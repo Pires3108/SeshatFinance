@@ -9,6 +9,7 @@ NestJS/Fastify presentation process. Controllers validate external input, resolv
 - `@nestjs/swagger`: versioned OpenAPI generation and interactive API documentation.
 - `zod`: validation of untrusted input at presentation boundaries.
 - `pino`: structured backend logs without financial or personal content.
+- `@supabase/supabase-js`: identity-provider adapter selected by ADR-006; provider types remain outside Application.
 - `reflect-metadata` and `rxjs`: NestJS runtime requirements.
 
 ## Contract
