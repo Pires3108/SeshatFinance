@@ -27,6 +27,7 @@
 ## Planejamento
 
 - [Backlog, roadmap e sprints](planning/13-backlog-roadmap-e-sprints-seshat-finance.md)
+- [Registro de riscos e inferências de implementação](planning/14-registro-de-riscos-e-inferencias-de-implementacao.md)
 
 ## Configuração do Codex
 
