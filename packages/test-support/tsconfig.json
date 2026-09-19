@@ -1,5 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "noEmit": true, "outDir": "dist", "rootDir": "src" },
-  "include": ["src/**/*.ts"]
+  "compilerOptions": { "noEmit": true, "outDir": "dist", "rootDir": "." },
+  "include": ["src/**/*.ts", "vitest*.config.ts"]
 }
