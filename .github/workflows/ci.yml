@@ -22,6 +22,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @seshat/database db:generate
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
