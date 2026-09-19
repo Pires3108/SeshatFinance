@@ -7,14 +7,14 @@ import {
 } from '@nestjs/platform-fastify';
 
 import { AppModule } from './app.module.js';
+import { configureApplication } from './platform/configure-application.js';
 
 export async function bootstrap(): Promise<void> {
   const application = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
   );
-  application.setGlobalPrefix('api/v1');
-  application.enableShutdownHooks();
+  configureApplication(application);
 
   const port = Number.parseInt(process.env.API_PORT ?? '3001', 10);
   await application.listen(port, '0.0.0.0');
