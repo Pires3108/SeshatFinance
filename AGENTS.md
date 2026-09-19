@@ -48,6 +48,8 @@
 
 ## Change discipline
 
+- Develop each backlog increment on its own descriptive branch; never commit directly to main.
+- Keep branch scope aligned with one reviewable backlog increment and publish it before starting the next branch.
 - Preserve existing identifiers in requirements and architecture documents.
 - Update requirements, rules, acceptance criteria, invariants, and traceability when behavior changes.
 - Keep commits small and use Conventional Commits.
