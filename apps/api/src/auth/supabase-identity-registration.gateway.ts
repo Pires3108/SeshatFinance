@@ -2,7 +2,21 @@ import type {
   IdentityRegistrationGateway,
   RegisterUserCommand,
 } from '@seshat/application';
-import type { SupabaseClient } from '@supabase/supabase-js';
+
+export type SupabaseRegistrationClient = Readonly<{
+  auth: Readonly<{
+    signUp(
+      credentials: Readonly<{
+        email: string;
+        password: string;
+        options: Readonly<{
+          data: Readonly<{ display_name: string }>;
+          emailRedirectTo: string;
+        }>;
+      }>,
+    ): PromiseLike<Readonly<{ error: unknown }>>;
+  }>;
+}>;
 
 export class IdentityRegistrationError extends Error {
   public constructor() {
@@ -12,10 +26,12 @@ export class IdentityRegistrationError extends Error {
 }
 
 export class SupabaseIdentityRegistrationGateway implements IdentityRegistrationGateway {
-  public constructor(private readonly client: SupabaseClient) {}
+  public constructor(
+    private readonly clientFactory: () => SupabaseRegistrationClient,
+  ) {}
 
   public async register(command: RegisterUserCommand): Promise<void> {
-    const { error } = await this.client.auth.signUp({
+    const { error } = await this.clientFactory().auth.signUp({
       email: command.email,
       password: command.password,
       options: {

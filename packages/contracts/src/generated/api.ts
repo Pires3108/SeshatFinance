@@ -4,6 +4,23 @@
  */
 
 export type paths = {
+    readonly "/api/v1/auth/registrations": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Register a user and request email confirmation */
+        readonly post: operations["AuthController_register"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/health": {
         readonly parameters: {
             readonly query?: never;
@@ -33,6 +50,37 @@ export type components = {
 };
 export type $defs = Record<string, never>;
 export interface operations {
+    readonly AuthController_register: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly displayName: string;
+                    /** Format: email */
+                    readonly email: string;
+                    readonly password: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 202: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** @enum {string} */
+                        readonly status: "confirmation_required";
+                    };
+                };
+            };
+        };
+    };
     readonly HealthController_getHealth: {
         readonly parameters: {
             readonly query?: never;

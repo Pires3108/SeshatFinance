@@ -1,4 +1,3 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -9,9 +8,9 @@ import {
 describe('SupabaseIdentityRegistrationGateway', () => {
   it('requests email confirmation with only the required profile metadata', async () => {
     const signUp = vi.fn().mockResolvedValue({ data: {}, error: null });
-    const gateway = new SupabaseIdentityRegistrationGateway({
+    const gateway = new SupabaseIdentityRegistrationGateway(() => ({
       auth: { signUp },
-    } as unknown as SupabaseClient);
+    }));
 
     await gateway.register({
       displayName: 'Pessoa Teste',
@@ -31,14 +30,14 @@ describe('SupabaseIdentityRegistrationGateway', () => {
   });
 
   it('does not leak provider errors through the application boundary', async () => {
-    const gateway = new SupabaseIdentityRegistrationGateway({
+    const gateway = new SupabaseIdentityRegistrationGateway(() => ({
       auth: {
         signUp: vi.fn().mockResolvedValue({
           data: {},
           error: new Error('provider detail'),
         }),
       },
-    } as unknown as SupabaseClient);
+    }));
 
     await expect(
       gateway.register({
