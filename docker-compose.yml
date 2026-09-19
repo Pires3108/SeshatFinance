@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: seshat
+      POSTGRES_PASSWORD: seshat
+      POSTGRES_USER: seshat
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U seshat -d seshat']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - '5432:5432'
+    volumes:
+      - seshat-postgres:/var/lib/postgresql/data
+
+volumes:
+  seshat-postgres:
