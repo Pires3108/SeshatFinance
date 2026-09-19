@@ -3,6 +3,7 @@ packages:
   - packages/*
 
 allowBuilds:
+  '@scarf/scarf': false
   '@prisma/engines': true
   esbuild: true
   prisma: true
