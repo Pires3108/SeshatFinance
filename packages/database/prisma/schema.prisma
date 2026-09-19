@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model UserProfile {
+  id                   String   @id @db.Uuid
+  displayName          String?  @map("display_name") @db.VarChar(120)
+  locale               String   @default("pt-BR") @db.VarChar(16)
+  timeZone             String   @default("America/Sao_Paulo") @map("time_zone") @db.VarChar(64)
+  presentationCurrency String   @default("BRL") @map("presentation_currency") @db.Char(3)
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  version              Int      @default(1)
+
+  @@map("user_profiles")
+}

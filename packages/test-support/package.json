@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@seshat/application": "workspace:*",
     "@testcontainers/postgresql": "12.1.0",
     "@types/node": "latest",
     "@types/pg": "8.15.5",

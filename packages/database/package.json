@@ -6,16 +6,26 @@
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "prisma generate && tsc -p tsconfig.build.json",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
     "lint": "eslint src",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
     "@seshat/application": "workspace:*",
-    "@seshat/domain": "workspace:*"
+    "@seshat/domain": "workspace:*",
+    "pg": "8.16.3"
   },
   "devDependencies": {
-    "@types/node": "latest"
+    "@types/node": "latest",
+    "@types/pg": "8.15.5",
+    "dotenv": "17.2.2",
+    "prisma": "7.10.0",
+    "tsx": "latest"
   }
 }
