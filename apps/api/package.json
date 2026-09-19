@@ -6,18 +6,24 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsx watch src/main.ts",
-    "lint": "eslint src test",
+    "lint": "eslint scripts src test",
+    "openapi:generate": "tsx scripts/generate-openapi.ts && prettier --write openapi.json",
     "start": "node dist/main.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@fastify/cors": "latest",
+    "@fastify/static": "^10.1.4",
     "@nestjs/common": "latest",
     "@nestjs/core": "latest",
     "@nestjs/platform-fastify": "latest",
+    "@nestjs/swagger": "12.0.1",
+    "fastify": "5.12.5",
+    "pino": "10.3.1",
     "reflect-metadata": "latest",
-    "rxjs": "latest"
+    "rxjs": "latest",
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@nestjs/testing": "latest",

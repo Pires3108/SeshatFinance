@@ -1,0 +1,51 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "operationId": "HealthController_getHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "service": "api",
+                    "status": "ok"
+                  },
+                  "properties": {
+                    "service": {
+                      "type": "string",
+                      "enum": ["api"]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["ok"]
+                    }
+                  },
+                  "required": ["service", "status"],
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Check API liveness",
+        "tags": ["health"]
+      }
+    }
+  },
+  "info": {
+    "title": "Seshat Finance API",
+    "description": "API para registrar e organizar informações financeiras.",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {}
+  }
+}
