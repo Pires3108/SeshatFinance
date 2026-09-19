@@ -1,2 +1,2 @@
-/** Stable public API contracts shared with generated clients. */
-export const contractsPackage = '@seshat/contracts' as const;
+export { createApiClient, type ApiClient } from './client/create-api-client.js';
+export type { paths } from './generated/api.js';

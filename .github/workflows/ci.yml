@@ -29,3 +29,4 @@ jobs:
       - run: pnpm build
       - run: pnpm --filter @seshat/api openapi:generate
       - run: git diff --exit-code -- apps/api/openapi.json
+      - run: pnpm --filter @seshat/contracts client:check
