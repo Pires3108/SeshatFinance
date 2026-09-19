@@ -5,8 +5,11 @@ packages:
 allowBuilds:
   '@scarf/scarf': false
   '@prisma/engines': true
+  cpu-features: false
   esbuild: true
   prisma: true
+  protobufjs: false
+  ssh2: false
   unrs-resolver: true
 
 onlyBuiltDependencies:

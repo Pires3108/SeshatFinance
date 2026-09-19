@@ -8,11 +8,15 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "lint": "eslint src",
-    "test": "vitest run src",
+    "test": "vitest run --passWithNoTests",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@seshat/application": "workspace:*",
-    "@types/node": "latest"
+    "@testcontainers/postgresql": "12.1.0",
+    "@types/node": "latest",
+    "@types/pg": "8.15.5",
+    "pg": "8.16.3"
   }
 }

@@ -28,5 +28,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - run: pnpm test:integration
       - run: pnpm --filter @seshat/api openapi:generate
       - run: git diff --exit-code -- apps/api/openapi.json
+      - run: pnpm --filter @seshat/contracts client:check

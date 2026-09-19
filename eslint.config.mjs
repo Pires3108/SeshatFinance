@@ -9,6 +9,7 @@ export default tseslint.config(
       '**/.next/**',
       '**/coverage/**',
       '**/node_modules/**',
+      'packages/contracts/src/generated/**',
     ],
   },
   eslint.configs.recommended,

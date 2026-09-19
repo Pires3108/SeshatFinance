@@ -7,11 +7,17 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "client:check": "openapi-typescript ../../apps/api/openapi.json --output src/generated/api.ts --immutable --export-type --check",
+    "client:generate": "openapi-typescript ../../apps/api/openapi.json --output src/generated/api.ts --immutable --export-type",
     "lint": "eslint src",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/node": "latest"
+    "@types/node": "latest",
+    "openapi-typescript": "7.13.0"
+  },
+  "dependencies": {
+    "openapi-fetch": "0.17.0"
   }
 }
