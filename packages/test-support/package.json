@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@seshat/application": "workspace:*",
     "@types/node": "latest"
   }
 }
