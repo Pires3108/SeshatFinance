@@ -9,7 +9,8 @@ try {
   respond({
     permission: 'deny',
     user_message: 'O hook de commits recebeu uma entrada inválida.',
-    agent_message: 'The commit guard failed closed because hook input was invalid.',
+    agent_message:
+      'The commit guard failed closed because hook input was invalid.',
   });
 }
 
@@ -28,7 +29,8 @@ try {
   respond({
     permission: 'deny',
     user_message: 'Não foi possível confirmar a branch antes do commit.',
-    agent_message: 'Create or enter a descriptive feature branch before committing.',
+    agent_message:
+      'Create or enter a descriptive feature branch before committing.',
   });
 }
 
