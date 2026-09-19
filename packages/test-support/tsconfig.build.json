@@ -1,1 +1,5 @@
-{ "extends": "./tsconfig.json", "compilerOptions": { "noEmit": false } }
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noEmit": false, "rootDir": "src" },
+  "exclude": ["src/**/*.spec.ts", "vitest*.config.ts"]
+}
