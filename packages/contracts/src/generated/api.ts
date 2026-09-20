@@ -38,6 +38,23 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/auth/password-recovery-requests": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Request a password recovery email */
+        readonly post: operations["PasswordRecoveryController_request"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
 };
 export type webhooks = Record<string, never>;
 export type components = {
@@ -100,6 +117,36 @@ export interface operations {
                         readonly service: "api";
                         /** @enum {string} */
                         readonly status: "ok";
+                    };
+                };
+            };
+        };
+    };
+    readonly PasswordRecoveryController_request: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Format: email */
+                    readonly email: string;
+                };
+            };
+        };
+        readonly responses: {
+            /** @description The same response is returned whether the address exists or not. */
+            readonly 202: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** @enum {string} */
+                        readonly status: "accepted";
                     };
                 };
             };
