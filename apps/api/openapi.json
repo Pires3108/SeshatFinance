@@ -2091,6 +2091,137 @@
         "tags": ["transactions"]
       }
     },
+    "/api/v1/transactions/{transactionId}/tags": {
+      "get": {
+        "operationId": "TransactionTagController_list",
+        "parameters": [
+          {
+            "name": "transactionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "tagIds": {
+                      "items": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "maxItems": 500,
+                      "type": "array",
+                      "uniqueItems": true
+                    }
+                  },
+                  "required": ["tagIds"],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned transaction was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List tag identifiers assigned to an owned transaction",
+        "tags": ["transactions"]
+      },
+      "put": {
+        "operationId": "TransactionTagController_replace",
+        "parameters": [
+          {
+            "name": "transactionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "tagIds": {
+                    "items": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "maxItems": 500,
+                    "type": "array"
+                  }
+                },
+                "required": ["tagIds"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "tagIds": {
+                      "items": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "maxItems": 500,
+                      "type": "array",
+                      "uniqueItems": true
+                    }
+                  },
+                  "required": ["tagIds"],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A selected tag is not owned by the actor"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned transaction was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace tags assigned to an owned transaction",
+        "tags": ["transactions"]
+      }
+    },
     "/api/v1/users/me/profile": {
       "get": {
         "operationId": "UserProfileController_get",
