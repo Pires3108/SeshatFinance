@@ -4,6 +4,57 @@
  */
 
 export type paths = {
+    readonly "/api/v1/accounts": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Create an account owned by the authenticated user */
+        readonly post: operations["AccountController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/accounts/{accountId}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get an account owned by the authenticated user */
+        readonly get: operations["AccountController_get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/accounts/{accountId}/lifecycle": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        /** Change an owned account lifecycle */
+        readonly patch: operations["AccountController_lifecycle"];
+        readonly trace?: never;
+    };
     readonly "/api/v1/auth/registrations": {
         readonly parameters: {
             readonly query?: never;
@@ -85,6 +136,192 @@ export type components = {
 };
 export type $defs = Record<string, never>;
 export interface operations {
+    readonly AccountController_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly color: string | null;
+                    readonly currencyCode: string;
+                    readonly currencyMinorUnitScale: number;
+                    readonly description: string | null;
+                    readonly icon: string | null;
+                    readonly initialBalance: string;
+                    readonly institution: string | null;
+                    readonly name: string;
+                    readonly typeKey: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        readonly color: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly description: string | null;
+                        readonly icon: string | null;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly initialBalance: string;
+                        readonly institution: string | null;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        readonly name: string;
+                        /** Format: date-time */
+                        readonly trashedAt: string | null;
+                        readonly typeKey: string;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly AccountController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly accountId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        readonly color: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly description: string | null;
+                        readonly icon: string | null;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly initialBalance: string;
+                        readonly institution: string | null;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        readonly name: string;
+                        /** Format: date-time */
+                        readonly trashedAt: string | null;
+                        readonly typeKey: string;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned account was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly AccountController_lifecycle: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly accountId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** @enum {string} */
+                    readonly action: "archive" | "unarchive" | "move-to-trash" | "restore-from-trash";
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        readonly color: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly description: string | null;
+                        readonly icon: string | null;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly initialBalance: string;
+                        readonly institution: string | null;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        readonly name: string;
+                        /** Format: date-time */
+                        readonly trashedAt: string | null;
+                        readonly typeKey: string;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned account was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly AuthController_register: {
         readonly parameters: {
             readonly query?: never;
