@@ -35,6 +35,15 @@ export {
   type TagRepository,
 } from './classifications/manage-tag.js';
 export {
+  CostCenterVersionConflictError,
+  CreateCostCenterUseCase,
+  ListOwnedCostCentersUseCase,
+  OwnedCostCenterNotFoundError,
+  RenameOwnedCostCenterUseCase,
+  type CostCenterRepository,
+  type CreateCostCenterCommand,
+} from './classifications/manage-cost-center.js';
+export {
   AuthenticateUserUseCase,
   type AuthenticateUserCommand,
   type IdentityAuthenticationGateway,

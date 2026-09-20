@@ -122,6 +122,19 @@ model Tag {
   @@map("tags")
 }
 
+model CostCenter {
+  id        String   @id @db.Uuid
+  ownerId   String   @map("owner_id") @db.Uuid
+  name      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @map("updated_at") @db.Timestamptz(6)
+  version   Int      @default(1)
+
+  @@unique([id, ownerId])
+  @@index([ownerId, name])
+  @@map("cost_centers")
+}
+
 model TransactionTag {
   transactionId String      @map("transaction_id") @db.Uuid
   tagId         String      @map("tag_id") @db.Uuid
