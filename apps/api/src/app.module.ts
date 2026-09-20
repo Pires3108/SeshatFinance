@@ -1,14 +1,20 @@
 import {
+  ChangeOwnedAccountLifecycleUseCase,
+  CreateAccountUseCase,
+  GetOwnedAccountUseCase,
   RegisterUserUseCase,
   ResolveAuthenticatedActorUseCase,
   RequestPasswordRecoveryUseCase,
   GetOwnUserProfileUseCase,
   UpdateOwnUserProfileUseCase,
   type UserProfileRepository,
+  type AccountRepository,
 } from '@seshat/application';
 import { Module } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 
+import { AccountController } from './accounts/account.controller.js';
+import { LazyAccountRepository } from './accounts/lazy-account-repository.js';
 import { AuthConfiguration } from './auth/auth-configuration.js';
 import { AuthController } from './auth/auth.controller.js';
 import { AuthenticatedActorContext } from './auth/authenticated-actor-context.js';
@@ -20,12 +26,15 @@ import { SupabasePasswordRecoveryGateway } from './auth/supabase-password-recove
 import { HealthController } from './health/health.controller.js';
 import { CorrelationContext } from './platform/correlation-context.js';
 import { PrivacySafeLogger } from './platform/privacy-safe-logger.js';
+import { LazyPrismaClient } from './platform/lazy-prisma-client.js';
 import { SystemClock } from './platform/system-clock.js';
+import { SystemIdentifierGenerator } from './platform/system-identifier-generator.js';
 import { LazyUserProfileRepository } from './users/lazy-user-profile-repository.js';
 import { UserProfileController } from './users/user-profile.controller.js';
 
 @Module({
   controllers: [
+    AccountController,
     AuthController,
     HealthController,
     PasswordRecoveryController,
@@ -37,7 +46,33 @@ import { UserProfileController } from './users/user-profile.controller.js';
     BearerAuthGuard,
     CorrelationContext,
     PrivacySafeLogger,
+    LazyPrismaClient,
+    LazyAccountRepository,
     LazyUserProfileRepository,
+    {
+      inject: [LazyAccountRepository],
+      provide: CreateAccountUseCase,
+      useFactory: (accounts: AccountRepository): CreateAccountUseCase =>
+        new CreateAccountUseCase(
+          accounts,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyAccountRepository],
+      provide: GetOwnedAccountUseCase,
+      useFactory: (accounts: AccountRepository): GetOwnedAccountUseCase =>
+        new GetOwnedAccountUseCase(accounts),
+    },
+    {
+      inject: [LazyAccountRepository],
+      provide: ChangeOwnedAccountLifecycleUseCase,
+      useFactory: (
+        accounts: AccountRepository,
+      ): ChangeOwnedAccountLifecycleUseCase =>
+        new ChangeOwnedAccountLifecycleUseCase(accounts, new SystemClock()),
+    },
     {
       inject: [LazyUserProfileRepository],
       provide: GetOwnUserProfileUseCase,

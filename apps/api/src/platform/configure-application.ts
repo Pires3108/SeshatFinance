@@ -35,6 +35,7 @@ export function createOpenApiDocument(
       .setTitle('Seshat Finance API')
       .setDescription('API para registrar e organizar informações financeiras.')
       .setVersion('1.0')
+      .addBearerAuth()
       .build(),
   );
 }
