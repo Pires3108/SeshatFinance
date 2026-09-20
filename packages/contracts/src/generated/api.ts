@@ -4,6 +4,23 @@
  */
 
 export type paths = {
+    readonly "/api/v1/accounts/{accountId}/balance": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Calculate the exact balance of an owned account */
+        readonly get: operations["AccountBalanceController_get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/accounts": {
         readonly parameters: {
             readonly query?: never;
@@ -191,6 +208,45 @@ export type components = {
 };
 export type $defs = Record<string, never>;
 export interface operations {
+    readonly AccountBalanceController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly accountId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly amount: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned account was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly AccountController_list: {
         readonly parameters: {
             readonly query?: {

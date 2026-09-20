@@ -4,6 +4,7 @@ import {
   CreateAccountUseCase,
   CreateTransactionUseCase,
   GetOwnedAccountUseCase,
+  GetOwnedAccountBalanceUseCase,
   GetOwnedTransactionUseCase,
   ListOwnedAccountsUseCase,
   ListOwnedAccountTransactionsUseCase,
@@ -22,6 +23,7 @@ import { Module } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 
 import { AccountController } from './accounts/account.controller.js';
+import { AccountBalanceController } from './accounts/account-balance.controller.js';
 import { LazyAccountRepository } from './accounts/lazy-account-repository.js';
 import { AuthConfiguration } from './auth/auth-configuration.js';
 import { AuthController } from './auth/auth.controller.js';
@@ -44,6 +46,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
 
 @Module({
   controllers: [
+    AccountBalanceController,
     AccountController,
     AuthController,
     HealthController,
@@ -131,6 +134,15 @@ import { UserProfileController } from './users/user-profile.controller.js';
       provide: GetOwnedAccountUseCase,
       useFactory: (accounts: AccountRepository): GetOwnedAccountUseCase =>
         new GetOwnedAccountUseCase(accounts),
+    },
+    {
+      inject: [LazyAccountRepository, LazyTransactionRepository],
+      provide: GetOwnedAccountBalanceUseCase,
+      useFactory: (
+        accounts: AccountRepository,
+        transactions: TransactionRepository,
+      ): GetOwnedAccountBalanceUseCase =>
+        new GetOwnedAccountBalanceUseCase(accounts, transactions),
     },
     {
       inject: [LazyAccountRepository],
