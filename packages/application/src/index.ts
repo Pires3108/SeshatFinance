@@ -44,9 +44,15 @@ export {
 } from './users/update-own-user-profile.js';
 export {
   CreateTransactionUseCase,
+  ChangeOwnedTransactionLifecycleUseCase,
   GetOwnedTransactionUseCase,
   ListOwnedAccountTransactionsUseCase,
+  OwnedTransactionNotFoundError,
+  TransactionVersionConflictError,
+  UpdateOwnedTransactionUseCase,
   TransactionAccountUnavailableError,
   type CreateTransactionCommand,
   type TransactionRepository,
+  type TransactionLifecycleAction,
+  type UpdateOwnedTransactionCommand,
 } from './transactions/create-transaction.js';

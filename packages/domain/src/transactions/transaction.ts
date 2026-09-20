@@ -30,6 +30,13 @@ export type CreateTransactionProperties = Readonly<{
   ownerId: string;
 }>;
 
+export type UpdateTransactionDetails = Readonly<{
+  amount: Money;
+  description: string | null;
+  kind: TransactionKind;
+  occurredAt: Date;
+}>;
+
 export class InvalidTransactionError extends Error {
   public constructor(message: string) {
     super(message);
@@ -112,6 +119,32 @@ export class Transaction {
     this.transition('archived', at, { archivedAt: at, trashedAt: null });
   }
 
+  public unarchive(at: Date): void {
+    this.requireLifecycle(
+      'archived',
+      'Only an archived transaction can be unarchived.',
+    );
+    this.transition('active', at, { archivedAt: null, trashedAt: null });
+  }
+
+  public updateDetails(details: UpdateTransactionDetails, at: Date): void {
+    this.requireNotTrashed();
+    assertPositiveAmount(details.amount);
+    assertValidInstant(details.occurredAt, 'Transaction occurrence instant');
+    if (!details.amount.currency.equals(this.amount.currency)) {
+      throw new InvalidTransactionError('Transaction currency cannot change.');
+    }
+    this.state = {
+      ...this.state,
+      amount: details.amount.toSnapshot(),
+      description: normalizeOptionalText(details.description),
+      kind: details.kind,
+      occurredAt: new Date(details.occurredAt),
+      updatedAt: checkedTransitionInstant(at, this.state.updatedAt),
+      version: this.state.version + 1,
+    };
+  }
+
   public moveToTrash(at: Date): void {
     if (this.state.lifecycle === 'trashed') {
       throw new TransactionLifecycleError(
@@ -152,25 +185,37 @@ export class Transaction {
     }
   }
 
+  private requireNotTrashed(): void {
+    if (this.state.lifecycle === 'trashed') {
+      throw new TransactionLifecycleError(
+        'A trashed transaction cannot be edited.',
+      );
+    }
+  }
+
   private transition(
     lifecycle: TransactionLifecycle,
     at: Date,
     timestamps: Pick<TransactionSnapshot, 'archivedAt' | 'trashedAt'>,
   ): void {
-    assertValidInstant(at, 'Transaction transition instant');
-    if (at < this.state.updatedAt) {
-      throw new TransactionLifecycleError(
-        'Transaction transition cannot precede the previous update.',
-      );
-    }
     this.state = {
       ...this.state,
       ...timestamps,
       lifecycle,
-      updatedAt: new Date(at),
+      updatedAt: checkedTransitionInstant(at, this.state.updatedAt),
       version: this.state.version + 1,
     };
   }
+}
+
+function checkedTransitionInstant(at: Date, previous: Date): Date {
+  assertValidInstant(at, 'Transaction transition instant');
+  if (at < previous) {
+    throw new TransactionLifecycleError(
+      'Transaction transition cannot precede the previous update.',
+    );
+  }
+  return new Date(at);
 }
 
 export function calculateAccountBalance(

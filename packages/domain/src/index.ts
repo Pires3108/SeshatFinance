@@ -32,4 +32,5 @@ export {
   type TransactionKind,
   type TransactionLifecycle,
   type TransactionSnapshot,
+  type UpdateTransactionDetails,
 } from './transactions/transaction.js';
