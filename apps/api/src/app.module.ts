@@ -1,4 +1,5 @@
 import {
+  ChangeOwnedTransactionLifecycleUseCase,
   ChangeOwnedAccountLifecycleUseCase,
   CreateAccountUseCase,
   CreateTransactionUseCase,
@@ -12,6 +13,7 @@ import {
   GetOwnUserProfileUseCase,
   UpdateOwnUserProfileUseCase,
   UpdateOwnedAccountDetailsUseCase,
+  UpdateOwnedTransactionUseCase,
   type UserProfileRepository,
   type AccountRepository,
   type TransactionRepository,
@@ -71,6 +73,30 @@ import { UserProfileController } from './users/user-profile.controller.js';
           accounts,
           new SystemClock(),
           new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyTransactionRepository, LazyAccountRepository],
+      provide: UpdateOwnedTransactionUseCase,
+      useFactory: (
+        transactions: TransactionRepository,
+        accounts: AccountRepository,
+      ): UpdateOwnedTransactionUseCase =>
+        new UpdateOwnedTransactionUseCase(
+          transactions,
+          accounts,
+          new SystemClock(),
+        ),
+    },
+    {
+      inject: [LazyTransactionRepository],
+      provide: ChangeOwnedTransactionLifecycleUseCase,
+      useFactory: (
+        transactions: TransactionRepository,
+      ): ChangeOwnedTransactionLifecycleUseCase =>
+        new ChangeOwnedTransactionLifecycleUseCase(
+          transactions,
+          new SystemClock(),
         ),
     },
     {

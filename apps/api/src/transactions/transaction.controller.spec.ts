@@ -1,7 +1,9 @@
 import type {
+  ChangeOwnedTransactionLifecycleUseCase,
   CreateTransactionUseCase,
   GetOwnedTransactionUseCase,
   ListOwnedAccountTransactionsUseCase,
+  UpdateOwnedTransactionUseCase,
 } from '@seshat/application';
 import { Currency, Money, Transaction } from '@seshat/domain';
 import type { FastifyRequest } from 'fastify';
@@ -37,6 +39,8 @@ describe('TransactionController', () => {
       { execute } as unknown as CreateTransactionUseCase,
       { execute: vi.fn() } as unknown as GetOwnedTransactionUseCase,
       { execute: vi.fn() } as unknown as ListOwnedAccountTransactionsUseCase,
+      { execute: vi.fn() } as unknown as UpdateOwnedTransactionUseCase,
+      { execute: vi.fn() } as unknown as ChangeOwnedTransactionLifecycleUseCase,
       actors,
     );
 
@@ -65,6 +69,8 @@ describe('TransactionController', () => {
       { execute: vi.fn() } as unknown as CreateTransactionUseCase,
       { execute: vi.fn() } as unknown as GetOwnedTransactionUseCase,
       { execute } as unknown as ListOwnedAccountTransactionsUseCase,
+      { execute: vi.fn() } as unknown as UpdateOwnedTransactionUseCase,
+      { execute: vi.fn() } as unknown as ChangeOwnedTransactionLifecycleUseCase,
       actors,
     );
 
@@ -76,6 +82,37 @@ describe('TransactionController', () => {
     expect(execute).toHaveBeenCalledWith(
       '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
       'actor-id',
+    );
+  });
+
+  it('updates a record using the verified actor', async () => {
+    const actors = new AuthenticatedActorContext();
+    const execute = vi.fn().mockResolvedValue(transaction());
+    const controller = new TransactionController(
+      { execute: vi.fn() } as unknown as CreateTransactionUseCase,
+      { execute: vi.fn() } as unknown as GetOwnedTransactionUseCase,
+      { execute: vi.fn() } as unknown as ListOwnedAccountTransactionsUseCase,
+      { execute } as unknown as UpdateOwnedTransactionUseCase,
+      { execute: vi.fn() } as unknown as ChangeOwnedTransactionLifecycleUseCase,
+      actors,
+    );
+
+    await controller.update(
+      request(actors),
+      '86684068-45d9-4e14-b454-f7e556b867e7',
+      {
+        amount: '9.99',
+        description: null,
+        kind: 'expense',
+        occurredAt: '2026-09-20T11:00:00.000Z',
+      },
+    );
+
+    expect(execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: 'actor-id',
+        transactionId: '86684068-45d9-4e14-b454-f7e556b867e7',
+      }),
     );
   });
 });
