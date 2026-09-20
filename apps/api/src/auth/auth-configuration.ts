@@ -6,6 +6,10 @@ const authEnvironmentSchema = z.object({
   SUPABASE_URL: z.url(),
 });
 
+const passwordRecoveryEnvironmentSchema = z.object({
+  AUTH_PASSWORD_RECOVERY_REDIRECT_URL: z.url(),
+});
+
 export type AuthConfigurationValues = Readonly<{
   confirmationRedirectUrl: string;
   supabasePublishableKey: string;
@@ -20,5 +24,10 @@ export class AuthConfiguration {
       supabasePublishableKey: values.SUPABASE_PUBLISHABLE_KEY,
       supabaseUrl: values.SUPABASE_URL,
     };
+  }
+
+  public readPasswordRecoveryRedirectUrl(): string {
+    return passwordRecoveryEnvironmentSchema.parse(process.env)
+      .AUTH_PASSWORD_RECOVERY_REDIRECT_URL;
   }
 }

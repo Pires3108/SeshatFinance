@@ -15,6 +15,8 @@ describe('AuthController', () => {
           supabasePublishableKey: 'synthetic-publishable-key',
           supabaseUrl: 'https://synthetic-project.supabase.co',
         }),
+        readPasswordRecoveryRedirectUrl: () =>
+          'https://app.example.test/auth/reset-password',
       } satisfies AuthConfiguration,
     );
 

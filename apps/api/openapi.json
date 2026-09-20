@@ -91,6 +91,52 @@
         "summary": "Check API liveness",
         "tags": ["health"]
       }
+    },
+    "/api/v1/auth/password-recovery-requests": {
+      "post": {
+        "operationId": "PasswordRecoveryController_request",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "email": {
+                    "format": "email",
+                    "maxLength": 320,
+                    "type": "string"
+                  }
+                },
+                "required": ["email"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "The same response is returned whether the address exists or not.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "status": {
+                      "enum": ["accepted"],
+                      "type": "string"
+                    }
+                  },
+                  "required": ["status"],
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Request a password recovery email",
+        "tags": ["auth"]
+      }
     }
   },
   "info": {
