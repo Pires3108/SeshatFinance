@@ -89,3 +89,19 @@ model Transaction {
   @@index([ownerId, accountId, occurredAt])
   @@map("transactions")
 }
+
+model Category {
+  id               String     @id @db.Uuid
+  ownerId          String     @map("owner_id") @db.Uuid
+  name             String
+  parentCategoryId String?    @map("parent_category_id") @db.Uuid
+  parentCategory   Category?  @relation("category_hierarchy", fields: [parentCategoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  childCategories  Category[] @relation("category_hierarchy")
+  createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime   @map("updated_at") @db.Timestamptz(6)
+  version          Int        @default(1)
+
+  @@unique([id, ownerId])
+  @@index([ownerId, parentCategoryId])
+  @@map("categories")
+}
