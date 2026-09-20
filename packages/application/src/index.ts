@@ -13,6 +13,11 @@ export {
   type RegisterUserCommand,
 } from './auth/register-user.js';
 export {
+  RequestPasswordRecoveryUseCase,
+  type PasswordRecoveryGateway,
+  type RequestPasswordRecoveryCommand,
+} from './auth/request-password-recovery.js';
+export {
   UpdateOwnUserProfileUseCase,
   type UpdateOwnUserProfileCommand,
   type UserProfile,
