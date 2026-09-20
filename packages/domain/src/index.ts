@@ -40,3 +40,9 @@ export {
   type CategorySnapshot,
   type CreateCategoryProperties,
 } from './classifications/category.js';
+export {
+  InvalidTagError,
+  Tag,
+  type CreateTagProperties,
+  type TagSnapshot,
+} from './classifications/tag.js';
