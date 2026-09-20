@@ -26,6 +26,15 @@ export {
   type CreateCategoryCommand,
 } from './classifications/manage-category.js';
 export {
+  CreateTagUseCase,
+  ListOwnedTagsUseCase,
+  OwnedTagNotFoundError,
+  RenameOwnedTagUseCase,
+  TagVersionConflictError,
+  type CreateTagCommand,
+  type TagRepository,
+} from './classifications/manage-tag.js';
+export {
   AuthenticateUserUseCase,
   type AuthenticateUserCommand,
   type IdentityAuthenticationGateway,

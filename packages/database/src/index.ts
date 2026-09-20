@@ -3,3 +3,4 @@ export { PrismaUserProfileRepository } from './users/prisma-user-profile-reposit
 export { PrismaAccountRepository } from './accounts/prisma-account-repository.js';
 export { PrismaTransactionRepository } from './transactions/prisma-transaction-repository.js';
 export { PrismaCategoryRepository } from './classifications/prisma-category-repository.js';
+export { PrismaTagRepository } from './classifications/prisma-tag-repository.js';
