@@ -18,6 +18,11 @@ export {
   type RequestPasswordRecoveryCommand,
 } from './auth/request-password-recovery.js';
 export {
+  ResolveAuthenticatedActorUseCase,
+  type AuthenticatedActor,
+  type IdentityTokenVerifier,
+} from './auth/resolve-authenticated-actor.js';
+export {
   UpdateOwnUserProfileUseCase,
   type UpdateOwnUserProfileCommand,
   type UserProfile,
