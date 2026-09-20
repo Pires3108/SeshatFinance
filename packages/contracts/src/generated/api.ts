@@ -140,7 +140,25 @@ export type paths = {
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
-        readonly patch?: never;
+        /** Update an owned transaction */
+        readonly patch: operations["TransactionController_update"];
+        readonly trace?: never;
+    };
+    readonly "/api/v1/transactions/{transactionId}/lifecycle": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        /** Change an owned transaction lifecycle */
+        readonly patch: operations["TransactionController_lifecycle"];
         readonly trace?: never;
     };
     readonly "/api/v1/users/me/profile": {
@@ -691,6 +709,142 @@ export interface operations {
             readonly cookie?: never;
         };
         readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly accountId: string;
+                        readonly amount: string;
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly description: string | null;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly kind: "income" | "expense";
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                        /** Format: date-time */
+                        readonly trashedAt: string | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned transaction was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TransactionController_update: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly transactionId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly amount: string;
+                    readonly description: string | null;
+                    /** @enum {string} */
+                    readonly kind: "income" | "expense";
+                    /** Format: date-time */
+                    readonly occurredAt: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly accountId: string;
+                        readonly amount: string;
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly description: string | null;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly kind: "income" | "expense";
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                        /** Format: date-time */
+                        readonly trashedAt: string | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned transaction was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TransactionController_lifecycle: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly transactionId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** @enum {string} */
+                    readonly action: "archive" | "unarchive" | "move-to-trash" | "restore-from-trash";
+                };
+            };
+        };
         readonly responses: {
             readonly 200: {
                 headers: {

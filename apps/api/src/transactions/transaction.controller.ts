@@ -1,24 +1,33 @@
 import {
+  ChangeOwnedTransactionLifecycleUseCase,
   CreateTransactionUseCase,
   GetOwnedTransactionUseCase,
   ListOwnedAccountTransactionsUseCase,
+  OwnedTransactionNotFoundError,
   TransactionAccountUnavailableError,
+  TransactionVersionConflictError,
+  UpdateOwnedTransactionUseCase,
 } from '@seshat/application';
 import {
   InvalidCurrencyError,
   InvalidMoneyAmountError,
   InvalidTransactionError,
+  TransactionLifecycleError,
   type Transaction,
   type TransactionSnapshot,
 } from '@seshat/domain';
 import {
   BadRequestException,
   Body,
+  ConflictException,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Inject,
   NotFoundException,
   Param,
+  Patch,
   Post,
   Req,
   UnauthorizedException,
@@ -55,7 +64,21 @@ const createSchema = z.object({
   kind: z.enum(['income', 'expense']),
   occurredAt: z.iso.datetime({ offset: true }),
 });
+const updateSchema = createSchema.omit({
+  currencyCode: true,
+  currencyMinorUnitScale: true,
+});
+const lifecycleSchema = z.object({
+  action: z.enum([
+    'archive',
+    'unarchive',
+    'move-to-trash',
+    'restore-from-trash',
+  ]),
+});
 type CreateRequest = z.infer<typeof createSchema>;
+type UpdateRequest = z.infer<typeof updateSchema>;
+type LifecycleRequest = z.infer<typeof lifecycleSchema>;
 type Response = Readonly<{
   accountId: string;
   amount: string;
@@ -122,6 +145,10 @@ export class TransactionController {
     private readonly getTransaction: GetOwnedTransactionUseCase,
     @Inject(ListOwnedAccountTransactionsUseCase)
     private readonly listTransactions: ListOwnedAccountTransactionsUseCase,
+    @Inject(UpdateOwnedTransactionUseCase)
+    private readonly updateTransaction: UpdateOwnedTransactionUseCase,
+    @Inject(ChangeOwnedTransactionLifecycleUseCase)
+    private readonly changeLifecycle: ChangeOwnedTransactionLifecycleUseCase,
     @Inject(AuthenticatedActorContext)
     private readonly actors: AuthenticatedActorContext,
   ) {}
@@ -190,6 +217,71 @@ export class TransactionController {
     return mapTransaction(transaction);
   }
 
+  @Patch('transactions/:transactionId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update an owned transaction' })
+  @ApiParam({ format: 'uuid', name: 'transactionId', type: 'string' })
+  @ApiBody({ schema: updateBodySchema() })
+  @ApiOkResponse({ schema: responseSchema })
+  @ApiNotFoundResponse({ description: 'Owned transaction was not found' })
+  public async update(
+    @Req() request: FastifyRequest,
+    @Param('transactionId', new ZodValidationPipe(idSchema))
+    transactionId: string,
+    @Body(new ZodValidationPipe(updateSchema)) body: UpdateRequest,
+  ): Promise<Response> {
+    try {
+      return mapTransaction(
+        await this.updateTransaction.execute({
+          actorId: this.actorId(request),
+          ...body,
+          occurredAt: new Date(body.occurredAt),
+          transactionId,
+        }),
+      );
+    } catch (error) {
+      throw mapError(error);
+    }
+  }
+
+  @Patch('transactions/:transactionId/lifecycle')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Change an owned transaction lifecycle' })
+  @ApiParam({ format: 'uuid', name: 'transactionId', type: 'string' })
+  @ApiBody({
+    schema: {
+      additionalProperties: false,
+      properties: {
+        action: {
+          enum: ['archive', 'unarchive', 'move-to-trash', 'restore-from-trash'],
+          type: 'string',
+        },
+      },
+      required: ['action'],
+      type: 'object',
+    },
+  })
+  @ApiOkResponse({ schema: responseSchema })
+  @ApiNotFoundResponse({ description: 'Owned transaction was not found' })
+  public async lifecycle(
+    @Req() request: FastifyRequest,
+    @Param('transactionId', new ZodValidationPipe(idSchema))
+    transactionId: string,
+    @Body(new ZodValidationPipe(lifecycleSchema)) body: LifecycleRequest,
+  ): Promise<Response> {
+    try {
+      return mapTransaction(
+        await this.changeLifecycle.execute({
+          action: body.action,
+          actorId: this.actorId(request),
+          transactionId,
+        }),
+      );
+    } catch (error) {
+      throw mapError(error);
+    }
+  }
+
   private actorId(request: FastifyRequest): string {
     const actor = this.actors.get(request);
     if (actor === undefined) throw new UnauthorizedException();
@@ -218,17 +310,34 @@ function mapTransaction(transaction: Transaction): Response {
 }
 
 function mapError(error: unknown): Error {
+  if (error instanceof OwnedTransactionNotFoundError)
+    return new NotFoundException('Transaction not found.');
   if (error instanceof TransactionAccountUnavailableError)
     return new NotFoundException('Account not found.');
+  if (error instanceof TransactionVersionConflictError)
+    return new ConflictException('Transaction was modified concurrently.');
   if (
     error instanceof InvalidCurrencyError ||
     error instanceof InvalidMoneyAmountError ||
-    error instanceof InvalidTransactionError
+    error instanceof InvalidTransactionError ||
+    error instanceof TransactionLifecycleError
   )
     return new BadRequestException('Invalid transaction operation.');
   return error instanceof Error
     ? error
     : new Error('Unknown transaction error.');
+}
+
+function updateBodySchema(): SchemaObject {
+  const schema = createBodySchema();
+  const properties = { ...schema.properties };
+  delete properties.currencyCode;
+  delete properties.currencyMinorUnitScale;
+  return {
+    ...schema,
+    properties,
+    required: ['amount', 'description', 'kind', 'occurredAt'],
+  };
 }
 
 function createBodySchema(): SchemaObject {
