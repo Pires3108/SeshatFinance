@@ -1,22 +1,26 @@
 import {
   ChangeOwnedTransactionLifecycleUseCase,
   ChangeOwnedAccountLifecycleUseCase,
+  CreateCategoryUseCase,
   CreateAccountUseCase,
   CreateTransactionUseCase,
   GetOwnedAccountUseCase,
   GetOwnedAccountBalanceUseCase,
   GetOwnedTransactionUseCase,
+  ListOwnedCategoriesUseCase,
   ListOwnedAccountsUseCase,
   ListOwnedAccountTransactionsUseCase,
   RegisterUserUseCase,
   ResolveAuthenticatedActorUseCase,
   RequestPasswordRecoveryUseCase,
+  RenameOwnedCategoryUseCase,
   GetOwnUserProfileUseCase,
   UpdateOwnUserProfileUseCase,
   UpdateOwnedAccountDetailsUseCase,
   UpdateOwnedTransactionUseCase,
   type UserProfileRepository,
   type AccountRepository,
+  type CategoryRepository,
   type TransactionRepository,
 } from '@seshat/application';
 import { Module } from '@nestjs/common';
@@ -33,6 +37,8 @@ import { PasswordRecoveryController } from './auth/password-recovery.controller.
 import { SupabaseIdentityRegistrationGateway } from './auth/supabase-identity-registration.gateway.js';
 import { SupabaseIdentityTokenVerifier } from './auth/supabase-identity-token-verifier.js';
 import { SupabasePasswordRecoveryGateway } from './auth/supabase-password-recovery.gateway.js';
+import { CategoryController } from './classifications/category.controller.js';
+import { LazyCategoryRepository } from './classifications/lazy-category-repository.js';
 import { HealthController } from './health/health.controller.js';
 import { CorrelationContext } from './platform/correlation-context.js';
 import { PrivacySafeLogger } from './platform/privacy-safe-logger.js';
@@ -49,6 +55,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     AccountBalanceController,
     AccountController,
     AuthController,
+    CategoryController,
     HealthController,
     PasswordRecoveryController,
     TransactionController,
@@ -62,8 +69,35 @@ import { UserProfileController } from './users/user-profile.controller.js';
     PrivacySafeLogger,
     LazyPrismaClient,
     LazyAccountRepository,
+    LazyCategoryRepository,
     LazyTransactionRepository,
     LazyUserProfileRepository,
+    {
+      inject: [LazyCategoryRepository],
+      provide: CreateCategoryUseCase,
+      useFactory: (categories: CategoryRepository): CreateCategoryUseCase =>
+        new CreateCategoryUseCase(
+          categories,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyCategoryRepository],
+      provide: ListOwnedCategoriesUseCase,
+      useFactory: (
+        categories: CategoryRepository,
+      ): ListOwnedCategoriesUseCase =>
+        new ListOwnedCategoriesUseCase(categories),
+    },
+    {
+      inject: [LazyCategoryRepository],
+      provide: RenameOwnedCategoryUseCase,
+      useFactory: (
+        categories: CategoryRepository,
+      ): RenameOwnedCategoryUseCase =>
+        new RenameOwnedCategoryUseCase(categories, new SystemClock()),
+    },
     {
       inject: [LazyTransactionRepository, LazyAccountRepository],
       provide: CreateTransactionUseCase,
