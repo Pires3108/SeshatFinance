@@ -10,3 +10,15 @@ export {
   type MoneyComparison,
   type MoneySnapshot,
 } from './money/money.js';
+export {
+  Account,
+  AccountLifecycleError,
+  InvalidAccountError,
+  type AccountLifecycle,
+  type AccountSnapshot,
+} from './accounts/account.js';
+export {
+  AccountType,
+  InvalidAccountTypeError,
+  type AccountTypeSnapshot,
+} from './accounts/account-type.js';
