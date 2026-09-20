@@ -46,7 +46,46 @@ model Account {
   createdAt                DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt                DateTime         @map("updated_at") @db.Timestamptz(6)
   version                  Int              @default(1)
+  transactions             Transaction[]
 
   @@index([ownerId, lifecycle])
+  @@unique([id, ownerId])
   @@map("accounts")
+}
+
+enum TransactionKind {
+  income
+  expense
+
+  @@map("transaction_kind")
+}
+
+enum TransactionLifecycle {
+  active
+  archived
+  trashed
+
+  @@map("transaction_lifecycle")
+}
+
+model Transaction {
+  id                     String               @id @db.Uuid
+  ownerId                String               @map("owner_id") @db.Uuid
+  accountId              String               @map("account_id") @db.Uuid
+  account                Account              @relation(fields: [accountId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  kind                   TransactionKind
+  amountMinorUnits       Decimal              @map("amount_minor_units") @db.Decimal(1000, 0)
+  currencyCode           String               @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale Int                  @map("currency_minor_unit_scale") @db.SmallInt
+  description            String?
+  occurredAt             DateTime             @map("occurred_at") @db.Timestamptz(6)
+  lifecycle              TransactionLifecycle @default(active)
+  archivedAt             DateTime?            @map("archived_at") @db.Timestamptz(6)
+  trashedAt              DateTime?            @map("trashed_at") @db.Timestamptz(6)
+  createdAt              DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime             @map("updated_at") @db.Timestamptz(6)
+  version                Int                  @default(1)
+
+  @@index([ownerId, accountId, occurredAt])
+  @@map("transactions")
 }
