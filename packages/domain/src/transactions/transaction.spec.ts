@@ -80,4 +80,36 @@ describe('Transaction', () => {
       ),
     ).toThrow();
   });
+
+  it('updates the balance effect as one versioned edit', () => {
+    const value = transaction('income');
+
+    value.updateDetails(
+      {
+        amount: Money.fromDecimal('30.50', currency),
+        description: 'Despesa corrigida',
+        kind: 'expense',
+        occurredAt: new Date('2026-09-19T11:00:00.000Z'),
+      },
+      new Date('2026-09-20T13:00:00.000Z'),
+    );
+
+    expect(value.balanceEffect().toDecimal()).toBe('-30.50');
+    expect(value.toSnapshot()).toMatchObject({
+      description: 'Despesa corrigida',
+      kind: 'expense',
+      version: 2,
+    });
+  });
+
+  it('restores an archived transaction to active after trash recovery', () => {
+    const value = transaction('income');
+    value.archive(new Date('2026-09-20T13:00:00.000Z'));
+    value.moveToTrash(new Date('2026-09-20T14:00:00.000Z'));
+    value.restoreFromTrash(new Date('2026-09-20T15:00:00.000Z'));
+
+    expect(value.lifecycle).toBe('archived');
+    value.unarchive(new Date('2026-09-20T16:00:00.000Z'));
+    expect(value.lifecycle).toBe('active');
+  });
 });
