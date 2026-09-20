@@ -80,6 +80,18 @@ export class Transaction {
     return Money.restore(this.state.amount);
   }
 
+  public get id(): string {
+    return this.state.id;
+  }
+
+  public get ownerId(): string {
+    return this.state.ownerId;
+  }
+
+  public get accountId(): string {
+    return this.state.accountId;
+  }
+
   public get lifecycle(): TransactionLifecycle {
     return this.state.lifecycle;
   }

@@ -42,3 +42,9 @@ export {
   type UserProfile,
   type UserProfileRepository,
 } from './users/update-own-user-profile.js';
+export {
+  CreateTransactionUseCase,
+  TransactionAccountUnavailableError,
+  type CreateTransactionCommand,
+  type TransactionRepository,
+} from './transactions/create-transaction.js';
