@@ -19,3 +19,34 @@ model UserProfile {
 
   @@map("user_profiles")
 }
+
+enum AccountLifecycle {
+  active
+  archived
+  trashed
+
+  @@map("account_lifecycle")
+}
+
+model Account {
+  id                       String           @id @db.Uuid
+  ownerId                  String           @map("owner_id") @db.Uuid
+  name                     String
+  description              String?
+  institution              String?
+  typeKey                  String           @map("type_key")
+  initialBalanceMinorUnits Decimal          @map("initial_balance_minor_units") @db.Decimal(1000, 0)
+  currencyCode             String           @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale   Int              @map("currency_minor_unit_scale") @db.SmallInt
+  color                    String?
+  icon                     String?
+  lifecycle                AccountLifecycle @default(active)
+  archivedAt               DateTime?        @map("archived_at") @db.Timestamptz(6)
+  trashedAt                DateTime?        @map("trashed_at") @db.Timestamptz(6)
+  createdAt                DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                DateTime         @map("updated_at") @db.Timestamptz(6)
+  version                  Int              @default(1)
+
+  @@index([ownerId, lifecycle])
+  @@map("accounts")
+}

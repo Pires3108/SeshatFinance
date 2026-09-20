@@ -62,6 +62,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** definir os rótulos e fluxos públicos para desarquivar e restaurar da lixeira.
 - **Limite atual:** o domínio mantém comandos distintos e, ao restaurar da lixeira, recupera o estado ativo ou arquivado preservado antes da remoção lógica.
 
+### RII-009 — Captura e armazenamento de número de conta mascarado
+
+- **Estado:** aberto.
+- **Referências:** RF-015; RNF-023; RNF-031; princípio de minimização.
+- **Risco:** o requisito não define se a API deve receber o número completo, somente os últimos dígitos ou uma máscara já pronta; receber ou persistir o valor bruto ampliaria desnecessariamente o dado financeiro sensível.
+- **Decisão necessária:** definir o formato de entrada, a máscara canônica, a quantidade de dígitos preservados e se existe necessidade de armazenamento cifrado reversível.
+- **Limite atual:** o campo não integra contratos nem persistência até a decisão; nenhuma API deve aceitar número de conta bruto.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
