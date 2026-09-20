@@ -2,6 +2,16 @@ export type { Clock } from './ports/clock.js';
 export type { IdentifierGenerator } from './ports/identifier-generator.js';
 export type { TransactionRunner } from './ports/transaction-runner.js';
 export {
+  AccountVersionConflictError,
+  ChangeOwnedAccountLifecycleUseCase,
+  CreateAccountUseCase,
+  GetOwnedAccountUseCase,
+  OwnedAccountNotFoundError,
+  type AccountLifecycleAction,
+  type AccountRepository,
+  type CreateAccountCommand,
+} from './accounts/create-account.js';
+export {
   AuthenticateUserUseCase,
   type AuthenticateUserCommand,
   type IdentityAuthenticationGateway,
