@@ -1,2 +1,12 @@
-/** Framework-independent financial domain building blocks. */
-export const domainPackage = '@seshat/domain' as const;
+export {
+  Currency,
+  InvalidCurrencyError,
+  type CurrencySnapshot,
+} from './money/currency.js';
+export {
+  CurrencyMismatchError,
+  InvalidMoneyAmountError,
+  Money,
+  type MoneyComparison,
+  type MoneySnapshot,
+} from './money/money.js';
