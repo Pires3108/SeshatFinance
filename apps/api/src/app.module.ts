@@ -1,8 +1,11 @@
 import {
   ChangeOwnedAccountLifecycleUseCase,
   CreateAccountUseCase,
+  CreateTransactionUseCase,
   GetOwnedAccountUseCase,
+  GetOwnedTransactionUseCase,
   ListOwnedAccountsUseCase,
+  ListOwnedAccountTransactionsUseCase,
   RegisterUserUseCase,
   ResolveAuthenticatedActorUseCase,
   RequestPasswordRecoveryUseCase,
@@ -11,6 +14,7 @@ import {
   UpdateOwnedAccountDetailsUseCase,
   type UserProfileRepository,
   type AccountRepository,
+  type TransactionRepository,
 } from '@seshat/application';
 import { Module } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
@@ -31,6 +35,8 @@ import { PrivacySafeLogger } from './platform/privacy-safe-logger.js';
 import { LazyPrismaClient } from './platform/lazy-prisma-client.js';
 import { SystemClock } from './platform/system-clock.js';
 import { SystemIdentifierGenerator } from './platform/system-identifier-generator.js';
+import { LazyTransactionRepository } from './transactions/lazy-transaction-repository.js';
+import { TransactionController } from './transactions/transaction.controller.js';
 import { LazyUserProfileRepository } from './users/lazy-user-profile-repository.js';
 import { UserProfileController } from './users/user-profile.controller.js';
 
@@ -40,6 +46,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     AuthController,
     HealthController,
     PasswordRecoveryController,
+    TransactionController,
     UserProfileController,
   ],
   providers: [
@@ -50,7 +57,39 @@ import { UserProfileController } from './users/user-profile.controller.js';
     PrivacySafeLogger,
     LazyPrismaClient,
     LazyAccountRepository,
+    LazyTransactionRepository,
     LazyUserProfileRepository,
+    {
+      inject: [LazyTransactionRepository, LazyAccountRepository],
+      provide: CreateTransactionUseCase,
+      useFactory: (
+        transactions: TransactionRepository,
+        accounts: AccountRepository,
+      ): CreateTransactionUseCase =>
+        new CreateTransactionUseCase(
+          transactions,
+          accounts,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyTransactionRepository],
+      provide: GetOwnedTransactionUseCase,
+      useFactory: (
+        transactions: TransactionRepository,
+      ): GetOwnedTransactionUseCase =>
+        new GetOwnedTransactionUseCase(transactions),
+    },
+    {
+      inject: [LazyTransactionRepository, LazyAccountRepository],
+      provide: ListOwnedAccountTransactionsUseCase,
+      useFactory: (
+        transactions: TransactionRepository,
+        accounts: AccountRepository,
+      ): ListOwnedAccountTransactionsUseCase =>
+        new ListOwnedAccountTransactionsUseCase(transactions, accounts),
+    },
     {
       inject: [LazyAccountRepository],
       provide: CreateAccountUseCase,
