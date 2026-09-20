@@ -16,6 +16,16 @@ export {
 } from './accounts/create-account.js';
 export { GetOwnedAccountBalanceUseCase } from './accounts/get-account-balance.js';
 export {
+  CategoryVersionConflictError,
+  CreateCategoryUseCase,
+  InvalidCategoryParentError,
+  ListOwnedCategoriesUseCase,
+  OwnedCategoryNotFoundError,
+  RenameOwnedCategoryUseCase,
+  type CategoryRepository,
+  type CreateCategoryCommand,
+} from './classifications/manage-category.js';
+export {
   AuthenticateUserUseCase,
   type AuthenticateUserCommand,
   type IdentityAuthenticationGateway,
