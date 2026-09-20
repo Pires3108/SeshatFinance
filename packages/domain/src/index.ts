@@ -34,3 +34,9 @@ export {
   type TransactionSnapshot,
   type UpdateTransactionDetails,
 } from './transactions/transaction.js';
+export {
+  Category,
+  InvalidCategoryError,
+  type CategorySnapshot,
+  type CreateCategoryProperties,
+} from './classifications/category.js';
