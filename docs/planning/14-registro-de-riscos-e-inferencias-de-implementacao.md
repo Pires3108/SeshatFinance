@@ -70,6 +70,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** definir o formato de entrada, a máscara canônica, a quantidade de dígitos preservados e se existe necessidade de armazenamento cifrado reversível.
 - **Limite atual:** o campo não integra contratos nem persistência até a decisão; nenhuma API deve aceitar número de conta bruto.
 
+### RII-010 — Catálogo inicial e exclusão de classificações
+
+- **Estado:** aberto.
+- **Referências:** RF-021 a RF-023; RN-013; US-025 a US-027.
+- **Risco:** os requisitos não enumeram as categorias iniciais, não definem se o catálogo é global ou copiado por usuário e não determinam o efeito de excluir uma categoria, subcategoria, etiqueta ou centro de custo já utilizado. Inferir essas escolhas pode apagar referências históricas, impedir personalização ou tornar futuras atualizações do catálogo incompatíveis.
+- **Decisão necessária:** aprovar o catálogo inicial versionado, seu modelo de ownership e personalização, além das regras de arquivamento, restauração e exclusão para classificações referenciadas.
+- **Limite atual:** permitir evoluir o núcleo de categorias com ownership e hierarquia validada, mas não publicar seed inicial nem exclusão destrutiva até a decisão. Referências históricas nunca devem ser removidas em cascata.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
