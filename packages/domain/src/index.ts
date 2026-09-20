@@ -23,3 +23,13 @@ export {
   InvalidAccountTypeError,
   type AccountTypeSnapshot,
 } from './accounts/account-type.js';
+export {
+  calculateAccountBalance,
+  InvalidTransactionError,
+  Transaction,
+  TransactionLifecycleError,
+  type CreateTransactionProperties,
+  type TransactionKind,
+  type TransactionLifecycle,
+  type TransactionSnapshot,
+} from './transactions/transaction.js';
