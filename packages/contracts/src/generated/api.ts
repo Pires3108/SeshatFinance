@@ -108,6 +108,41 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/accounts/{accountId}/transactions": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List transactions for an owned account */
+        readonly get: operations["TransactionController_list"];
+        readonly put?: never;
+        /** Record an income or expense declared by the authenticated user */
+        readonly post: operations["TransactionController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/transactions/{transactionId}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get a transaction owned by the authenticated user */
+        readonly get: operations["TransactionController_get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/users/me/profile": {
         readonly parameters: {
             readonly query?: never;
@@ -526,6 +561,182 @@ export interface operations {
                         readonly status: "accepted";
                     };
                 };
+            };
+        };
+    };
+    readonly TransactionController_list: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly accountId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        /** Format: uuid */
+                        readonly accountId: string;
+                        readonly amount: string;
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly description: string | null;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly kind: "income" | "expense";
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                        /** Format: date-time */
+                        readonly trashedAt: string | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    }[];
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TransactionController_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly accountId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly amount: string;
+                    readonly currencyCode: string;
+                    readonly currencyMinorUnitScale: number;
+                    readonly description: string | null;
+                    /** @enum {string} */
+                    readonly kind: "income" | "expense";
+                    /** Format: date-time */
+                    readonly occurredAt: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly accountId: string;
+                        readonly amount: string;
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly description: string | null;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly kind: "income" | "expense";
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                        /** Format: date-time */
+                        readonly trashedAt: string | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TransactionController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly transactionId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly accountId: string;
+                        readonly amount: string;
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly description: string | null;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly kind: "income" | "expense";
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                        /** Format: date-time */
+                        readonly trashedAt: string | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned transaction was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

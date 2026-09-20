@@ -76,3 +76,31 @@ export class CreateTransactionUseCase {
     return transaction;
   }
 }
+
+export class GetOwnedTransactionUseCase {
+  public constructor(private readonly transactions: TransactionRepository) {}
+
+  public execute(
+    transactionId: string,
+    actorId: string,
+  ): Promise<Transaction | null> {
+    return this.transactions.findByIdForOwner(transactionId, actorId);
+  }
+}
+
+export class ListOwnedAccountTransactionsUseCase {
+  public constructor(
+    private readonly transactions: TransactionRepository,
+    private readonly accounts: AccountRepository,
+  ) {}
+
+  public async execute(
+    accountId: string,
+    actorId: string,
+  ): Promise<readonly Transaction[]> {
+    if ((await this.accounts.findByIdForOwner(accountId, actorId)) === null) {
+      throw new TransactionAccountUnavailableError();
+    }
+    return this.transactions.listForAccountOwner(accountId, actorId);
+  }
+}
