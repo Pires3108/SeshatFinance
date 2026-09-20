@@ -46,6 +46,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** definir as janelas e durações progressivas, as chaves de origem consideradas e qual camada manterá o estado compartilhado entre instâncias.
 - **Limite atual:** não publicar login nem afirmar a conclusão do rate limit; testes de cadastro, recuperação e resolução de ator continuam independentes.
 
+### RII-007 — Catálogo monetário e política de arredondamento
+
+- **Estado:** aberto.
+- **Referências:** RN-002; RNF-047; US-021; US-022; INV-003 a INV-005.
+- **Risco:** os documentos exigem precisão compatível com a moeda e arredondamento explícito, mas não definem o catálogo de moedas suportadas, a fonte das casas decimais nem os modos de arredondamento por operação.
+- **Decisão necessária:** aprovar o catálogo versionado de moedas e a matriz de arredondamento para conversões, rateios, juros e apresentação.
+- **Limite atual:** `Currency` exige código e escala explícitos, e `Money` aceita apenas valores exatamente representáveis nessa escala; operações que exigem arredondamento não serão adicionadas antes da decisão.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
