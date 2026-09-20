@@ -54,6 +54,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** aprovar o catálogo versionado de moedas e a matriz de arredondamento para conversões, rateios, juros e apresentação.
 - **Limite atual:** `Currency` exige código e escala explícitos, e `Money` aceita apenas valores exatamente representáveis nessa escala; operações que exigem arredondamento não serão adicionadas antes da decisão.
 
+### RII-008 — Semântica pública de restauração de conta
+
+- **Estado:** aberto.
+- **Referências:** RF-017; RN-005; INV-009; INV-010.
+- **Risco:** “restaurar” não distingue reativação de conta arquivada de recuperação da lixeira, o que pode alterar indevidamente sua participação nas listas e indicadores.
+- **Decisão necessária:** definir os rótulos e fluxos públicos para desarquivar e restaurar da lixeira.
+- **Limite atual:** o domínio mantém comandos distintos e, ao restaurar da lixeira, recupera o estado ativo ou arquivado preservado antes da remoção lógica.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
