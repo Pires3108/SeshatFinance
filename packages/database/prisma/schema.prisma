@@ -85,7 +85,9 @@ model Transaction {
   createdAt              DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt              DateTime             @map("updated_at") @db.Timestamptz(6)
   version                Int                  @default(1)
+  tagAssignments         TransactionTag[]
 
+  @@unique([id, ownerId])
   @@index([ownerId, accountId, occurredAt])
   @@map("transactions")
 }
@@ -107,13 +109,28 @@ model Category {
 }
 
 model Tag {
-  id        String   @id @db.Uuid
-  ownerId   String   @map("owner_id") @db.Uuid
-  name      String
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @map("updated_at") @db.Timestamptz(6)
-  version   Int      @default(1)
+  id                     String           @id @db.Uuid
+  ownerId                String           @map("owner_id") @db.Uuid
+  name                   String
+  createdAt              DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime         @map("updated_at") @db.Timestamptz(6)
+  version                Int              @default(1)
+  transactionAssignments TransactionTag[]
 
+  @@unique([id, ownerId])
   @@index([ownerId, name])
   @@map("tags")
+}
+
+model TransactionTag {
+  transactionId String      @map("transaction_id") @db.Uuid
+  tagId         String      @map("tag_id") @db.Uuid
+  ownerId       String      @map("owner_id") @db.Uuid
+  transaction   Transaction @relation(fields: [transactionId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  tag           Tag         @relation(fields: [tagId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@id([transactionId, tagId])
+  @@index([ownerId, tagId])
+  @@map("transaction_tags")
 }

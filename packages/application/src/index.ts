@@ -76,3 +76,10 @@ export {
   type TransactionLifecycleAction,
   type UpdateOwnedTransactionCommand,
 } from './transactions/create-transaction.js';
+export {
+  InvalidOwnedTagSelectionError,
+  ListOwnedTransactionTagsUseCase,
+  SetOwnedTransactionTagsUseCase,
+  type ReplaceTransactionTagsResult,
+  type TransactionTagRepository,
+} from './transactions/set-transaction-tags.js';
