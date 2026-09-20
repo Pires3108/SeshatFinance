@@ -20,7 +20,16 @@ export type UpdateOwnUserProfileCommand = Readonly<{
 }>;
 
 export interface UserProfileRepository {
+  findById(id: string): Promise<UserProfile | null>;
   upsert(profile: UserProfile): Promise<UserProfile>;
+}
+
+export class GetOwnUserProfileUseCase {
+  public constructor(private readonly profiles: UserProfileRepository) {}
+
+  public execute(actorId: string): Promise<UserProfile | null> {
+    return this.profiles.findById(actorId);
+  }
 }
 
 export class UpdateOwnUserProfileUseCase {

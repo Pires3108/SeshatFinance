@@ -2,6 +2,9 @@ import {
   RegisterUserUseCase,
   ResolveAuthenticatedActorUseCase,
   RequestPasswordRecoveryUseCase,
+  GetOwnUserProfileUseCase,
+  UpdateOwnUserProfileUseCase,
+  type UserProfileRepository,
 } from '@seshat/application';
 import { Module } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
@@ -17,15 +20,38 @@ import { SupabasePasswordRecoveryGateway } from './auth/supabase-password-recove
 import { HealthController } from './health/health.controller.js';
 import { CorrelationContext } from './platform/correlation-context.js';
 import { PrivacySafeLogger } from './platform/privacy-safe-logger.js';
+import { SystemClock } from './platform/system-clock.js';
+import { LazyUserProfileRepository } from './users/lazy-user-profile-repository.js';
+import { UserProfileController } from './users/user-profile.controller.js';
 
 @Module({
-  controllers: [AuthController, HealthController, PasswordRecoveryController],
+  controllers: [
+    AuthController,
+    HealthController,
+    PasswordRecoveryController,
+    UserProfileController,
+  ],
   providers: [
     AuthConfiguration,
     AuthenticatedActorContext,
     BearerAuthGuard,
     CorrelationContext,
     PrivacySafeLogger,
+    LazyUserProfileRepository,
+    {
+      inject: [LazyUserProfileRepository],
+      provide: GetOwnUserProfileUseCase,
+      useFactory: (profiles: UserProfileRepository): GetOwnUserProfileUseCase =>
+        new GetOwnUserProfileUseCase(profiles),
+    },
+    {
+      inject: [LazyUserProfileRepository],
+      provide: UpdateOwnUserProfileUseCase,
+      useFactory: (
+        profiles: UserProfileRepository,
+      ): UpdateOwnUserProfileUseCase =>
+        new UpdateOwnUserProfileUseCase(profiles, new SystemClock()),
+    },
     {
       inject: [AuthConfiguration],
       provide: ResolveAuthenticatedActorUseCase,

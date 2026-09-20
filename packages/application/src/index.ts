@@ -23,6 +23,7 @@ export {
   type IdentityTokenVerifier,
 } from './auth/resolve-authenticated-actor.js';
 export {
+  GetOwnUserProfileUseCase,
   UpdateOwnUserProfileUseCase,
   type UpdateOwnUserProfileCommand,
   type UserProfile,

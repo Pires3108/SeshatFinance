@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { Clock } from '../ports/clock.js';
 import {
+  GetOwnUserProfileUseCase,
   UpdateOwnUserProfileUseCase,
   type UserProfile,
   type UserProfileRepository,
@@ -9,6 +10,12 @@ import {
 
 class RecordingUserProfileRepository implements UserProfileRepository {
   public savedProfile: UserProfile | undefined;
+
+  public findById(id: string): Promise<UserProfile | null> {
+    return Promise.resolve(
+      this.savedProfile?.id === id ? this.savedProfile : null,
+    );
+  }
 
   public upsert(profile: UserProfile): Promise<UserProfile> {
     this.savedProfile = profile;
@@ -33,5 +40,14 @@ describe('UpdateOwnUserProfileUseCase', () => {
 
     expect(result.id).toBe('7c2c7a54-73fe-49a3-b0ea-19034bf22baf');
     expect(repository.savedProfile?.updatedAt).toEqual(instant);
+  });
+});
+
+describe('GetOwnUserProfileUseCase', () => {
+  it('queries only the authenticated actor profile', async (): Promise<void> => {
+    const repository = new RecordingUserProfileRepository();
+    const useCase = new GetOwnUserProfileUseCase(repository);
+
+    await expect(useCase.execute('actor-id')).resolves.toBeNull();
   });
 });
