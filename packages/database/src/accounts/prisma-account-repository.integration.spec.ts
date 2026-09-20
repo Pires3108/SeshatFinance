@@ -79,6 +79,15 @@ describe('PrismaAccountRepository', () => {
         'e89b6ad0-7838-4a2c-9a21-c775ea78e22a',
       ),
     ).resolves.toBeNull();
+    await expect(
+      repository.listForOwner(account.ownerId, 'active'),
+    ).resolves.toHaveLength(1);
+    await expect(
+      repository.listForOwner(account.ownerId, 'archived'),
+    ).resolves.toEqual([]);
+    await expect(
+      repository.listForOwner('e89b6ad0-7838-4a2c-9a21-c775ea78e22a'),
+    ).resolves.toEqual([]);
 
     if (restored === null) throw new Error('Account was not restored.');
     restored.archive(new Date('2026-09-20T13:00:00.000Z'));

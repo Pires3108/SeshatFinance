@@ -14,6 +14,7 @@ export {
   Account,
   AccountLifecycleError,
   InvalidAccountError,
+  type UpdateAccountDetails,
   type AccountLifecycle,
   type AccountSnapshot,
 } from './accounts/account.js';

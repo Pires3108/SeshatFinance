@@ -6,10 +6,13 @@ export {
   ChangeOwnedAccountLifecycleUseCase,
   CreateAccountUseCase,
   GetOwnedAccountUseCase,
+  ListOwnedAccountsUseCase,
   OwnedAccountNotFoundError,
+  UpdateOwnedAccountDetailsUseCase,
   type AccountLifecycleAction,
   type AccountRepository,
   type CreateAccountCommand,
+  type UpdateOwnedAccountDetailsCommand,
 } from './accounts/create-account.js';
 export {
   AuthenticateUserUseCase,

@@ -22,6 +22,13 @@ export class LazyAccountRepository implements AccountRepository {
     return this.getRepository().findByIdForOwner(id, ownerId);
   }
 
+  public listForOwner(
+    ownerId: string,
+    lifecycle?: Account['lifecycle'],
+  ): Promise<readonly Account[]> {
+    return this.getRepository().listForOwner(ownerId, lifecycle);
+  }
+
   public save(account: Account, expectedVersion: number): Promise<boolean> {
     return this.getRepository().save(account, expectedVersion);
   }

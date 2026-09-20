@@ -34,6 +34,15 @@ export type CreateAccountProperties = Readonly<{
   type: AccountType;
 }>;
 
+export type UpdateAccountDetails = Readonly<{
+  color: string | null;
+  description: string | null;
+  icon: string | null;
+  institution: string | null;
+  name: string;
+  type: AccountType;
+}>;
+
 export class InvalidAccountError extends Error {
   public constructor(message: string) {
     super(message);
@@ -136,6 +145,22 @@ export class Account {
     this.state = {
       ...this.state,
       name: name.trim(),
+      updatedAt: checkedTransitionInstant(at, this.state.updatedAt),
+      version: this.state.version + 1,
+    };
+  }
+
+  public updateDetails(details: UpdateAccountDetails, at: Date): void {
+    assertRequiredText(details.name, 'Account name');
+    this.requireNotTrashed();
+    this.state = {
+      ...this.state,
+      color: normalizeOptionalText(details.color),
+      description: normalizeOptionalText(details.description),
+      icon: normalizeOptionalText(details.icon),
+      institution: normalizeOptionalText(details.institution),
+      name: details.name.trim(),
+      type: details.type.toSnapshot(),
       updatedAt: checkedTransitionInstant(at, this.state.updatedAt),
       version: this.state.version + 1,
     };

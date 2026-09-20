@@ -174,6 +174,130 @@
         ],
         "summary": "Create an account owned by the authenticated user",
         "tags": ["accounts"]
+      },
+      "get": {
+        "operationId": "AccountController_list",
+        "parameters": [
+          {
+            "name": "lifecycle",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": ["active", "archived", "trashed"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "properties": {
+                      "archivedAt": {
+                        "format": "date-time",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "color": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "currencyCode": {
+                        "pattern": "^[A-Z]{3}$",
+                        "type": "string"
+                      },
+                      "currencyMinorUnitScale": {
+                        "maximum": 18,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "description": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "icon": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "initialBalance": {
+                        "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "institution": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "lifecycle": {
+                        "enum": ["active", "archived", "trashed"],
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "trashedAt": {
+                        "format": "date-time",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "typeKey": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "version": {
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "archivedAt",
+                      "color",
+                      "createdAt",
+                      "currencyCode",
+                      "currencyMinorUnitScale",
+                      "description",
+                      "icon",
+                      "id",
+                      "initialBalance",
+                      "institution",
+                      "lifecycle",
+                      "name",
+                      "trashedAt",
+                      "typeKey",
+                      "updatedAt",
+                      "version"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List accounts owned by the authenticated user",
+        "tags": ["accounts"]
       }
     },
     "/api/v1/accounts/{accountId}": {
@@ -299,6 +423,175 @@
           }
         ],
         "summary": "Get an account owned by the authenticated user",
+        "tags": ["accounts"]
+      },
+      "patch": {
+        "operationId": "AccountController_update",
+        "parameters": [
+          {
+            "name": "accountId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "color": {
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "description": {
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "institution": {
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "typeKey": {
+                    "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "color",
+                  "description",
+                  "icon",
+                  "institution",
+                  "name",
+                  "typeKey"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "color": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "description": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "icon": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "initialBalance": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "institution": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "lifecycle": {
+                      "enum": ["active", "archived", "trashed"],
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "trashedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "typeKey": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "archivedAt",
+                    "color",
+                    "createdAt",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "description",
+                    "icon",
+                    "id",
+                    "initialBalance",
+                    "institution",
+                    "lifecycle",
+                    "name",
+                    "trashedAt",
+                    "typeKey",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned account was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update details of an owned account",
         "tags": ["accounts"]
       }
     },

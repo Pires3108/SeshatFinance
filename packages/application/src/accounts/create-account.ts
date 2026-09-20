@@ -19,6 +19,10 @@ export type CreateAccountCommand = Readonly<{
 export interface AccountRepository {
   insert(account: Account): Promise<void>;
   findByIdForOwner(id: string, ownerId: string): Promise<Account | null>;
+  listForOwner(
+    ownerId: string,
+    lifecycle?: Account['lifecycle'],
+  ): Promise<readonly Account[]>;
   save(account: Account, expectedVersion: number): Promise<boolean>;
 }
 
@@ -73,6 +77,61 @@ export class GetOwnedAccountUseCase {
 
   public execute(accountId: string, actorId: string): Promise<Account | null> {
     return this.accounts.findByIdForOwner(accountId, actorId);
+  }
+}
+
+export class ListOwnedAccountsUseCase {
+  public constructor(private readonly accounts: AccountRepository) {}
+
+  public execute(
+    actorId: string,
+    lifecycle?: Account['lifecycle'],
+  ): Promise<readonly Account[]> {
+    return this.accounts.listForOwner(actorId, lifecycle);
+  }
+}
+
+export type UpdateOwnedAccountDetailsCommand = Readonly<{
+  accountId: string;
+  actorId: string;
+  color: string | null;
+  description: string | null;
+  icon: string | null;
+  institution: string | null;
+  name: string;
+  typeKey: string;
+}>;
+
+export class UpdateOwnedAccountDetailsUseCase {
+  public constructor(
+    private readonly accounts: AccountRepository,
+    private readonly clock: Clock,
+  ) {}
+
+  public async execute(
+    command: UpdateOwnedAccountDetailsCommand,
+  ): Promise<Account> {
+    const account = await this.accounts.findByIdForOwner(
+      command.accountId,
+      command.actorId,
+    );
+    if (account === null) throw new OwnedAccountNotFoundError();
+    const expectedVersion = account.toSnapshot().version;
+    account.updateDetails(
+      {
+        color: command.color,
+        description: command.description,
+        icon: command.icon,
+        institution: command.institution,
+        name: command.name,
+        type: AccountType.create(command.typeKey),
+      },
+      this.clock.now(),
+    );
+    if (!(await this.accounts.save(account, expectedVersion))) {
+      throw new AccountVersionConflictError();
+    }
+    return account;
   }
 }
 

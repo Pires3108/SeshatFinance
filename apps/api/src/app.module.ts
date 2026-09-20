@@ -2,11 +2,13 @@ import {
   ChangeOwnedAccountLifecycleUseCase,
   CreateAccountUseCase,
   GetOwnedAccountUseCase,
+  ListOwnedAccountsUseCase,
   RegisterUserUseCase,
   ResolveAuthenticatedActorUseCase,
   RequestPasswordRecoveryUseCase,
   GetOwnUserProfileUseCase,
   UpdateOwnUserProfileUseCase,
+  UpdateOwnedAccountDetailsUseCase,
   type UserProfileRepository,
   type AccountRepository,
 } from '@seshat/application';
@@ -64,6 +66,20 @@ import { UserProfileController } from './users/user-profile.controller.js';
       provide: GetOwnedAccountUseCase,
       useFactory: (accounts: AccountRepository): GetOwnedAccountUseCase =>
         new GetOwnedAccountUseCase(accounts),
+    },
+    {
+      inject: [LazyAccountRepository],
+      provide: ListOwnedAccountsUseCase,
+      useFactory: (accounts: AccountRepository): ListOwnedAccountsUseCase =>
+        new ListOwnedAccountsUseCase(accounts),
+    },
+    {
+      inject: [LazyAccountRepository],
+      provide: UpdateOwnedAccountDetailsUseCase,
+      useFactory: (
+        accounts: AccountRepository,
+      ): UpdateOwnedAccountDetailsUseCase =>
+        new UpdateOwnedAccountDetailsUseCase(accounts, new SystemClock()),
     },
     {
       inject: [LazyAccountRepository],
