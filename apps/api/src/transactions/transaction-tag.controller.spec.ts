@@ -2,6 +2,11 @@ import type {
   ListOwnedTransactionTagsUseCase,
   SetOwnedTransactionTagsUseCase,
 } from '@seshat/application';
+import {
+  InvalidOwnedTagSelectionError,
+  OwnedTransactionNotFoundError,
+} from '@seshat/application';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { FastifyRequest } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -52,5 +57,35 @@ describe('TransactionTagController', () => {
       tagIds: [tagId],
       transactionId,
     });
+  });
+
+  it('does not reveal transactions outside the verified actor ownership', async () => {
+    const actors = new AuthenticatedActorContext();
+    const controller = new TransactionTagController(
+      {
+        execute: vi.fn().mockRejectedValue(new OwnedTransactionNotFoundError()),
+      } as unknown as ListOwnedTransactionTagsUseCase,
+      { execute: vi.fn() } as unknown as SetOwnedTransactionTagsUseCase,
+      actors,
+    );
+
+    await expect(
+      controller.list(request(actors), transactionId),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('rejects tags outside the verified actor ownership', async () => {
+    const actors = new AuthenticatedActorContext();
+    const controller = new TransactionTagController(
+      { execute: vi.fn() } as unknown as ListOwnedTransactionTagsUseCase,
+      {
+        execute: vi.fn().mockRejectedValue(new InvalidOwnedTagSelectionError()),
+      } as unknown as SetOwnedTransactionTagsUseCase,
+      actors,
+    );
+
+    await expect(
+      controller.replace(request(actors), transactionId, { tagIds: [tagId] }),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });
