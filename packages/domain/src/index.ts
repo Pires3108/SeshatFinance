@@ -46,3 +46,9 @@ export {
   type CreateTagProperties,
   type TagSnapshot,
 } from './classifications/tag.js';
+export {
+  CostCenter,
+  InvalidCostCenterError,
+  type CostCenterSnapshot,
+  type CreateCostCenterProperties,
+} from './classifications/cost-center.js';
