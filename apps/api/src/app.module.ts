@@ -2,18 +2,21 @@ import {
   ChangeOwnedTransactionLifecycleUseCase,
   ChangeOwnedAccountLifecycleUseCase,
   CreateCategoryUseCase,
+  CreateTagUseCase,
   CreateAccountUseCase,
   CreateTransactionUseCase,
   GetOwnedAccountUseCase,
   GetOwnedAccountBalanceUseCase,
   GetOwnedTransactionUseCase,
   ListOwnedCategoriesUseCase,
+  ListOwnedTagsUseCase,
   ListOwnedAccountsUseCase,
   ListOwnedAccountTransactionsUseCase,
   RegisterUserUseCase,
   ResolveAuthenticatedActorUseCase,
   RequestPasswordRecoveryUseCase,
   RenameOwnedCategoryUseCase,
+  RenameOwnedTagUseCase,
   GetOwnUserProfileUseCase,
   UpdateOwnUserProfileUseCase,
   UpdateOwnedAccountDetailsUseCase,
@@ -21,6 +24,7 @@ import {
   type UserProfileRepository,
   type AccountRepository,
   type CategoryRepository,
+  type TagRepository,
   type TransactionRepository,
 } from '@seshat/application';
 import { Module } from '@nestjs/common';
@@ -39,6 +43,8 @@ import { SupabaseIdentityTokenVerifier } from './auth/supabase-identity-token-ve
 import { SupabasePasswordRecoveryGateway } from './auth/supabase-password-recovery.gateway.js';
 import { CategoryController } from './classifications/category.controller.js';
 import { LazyCategoryRepository } from './classifications/lazy-category-repository.js';
+import { LazyTagRepository } from './classifications/lazy-tag-repository.js';
+import { TagController } from './classifications/tag.controller.js';
 import { HealthController } from './health/health.controller.js';
 import { CorrelationContext } from './platform/correlation-context.js';
 import { PrivacySafeLogger } from './platform/privacy-safe-logger.js';
@@ -58,6 +64,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     CategoryController,
     HealthController,
     PasswordRecoveryController,
+    TagController,
     TransactionController,
     UserProfileController,
   ],
@@ -70,8 +77,31 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyPrismaClient,
     LazyAccountRepository,
     LazyCategoryRepository,
+    LazyTagRepository,
     LazyTransactionRepository,
     LazyUserProfileRepository,
+    {
+      inject: [LazyTagRepository],
+      provide: CreateTagUseCase,
+      useFactory: (tags: TagRepository): CreateTagUseCase =>
+        new CreateTagUseCase(
+          tags,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyTagRepository],
+      provide: ListOwnedTagsUseCase,
+      useFactory: (tags: TagRepository): ListOwnedTagsUseCase =>
+        new ListOwnedTagsUseCase(tags),
+    },
+    {
+      inject: [LazyTagRepository],
+      provide: RenameOwnedTagUseCase,
+      useFactory: (tags: TagRepository): RenameOwnedTagUseCase =>
+        new RenameOwnedTagUseCase(tags, new SystemClock()),
+    },
     {
       inject: [LazyCategoryRepository],
       provide: CreateCategoryUseCase,
