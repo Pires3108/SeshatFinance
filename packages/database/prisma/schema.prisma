@@ -105,3 +105,15 @@ model Category {
   @@index([ownerId, parentCategoryId])
   @@map("categories")
 }
+
+model Tag {
+  id        String   @id @db.Uuid
+  ownerId   String   @map("owner_id") @db.Uuid
+  name      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @map("updated_at") @db.Timestamptz(6)
+  version   Int      @default(1)
+
+  @@index([ownerId, name])
+  @@map("tags")
+}
