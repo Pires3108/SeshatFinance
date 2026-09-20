@@ -2,6 +2,12 @@ export type { Clock } from './ports/clock.js';
 export type { IdentifierGenerator } from './ports/identifier-generator.js';
 export type { TransactionRunner } from './ports/transaction-runner.js';
 export {
+  AuthenticateUserUseCase,
+  type AuthenticateUserCommand,
+  type IdentityAuthenticationGateway,
+  type IdentitySession,
+} from './auth/authenticate-user.js';
+export {
   RegisterUserUseCase,
   type IdentityRegistrationGateway,
   type RegisterUserCommand,
