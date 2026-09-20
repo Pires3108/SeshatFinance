@@ -2,6 +2,7 @@ import {
   ChangeOwnedTransactionLifecycleUseCase,
   ChangeOwnedAccountLifecycleUseCase,
   CreateCategoryUseCase,
+  CreateCostCenterUseCase,
   CreateTagUseCase,
   CreateAccountUseCase,
   CreateTransactionUseCase,
@@ -10,6 +11,7 @@ import {
   GetOwnedTransactionUseCase,
   ListOwnedTransactionTagsUseCase,
   ListOwnedCategoriesUseCase,
+  ListOwnedCostCentersUseCase,
   ListOwnedTagsUseCase,
   ListOwnedAccountsUseCase,
   ListOwnedAccountTransactionsUseCase,
@@ -17,6 +19,7 @@ import {
   ResolveAuthenticatedActorUseCase,
   RequestPasswordRecoveryUseCase,
   RenameOwnedCategoryUseCase,
+  RenameOwnedCostCenterUseCase,
   RenameOwnedTagUseCase,
   SetOwnedTransactionTagsUseCase,
   GetOwnUserProfileUseCase,
@@ -26,6 +29,7 @@ import {
   type UserProfileRepository,
   type AccountRepository,
   type CategoryRepository,
+  type CostCenterRepository,
   type TagRepository,
   type TransactionRepository,
   type TransactionTagRepository,
@@ -45,7 +49,9 @@ import { SupabaseIdentityRegistrationGateway } from './auth/supabase-identity-re
 import { SupabaseIdentityTokenVerifier } from './auth/supabase-identity-token-verifier.js';
 import { SupabasePasswordRecoveryGateway } from './auth/supabase-password-recovery.gateway.js';
 import { CategoryController } from './classifications/category.controller.js';
+import { CostCenterController } from './classifications/cost-center.controller.js';
 import { LazyCategoryRepository } from './classifications/lazy-category-repository.js';
+import { LazyCostCenterRepository } from './classifications/lazy-cost-center-repository.js';
 import { LazyTagRepository } from './classifications/lazy-tag-repository.js';
 import { TagController } from './classifications/tag.controller.js';
 import { HealthController } from './health/health.controller.js';
@@ -67,6 +73,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     AccountController,
     AuthController,
     CategoryController,
+    CostCenterController,
     HealthController,
     PasswordRecoveryController,
     TagController,
@@ -83,10 +90,39 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyPrismaClient,
     LazyAccountRepository,
     LazyCategoryRepository,
+    LazyCostCenterRepository,
     LazyTagRepository,
     LazyTransactionRepository,
     LazyTransactionTagRepository,
     LazyUserProfileRepository,
+    {
+      inject: [LazyCostCenterRepository],
+      provide: CreateCostCenterUseCase,
+      useFactory: (
+        costCenters: CostCenterRepository,
+      ): CreateCostCenterUseCase =>
+        new CreateCostCenterUseCase(
+          costCenters,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyCostCenterRepository],
+      provide: ListOwnedCostCentersUseCase,
+      useFactory: (
+        costCenters: CostCenterRepository,
+      ): ListOwnedCostCentersUseCase =>
+        new ListOwnedCostCentersUseCase(costCenters),
+    },
+    {
+      inject: [LazyCostCenterRepository],
+      provide: RenameOwnedCostCenterUseCase,
+      useFactory: (
+        costCenters: CostCenterRepository,
+      ): RenameOwnedCostCenterUseCase =>
+        new RenameOwnedCostCenterUseCase(costCenters, new SystemClock()),
+    },
     {
       inject: [LazyTagRepository],
       provide: CreateTagUseCase,
