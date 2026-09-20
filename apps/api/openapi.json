@@ -1,6 +1,67 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/accounts/{accountId}/balance": {
+      "get": {
+        "operationId": "AccountBalanceController_get",
+        "parameters": [
+          {
+            "name": "accountId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "amount": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "currencyCode",
+                    "currencyMinorUnitScale"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned account was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Calculate the exact balance of an owned account",
+        "tags": ["accounts"]
+      }
+    },
     "/api/v1/accounts": {
       "post": {
         "operationId": "AccountController_create",

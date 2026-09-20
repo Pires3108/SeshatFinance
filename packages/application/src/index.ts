@@ -14,6 +14,7 @@ export {
   type CreateAccountCommand,
   type UpdateOwnedAccountDetailsCommand,
 } from './accounts/create-account.js';
+export { GetOwnedAccountBalanceUseCase } from './accounts/get-account-balance.js';
 export {
   AuthenticateUserUseCase,
   type AuthenticateUserCommand,
