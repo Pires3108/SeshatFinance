@@ -41,32 +41,19 @@ export class PrismaAccountRepository implements AccountRepository {
       where: { id, ownerId },
     });
     if (persisted === null) return null;
-    return Account.restore({
-      archivedAt: persisted.archivedAt,
-      color: persisted.color,
-      createdAt: persisted.createdAt,
-      description: persisted.description,
-      icon: persisted.icon,
-      id: persisted.id,
-      initialBalance: {
-        amount: decimalFromMinorUnits(
-          persisted.initialBalanceMinorUnits.toFixed(0),
-          persisted.currencyMinorUnitScale,
-        ),
-        currency: {
-          code: persisted.currencyCode,
-          minorUnitScale: persisted.currencyMinorUnitScale,
-        },
-      },
-      institution: persisted.institution,
-      lifecycle: persisted.lifecycle,
-      name: persisted.name,
-      ownerId: persisted.ownerId,
-      trashedAt: persisted.trashedAt,
-      type: { key: persisted.typeKey },
-      updatedAt: persisted.updatedAt,
-      version: persisted.version,
+    return restoreAccount(persisted);
+  }
+
+  public async listForOwner(
+    ownerId: string,
+    lifecycle?: Account['lifecycle'],
+  ): Promise<readonly Account[]> {
+    const persisted = await this.client.account.findMany({
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      take: 100,
+      where: { ownerId, ...(lifecycle === undefined ? {} : { lifecycle }) },
     });
+    return persisted.map(restoreAccount);
   }
 
   public async save(
@@ -96,6 +83,40 @@ export class PrismaAccountRepository implements AccountRepository {
     });
     return result.count === 1;
   }
+}
+
+type PersistedAccount =
+  Awaited<ReturnType<PrismaClient['account']['findFirst']>> extends infer Result
+    ? Exclude<Result, null>
+    : never;
+
+function restoreAccount(persisted: PersistedAccount): Account {
+  return Account.restore({
+    archivedAt: persisted.archivedAt,
+    color: persisted.color,
+    createdAt: persisted.createdAt,
+    description: persisted.description,
+    icon: persisted.icon,
+    id: persisted.id,
+    initialBalance: {
+      amount: decimalFromMinorUnits(
+        persisted.initialBalanceMinorUnits.toFixed(0),
+        persisted.currencyMinorUnitScale,
+      ),
+      currency: {
+        code: persisted.currencyCode,
+        minorUnitScale: persisted.currencyMinorUnitScale,
+      },
+    },
+    institution: persisted.institution,
+    lifecycle: persisted.lifecycle,
+    name: persisted.name,
+    ownerId: persisted.ownerId,
+    trashedAt: persisted.trashedAt,
+    type: { key: persisted.typeKey },
+    updatedAt: persisted.updatedAt,
+    version: persisted.version,
+  });
 }
 
 function decimalFromMinorUnits(minorUnits: string, scale: number): string {

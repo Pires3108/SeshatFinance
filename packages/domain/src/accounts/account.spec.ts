@@ -72,6 +72,32 @@ describe('Account', () => {
     }).toThrow(AccountLifecycleError);
   });
 
+  it('updates editable details atomically', () => {
+    const account = createAccount();
+
+    account.updateDetails(
+      {
+        color: ' #112233 ',
+        description: ' Reserva ',
+        icon: ' piggy-bank ',
+        institution: ' Instituição ',
+        name: ' Conta reserva ',
+        type: AccountType.create('savings-account'),
+      },
+      new Date('2026-09-20T13:00:00.000Z'),
+    );
+
+    expect(account.toSnapshot()).toMatchObject({
+      color: '#112233',
+      description: 'Reserva',
+      icon: 'piggy-bank',
+      institution: 'Instituição',
+      name: 'Conta reserva',
+      type: { key: 'savings-account' },
+      version: 2,
+    });
+  });
+
   it('rejects stale lifecycle transitions', () => {
     const account = createAccount();
 

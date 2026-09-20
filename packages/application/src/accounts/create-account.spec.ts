@@ -9,6 +9,8 @@ import {
   type AccountRepository,
   CreateAccountUseCase,
   GetOwnedAccountUseCase,
+  ListOwnedAccountsUseCase,
+  UpdateOwnedAccountDetailsUseCase,
 } from './create-account.js';
 
 class RecordingAccountRepository implements AccountRepository {
@@ -39,6 +41,20 @@ class RecordingAccountRepository implements AccountRepository {
     this.inserted = account;
     this.persistedVersion = account.toSnapshot().version;
     return Promise.resolve(true);
+  }
+
+  public listForOwner(
+    ownerId: string,
+    lifecycle?: Account['lifecycle'],
+  ): Promise<readonly Account[]> {
+    const account = this.inserted;
+    if (
+      account?.ownerId !== ownerId ||
+      (lifecycle !== undefined && account.lifecycle !== lifecycle)
+    ) {
+      return Promise.resolve([]);
+    }
+    return Promise.resolve([account]);
   }
 }
 
@@ -97,6 +113,62 @@ describe('GetOwnedAccountUseCase', () => {
     const get = new GetOwnedAccountUseCase(repository);
 
     await expect(get.execute('account-id', 'other-owner')).resolves.toBeNull();
+  });
+});
+
+describe('ListOwnedAccountsUseCase', () => {
+  it('delegates ownership and lifecycle filtering to the repository', async () => {
+    const repository = new RecordingAccountRepository();
+    const list = new ListOwnedAccountsUseCase(repository);
+
+    await expect(list.execute('other-owner')).resolves.toEqual([]);
+    await expect(list.execute('owner-id', 'archived')).resolves.toEqual([]);
+  });
+});
+
+describe('UpdateOwnedAccountDetailsUseCase', () => {
+  it('updates all editable details as one versioned change', async () => {
+    const repository = new RecordingAccountRepository();
+    await new CreateAccountUseCase(
+      repository,
+      { now: (): Date => new Date('2026-09-20T12:00:00.000Z') },
+      { generate: (): string => 'account-id' },
+    ).execute({
+      actorId: 'owner-id',
+      color: null,
+      currencyCode: 'BRL',
+      currencyMinorUnitScale: 2,
+      description: null,
+      icon: null,
+      initialBalance: '0',
+      institution: null,
+      name: 'Conta',
+      typeKey: 'checking-account',
+    });
+    const update = new UpdateOwnedAccountDetailsUseCase(repository, {
+      now: (): Date => new Date('2026-09-20T13:00:00.000Z'),
+    });
+
+    const result = await update.execute({
+      accountId: 'account-id',
+      actorId: 'owner-id',
+      color: '#112233',
+      description: 'Reserva mensal',
+      icon: 'piggy-bank',
+      institution: 'Instituição',
+      name: 'Reserva',
+      typeKey: 'savings-account',
+    });
+
+    expect(result.toSnapshot()).toMatchObject({
+      color: '#112233',
+      description: 'Reserva mensal',
+      icon: 'piggy-bank',
+      institution: 'Instituição',
+      name: 'Reserva',
+      type: { key: 'savings-account' },
+      version: 2,
+    });
   });
 });
 

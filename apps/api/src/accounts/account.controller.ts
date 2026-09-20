@@ -3,7 +3,9 @@ import {
   ChangeOwnedAccountLifecycleUseCase,
   CreateAccountUseCase,
   GetOwnedAccountUseCase,
+  ListOwnedAccountsUseCase,
   OwnedAccountNotFoundError,
+  UpdateOwnedAccountDetailsUseCase,
 } from '@seshat/application';
 import {
   AccountLifecycleError,
@@ -27,6 +29,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UnauthorizedException,
   UseGuards,
@@ -39,6 +42,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
   type SchemaObject,
@@ -72,9 +76,22 @@ const lifecycleSchema = z.object({
     'restore-from-trash',
   ]),
 });
+const listAccountsSchema = z.object({
+  lifecycle: z.enum(['active', 'archived', 'trashed']).optional(),
+});
+const updateAccountSchema = z.object({
+  color: z.string().trim().min(1).nullable(),
+  description: z.string().trim().min(1).nullable(),
+  icon: z.string().trim().min(1).nullable(),
+  institution: z.string().trim().min(1).nullable(),
+  name: z.string().trim().min(1),
+  typeKey: z.string().regex(typeKeyPattern),
+});
 
 type CreateAccountRequest = z.infer<typeof createAccountSchema>;
 type LifecycleRequest = z.infer<typeof lifecycleSchema>;
+type ListAccountsRequest = z.infer<typeof listAccountsSchema>;
+type UpdateAccountRequest = z.infer<typeof updateAccountSchema>;
 type AccountResponse = Readonly<{
   archivedAt: string | null;
   color: string | null;
@@ -145,6 +162,10 @@ export class AccountController {
     private readonly createAccount: CreateAccountUseCase,
     @Inject(GetOwnedAccountUseCase)
     private readonly getAccount: GetOwnedAccountUseCase,
+    @Inject(ListOwnedAccountsUseCase)
+    private readonly listAccounts: ListOwnedAccountsUseCase,
+    @Inject(UpdateOwnedAccountDetailsUseCase)
+    private readonly updateAccount: UpdateOwnedAccountDetailsUseCase,
     @Inject(ChangeOwnedAccountLifecycleUseCase)
     private readonly changeLifecycle: ChangeOwnedAccountLifecycleUseCase,
     @Inject(AuthenticatedActorContext)
@@ -174,6 +195,26 @@ export class AccountController {
     }
   }
 
+  @Get()
+  @ApiOperation({ summary: 'List accounts owned by the authenticated user' })
+  @ApiQuery({
+    enum: ['active', 'archived', 'trashed'],
+    name: 'lifecycle',
+    required: false,
+  })
+  @ApiOkResponse({ schema: { items: accountResponseSchema, type: 'array' } })
+  public async list(
+    @Req() request: FastifyRequest,
+    @Query(new ZodValidationPipe(listAccountsSchema))
+    query: ListAccountsRequest,
+  ): Promise<readonly AccountResponse[]> {
+    const accounts = await this.listAccounts.execute(
+      this.actorId(request),
+      query.lifecycle,
+    );
+    return accounts.map(mapAccount);
+  }
+
   @Get(':accountId')
   @ApiOperation({ summary: 'Get an account owned by the authenticated user' })
   @ApiParam({ format: 'uuid', name: 'accountId', type: 'string' })
@@ -190,6 +231,33 @@ export class AccountController {
     );
     if (account === null) throw new NotFoundException('Account not found.');
     return mapAccount(account);
+  }
+
+  @Patch(':accountId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update details of an owned account' })
+  @ApiParam({ format: 'uuid', name: 'accountId', type: 'string' })
+  @ApiBody({ schema: updateAccountBodySchema() })
+  @ApiOkResponse({ schema: accountResponseSchema })
+  @ApiNotFoundResponse({ description: 'Owned account was not found' })
+  public async update(
+    @Req() request: FastifyRequest,
+    @Param('accountId', new ZodValidationPipe(accountIdSchema))
+    accountId: string,
+    @Body(new ZodValidationPipe(updateAccountSchema))
+    body: UpdateAccountRequest,
+  ): Promise<AccountResponse> {
+    try {
+      return mapAccount(
+        await this.updateAccount.execute({
+          accountId,
+          actorId: this.actorId(request),
+          ...body,
+        }),
+      );
+    } catch (error) {
+      throw mapDomainError(error);
+    }
   }
 
   @Patch(':accountId/lifecycle')
@@ -303,6 +371,29 @@ function createAccountBodySchema(): SchemaObject {
       'description',
       'icon',
       'initialBalance',
+      'institution',
+      'name',
+      'typeKey',
+    ],
+    type: 'object',
+  };
+}
+
+function updateAccountBodySchema(): SchemaObject {
+  return {
+    additionalProperties: false,
+    properties: {
+      color: { nullable: true, type: 'string' },
+      description: { nullable: true, type: 'string' },
+      icon: { nullable: true, type: 'string' },
+      institution: { nullable: true, type: 'string' },
+      name: { minLength: 1, type: 'string' },
+      typeKey: { pattern: '^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$', type: 'string' },
+    },
+    required: [
+      'color',
+      'description',
+      'icon',
       'institution',
       'name',
       'typeKey',
