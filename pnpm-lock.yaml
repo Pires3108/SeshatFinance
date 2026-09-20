@@ -13,7 +13,7 @@ importers:
         version: 10.0.1(eslint@10.11.0(jiti@2.7.0)(supports-color@10.2.2))
       '@types/node':
         specifier: latest
-        version: 26.6.1
+        version: 26.6.2
       eslint:
         specifier: latest
         version: 10.11.0(jiti@2.7.0)(supports-color@10.2.2)
@@ -34,7 +34,7 @@ importers:
         version: 8.70.0(eslint@10.11.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@5.9.3)
       vitest:
         specifier: latest
-        version: 5.0.1(@types/node@26.6.1)(vite@8.3.0(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
+        version: 5.0.1(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
 
   apps/api:
     dependencies:
@@ -59,6 +59,9 @@ importers:
       '@seshat/application':
         specifier: workspace:*
         version: link:../../packages/application
+      '@seshat/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       '@supabase/supabase-js':
         specifier: 2.116.0
         version: 2.116.0
@@ -83,7 +86,7 @@ importers:
         version: 12.0.3(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2))(@nestjs/core@12.0.3(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))
       '@types/node':
         specifier: latest
-        version: 26.6.1
+        version: 26.6.2
       tsx:
         specifier: latest
         version: 4.23.13
@@ -92,7 +95,7 @@ importers:
     dependencies:
       next:
         specifier: latest
-        version: 16.3.5(@types/node@26.6.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        version: 16.3.5(@types/node@26.6.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       react:
         specifier: latest
         version: 19.3.0
@@ -102,7 +105,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 26.6.1
+        version: 26.6.2
       '@types/react':
         specifier: latest
         version: 19.3.0
@@ -114,7 +117,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 26.6.1
+        version: 26.6.2
       tsx:
         specifier: latest
         version: 4.23.13
@@ -127,7 +130,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 26.6.1
+        version: 26.6.2
 
   packages/contracts:
     dependencies:
@@ -137,7 +140,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 26.6.1
+        version: 26.6.2
       openapi-typescript:
         specifier: 7.13.0
         version: 7.13.0(typescript@5.9.3)
@@ -160,9 +163,12 @@ importers:
         specifier: 8.16.3
         version: 8.16.3
     devDependencies:
+      '@testcontainers/postgresql':
+        specifier: 12.1.0
+        version: 12.1.0(supports-color@10.2.2)
       '@types/node':
         specifier: latest
-        version: 26.6.1
+        version: 26.6.2
       '@types/pg':
         specifier: 8.15.5
         version: 8.15.5
@@ -180,13 +186,13 @@ importers:
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 26.6.1
+        version: 26.6.2
 
   packages/observability:
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 26.6.1
+        version: 26.6.2
 
   packages/test-support:
     devDependencies:
@@ -198,7 +204,7 @@ importers:
         version: 12.1.0(supports-color@10.2.2)
       '@types/node':
         specifier: latest
-        version: 26.6.1
+        version: 26.6.2
       '@types/pg':
         specifier: 8.15.5
         version: 8.15.5
@@ -210,7 +216,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 26.6.1
+        version: 26.6.2
 
 packages:
 
@@ -1308,8 +1314,8 @@ packages:
   '@types/node@18.19.130':
     resolution: {integrity: sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg==}
 
-  '@types/node@26.6.1':
-    resolution: {integrity: sha512-VqGJBMCtdhqkBUCcBLvywI0NJ+KLuVzgNnlBUNFOQjqVxzo2lxLUNg1DSey8+u2u6ktswSAxg+s68QLzWHNOuA==}
+  '@types/node@26.6.2':
+    resolution: {integrity: sha512-X1P21scMv4zGKLYqjdGjaKa7COa0RKVYYZZN/NfvLQ1JegxFhdhpZG/Lyn8AXx6CDUavKAd11v6BvfpkDByK8g==}
 
   '@types/pg@8.15.5':
     resolution: {integrity: sha512-LF7lF6zWEKxuT3/OR8wAZGzkg4ENGXFNyiV/JeOt9z5B+0ZVwbql9McqX5c/WStFq1GaGso7H1AzP/qSzmlCKQ==}
@@ -4164,13 +4170,13 @@ snapshots:
 
   '@types/docker-modem@3.0.6':
     dependencies:
-      '@types/node': 26.6.1
+      '@types/node': 26.6.2
       '@types/ssh2': 1.15.6
 
   '@types/dockerode@4.0.1':
     dependencies:
       '@types/docker-modem': 3.0.6
-      '@types/node': 26.6.1
+      '@types/node': 26.6.2
       '@types/ssh2': 1.15.6
 
   '@types/esrecurse@4.3.1': {}
@@ -4187,19 +4193,19 @@ snapshots:
     dependencies:
       undici-types: 5.26.5
 
-  '@types/node@26.6.1':
+  '@types/node@26.6.2':
     dependencies:
       undici-types: 8.9.0
 
   '@types/pg@8.15.5':
     dependencies:
-      '@types/node': 26.6.1
+      '@types/node': 26.6.2
       pg-protocol: 1.16.0
       pg-types: 2.2.0
 
   '@types/pg@8.23.1':
     dependencies:
-      '@types/node': 26.6.1
+      '@types/node': 26.6.2
       pg-protocol: 1.16.0
       pg-types: 2.2.0
 
@@ -4213,11 +4219,11 @@ snapshots:
 
   '@types/ssh2-streams@0.1.13':
     dependencies:
-      '@types/node': 26.6.1
+      '@types/node': 26.6.2
 
   '@types/ssh2@0.5.52':
     dependencies:
-      '@types/node': 26.6.1
+      '@types/node': 26.6.2
       '@types/ssh2-streams': 0.1.13
 
   '@types/ssh2@1.15.6':
@@ -4462,14 +4468,14 @@ snapshots:
       d3-time-format: 4.1.0
       internmap: 2.0.3
 
-  '@vitest/mocker@5.0.1(vite@8.3.0(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))':
+  '@vitest/mocker@5.0.1(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       '@vitest/spy': 5.0.1
       estree-walker: 3.0.3
       magic-string: 1.4.1
     optionalDependencies:
-      vite: 8.3.0(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)
+      vite: 8.3.0(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)
 
   '@vitest/spy@5.0.1': {}
 
@@ -5398,7 +5404,7 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  next@16.3.5(@types/node@26.6.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
+  next@16.3.5(@types/node@26.6.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
       '@next/env': 16.3.5
       '@swc/helpers': 0.5.23
@@ -5417,7 +5423,7 @@ snapshots:
       '@next/swc-linux-x64-musl': 16.3.5
       '@next/swc-win32-arm64-msvc': 16.3.5
       '@next/swc-win32-x64-msvc': 16.3.5
-      sharp: 0.35.4(@types/node@26.6.1)
+      sharp: 0.35.4(@types/node@26.6.2)
     transitivePeerDependencies:
       - '@babel/core'
       - '@types/node'
@@ -5642,7 +5648,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.2
-      '@types/node': 26.6.1
+      '@types/node': 26.6.2
       long: 5.3.2
 
   pump@3.0.4:
@@ -5775,7 +5781,7 @@ snapshots:
 
   setprototypeof@1.2.0: {}
 
-  sharp@0.35.4(@types/node@26.6.1):
+  sharp@0.35.4(@types/node@26.6.2):
     dependencies:
       '@img/colour': 1.1.0
       detect-libc: 2.1.2
@@ -5806,7 +5812,7 @@ snapshots:
       '@img/sharp-win32-arm64': 0.35.4
       '@img/sharp-win32-ia32': 0.35.4
       '@img/sharp-win32-x64': 0.35.4
-      '@types/node': 26.6.1
+      '@types/node': 26.6.2
     optional: true
 
   shebang-command@2.0.0:
@@ -6100,7 +6106,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
-  vite@8.3.0(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1):
+  vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1):
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.7
@@ -6108,17 +6114,17 @@ snapshots:
       rolldown: 1.2.9
       tinyglobby: 0.2.17
     optionalDependencies:
-      '@types/node': 26.6.1
+      '@types/node': 26.6.2
       esbuild: 0.28.2
       fsevents: 2.3.3
       jiti: 2.7.0
       tsx: 4.23.13
       yaml: 2.9.1
 
-  vitest@5.0.1(@types/node@26.6.1)(vite@8.3.0(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)):
+  vitest@5.0.1(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)):
     dependencies:
       '@types/chai': 5.2.3
-      '@vitest/mocker': 5.0.1(vite@8.3.0(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
+      '@vitest/mocker': 5.0.1(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
       chai: 6.2.2
       es-module-lexer: 2.3.2
       expect-type: 1.4.0
@@ -6129,10 +6135,10 @@ snapshots:
       tinybench: 6.1.4
       tinyexec: 1.3.0
       tinyglobby: 0.2.17
-      vite: 8.3.0(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)
+      vite: 8.3.0(@types/node@26.6.2)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 26.6.1
+      '@types/node': 26.6.2
     transitivePeerDependencies:
       - msw
 
