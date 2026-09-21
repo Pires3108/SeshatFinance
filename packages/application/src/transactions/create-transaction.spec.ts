@@ -14,13 +14,18 @@ import {
   InvalidTransactionInstantRangeError,
   ListOwnedTransactionsBetweenUseCase,
   TransactionAccountUnavailableError,
+  TransactionRequiresTransferMutationError,
   UpdateOwnedTransactionUseCase,
   type TransactionRepository,
+  type TransactionFinancialLinkRepository,
   type TransactionTimelineRepository,
 } from './create-transaction.js';
 
-class RecordingTransactions implements TransactionRepository {
+class RecordingTransactions
+  implements TransactionRepository, TransactionFinancialLinkRepository
+{
   public inserted: Transaction | undefined;
+  public transferId: string | null = null;
   public insert(transaction: Transaction): Promise<void> {
     this.inserted = transaction;
     return Promise.resolve();
@@ -40,6 +45,9 @@ class RecordingTransactions implements TransactionRepository {
   }
   public save(): Promise<boolean> {
     return Promise.resolve(true);
+  }
+  public findTransferIdByEntryForOwner(): Promise<string | null> {
+    return Promise.resolve(this.transferId);
   }
 }
 
@@ -135,9 +143,14 @@ describe('owned transaction changes', () => {
       kind: 'income',
       occurredAt: new Date('2026-09-20T11:00:00.000Z'),
     });
-    const update = new UpdateOwnedTransactionUseCase(repository, accounts(), {
-      now: (): Date => new Date('2026-09-20T14:00:00.000Z'),
-    });
+    const update = new UpdateOwnedTransactionUseCase(
+      repository,
+      repository,
+      accounts(),
+      {
+        now: (): Date => new Date('2026-09-20T14:00:00.000Z'),
+      },
+    );
 
     const result = await update.execute({
       actorId: 'owner-id',
@@ -174,9 +187,13 @@ describe('owned transaction changes', () => {
       kind: 'income',
       occurredAt: new Date('2026-09-20T11:00:00.000Z'),
     });
-    const change = new ChangeOwnedTransactionLifecycleUseCase(repository, {
-      now: (): Date => new Date('2026-09-20T14:00:00.000Z'),
-    });
+    const change = new ChangeOwnedTransactionLifecycleUseCase(
+      repository,
+      repository,
+      {
+        now: (): Date => new Date('2026-09-20T14:00:00.000Z'),
+      },
+    );
 
     const result = await change.execute({
       action: 'move-to-trash',
@@ -185,6 +202,60 @@ describe('owned transaction changes', () => {
     });
 
     expect(result.balanceEffect().isZero()).toBe(true);
+  });
+
+  it('rejects isolated changes to an entry linked to a transfer', async () => {
+    const repository = new RecordingTransactions();
+    await new CreateTransactionUseCase(
+      repository,
+      accounts(),
+      { now: (): Date => new Date('2026-09-20T13:00:00.000Z') },
+      { generate: (): string => 'transaction-id' },
+    ).execute({
+      accountId: 'account-id',
+      actorId: 'owner-id',
+      amount: '12.34',
+      currencyCode: 'BRL',
+      currencyMinorUnitScale: 2,
+      description: null,
+      kind: 'income',
+      occurredAt: new Date('2026-09-20T11:00:00.000Z'),
+    });
+    repository.transferId = 'transfer-id';
+    const clock = {
+      now: (): Date => new Date('2026-09-20T14:00:00.000Z'),
+    };
+    const update = new UpdateOwnedTransactionUseCase(
+      repository,
+      repository,
+      accounts(),
+      clock,
+    );
+    const lifecycle = new ChangeOwnedTransactionLifecycleUseCase(
+      repository,
+      repository,
+      clock,
+    );
+
+    await expect(
+      update.execute({
+        actorId: 'owner-id',
+        amount: '9.99',
+        description: null,
+        kind: 'expense',
+        occurredAt: new Date('2026-09-20T11:00:00.000Z'),
+        transactionId: 'transaction-id',
+      }),
+    ).rejects.toMatchObject({
+      transferId: 'transfer-id',
+    } satisfies Partial<TransactionRequiresTransferMutationError>);
+    await expect(
+      lifecycle.execute({
+        action: 'move-to-trash',
+        actorId: 'owner-id',
+        transactionId: 'transaction-id',
+      }),
+    ).rejects.toBeInstanceOf(TransactionRequiresTransferMutationError);
   });
 });
 

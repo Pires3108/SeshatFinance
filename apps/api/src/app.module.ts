@@ -39,6 +39,7 @@ import {
   type CostCenterRepository,
   type TagRepository,
   type TransactionRepository,
+  type TransactionFinancialLinkRepository,
   type TransactionTimelineRepository,
   type TransactionTagRepository,
   type TransactionClassificationRepository,
@@ -260,12 +261,14 @@ import { UserProfileController } from './users/user-profile.controller.js';
       ],
       provide: SetOwnedTransactionClassificationUseCase,
       useFactory: (
-        transactions: TransactionRepository,
+        transactions: TransactionRepository &
+          TransactionFinancialLinkRepository,
         categories: CategoryRepository,
         costCenters: CostCenterRepository,
         classifications: TransactionClassificationRepository,
       ): SetOwnedTransactionClassificationUseCase =>
         new SetOwnedTransactionClassificationUseCase(
+          transactions,
           transactions,
           categories,
           costCenters,
@@ -297,11 +300,17 @@ import { UserProfileController } from './users/user-profile.controller.js';
       ],
       provide: SetOwnedTransactionTagsUseCase,
       useFactory: (
-        transactions: TransactionRepository,
+        transactions: TransactionRepository &
+          TransactionFinancialLinkRepository,
         tags: TagRepository,
         assignments: TransactionTagRepository,
       ): SetOwnedTransactionTagsUseCase =>
-        new SetOwnedTransactionTagsUseCase(transactions, tags, assignments),
+        new SetOwnedTransactionTagsUseCase(
+          transactions,
+          transactions,
+          tags,
+          assignments,
+        ),
     },
     {
       inject: [LazyTransactionRepository, LazyAccountRepository],
@@ -321,10 +330,12 @@ import { UserProfileController } from './users/user-profile.controller.js';
       inject: [LazyTransactionRepository, LazyAccountRepository],
       provide: UpdateOwnedTransactionUseCase,
       useFactory: (
-        transactions: TransactionRepository,
+        transactions: TransactionRepository &
+          TransactionFinancialLinkRepository,
         accounts: AccountRepository,
       ): UpdateOwnedTransactionUseCase =>
         new UpdateOwnedTransactionUseCase(
+          transactions,
           transactions,
           accounts,
           new SystemClock(),
@@ -334,9 +345,11 @@ import { UserProfileController } from './users/user-profile.controller.js';
       inject: [LazyTransactionRepository],
       provide: ChangeOwnedTransactionLifecycleUseCase,
       useFactory: (
-        transactions: TransactionRepository,
+        transactions: TransactionRepository &
+          TransactionFinancialLinkRepository,
       ): ChangeOwnedTransactionLifecycleUseCase =>
         new ChangeOwnedTransactionLifecycleUseCase(
+          transactions,
           transactions,
           new SystemClock(),
         ),

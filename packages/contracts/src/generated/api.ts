@@ -1607,6 +1607,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Transaction changed concurrently or belongs to a transfer */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     readonly TransactionController_lifecycle: {
@@ -1669,6 +1676,13 @@ export interface operations {
             };
             /** @description Owned transaction was not found */
             readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction changed concurrently or belongs to a transfer */
+            readonly 409: {
                 headers: {
                     readonly [name: string]: unknown;
                 };
@@ -1776,6 +1790,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Transaction belongs to a transfer */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     readonly TransactionTagController_list: {
@@ -1858,6 +1879,13 @@ export interface operations {
             };
             /** @description Owned transaction was not found */
             readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transaction belongs to a transfer */
+            readonly 409: {
                 headers: {
                     readonly [name: string]: unknown;
                 };

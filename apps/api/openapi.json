@@ -2462,6 +2462,9 @@
           },
           "404": {
             "description": "Owned transaction was not found"
+          },
+          "409": {
+            "description": "Transaction changed concurrently or belongs to a transfer"
           }
         },
         "security": [
@@ -2608,6 +2611,9 @@
           },
           "404": {
             "description": "Owned transaction was not found"
+          },
+          "409": {
+            "description": "Transaction changed concurrently or belongs to a transfer"
           }
         },
         "security": [
@@ -2758,6 +2764,9 @@
           },
           "404": {
             "description": "Owned transaction was not found"
+          },
+          "409": {
+            "description": "Transaction belongs to a transfer"
           }
         },
         "security": [
@@ -2889,6 +2898,9 @@
           },
           "404": {
             "description": "Owned transaction was not found"
+          },
+          "409": {
+            "description": "Transaction belongs to a transfer"
           }
         },
         "security": [

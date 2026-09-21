@@ -9,7 +9,11 @@ import { describe, expect, it } from 'vitest';
 
 import type { CategoryRepository } from '../classifications/manage-category.js';
 import type { CostCenterRepository } from '../classifications/manage-cost-center.js';
-import type { TransactionRepository } from './create-transaction.js';
+import {
+  TransactionRequiresTransferMutationError,
+  type TransactionFinancialLinkRepository,
+  type TransactionRepository,
+} from './create-transaction.js';
 import {
   InvalidOwnedTransactionClassificationError,
   InvalidSubcategorySelectionError,
@@ -48,6 +52,7 @@ function createUseCase(values: {
   categories: readonly Category[];
   costCenters?: readonly CostCenter[];
   onReplace?: (selection: TransactionClassificationSelection) => void;
+  transferId?: string | null;
 }): SetOwnedTransactionClassificationUseCase {
   const transactions: TransactionRepository = {
     findByIdForOwner: (id, actorId) =>
@@ -68,6 +73,10 @@ function createUseCase(values: {
     insert: () => Promise.resolve(),
     listForOwner: () => Promise.resolve(values.categories),
     save: () => Promise.resolve(true),
+  };
+  const links: TransactionFinancialLinkRepository = {
+    findTransferIdByEntryForOwner: () =>
+      Promise.resolve(values.transferId ?? null),
   };
   const costCenters: CostCenterRepository = {
     findByIdForOwner: (id, actorId) =>
@@ -94,6 +103,7 @@ function createUseCase(values: {
   };
   return new SetOwnedTransactionClassificationUseCase(
     transactions,
+    links,
     categories,
     costCenters,
     classifications,
@@ -158,5 +168,22 @@ describe('SetOwnedTransactionClassificationUseCase', () => {
         transactionId: 'transaction-id',
       }),
     ).rejects.toBeInstanceOf(InvalidOwnedTransactionClassificationError);
+  });
+
+  it('rejects isolated classification changes for a transfer entry', async () => {
+    const useCase = createUseCase({
+      categories: [],
+      transferId: 'transfer-id',
+    });
+
+    await expect(
+      useCase.execute({
+        actorId: ownerId,
+        categoryId: null,
+        costCenterId: null,
+        subcategoryId: null,
+        transactionId: 'transaction-id',
+      }),
+    ).rejects.toBeInstanceOf(TransactionRequiresTransferMutationError);
   });
 });

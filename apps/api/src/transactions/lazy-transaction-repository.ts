@@ -1,4 +1,7 @@
-import type { TransactionRepository } from '@seshat/application';
+import type {
+  TransactionFinancialLinkRepository,
+  TransactionRepository,
+} from '@seshat/application';
 import type { Transaction } from '@seshat/domain';
 import { PrismaTransactionRepository } from '@seshat/database';
 import { Injectable } from '@nestjs/common';
@@ -6,7 +9,9 @@ import { Injectable } from '@nestjs/common';
 import { LazyPrismaClient } from '../platform/lazy-prisma-client.js';
 
 @Injectable()
-export class LazyTransactionRepository implements TransactionRepository {
+export class LazyTransactionRepository
+  implements TransactionRepository, TransactionFinancialLinkRepository
+{
   private repository: PrismaTransactionRepository | undefined;
   public constructor(private readonly prisma: LazyPrismaClient) {}
   public insert(transaction: Transaction): Promise<void> {
@@ -37,6 +42,16 @@ export class LazyTransactionRepository implements TransactionRepository {
     expectedVersion: number,
   ): Promise<boolean> {
     return this.getRepository().save(transaction, expectedVersion);
+  }
+
+  public findTransferIdByEntryForOwner(
+    transactionId: string,
+    ownerId: string,
+  ): Promise<string | null> {
+    return this.getRepository().findTransferIdByEntryForOwner(
+      transactionId,
+      ownerId,
+    );
   }
   private getRepository(): PrismaTransactionRepository {
     this.repository ??= new PrismaTransactionRepository(this.prisma.get());

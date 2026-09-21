@@ -19,6 +19,13 @@ export interface TransactionRepository {
   save(transaction: Transaction, expectedVersion: number): Promise<boolean>;
 }
 
+export interface TransactionFinancialLinkRepository {
+  findTransferIdByEntryForOwner(
+    transactionId: string,
+    ownerId: string,
+  ): Promise<string | null>;
+}
+
 export type CreateTransactionCommand = Readonly<{
   accountId: string;
   actorId: string;
@@ -49,6 +56,13 @@ export class TransactionVersionConflictError extends Error {
   public constructor() {
     super('Transaction was modified concurrently.');
     this.name = 'TransactionVersionConflictError';
+  }
+}
+
+export class TransactionRequiresTransferMutationError extends Error {
+  public constructor(public readonly transferId: string) {
+    super('A transfer entry must be changed through its transfer.');
+    this.name = 'TransactionRequiresTransferMutationError';
   }
 }
 
@@ -170,6 +184,7 @@ export type UpdateOwnedTransactionCommand = Readonly<{
 export class UpdateOwnedTransactionUseCase {
   public constructor(
     private readonly transactions: TransactionRepository,
+    private readonly financialLinks: TransactionFinancialLinkRepository,
     private readonly accounts: AccountRepository,
     private readonly clock: Clock,
   ) {}
@@ -181,6 +196,7 @@ export class UpdateOwnedTransactionUseCase {
       command.transactionId,
       command.actorId,
     );
+    await this.requireStandalone(transaction.id, command.actorId);
     const account = await this.accounts.findByIdForOwner(
       transaction.accountId,
       command.actorId,
@@ -219,6 +235,19 @@ export class UpdateOwnedTransactionUseCase {
     return transaction;
   }
 
+  private async requireStandalone(
+    transactionId: string,
+    actorId: string,
+  ): Promise<void> {
+    const transferId = await this.financialLinks.findTransferIdByEntryForOwner(
+      transactionId,
+      actorId,
+    );
+    if (transferId !== null) {
+      throw new TransactionRequiresTransferMutationError(transferId);
+    }
+  }
+
   private async save(
     transaction: Transaction,
     expectedVersion: number,
@@ -235,6 +264,7 @@ export type TransactionLifecycleAction =
 export class ChangeOwnedTransactionLifecycleUseCase {
   public constructor(
     private readonly transactions: TransactionRepository,
+    private readonly financialLinks: TransactionFinancialLinkRepository,
     private readonly clock: Clock,
   ) {}
 
@@ -248,6 +278,13 @@ export class ChangeOwnedTransactionLifecycleUseCase {
       command.actorId,
     );
     if (transaction === null) throw new OwnedTransactionNotFoundError();
+    const transferId = await this.financialLinks.findTransferIdByEntryForOwner(
+      transaction.id,
+      command.actorId,
+    );
+    if (transferId !== null) {
+      throw new TransactionRequiresTransferMutationError(transferId);
+    }
     const expectedVersion = transaction.toSnapshot().version;
     const at = this.clock.now();
     switch (command.action) {

@@ -7,6 +7,7 @@ import {
   ListOwnedTransactionsBetweenUseCase,
   OwnedTransactionNotFoundError,
   TransactionAccountUnavailableError,
+  TransactionRequiresTransferMutationError,
   TransactionVersionConflictError,
   UpdateOwnedTransactionUseCase,
 } from '@seshat/application';
@@ -40,6 +41,7 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiCreatedResponse,
+  ApiConflictResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -269,6 +271,9 @@ export class TransactionController {
   @ApiBody({ schema: updateBodySchema() })
   @ApiOkResponse({ schema: responseSchema })
   @ApiNotFoundResponse({ description: 'Owned transaction was not found' })
+  @ApiConflictResponse({
+    description: 'Transaction changed concurrently or belongs to a transfer',
+  })
   public async update(
     @Req() request: FastifyRequest,
     @Param('transactionId', new ZodValidationPipe(idSchema))
@@ -308,6 +313,9 @@ export class TransactionController {
   })
   @ApiOkResponse({ schema: responseSchema })
   @ApiNotFoundResponse({ description: 'Owned transaction was not found' })
+  @ApiConflictResponse({
+    description: 'Transaction changed concurrently or belongs to a transfer',
+  })
   public async lifecycle(
     @Req() request: FastifyRequest,
     @Param('transactionId', new ZodValidationPipe(idSchema))
@@ -362,6 +370,10 @@ function mapError(error: unknown): Error {
     return new NotFoundException('Account not found.');
   if (error instanceof TransactionVersionConflictError)
     return new ConflictException('Transaction was modified concurrently.');
+  if (error instanceof TransactionRequiresTransferMutationError)
+    return new ConflictException(
+      'Transfer entries must be changed through the transfer endpoint.',
+    );
   if (
     error instanceof InvalidCurrencyError ||
     error instanceof InvalidMoneyAmountError ||

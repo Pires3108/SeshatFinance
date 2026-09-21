@@ -5,6 +5,28 @@ import type { PrismaClient } from '../generated/prisma/client.js';
 import { PrismaTransactionRepository } from './prisma-transaction-repository.js';
 
 describe('PrismaTransactionRepository', () => {
+  it('finds a transfer through either owned entry without exposing foreign links', async () => {
+    const findFirst = vi.fn().mockResolvedValue({ id: 'transfer-id' });
+    const client = {
+      transfer: { findFirst },
+    } as unknown as PrismaClient;
+    const repository = new PrismaTransactionRepository(client);
+
+    await expect(
+      repository.findTransferIdByEntryForOwner('transaction-id', 'owner-id'),
+    ).resolves.toBe('transfer-id');
+    expect(findFirst).toHaveBeenCalledWith({
+      select: { id: true },
+      where: {
+        OR: [
+          { sourceTransactionId: 'transaction-id' },
+          { destinationTransactionId: 'transaction-id' },
+        ],
+        ownerId: 'owner-id',
+      },
+    });
+  });
+
   it('queries an owned half-open instant range in deterministic order', async () => {
     const findMany = vi.fn().mockResolvedValue([]);
     const client = {

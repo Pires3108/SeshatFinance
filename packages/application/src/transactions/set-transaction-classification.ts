@@ -2,6 +2,8 @@ import type { CategoryRepository } from '../classifications/manage-category.js';
 import type { CostCenterRepository } from '../classifications/manage-cost-center.js';
 import {
   OwnedTransactionNotFoundError,
+  TransactionRequiresTransferMutationError,
+  type TransactionFinancialLinkRepository,
   type TransactionRepository,
 } from './create-transaction.js';
 
@@ -51,6 +53,7 @@ export class InvalidSubcategorySelectionError extends Error {
 export class SetOwnedTransactionClassificationUseCase {
   public constructor(
     private readonly transactions: TransactionRepository,
+    private readonly financialLinks: TransactionFinancialLinkRepository,
     private readonly categories: CategoryRepository,
     private readonly costCenters: CostCenterRepository,
     private readonly classifications: TransactionClassificationRepository,
@@ -70,6 +73,13 @@ export class SetOwnedTransactionClassificationUseCase {
       )) === null
     ) {
       throw new OwnedTransactionNotFoundError();
+    }
+    const transferId = await this.financialLinks.findTransferIdByEntryForOwner(
+      command.transactionId,
+      command.actorId,
+    );
+    if (transferId !== null) {
+      throw new TransactionRequiresTransferMutationError(transferId);
     }
     const selection: TransactionClassificationSelection = {
       categoryId: command.categoryId,
