@@ -38,6 +38,7 @@ describe('PrismaTransactionRepository', () => {
       '../../prisma/migrations/20260920180000_create_categories/migration.sql',
       '../../prisma/migrations/20260920210000_create_cost_centers/migration.sql',
       '../../prisma/migrations/20260921010000_assign_transaction_classifications/migration.sql',
+      '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
     ]) {
       await client.query(
         await readFile(new URL(path, import.meta.url), 'utf8'),
@@ -108,6 +109,7 @@ describe('PrismaTransactionRepository', () => {
         amount: Money.fromDecimal('42.375', Currency.create('BHD', 3)),
         description: 'Updated synthetic transaction',
         kind: 'expense',
+        observations: 'Corrected after statement review',
         occurredAt: new Date('2026-09-21T10:30:00.000Z'),
       },
       new Date('2026-09-21T12:00:00.000Z'),

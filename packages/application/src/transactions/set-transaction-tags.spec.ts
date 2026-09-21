@@ -46,6 +46,7 @@ function transaction(): Transaction {
     id: 'transaction-id',
     kind: 'expense',
     lifecycle: 'active',
+    observations: null,
     occurredAt: now,
     ownerId: 'owner-id',
     trashedAt: null,

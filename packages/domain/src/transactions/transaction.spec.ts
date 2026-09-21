@@ -18,6 +18,7 @@ function transaction(kind: 'income' | 'expense'): Transaction {
     description: 'Movimentação sintética',
     id: `${kind}-id`,
     kind,
+    observations: '  Confirmada fora da aplicação  ',
     occurredAt: new Date('2026-09-20T11:00:00.000Z'),
     ownerId: 'owner-id',
   });
@@ -89,6 +90,7 @@ describe('Transaction', () => {
         amount: Money.fromDecimal('30.50', currency),
         description: 'Despesa corrigida',
         kind: 'expense',
+        observations: '  Conferida no extrato  ',
         occurredAt: new Date('2026-09-19T11:00:00.000Z'),
       },
       new Date('2026-09-20T13:00:00.000Z'),
@@ -98,6 +100,7 @@ describe('Transaction', () => {
     expect(value.toSnapshot()).toMatchObject({
       description: 'Despesa corrigida',
       kind: 'expense',
+      observations: 'Conferida no extrato',
       version: 2,
     });
   });

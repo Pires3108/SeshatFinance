@@ -12,6 +12,7 @@ export type TransactionSnapshot = Readonly<{
   id: string;
   kind: TransactionKind;
   lifecycle: TransactionLifecycle;
+  observations: string | null;
   occurredAt: Date;
   ownerId: string;
   trashedAt: Date | null;
@@ -26,6 +27,7 @@ export type CreateTransactionProperties = Readonly<{
   description: string | null;
   id: string;
   kind: TransactionKind;
+  observations?: string | null;
   occurredAt: Date;
   ownerId: string;
 }>;
@@ -34,6 +36,7 @@ export type UpdateTransactionDetails = Readonly<{
   amount: Money;
   description: string | null;
   kind: TransactionKind;
+  observations?: string | null;
   occurredAt: Date;
 }>;
 
@@ -70,6 +73,7 @@ export class Transaction {
       id: properties.id,
       kind: properties.kind,
       lifecycle: 'active',
+      observations: normalizeOptionalText(properties.observations),
       occurredAt: new Date(properties.occurredAt),
       ownerId: properties.ownerId,
       trashedAt: null,
@@ -139,6 +143,10 @@ export class Transaction {
       amount: details.amount.toSnapshot(),
       description: normalizeOptionalText(details.description),
       kind: details.kind,
+      observations:
+        details.observations === undefined
+          ? this.state.observations
+          : normalizeOptionalText(details.observations),
       occurredAt: new Date(details.occurredAt),
       updatedAt: checkedTransitionInstant(at, this.state.updatedAt),
       version: this.state.version + 1,
@@ -304,7 +312,9 @@ function assertOptionalInstant(value: Date | null, label: string): void {
   if (value !== null) assertValidInstant(value, label);
 }
 
-function normalizeOptionalText(value: string | null): string | null {
+function normalizeOptionalText(
+  value: string | null | undefined,
+): string | null {
   const normalized = value?.trim() ?? '';
   return normalized.length === 0 ? null : normalized;
 }

@@ -53,6 +53,7 @@ describe('TransactionController', () => {
         currencyMinorUnitScale: 2,
         description: null,
         kind: 'income',
+        observations: 'Recorded after bank confirmation',
         occurredAt: '2026-09-20T11:00:00.000Z',
       },
     );
@@ -104,6 +105,7 @@ describe('TransactionController', () => {
         amount: '9.99',
         description: null,
         kind: 'expense',
+        observations: null,
         occurredAt: '2026-09-20T11:00:00.000Z',
       },
     );

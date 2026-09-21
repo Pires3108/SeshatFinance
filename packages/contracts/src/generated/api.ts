@@ -1198,6 +1198,7 @@ export interface operations {
                         readonly kind: "income" | "expense";
                         /** @enum {string} */
                         readonly lifecycle: "active" | "archived" | "trashed";
+                        readonly observations: string | null;
                         /** Format: date-time */
                         readonly occurredAt: string;
                         /** Format: date-time */
@@ -1235,6 +1236,7 @@ export interface operations {
                     readonly description: string | null;
                     /** @enum {string} */
                     readonly kind: "income" | "expense";
+                    readonly observations: string | null;
                     /** Format: date-time */
                     readonly occurredAt: string;
                 };
@@ -1263,6 +1265,7 @@ export interface operations {
                         readonly kind: "income" | "expense";
                         /** @enum {string} */
                         readonly lifecycle: "active" | "archived" | "trashed";
+                        readonly observations: string | null;
                         /** Format: date-time */
                         readonly occurredAt: string;
                         /** Format: date-time */
@@ -1315,6 +1318,7 @@ export interface operations {
                         readonly kind: "income" | "expense";
                         /** @enum {string} */
                         readonly lifecycle: "active" | "archived" | "trashed";
+                        readonly observations: string | null;
                         /** Format: date-time */
                         readonly occurredAt: string;
                         /** Format: date-time */
@@ -1357,6 +1361,7 @@ export interface operations {
                     readonly description: string | null;
                     /** @enum {string} */
                     readonly kind: "income" | "expense";
+                    readonly observations: string | null;
                     /** Format: date-time */
                     readonly occurredAt: string;
                 };
@@ -1385,6 +1390,7 @@ export interface operations {
                         readonly kind: "income" | "expense";
                         /** @enum {string} */
                         readonly lifecycle: "active" | "archived" | "trashed";
+                        readonly observations: string | null;
                         /** Format: date-time */
                         readonly occurredAt: string;
                         /** Format: date-time */
@@ -1451,6 +1457,7 @@ export interface operations {
                         readonly kind: "income" | "expense";
                         /** @enum {string} */
                         readonly lifecycle: "active" | "archived" | "trashed";
+                        readonly observations: string | null;
                         /** Format: date-time */
                         readonly occurredAt: string;
                         /** Format: date-time */

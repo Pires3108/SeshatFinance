@@ -27,6 +27,7 @@ export type CreateTransactionCommand = Readonly<{
   currencyMinorUnitScale: number;
   description: string | null;
   kind: TransactionKind;
+  observations?: string | null;
   occurredAt: Date;
 }>;
 
@@ -83,6 +84,7 @@ export class CreateTransactionUseCase {
       description: command.description,
       id: this.identifiers.generate(),
       kind: command.kind,
+      observations: command.observations ?? null,
       occurredAt: command.occurredAt,
       ownerId: command.actorId,
     });
@@ -124,6 +126,7 @@ export type UpdateOwnedTransactionCommand = Readonly<{
   amount: string;
   description: string | null;
   kind: TransactionKind;
+  observations?: string | null;
   occurredAt: Date;
   transactionId: string;
 }>;
@@ -156,6 +159,10 @@ export class UpdateOwnedTransactionUseCase {
         ),
         description: command.description,
         kind: command.kind,
+        observations:
+          command.observations === undefined
+            ? transaction.toSnapshot().observations
+            : command.observations,
         occurredAt: command.occurredAt,
       },
       this.clock.now(),
