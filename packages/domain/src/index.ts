@@ -52,3 +52,9 @@ export {
   type CostCenterSnapshot,
   type CreateCostCenterProperties,
 } from './classifications/cost-center.js';
+export {
+  InvalidTransferError,
+  Transfer,
+  type CreateTransferProperties,
+  type TransferSnapshot,
+} from './transfers/transfer.js';
