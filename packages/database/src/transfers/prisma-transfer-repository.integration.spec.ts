@@ -90,6 +90,65 @@ describe('PrismaTransferRepository', () => {
     await expect(client.transfer.count()).resolves.toBe(1);
     await expect(client.transaction.count()).resolves.toBe(2);
   });
+
+  it('restores and updates both entries atomically with optimistic locking', async () => {
+    if (client === undefined || repository === undefined) {
+      throw new Error('Transfer persistence is unavailable.');
+    }
+    const transferId = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
+    await repository.insertAtomically(
+      transfer(
+        transferId,
+        '12121212-1212-4212-8212-121212121212',
+        '34343434-3434-4434-8434-343434343434',
+      ),
+    );
+    const persisted = await repository.findByIdForOwner(
+      transferId,
+      '99999999-9999-4999-8999-999999999999',
+    );
+    if (persisted === null) throw new Error('Transfer was not restored.');
+    persisted.moveToTrash(new Date('2026-09-21T13:00:00.000Z'));
+
+    await expect(repository.saveAtomically(persisted, 1, 1)).resolves.toBe(
+      true,
+    );
+    const trashed = await client.transaction.findMany({
+      orderBy: { id: 'asc' },
+      where: {
+        id: {
+          in: [
+            persisted.toSnapshot().source.id,
+            persisted.toSnapshot().destination.id,
+          ],
+        },
+      },
+    });
+    expect(trashed).toHaveLength(2);
+    expect(
+      trashed.every((row) => row.lifecycle === 'trashed' && row.version === 2),
+    ).toBe(true);
+
+    persisted.restoreFromTrash(new Date('2026-09-21T14:00:00.000Z'));
+    await expect(repository.saveAtomically(persisted, 2, 1)).resolves.toBe(
+      false,
+    );
+    const rolledBack = await client.transaction.findMany({
+      where: {
+        id: {
+          in: [
+            persisted.toSnapshot().source.id,
+            persisted.toSnapshot().destination.id,
+          ],
+        },
+      },
+    });
+    expect(
+      rolledBack.every(
+        (row) => row.lifecycle === 'trashed' && row.version === 2,
+      ),
+    ).toBe(true);
+  });
 });
 
 function account(id: string): Account {
