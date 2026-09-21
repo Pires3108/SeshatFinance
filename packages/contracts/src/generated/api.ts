@@ -336,6 +336,23 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/transfers": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Record a transfer declared by the authenticated user */
+        readonly post: operations["TransferController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/users/me/profile": {
         readonly parameters: {
             readonly query?: never;
@@ -1736,6 +1753,75 @@ export interface operations {
                 content?: never;
             };
             /** @description Owned transaction was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TransferController_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly amount: string;
+                    readonly currencyCode: string;
+                    readonly currencyMinorUnitScale: number;
+                    readonly description: string | null;
+                    /** Format: uuid */
+                    readonly destinationAccountId: string;
+                    readonly observations: string | null;
+                    /** Format: date-time */
+                    readonly occurredAt: string;
+                    /** Format: uuid */
+                    readonly sourceAccountId: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly amount: string;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly description: string | null;
+                        /** Format: uuid */
+                        readonly destinationAccountId: string;
+                        /** Format: uuid */
+                        readonly destinationTransactionId: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly observations: string | null;
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                        /** Format: uuid */
+                        readonly sourceAccountId: string;
+                        /** Format: uuid */
+                        readonly sourceTransactionId: string;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description An owned active account was not found */
             readonly 404: {
                 headers: {
                     readonly [name: string]: unknown;
