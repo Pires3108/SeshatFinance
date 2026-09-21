@@ -2765,6 +2765,159 @@
         "tags": ["transactions"]
       }
     },
+    "/api/v1/transfers": {
+      "post": {
+        "operationId": "TransferController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "amount": {
+                    "maxLength": 1002,
+                    "pattern": "^\\d+(?:\\.\\d+)?$",
+                    "type": "string"
+                  },
+                  "currencyCode": {
+                    "pattern": "^[A-Z]{3}$",
+                    "type": "string"
+                  },
+                  "currencyMinorUnitScale": {
+                    "maximum": 18,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "description": {
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "destinationAccountId": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "observations": {
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "occurredAt": {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  "sourceAccountId": {
+                    "format": "uuid",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currencyCode",
+                  "currencyMinorUnitScale",
+                  "description",
+                  "destinationAccountId",
+                  "observations",
+                  "occurredAt",
+                  "sourceAccountId"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "amount": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "description": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "destinationAccountId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "destinationTransactionId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "observations": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "occurredAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "sourceAccountId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "sourceTransactionId": {
+                      "format": "uuid",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "createdAt",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "description",
+                    "destinationAccountId",
+                    "destinationTransactionId",
+                    "id",
+                    "observations",
+                    "occurredAt",
+                    "sourceAccountId",
+                    "sourceTransactionId"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "An owned active account was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a transfer declared by the authenticated user",
+        "tags": ["transfers"]
+      }
+    },
     "/api/v1/users/me/profile": {
       "get": {
         "operationId": "UserProfileController_get",

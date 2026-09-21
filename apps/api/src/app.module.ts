@@ -6,6 +6,7 @@ import {
   CreateTagUseCase,
   CreateAccountUseCase,
   CreateTransactionUseCase,
+  CreateTransferUseCase,
   GetOwnedAccountUseCase,
   GetOwnedAccountBalanceUseCase,
   GetOwnedTransactionUseCase,
@@ -38,6 +39,7 @@ import {
   type TransactionTimelineRepository,
   type TransactionTagRepository,
   type TransactionClassificationRepository,
+  type TransferRepository,
 } from '@seshat/application';
 import { Module } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
@@ -71,6 +73,8 @@ import { LazyTransactionTagRepository } from './transactions/lazy-transaction-ta
 import { TransactionController } from './transactions/transaction.controller.js';
 import { TransactionTagController } from './transactions/transaction-tag.controller.js';
 import { TransactionClassificationController } from './transactions/transaction-classification.controller.js';
+import { LazyTransferRepository } from './transfers/lazy-transfer-repository.js';
+import { TransferController } from './transfers/transfer.controller.js';
 import { LazyUserProfileRepository } from './users/lazy-user-profile-repository.js';
 import { UserProfileController } from './users/user-profile.controller.js';
 
@@ -87,6 +91,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     TransactionController,
     TransactionClassificationController,
     TransactionTagController,
+    TransferController,
     UserProfileController,
   ],
   providers: [
@@ -103,7 +108,22 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyTransactionRepository,
     LazyTransactionClassificationRepository,
     LazyTransactionTagRepository,
+    LazyTransferRepository,
     LazyUserProfileRepository,
+    {
+      inject: [LazyAccountRepository, LazyTransferRepository],
+      provide: CreateTransferUseCase,
+      useFactory: (
+        accounts: AccountRepository,
+        transfers: TransferRepository,
+      ): CreateTransferUseCase =>
+        new CreateTransferUseCase(
+          accounts,
+          transfers,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
     {
       inject: [LazyCostCenterRepository],
       provide: CreateCostCenterUseCase,
