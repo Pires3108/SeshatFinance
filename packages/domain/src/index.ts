@@ -64,3 +64,13 @@ export {
   type BalanceAdjustmentSnapshot,
   type CreateBalanceAdjustmentProperties,
 } from './adjustments/balance-adjustment.js';
+export {
+  FinancialAuditEvent,
+  InvalidFinancialAuditEventError,
+  financialAuditActions,
+  financialAuditResourceTypes,
+  type CreateFinancialAuditEventProperties,
+  type FinancialAuditAction,
+  type FinancialAuditEventSnapshot,
+  type FinancialAuditResourceType,
+} from './audit/financial-audit-event.js';

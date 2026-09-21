@@ -125,3 +125,7 @@ export {
   type BalanceAdjustmentRepository,
   type CreateBalanceAdjustmentCommand,
 } from './adjustments/create-balance-adjustment.js';
+export {
+  FinancialAuditEventFactory,
+  type CreateFinancialAuditEventCommand,
+} from './audit/create-financial-audit-event.js';
