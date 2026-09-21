@@ -78,6 +78,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** aprovar o catálogo inicial versionado, seu modelo de ownership e personalização, além das regras de arquivamento, restauração e exclusão para classificações referenciadas.
 - **Limite atual:** permitir evoluir o núcleo de categorias com ownership e hierarquia validada, mas não publicar seed inicial nem exclusão destrutiva até a decisão. Referências históricas nunca devem ser removidas em cascata.
 
+### RII-011 — Estado e preservação histórica de entidades
+
+- **Estado:** aberto.
+- **Referências:** RF-024; RF-025; RN-014; US-028.
+- **Risco:** o cadastro de pessoas, empresas e instituições exige um status, mas os requisitos não definem os estados permitidos, o estado inicial, as transições nem o efeito de desativar uma entidade já vinculada. Inferir essas regras pode ocultar vínculos válidos ou reescrever a interpretação do histórico financeiro.
+- **Decisão necessária:** definir a máquina de estados pública das entidades, incluindo criação, desativação, reativação, exclusão e comportamento nas consultas e vínculos históricos.
+- **Limite atual:** não implementar persistência nem contratos públicos de entidade até a decisão. Vínculos opcionais por texto ou referência futura não devem exigir cadastro, e alterações cadastrais nunca devem reescrever silenciosamente o histórico.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
