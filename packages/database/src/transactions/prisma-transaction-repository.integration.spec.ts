@@ -102,5 +102,22 @@ describe('PrismaTransactionRepository', () => {
         'e89b6ad0-7838-4a2c-9a21-c775ea78e22a',
       ),
     ).resolves.toBeNull();
+
+    transaction.updateDetails(
+      {
+        amount: Money.fromDecimal('42.375', Currency.create('BHD', 3)),
+        description: 'Updated synthetic transaction',
+        kind: 'expense',
+        occurredAt: new Date('2026-09-21T10:30:00.000Z'),
+      },
+      new Date('2026-09-21T12:00:00.000Z'),
+    );
+
+    await expect(transactions.save(transaction, 1)).resolves.toBe(true);
+    const persisted = await transactions.findByIdForOwner(
+      transaction.id,
+      ownerId,
+    );
+    expect(persisted?.toSnapshot()).toEqual(transaction.toSnapshot());
   });
 });
