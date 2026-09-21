@@ -1,20 +1,28 @@
 import {
+  ChangeOwnedTransferLifecycleUseCase,
   CreateTransferUseCase,
+  OwnedTransferNotFoundError,
   TransferAccountUnavailableError,
   TransferCurrencyMismatchError,
+  TransferVersionConflictError,
 } from '@seshat/application';
 import {
   InvalidCurrencyError,
   InvalidMoneyAmountError,
   InvalidTransferError,
+  TransactionLifecycleError,
   type Transfer,
 } from '@seshat/domain';
 import {
   BadRequestException,
   Body,
   Controller,
+  ConflictException,
   Inject,
   NotFoundException,
+  Param,
+  ParseUUIDPipe,
+  Patch,
   Post,
   Req,
   UnauthorizedException,
@@ -24,8 +32,11 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiCreatedResponse,
+  ApiConflictResponse,
   ApiNotFoundResponse,
   ApiOperation,
+  ApiOkResponse,
+  ApiParam,
   ApiTags,
   ApiUnauthorizedResponse,
   type SchemaObject,
@@ -50,9 +61,19 @@ const createSchema = z.object({
   occurredAt: z.iso.datetime({ offset: true }),
   sourceAccountId: z.uuid(),
 });
+const lifecycleSchema = z.object({
+  action: z.enum([
+    'archive',
+    'unarchive',
+    'move-to-trash',
+    'restore-from-trash',
+  ]),
+});
 type CreateRequest = z.infer<typeof createSchema>;
+type LifecycleRequest = z.infer<typeof lifecycleSchema>;
 type Response = Readonly<{
   amount: string;
+  archivedAt: string | null;
   createdAt: string;
   currencyCode: string;
   currencyMinorUnitScale: number;
@@ -60,15 +81,18 @@ type Response = Readonly<{
   destinationAccountId: string;
   destinationTransactionId: string;
   id: string;
+  lifecycle: 'active' | 'archived' | 'trashed';
   observations: string | null;
   occurredAt: string;
   sourceAccountId: string;
   sourceTransactionId: string;
+  trashedAt: string | null;
 }>;
 
 const responseSchema: SchemaObject = {
   properties: {
     amount: { pattern: '^\\d+(?:\\.\\d+)?$', type: 'string' },
+    archivedAt: { format: 'date-time', nullable: true, type: 'string' },
     createdAt: { format: 'date-time', type: 'string' },
     currencyCode: { pattern: '^[A-Z]{3}$', type: 'string' },
     currencyMinorUnitScale: { maximum: 18, minimum: 0, type: 'integer' },
@@ -76,13 +100,16 @@ const responseSchema: SchemaObject = {
     destinationAccountId: { format: 'uuid', type: 'string' },
     destinationTransactionId: { format: 'uuid', type: 'string' },
     id: { format: 'uuid', type: 'string' },
+    lifecycle: { enum: ['active', 'archived', 'trashed'], type: 'string' },
     observations: { nullable: true, type: 'string' },
     occurredAt: { format: 'date-time', type: 'string' },
     sourceAccountId: { format: 'uuid', type: 'string' },
     sourceTransactionId: { format: 'uuid', type: 'string' },
+    trashedAt: { format: 'date-time', nullable: true, type: 'string' },
   },
   required: [
     'amount',
+    'archivedAt',
     'createdAt',
     'currencyCode',
     'currencyMinorUnitScale',
@@ -90,10 +117,12 @@ const responseSchema: SchemaObject = {
     'destinationAccountId',
     'destinationTransactionId',
     'id',
+    'lifecycle',
     'observations',
     'occurredAt',
     'sourceAccountId',
     'sourceTransactionId',
+    'trashedAt',
   ],
   type: 'object',
 };
@@ -107,6 +136,8 @@ export class TransferController {
   public constructor(
     @Inject(CreateTransferUseCase)
     private readonly createTransfer: CreateTransferUseCase,
+    @Inject(ChangeOwnedTransferLifecycleUseCase)
+    private readonly changeLifecycle: ChangeOwnedTransferLifecycleUseCase,
     @Inject(AuthenticatedActorContext)
     private readonly actors: AuthenticatedActorContext,
   ) {}
@@ -135,6 +166,44 @@ export class TransferController {
     }
   }
 
+  @Patch(':transferId/lifecycle')
+  @ApiOperation({ summary: 'Change an owned transfer pair lifecycle' })
+  @ApiParam({ format: 'uuid', name: 'transferId', type: 'string' })
+  @ApiBody({
+    schema: {
+      additionalProperties: false,
+      properties: {
+        action: {
+          enum: ['archive', 'unarchive', 'move-to-trash', 'restore-from-trash'],
+          type: 'string',
+        },
+      },
+      required: ['action'],
+      type: 'object',
+    },
+  })
+  @ApiOkResponse({ schema: responseSchema })
+  @ApiNotFoundResponse({ description: 'Owned transfer not found' })
+  @ApiConflictResponse({ description: 'Transfer changed concurrently' })
+  public async lifecycle(
+    @Req() request: FastifyRequest,
+    @Param('transferId', new ParseUUIDPipe({ version: '4' }))
+    transferId: string,
+    @Body(new ZodValidationPipe(lifecycleSchema)) body: LifecycleRequest,
+  ): Promise<Response> {
+    try {
+      return mapTransfer(
+        await this.changeLifecycle.execute({
+          action: body.action,
+          actorId: this.actorId(request),
+          transferId,
+        }),
+      );
+    } catch (error) {
+      throw mapError(error);
+    }
+  }
+
   private actorId(request: FastifyRequest): string {
     const actor = this.actors.get(request);
     if (actor === undefined) throw new UnauthorizedException();
@@ -146,6 +215,7 @@ function mapTransfer(transfer: Transfer): Response {
   const value = transfer.toSnapshot();
   return {
     amount: value.source.amount.amount,
+    archivedAt: value.source.archivedAt?.toISOString() ?? null,
     createdAt: value.source.createdAt.toISOString(),
     currencyCode: value.source.amount.currency.code,
     currencyMinorUnitScale: value.source.amount.currency.minorUnitScale,
@@ -153,14 +223,22 @@ function mapTransfer(transfer: Transfer): Response {
     destinationAccountId: value.destination.accountId,
     destinationTransactionId: value.destination.id,
     id: value.id,
+    lifecycle: value.source.lifecycle,
     observations: value.source.observations,
     occurredAt: value.source.occurredAt.toISOString(),
     sourceAccountId: value.source.accountId,
     sourceTransactionId: value.source.id,
+    trashedAt: value.source.trashedAt?.toISOString() ?? null,
   };
 }
 
 function mapError(error: unknown): Error {
+  if (error instanceof OwnedTransferNotFoundError) {
+    return new NotFoundException('Transfer not found.');
+  }
+  if (error instanceof TransferVersionConflictError) {
+    return new ConflictException('Transfer changed concurrently.');
+  }
   if (error instanceof TransferAccountUnavailableError) {
     return new NotFoundException('Account not found.');
   }
@@ -168,6 +246,7 @@ function mapError(error: unknown): Error {
     error instanceof InvalidCurrencyError ||
     error instanceof InvalidMoneyAmountError ||
     error instanceof InvalidTransferError ||
+    error instanceof TransactionLifecycleError ||
     error instanceof TransferCurrencyMismatchError
   ) {
     return new BadRequestException('Invalid transfer operation.');

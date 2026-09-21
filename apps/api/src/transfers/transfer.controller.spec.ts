@@ -1,4 +1,7 @@
-import type { CreateTransferUseCase } from '@seshat/application';
+import type {
+  ChangeOwnedTransferLifecycleUseCase,
+  CreateTransferUseCase,
+} from '@seshat/application';
 import { Currency, Money, Transfer } from '@seshat/domain';
 import type { FastifyRequest } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
@@ -34,6 +37,7 @@ describe('TransferController', () => {
     const execute = vi.fn().mockResolvedValue(transfer());
     const controller = new TransferController(
       { execute } as unknown as CreateTransferUseCase,
+      { execute: vi.fn() } as unknown as ChangeOwnedTransferLifecycleUseCase,
       actors,
     );
 
@@ -55,6 +59,35 @@ describe('TransferController', () => {
       amount: '15.50',
       destinationTransactionId: '2fa93982-b631-4cb6-9eca-95ecbad87308',
       sourceTransactionId: '86684068-45d9-4e14-b454-f7e556b867e7',
+    });
+    expect(response).not.toHaveProperty('ownerId');
+  });
+
+  it('changes the full pair lifecycle using the verified actor', async () => {
+    const actors = new AuthenticatedActorContext();
+    const value = transfer();
+    value.moveToTrash(new Date('2026-09-21T13:00:00.000Z'));
+    const execute = vi.fn().mockResolvedValue(value);
+    const controller = new TransferController(
+      { execute: vi.fn() } as unknown as CreateTransferUseCase,
+      { execute } as unknown as ChangeOwnedTransferLifecycleUseCase,
+      actors,
+    );
+
+    const response = await controller.lifecycle(
+      request(actors),
+      'c722103a-e28a-482c-b6e9-e3320d8a44e3',
+      { action: 'move-to-trash' },
+    );
+
+    expect(execute).toHaveBeenCalledWith({
+      action: 'move-to-trash',
+      actorId: 'actor-id',
+      transferId: 'c722103a-e28a-482c-b6e9-e3320d8a44e3',
+    });
+    expect(response).toMatchObject({
+      lifecycle: 'trashed',
+      trashedAt: '2026-09-21T13:00:00.000Z',
     });
     expect(response).not.toHaveProperty('ownerId');
   });
