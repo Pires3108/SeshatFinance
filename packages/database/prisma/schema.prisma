@@ -86,6 +86,12 @@ model Transaction {
   updatedAt              DateTime             @map("updated_at") @db.Timestamptz(6)
   version                Int                  @default(1)
   tagAssignments         TransactionTag[]
+  categoryId             String?              @map("category_id") @db.Uuid
+  category               Category?            @relation("transaction_category", fields: [categoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  subcategoryId          String?              @map("subcategory_id") @db.Uuid
+  subcategory            Category?            @relation("transaction_subcategory", fields: [subcategoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  costCenterId           String?              @map("cost_center_id") @db.Uuid
+  costCenter             CostCenter?          @relation(fields: [costCenterId, ownerId], references: [id, ownerId], onDelete: Restrict)
 
   @@unique([id, ownerId])
   @@index([ownerId, accountId, occurredAt])
@@ -93,15 +99,17 @@ model Transaction {
 }
 
 model Category {
-  id               String     @id @db.Uuid
-  ownerId          String     @map("owner_id") @db.Uuid
+  id               String        @id @db.Uuid
+  ownerId          String        @map("owner_id") @db.Uuid
   name             String
-  parentCategoryId String?    @map("parent_category_id") @db.Uuid
-  parentCategory   Category?  @relation("category_hierarchy", fields: [parentCategoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
-  childCategories  Category[] @relation("category_hierarchy")
-  createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime   @map("updated_at") @db.Timestamptz(6)
-  version          Int        @default(1)
+  parentCategoryId String?       @map("parent_category_id") @db.Uuid
+  parentCategory   Category?     @relation("category_hierarchy", fields: [parentCategoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  childCategories  Category[]    @relation("category_hierarchy")
+  categorizedTransactions    Transaction[] @relation("transaction_category")
+  subcategorizedTransactions Transaction[] @relation("transaction_subcategory")
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime      @map("updated_at") @db.Timestamptz(6)
+  version          Int           @default(1)
 
   @@unique([id, ownerId])
   @@index([ownerId, parentCategoryId])
@@ -123,12 +131,13 @@ model Tag {
 }
 
 model CostCenter {
-  id        String   @id @db.Uuid
-  ownerId   String   @map("owner_id") @db.Uuid
-  name      String
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @map("updated_at") @db.Timestamptz(6)
-  version   Int      @default(1)
+  id           String        @id @db.Uuid
+  ownerId      String        @map("owner_id") @db.Uuid
+  name         String
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime      @map("updated_at") @db.Timestamptz(6)
+  version      Int           @default(1)
+  transactions Transaction[]
 
   @@unique([id, ownerId])
   @@index([ownerId, name])

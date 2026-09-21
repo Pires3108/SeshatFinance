@@ -92,3 +92,12 @@ export {
   type ReplaceTransactionTagsResult,
   type TransactionTagRepository,
 } from './transactions/set-transaction-tags.js';
+export {
+  GetOwnedTransactionClassificationUseCase,
+  InvalidOwnedTransactionClassificationError,
+  InvalidSubcategorySelectionError,
+  SetOwnedTransactionClassificationUseCase,
+  type ReplaceTransactionClassificationResult,
+  type TransactionClassificationRepository,
+  type TransactionClassificationSelection,
+} from './transactions/set-transaction-classification.js';

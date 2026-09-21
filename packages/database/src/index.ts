@@ -3,6 +3,7 @@ export { PrismaUserProfileRepository } from './users/prisma-user-profile-reposit
 export { PrismaAccountRepository } from './accounts/prisma-account-repository.js';
 export { PrismaTransactionRepository } from './transactions/prisma-transaction-repository.js';
 export { PrismaTransactionTagRepository } from './transactions/prisma-transaction-tag-repository.js';
+export { PrismaTransactionClassificationRepository } from './transactions/prisma-transaction-classification-repository.js';
 export { PrismaCategoryRepository } from './classifications/prisma-category-repository.js';
 export { PrismaTagRepository } from './classifications/prisma-tag-repository.js';
 export { PrismaCostCenterRepository } from './classifications/prisma-cost-center-repository.js';
