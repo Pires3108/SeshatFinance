@@ -1,5 +1,6 @@
 import {
   ChangeOwnedTransactionLifecycleUseCase,
+  ChangeOwnedTransferLifecycleUseCase,
   ChangeOwnedAccountLifecycleUseCase,
   CreateBalanceAdjustmentUseCase,
   CreateCategoryUseCase,
@@ -42,6 +43,7 @@ import {
   type TransactionTagRepository,
   type TransactionClassificationRepository,
   type TransferRepository,
+  type TransferLifecycleRepository,
 } from '@seshat/application';
 import { Module } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
@@ -149,6 +151,14 @@ import { UserProfileController } from './users/user-profile.controller.js';
           new SystemClock(),
           new SystemIdentifierGenerator(),
         ),
+    },
+    {
+      inject: [LazyTransferRepository],
+      provide: ChangeOwnedTransferLifecycleUseCase,
+      useFactory: (
+        transfers: TransferLifecycleRepository,
+      ): ChangeOwnedTransferLifecycleUseCase =>
+        new ChangeOwnedTransferLifecycleUseCase(transfers, new SystemClock()),
     },
     {
       inject: [LazyCostCenterRepository],
