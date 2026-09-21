@@ -35,6 +35,9 @@ describe('PrismaTransactionRepository', () => {
     for (const path of [
       '../../prisma/migrations/20260920040000_create_accounts/migration.sql',
       '../../prisma/migrations/20260920133000_create_transactions/migration.sql',
+      '../../prisma/migrations/20260920180000_create_categories/migration.sql',
+      '../../prisma/migrations/20260920210000_create_cost_centers/migration.sql',
+      '../../prisma/migrations/20260921010000_assign_transaction_classifications/migration.sql',
     ]) {
       await client.query(
         await readFile(new URL(path, import.meta.url), 'utf8'),

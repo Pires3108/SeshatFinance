@@ -38,6 +38,9 @@ describe('PrismaTransactionTagRepository', () => {
       '../../prisma/migrations/20260920133000_create_transactions/migration.sql',
       '../../prisma/migrations/20260920190000_create_tags/migration.sql',
       '../../prisma/migrations/20260920200000_assign_transaction_tags/migration.sql',
+      '../../prisma/migrations/20260920180000_create_categories/migration.sql',
+      '../../prisma/migrations/20260920210000_create_cost_centers/migration.sql',
+      '../../prisma/migrations/20260921010000_assign_transaction_classifications/migration.sql',
     ];
     const migrationClient = new Client({
       connectionString: container.getConnectionUri(),
