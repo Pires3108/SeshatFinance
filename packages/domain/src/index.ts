@@ -58,3 +58,9 @@ export {
   type CreateTransferProperties,
   type TransferSnapshot,
 } from './transfers/transfer.js';
+export {
+  BalanceAdjustment,
+  InvalidBalanceAdjustmentError,
+  type BalanceAdjustmentSnapshot,
+  type CreateBalanceAdjustmentProperties,
+} from './adjustments/balance-adjustment.js';
