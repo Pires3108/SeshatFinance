@@ -29,27 +29,28 @@ enum AccountLifecycle {
 }
 
 model Account {
-  id                       String           @id @db.Uuid
-  ownerId                  String           @map("owner_id") @db.Uuid
+  id                       String              @id @db.Uuid
+  ownerId                  String              @map("owner_id") @db.Uuid
   name                     String
   description              String?
   institution              String?
-  typeKey                  String           @map("type_key")
-  initialBalanceMinorUnits Decimal          @map("initial_balance_minor_units") @db.Decimal(1000, 0)
-  currencyCode             String           @map("currency_code") @db.Char(3)
-  currencyMinorUnitScale   Int              @map("currency_minor_unit_scale") @db.SmallInt
+  typeKey                  String              @map("type_key")
+  initialBalanceMinorUnits Decimal             @map("initial_balance_minor_units") @db.Decimal(1000, 0)
+  currencyCode             String              @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale   Int                 @map("currency_minor_unit_scale") @db.SmallInt
   color                    String?
   icon                     String?
-  lifecycle                AccountLifecycle @default(active)
-  archivedAt               DateTime?        @map("archived_at") @db.Timestamptz(6)
-  trashedAt                DateTime?        @map("trashed_at") @db.Timestamptz(6)
-  createdAt                DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt                DateTime         @map("updated_at") @db.Timestamptz(6)
-  version                  Int              @default(1)
+  lifecycle                AccountLifecycle    @default(active)
+  archivedAt               DateTime?           @map("archived_at") @db.Timestamptz(6)
+  trashedAt                DateTime?           @map("trashed_at") @db.Timestamptz(6)
+  createdAt                DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                DateTime            @map("updated_at") @db.Timestamptz(6)
+  version                  Int                 @default(1)
   transactions             Transaction[]
+  balanceAdjustments       BalanceAdjustment[]
 
-  @@index([ownerId, lifecycle])
   @@unique([id, ownerId])
+  @@index([ownerId, lifecycle])
   @@map("accounts")
 }
 
@@ -93,8 +94,9 @@ model Transaction {
   subcategory            Category?            @relation("transaction_subcategory", fields: [subcategoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
   costCenterId           String?              @map("cost_center_id") @db.Uuid
   costCenter             CostCenter?          @relation(fields: [costCenterId, ownerId], references: [id, ownerId], onDelete: Restrict)
-  outgoingTransfer       Transfer?             @relation("transfer_source")
-  incomingTransfer       Transfer?             @relation("transfer_destination")
+  outgoingTransfer       Transfer?            @relation("transfer_source")
+  incomingTransfer       Transfer?            @relation("transfer_destination")
+  balanceAdjustment      BalanceAdjustment?
 
   @@unique([id, ownerId])
   @@index([ownerId, accountId, occurredAt])
@@ -117,18 +119,39 @@ model Transfer {
   @@map("transfers")
 }
 
+model BalanceAdjustment {
+  id                        String      @id @db.Uuid
+  ownerId                   String      @map("owner_id") @db.Uuid
+  accountId                 String      @map("account_id") @db.Uuid
+  account                   Account     @relation(fields: [accountId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  transactionId             String      @map("transaction_id") @db.Uuid
+  transaction               Transaction @relation(fields: [transactionId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  previousBalanceMinorUnits Decimal     @map("previous_balance_minor_units") @db.Decimal(1000, 0)
+  reportedBalanceMinorUnits Decimal     @map("reported_balance_minor_units") @db.Decimal(1000, 0)
+  differenceMinorUnits      Decimal     @map("difference_minor_units") @db.Decimal(1000, 0)
+  currencyCode              String      @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale    Int         @map("currency_minor_unit_scale") @db.SmallInt
+  justification             String
+  createdAt                 DateTime    @map("created_at") @db.Timestamptz(6)
+
+  @@unique([id, ownerId])
+  @@unique([transactionId, ownerId])
+  @@index([ownerId, accountId, createdAt])
+  @@map("balance_adjustments")
+}
+
 model Category {
-  id               String        @id @db.Uuid
-  ownerId          String        @map("owner_id") @db.Uuid
-  name             String
-  parentCategoryId String?       @map("parent_category_id") @db.Uuid
-  parentCategory   Category?     @relation("category_hierarchy", fields: [parentCategoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
-  childCategories  Category[]    @relation("category_hierarchy")
+  id                         String        @id @db.Uuid
+  ownerId                    String        @map("owner_id") @db.Uuid
+  name                       String
+  parentCategoryId           String?       @map("parent_category_id") @db.Uuid
+  parentCategory             Category?     @relation("category_hierarchy", fields: [parentCategoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  childCategories            Category[]    @relation("category_hierarchy")
   categorizedTransactions    Transaction[] @relation("transaction_category")
   subcategorizedTransactions Transaction[] @relation("transaction_subcategory")
-  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt        DateTime      @map("updated_at") @db.Timestamptz(6)
-  version          Int           @default(1)
+  createdAt                  DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                  DateTime      @map("updated_at") @db.Timestamptz(6)
+  version                    Int           @default(1)
 
   @@unique([id, ownerId])
   @@index([ownerId, parentCategoryId])
