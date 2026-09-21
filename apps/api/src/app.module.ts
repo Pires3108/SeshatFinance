@@ -9,6 +9,7 @@ import {
   GetOwnedAccountUseCase,
   GetOwnedAccountBalanceUseCase,
   GetOwnedTransactionUseCase,
+  GetOwnedTransactionClassificationUseCase,
   ListOwnedTransactionTagsUseCase,
   ListOwnedCategoriesUseCase,
   ListOwnedCostCentersUseCase,
@@ -22,6 +23,7 @@ import {
   RenameOwnedCostCenterUseCase,
   RenameOwnedTagUseCase,
   SetOwnedTransactionTagsUseCase,
+  SetOwnedTransactionClassificationUseCase,
   GetOwnUserProfileUseCase,
   UpdateOwnUserProfileUseCase,
   UpdateOwnedAccountDetailsUseCase,
@@ -33,6 +35,7 @@ import {
   type TagRepository,
   type TransactionRepository,
   type TransactionTagRepository,
+  type TransactionClassificationRepository,
 } from '@seshat/application';
 import { Module } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
@@ -61,9 +64,11 @@ import { LazyPrismaClient } from './platform/lazy-prisma-client.js';
 import { SystemClock } from './platform/system-clock.js';
 import { SystemIdentifierGenerator } from './platform/system-identifier-generator.js';
 import { LazyTransactionRepository } from './transactions/lazy-transaction-repository.js';
+import { LazyTransactionClassificationRepository } from './transactions/lazy-transaction-classification-repository.js';
 import { LazyTransactionTagRepository } from './transactions/lazy-transaction-tag-repository.js';
 import { TransactionController } from './transactions/transaction.controller.js';
 import { TransactionTagController } from './transactions/transaction-tag.controller.js';
+import { TransactionClassificationController } from './transactions/transaction-classification.controller.js';
 import { LazyUserProfileRepository } from './users/lazy-user-profile-repository.js';
 import { UserProfileController } from './users/user-profile.controller.js';
 
@@ -78,6 +83,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     PasswordRecoveryController,
     TagController,
     TransactionController,
+    TransactionClassificationController,
     TransactionTagController,
     UserProfileController,
   ],
@@ -93,6 +99,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyCostCenterRepository,
     LazyTagRepository,
     LazyTransactionRepository,
+    LazyTransactionClassificationRepository,
     LazyTransactionTagRepository,
     LazyUserProfileRepository,
     {
@@ -170,6 +177,42 @@ import { UserProfileController } from './users/user-profile.controller.js';
         categories: CategoryRepository,
       ): RenameOwnedCategoryUseCase =>
         new RenameOwnedCategoryUseCase(categories, new SystemClock()),
+    },
+    {
+      inject: [
+        LazyTransactionRepository,
+        LazyTransactionClassificationRepository,
+      ],
+      provide: GetOwnedTransactionClassificationUseCase,
+      useFactory: (
+        transactions: TransactionRepository,
+        classifications: TransactionClassificationRepository,
+      ): GetOwnedTransactionClassificationUseCase =>
+        new GetOwnedTransactionClassificationUseCase(
+          transactions,
+          classifications,
+        ),
+    },
+    {
+      inject: [
+        LazyTransactionRepository,
+        LazyCategoryRepository,
+        LazyCostCenterRepository,
+        LazyTransactionClassificationRepository,
+      ],
+      provide: SetOwnedTransactionClassificationUseCase,
+      useFactory: (
+        transactions: TransactionRepository,
+        categories: CategoryRepository,
+        costCenters: CostCenterRepository,
+        classifications: TransactionClassificationRepository,
+      ): SetOwnedTransactionClassificationUseCase =>
+        new SetOwnedTransactionClassificationUseCase(
+          transactions,
+          categories,
+          costCenters,
+          classifications,
+        ),
     },
     {
       inject: [LazyTransactionRepository, LazyTransactionTagRepository],

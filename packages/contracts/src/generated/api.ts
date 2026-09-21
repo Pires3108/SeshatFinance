@@ -283,6 +283,24 @@ export type paths = {
         readonly patch: operations["TransactionController_lifecycle"];
         readonly trace?: never;
     };
+    readonly "/api/v1/transactions/{transactionId}/classification": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get the classification of an owned transaction */
+        readonly get: operations["TransactionClassificationController_get"];
+        /** Replace the classification of an owned transaction */
+        readonly put: operations["TransactionClassificationController_replace"];
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/transactions/{transactionId}/tags": {
         readonly parameters: {
             readonly query?: never;
@@ -1442,6 +1460,108 @@ export interface operations {
                         readonly version: number;
                     };
                 };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned transaction was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TransactionClassificationController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly transactionId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly categoryId: string | null;
+                        /** Format: uuid */
+                        readonly costCenterId: string | null;
+                        /** Format: uuid */
+                        readonly subcategoryId: string | null;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned transaction was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TransactionClassificationController_replace: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly transactionId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Format: uuid */
+                    readonly categoryId: string | null;
+                    /** Format: uuid */
+                    readonly costCenterId: string | null;
+                    /** Format: uuid */
+                    readonly subcategoryId: string | null;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly categoryId: string | null;
+                        /** Format: uuid */
+                        readonly costCenterId: string | null;
+                        /** Format: uuid */
+                        readonly subcategoryId: string | null;
+                    };
+                };
+            };
+            /** @description A selected classification is invalid or not owned by the actor */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Bearer token missing or invalid */
             readonly 401: {
