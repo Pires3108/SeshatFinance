@@ -1,6 +1,7 @@
 import {
   ChangeOwnedTransactionLifecycleUseCase,
   ChangeOwnedAccountLifecycleUseCase,
+  CreateBalanceAdjustmentUseCase,
   CreateCategoryUseCase,
   CreateCostCenterUseCase,
   CreateTagUseCase,
@@ -32,6 +33,7 @@ import {
   UpdateOwnedTransactionUseCase,
   type UserProfileRepository,
   type AccountRepository,
+  type BalanceAdjustmentRepository,
   type CategoryRepository,
   type CostCenterRepository,
   type TagRepository,
@@ -47,6 +49,8 @@ import { createClient } from '@supabase/supabase-js';
 import { AccountController } from './accounts/account.controller.js';
 import { AccountBalanceController } from './accounts/account-balance.controller.js';
 import { LazyAccountRepository } from './accounts/lazy-account-repository.js';
+import { BalanceAdjustmentController } from './adjustments/balance-adjustment.controller.js';
+import { LazyBalanceAdjustmentRepository } from './adjustments/lazy-balance-adjustment-repository.js';
 import { AuthConfiguration } from './auth/auth-configuration.js';
 import { AuthController } from './auth/auth.controller.js';
 import { AuthenticatedActorContext } from './auth/authenticated-actor-context.js';
@@ -82,6 +86,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
   controllers: [
     AccountBalanceController,
     AccountController,
+    BalanceAdjustmentController,
     AuthController,
     CategoryController,
     CostCenterController,
@@ -102,6 +107,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     PrivacySafeLogger,
     LazyPrismaClient,
     LazyAccountRepository,
+    LazyBalanceAdjustmentRepository,
     LazyCategoryRepository,
     LazyCostCenterRepository,
     LazyTagRepository,
@@ -110,6 +116,26 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyTransactionTagRepository,
     LazyTransferRepository,
     LazyUserProfileRepository,
+    {
+      inject: [
+        LazyAccountRepository,
+        LazyTransactionRepository,
+        LazyBalanceAdjustmentRepository,
+      ],
+      provide: CreateBalanceAdjustmentUseCase,
+      useFactory: (
+        accounts: AccountRepository,
+        transactions: TransactionRepository,
+        adjustments: BalanceAdjustmentRepository,
+      ): CreateBalanceAdjustmentUseCase =>
+        new CreateBalanceAdjustmentUseCase(
+          accounts,
+          transactions,
+          adjustments,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
     {
       inject: [LazyAccountRepository, LazyTransferRepository],
       provide: CreateTransferUseCase,

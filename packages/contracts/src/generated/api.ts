@@ -74,6 +74,23 @@ export type paths = {
         readonly patch: operations["AccountController_lifecycle"];
         readonly trace?: never;
     };
+    readonly "/api/v1/accounts/{accountId}/balance-adjustments": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Reconcile an owned account to a user-reported balance */
+        readonly post: operations["BalanceAdjustmentController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/auth/registrations": {
         readonly parameters: {
             readonly query?: never;
@@ -721,6 +738,76 @@ export interface operations {
             };
             /** @description Owned account was not found */
             readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly BalanceAdjustmentController_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly accountId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly justification: string;
+                    /** Format: date-time */
+                    readonly occurredAt: string;
+                    readonly reportedBalance: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly accountId: string;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly difference: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly justification: string;
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                        readonly previousBalance: string;
+                        readonly reportedBalance: string;
+                        /** Format: uuid */
+                        readonly transactionId: string;
+                        /** @enum {string} */
+                        readonly transactionKind: "income" | "expense";
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned active account was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Account balance changed concurrently */
+            readonly 409: {
                 headers: {
                     readonly [name: string]: unknown;
                 };
