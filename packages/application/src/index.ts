@@ -104,3 +104,10 @@ export {
   type TransactionClassificationRepository,
   type TransactionClassificationSelection,
 } from './transactions/set-transaction-classification.js';
+export {
+  CreateTransferUseCase,
+  TransferAccountUnavailableError,
+  TransferCurrencyMismatchError,
+  type CreateTransferCommand,
+  type TransferRepository,
+} from './transfers/create-transfer.js';
