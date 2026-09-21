@@ -105,10 +105,15 @@ export {
   type TransactionClassificationSelection,
 } from './transactions/set-transaction-classification.js';
 export {
+  ChangeOwnedTransferLifecycleUseCase,
   CreateTransferUseCase,
+  OwnedTransferNotFoundError,
   TransferAccountUnavailableError,
   TransferCurrencyMismatchError,
+  TransferVersionConflictError,
   type CreateTransferCommand,
+  type TransferLifecycleAction,
+  type TransferLifecycleRepository,
   type TransferRepository,
 } from './transfers/create-transfer.js';
 export {

@@ -81,6 +81,39 @@ export class Transfer {
     );
   }
 
+  public static restore(snapshot: TransferSnapshot): Transfer {
+    assertRequiredText(snapshot.id, 'Transfer id');
+    assertRequiredText(snapshot.ownerId, 'Transfer owner id');
+    const source = Transaction.restore(snapshot.source);
+    const destination = Transaction.restore(snapshot.destination);
+    validatePair(snapshot.ownerId, source, destination);
+    return new Transfer(snapshot.id, snapshot.ownerId, source, destination);
+  }
+
+  public archive(at: Date): void {
+    this.changePairLifecycle((transaction) => {
+      transaction.archive(at);
+    });
+  }
+
+  public unarchive(at: Date): void {
+    this.changePairLifecycle((transaction) => {
+      transaction.unarchive(at);
+    });
+  }
+
+  public moveToTrash(at: Date): void {
+    this.changePairLifecycle((transaction) => {
+      transaction.moveToTrash(at);
+    });
+  }
+
+  public restoreFromTrash(at: Date): void {
+    this.changePairLifecycle((transaction) => {
+      transaction.restoreFromTrash(at);
+    });
+  }
+
   public toSnapshot(): TransferSnapshot {
     return {
       destination: this.destination.toSnapshot(),
@@ -93,6 +126,51 @@ export class Transfer {
   public netBalanceEffect(): Money {
     return this.source.balanceEffect().add(this.destination.balanceEffect());
   }
+
+  private changePairLifecycle(
+    change: (transaction: Transaction) => void,
+  ): void {
+    validatePair(this.ownerId, this.source, this.destination);
+    change(this.source);
+    change(this.destination);
+  }
+}
+
+function validatePair(
+  ownerId: string,
+  source: Transaction,
+  destination: Transaction,
+): void {
+  const sourceSnapshot = source.toSnapshot();
+  const destinationSnapshot = destination.toSnapshot();
+  if (
+    source.ownerId !== ownerId ||
+    destination.ownerId !== ownerId ||
+    sourceSnapshot.kind !== 'expense' ||
+    destinationSnapshot.kind !== 'income' ||
+    source.accountId === destination.accountId ||
+    source.id === destination.id ||
+    !source.amount.equals(destination.amount) ||
+    sourceSnapshot.description !== destinationSnapshot.description ||
+    sourceSnapshot.observations !== destinationSnapshot.observations ||
+    sourceSnapshot.lifecycle !== destinationSnapshot.lifecycle ||
+    sourceSnapshot.version !== destinationSnapshot.version ||
+    !sameInstant(sourceSnapshot.createdAt, destinationSnapshot.createdAt) ||
+    !sameInstant(sourceSnapshot.occurredAt, destinationSnapshot.occurredAt) ||
+    !sameInstant(sourceSnapshot.updatedAt, destinationSnapshot.updatedAt) ||
+    !sameInstant(sourceSnapshot.archivedAt, destinationSnapshot.archivedAt) ||
+    !sameInstant(sourceSnapshot.trashedAt, destinationSnapshot.trashedAt)
+  ) {
+    throw new InvalidTransferError(
+      'Transfer entries must form a coherent pair.',
+    );
+  }
+}
+
+function sameInstant(left: Date | null, right: Date | null): boolean {
+  return left === null
+    ? right === null
+    : right !== null && left.getTime() === right.getTime();
 }
 
 function assertRequiredText(value: string, label: string): void {
