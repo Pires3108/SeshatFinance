@@ -20,6 +20,15 @@ export interface TransferRepository {
   insertAtomically(transfer: Transfer): Promise<void>;
 }
 
+export interface TransferLifecycleRepository {
+  findByIdForOwner(id: string, ownerId: string): Promise<Transfer | null>;
+  saveAtomically(
+    transfer: Transfer,
+    expectedSourceVersion: number,
+    expectedDestinationVersion: number,
+  ): Promise<boolean>;
+}
+
 export class TransferAccountUnavailableError extends Error {
   public constructor() {
     super('Two distinct active owned accounts are required.');
@@ -31,6 +40,20 @@ export class TransferCurrencyMismatchError extends Error {
   public constructor() {
     super('Transfer accounts must use the same currency.');
     this.name = 'TransferCurrencyMismatchError';
+  }
+}
+
+export class OwnedTransferNotFoundError extends Error {
+  public constructor() {
+    super('Owned transfer was not found.');
+    this.name = 'OwnedTransferNotFoundError';
+  }
+}
+
+export class TransferVersionConflictError extends Error {
+  public constructor() {
+    super('Transfer was modified concurrently.');
+    this.name = 'TransferVersionConflictError';
   }
 }
 
@@ -87,6 +110,51 @@ export class CreateTransferUseCase {
       sourceTransactionId,
     });
     await this.transfers.insertAtomically(transfer);
+    return transfer;
+  }
+}
+
+export type TransferLifecycleAction =
+  'archive' | 'unarchive' | 'move-to-trash' | 'restore-from-trash';
+
+export class ChangeOwnedTransferLifecycleUseCase {
+  public constructor(
+    private readonly transfers: TransferLifecycleRepository,
+    private readonly clock: Clock,
+  ) {}
+
+  public async execute(command: {
+    action: TransferLifecycleAction;
+    actorId: string;
+    transferId: string;
+  }): Promise<Transfer> {
+    const transfer = await this.transfers.findByIdForOwner(
+      command.transferId,
+      command.actorId,
+    );
+    if (transfer === null) throw new OwnedTransferNotFoundError();
+    const before = transfer.toSnapshot();
+    const at = this.clock.now();
+    switch (command.action) {
+      case 'archive':
+        transfer.archive(at);
+        break;
+      case 'unarchive':
+        transfer.unarchive(at);
+        break;
+      case 'move-to-trash':
+        transfer.moveToTrash(at);
+        break;
+      case 'restore-from-trash':
+        transfer.restoreFromTrash(at);
+        break;
+    }
+    const saved = await this.transfers.saveAtomically(
+      transfer,
+      before.source.version,
+      before.destination.version,
+    );
+    if (!saved) throw new TransferVersionConflictError();
     return transfer;
   }
 }

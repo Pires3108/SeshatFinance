@@ -34,4 +34,46 @@ describe('Transfer', () => {
       Transfer.create({ ...base, destinationAccountId: 'source-account-id' }),
     ).toThrow(InvalidTransferError);
   });
+
+  it('restores and changes both lifecycle entries together', () => {
+    const created = Transfer.create(base);
+    const restored = Transfer.restore(created.toSnapshot());
+    const archivedAt = new Date('2026-09-21T15:00:00.000Z');
+    const trashedAt = new Date('2026-09-21T16:00:00.000Z');
+    const restoredAt = new Date('2026-09-21T17:00:00.000Z');
+
+    restored.archive(archivedAt);
+    expect(restored.toSnapshot()).toMatchObject({
+      destination: { lifecycle: 'archived', version: 2 },
+      source: { lifecycle: 'archived', version: 2 },
+    });
+
+    restored.moveToTrash(trashedAt);
+    expect(restored.netBalanceEffect().toDecimal()).toBe('0.00');
+    expect(restored.toSnapshot()).toMatchObject({
+      destination: { lifecycle: 'trashed', version: 3 },
+      source: { lifecycle: 'trashed', version: 3 },
+    });
+
+    restored.restoreFromTrash(restoredAt);
+    expect(restored.toSnapshot()).toMatchObject({
+      destination: { lifecycle: 'archived', version: 4 },
+      source: { lifecycle: 'archived', version: 4 },
+    });
+  });
+
+  it('rejects restoring an incoherent persisted pair', () => {
+    const snapshot = Transfer.create(base).toSnapshot();
+
+    expect(() =>
+      Transfer.restore({
+        ...snapshot,
+        destination: {
+          ...snapshot.destination,
+          lifecycle: 'archived',
+          archivedAt: new Date('2026-09-21T15:00:00.000Z'),
+        },
+      }),
+    ).toThrow(InvalidTransferError);
+  });
 });

@@ -9,10 +9,14 @@ import { describe, expect, it } from 'vitest';
 
 import type { AccountRepository } from '../accounts/create-account.js';
 import {
+  ChangeOwnedTransferLifecycleUseCase,
   CreateTransferUseCase,
+  OwnedTransferNotFoundError,
   TransferAccountUnavailableError,
   TransferCurrencyMismatchError,
+  TransferVersionConflictError,
   type CreateTransferCommand,
+  type TransferLifecycleRepository,
   type TransferRepository,
 } from './create-transfer.js';
 
@@ -122,3 +126,89 @@ describe('CreateTransferUseCase', () => {
     );
   });
 });
+
+describe('ChangeOwnedTransferLifecycleUseCase', () => {
+  it('persists both entries with their independent expected versions', async () => {
+    const created = await createTransfer();
+    let saved: Transfer | undefined;
+    let versions: readonly number[] = [];
+    const repository: TransferLifecycleRepository = {
+      findByIdForOwner: (id, actorId) =>
+        Promise.resolve(
+          id === created.id && actorId === created.ownerId ? created : null,
+        ),
+      saveAtomically: (transfer, sourceVersion, destinationVersion) => {
+        saved = transfer;
+        versions = [sourceVersion, destinationVersion];
+        return Promise.resolve(true);
+      },
+    };
+    const useCase = new ChangeOwnedTransferLifecycleUseCase(repository, {
+      now: () => new Date('2026-09-21T13:00:00.000Z'),
+    });
+
+    const result = await useCase.execute({
+      action: 'move-to-trash',
+      actorId: ownerId,
+      transferId: created.id,
+    });
+
+    expect(saved).toBe(result);
+    expect(versions).toEqual([1, 1]);
+    expect(result.toSnapshot()).toMatchObject({
+      destination: { lifecycle: 'trashed', version: 2 },
+      source: { lifecycle: 'trashed', version: 2 },
+    });
+  });
+
+  it('does not reveal a missing or foreign transfer', async () => {
+    const useCase = new ChangeOwnedTransferLifecycleUseCase(
+      {
+        findByIdForOwner: () => Promise.resolve(null),
+        saveAtomically: () => Promise.resolve(true),
+      },
+      { now: () => new Date('2026-09-21T13:00:00.000Z') },
+    );
+
+    await expect(
+      useCase.execute({
+        action: 'archive',
+        actorId: ownerId,
+        transferId: 'unknown-id',
+      }),
+    ).rejects.toBeInstanceOf(OwnedTransferNotFoundError);
+  });
+
+  it('reports an atomic optimistic concurrency conflict', async () => {
+    const created = await createTransfer();
+    const useCase = new ChangeOwnedTransferLifecycleUseCase(
+      {
+        findByIdForOwner: () => Promise.resolve(created),
+        saveAtomically: () => Promise.resolve(false),
+      },
+      { now: () => new Date('2026-09-21T13:00:00.000Z') },
+    );
+
+    await expect(
+      useCase.execute({
+        action: 'archive',
+        actorId: ownerId,
+        transferId: created.id,
+      }),
+    ).rejects.toBeInstanceOf(TransferVersionConflictError);
+  });
+});
+
+async function createTransfer(): Promise<Transfer> {
+  const identifiers = [
+    'transfer-id',
+    'source-entry-id',
+    'destination-entry-id',
+  ];
+  return new CreateTransferUseCase(
+    accounts([account('source-id'), account('destination-id')]),
+    { insertAtomically: () => Promise.resolve() },
+    { now: () => new Date('2026-09-21T12:00:00.000Z') },
+    { generate: () => identifiers.shift() ?? 'unexpected-id' },
+  ).execute(command());
+}
