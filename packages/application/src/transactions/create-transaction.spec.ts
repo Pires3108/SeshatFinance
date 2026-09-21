@@ -11,9 +11,12 @@ import { describe, expect, it } from 'vitest';
 import {
   ChangeOwnedTransactionLifecycleUseCase,
   CreateTransactionUseCase,
+  InvalidTransactionInstantRangeError,
+  ListOwnedTransactionsBetweenUseCase,
   TransactionAccountUnavailableError,
   UpdateOwnedTransactionUseCase,
   type TransactionRepository,
+  type TransactionTimelineRepository,
 } from './create-transaction.js';
 
 class RecordingTransactions implements TransactionRepository {
@@ -182,5 +185,36 @@ describe('owned transaction changes', () => {
     });
 
     expect(result.balanceEffect().isZero()).toBe(true);
+  });
+});
+
+describe('ListOwnedTransactionsBetweenUseCase', () => {
+  it('passes an explicit half-open range with the actor ownership', async () => {
+    let received:
+      Readonly<{ from: Date; ownerId: string; to: Date }> | undefined;
+    const timeline: TransactionTimelineRepository = {
+      listForOwnerBetween: (ownerId, from, to) => {
+        received = { from, ownerId, to };
+        return Promise.resolve([]);
+      },
+    };
+    const useCase = new ListOwnedTransactionsBetweenUseCase(timeline);
+    const from = new Date('2026-09-20T00:00:00.000Z');
+    const to = new Date('2026-09-21T00:00:00.000Z');
+
+    await expect(useCase.execute('owner-id', from, to)).resolves.toEqual([]);
+    expect(received).toEqual({ from, ownerId: 'owner-id', to });
+  });
+
+  it('rejects empty or reversed ranges before querying persistence', () => {
+    const timeline: TransactionTimelineRepository = {
+      listForOwnerBetween: () => Promise.resolve([]),
+    };
+    const useCase = new ListOwnedTransactionsBetweenUseCase(timeline);
+    const instant = new Date('2026-09-20T00:00:00.000Z');
+
+    expect(() => useCase.execute('owner-id', instant, instant)).toThrow(
+      InvalidTransactionInstantRangeError,
+    );
   });
 });

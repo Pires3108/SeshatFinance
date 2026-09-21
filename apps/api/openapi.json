@@ -1921,6 +1921,138 @@
         "tags": ["transactions"]
       }
     },
+    "/api/v1/transactions": {
+      "get": {
+        "operationId": "TransactionController_listBetween",
+        "parameters": [
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "properties": {
+                      "accountId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "amount": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "archivedAt": {
+                        "format": "date-time",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "currencyCode": {
+                        "pattern": "^[A-Z]{3}$",
+                        "type": "string"
+                      },
+                      "currencyMinorUnitScale": {
+                        "maximum": 18,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "description": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "kind": {
+                        "enum": ["income", "expense"],
+                        "type": "string"
+                      },
+                      "lifecycle": {
+                        "enum": ["active", "archived", "trashed"],
+                        "type": "string"
+                      },
+                      "observations": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "occurredAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "trashedAt": {
+                        "format": "date-time",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "version": {
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "accountId",
+                      "amount",
+                      "archivedAt",
+                      "createdAt",
+                      "currencyCode",
+                      "currencyMinorUnitScale",
+                      "description",
+                      "id",
+                      "kind",
+                      "lifecycle",
+                      "observations",
+                      "occurredAt",
+                      "trashedAt",
+                      "updatedAt",
+                      "version"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List owned transactions in an explicit instant range",
+        "tags": ["transactions"]
+      }
+    },
     "/api/v1/transactions/{transactionId}": {
       "get": {
         "operationId": "TransactionController_get",

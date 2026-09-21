@@ -248,6 +248,23 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/transactions": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List owned transactions in an explicit instant range */
+        readonly get: operations["TransactionController_listBetween"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/transactions/{transactionId}": {
         readonly parameters: {
             readonly query?: never;
@@ -1274,6 +1291,60 @@ export interface operations {
                         readonly updatedAt: string;
                         readonly version: number;
                     };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TransactionController_listBetween: {
+        readonly parameters: {
+            readonly query: {
+                readonly to: string;
+                readonly from: string;
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        /** Format: uuid */
+                        readonly accountId: string;
+                        readonly amount: string;
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly description: string | null;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly kind: "income" | "expense";
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        readonly observations: string | null;
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                        /** Format: date-time */
+                        readonly trashedAt: string | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    }[];
                 };
             };
             /** @description Bearer token missing or invalid */

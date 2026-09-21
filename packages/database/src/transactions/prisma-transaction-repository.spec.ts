@@ -5,6 +5,27 @@ import type { PrismaClient } from '../generated/prisma/client.js';
 import { PrismaTransactionRepository } from './prisma-transaction-repository.js';
 
 describe('PrismaTransactionRepository', () => {
+  it('queries an owned half-open instant range in deterministic order', async () => {
+    const findMany = vi.fn().mockResolvedValue([]);
+    const client = {
+      transaction: { findMany },
+    } as unknown as PrismaClient;
+    const repository = new PrismaTransactionRepository(client);
+    const from = new Date('2026-09-20T00:00:00.000Z');
+    const to = new Date('2026-09-21T00:00:00.000Z');
+
+    await expect(
+      repository.listForOwnerBetween('owner-id', from, to),
+    ).resolves.toEqual([]);
+    expect(findMany).toHaveBeenCalledWith({
+      orderBy: [{ occurredAt: 'asc' }, { id: 'asc' }],
+      where: {
+        occurredAt: { gte: from, lt: to },
+        ownerId: 'owner-id',
+      },
+    });
+  });
+
   it('persists edited amount and kind with the optimistic version', async () => {
     const updateMany = vi.fn().mockResolvedValue({ count: 1 });
     const client = {

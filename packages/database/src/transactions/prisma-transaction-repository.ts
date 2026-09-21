@@ -51,6 +51,18 @@ export class PrismaTransactionRepository implements TransactionRepository {
     return rows.map(restoreTransaction);
   }
 
+  public async listForOwnerBetween(
+    ownerId: string,
+    from: Date,
+    to: Date,
+  ): Promise<readonly Transaction[]> {
+    const rows = await this.client.transaction.findMany({
+      orderBy: [{ occurredAt: 'asc' }, { id: 'asc' }],
+      where: { occurredAt: { gte: from, lt: to }, ownerId },
+    });
+    return rows.map(restoreTransaction);
+  }
+
   public async save(
     transaction: Transaction,
     expectedVersion: number,
