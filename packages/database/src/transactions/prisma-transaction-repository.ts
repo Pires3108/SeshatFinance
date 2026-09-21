@@ -57,8 +57,10 @@ export class PrismaTransactionRepository implements TransactionRepository {
     const snapshot = transaction.toSnapshot();
     const result = await this.client.transaction.updateMany({
       data: {
+        amountMinorUnits: transaction.amount.toMinorUnits().toString(),
         archivedAt: snapshot.archivedAt,
         description: snapshot.description,
+        kind: snapshot.kind,
         lifecycle: snapshot.lifecycle,
         occurredAt: snapshot.occurredAt,
         trashedAt: snapshot.trashedAt,
