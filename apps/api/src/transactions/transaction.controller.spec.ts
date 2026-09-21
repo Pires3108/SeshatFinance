@@ -3,6 +3,7 @@ import type {
   CreateTransactionUseCase,
   GetOwnedTransactionUseCase,
   ListOwnedAccountTransactionsUseCase,
+  ListOwnedTransactionsBetweenUseCase,
   UpdateOwnedTransactionUseCase,
 } from '@seshat/application';
 import { Currency, Money, Transaction } from '@seshat/domain';
@@ -39,6 +40,7 @@ describe('TransactionController', () => {
       { execute } as unknown as CreateTransactionUseCase,
       { execute: vi.fn() } as unknown as GetOwnedTransactionUseCase,
       { execute: vi.fn() } as unknown as ListOwnedAccountTransactionsUseCase,
+      { execute: vi.fn() } as unknown as ListOwnedTransactionsBetweenUseCase,
       { execute: vi.fn() } as unknown as UpdateOwnedTransactionUseCase,
       { execute: vi.fn() } as unknown as ChangeOwnedTransactionLifecycleUseCase,
       actors,
@@ -70,6 +72,7 @@ describe('TransactionController', () => {
       { execute: vi.fn() } as unknown as CreateTransactionUseCase,
       { execute: vi.fn() } as unknown as GetOwnedTransactionUseCase,
       { execute } as unknown as ListOwnedAccountTransactionsUseCase,
+      { execute: vi.fn() } as unknown as ListOwnedTransactionsBetweenUseCase,
       { execute: vi.fn() } as unknown as UpdateOwnedTransactionUseCase,
       { execute: vi.fn() } as unknown as ChangeOwnedTransactionLifecycleUseCase,
       actors,
@@ -86,6 +89,31 @@ describe('TransactionController', () => {
     );
   });
 
+  it('lists an explicit instant range using only the verified actor', async () => {
+    const actors = new AuthenticatedActorContext();
+    const execute = vi.fn().mockResolvedValue([transaction()]);
+    const controller = new TransactionController(
+      { execute: vi.fn() } as unknown as CreateTransactionUseCase,
+      { execute: vi.fn() } as unknown as GetOwnedTransactionUseCase,
+      { execute: vi.fn() } as unknown as ListOwnedAccountTransactionsUseCase,
+      { execute } as unknown as ListOwnedTransactionsBetweenUseCase,
+      { execute: vi.fn() } as unknown as UpdateOwnedTransactionUseCase,
+      { execute: vi.fn() } as unknown as ChangeOwnedTransactionLifecycleUseCase,
+      actors,
+    );
+
+    await controller.listBetween(request(actors), {
+      from: '2026-09-20T00:00:00.000Z',
+      to: '2026-09-21T00:00:00.000Z',
+    });
+
+    expect(execute).toHaveBeenCalledWith(
+      'actor-id',
+      new Date('2026-09-20T00:00:00.000Z'),
+      new Date('2026-09-21T00:00:00.000Z'),
+    );
+  });
+
   it('updates a record using the verified actor', async () => {
     const actors = new AuthenticatedActorContext();
     const execute = vi.fn().mockResolvedValue(transaction());
@@ -93,6 +121,7 @@ describe('TransactionController', () => {
       { execute: vi.fn() } as unknown as CreateTransactionUseCase,
       { execute: vi.fn() } as unknown as GetOwnedTransactionUseCase,
       { execute: vi.fn() } as unknown as ListOwnedAccountTransactionsUseCase,
+      { execute: vi.fn() } as unknown as ListOwnedTransactionsBetweenUseCase,
       { execute } as unknown as UpdateOwnedTransactionUseCase,
       { execute: vi.fn() } as unknown as ChangeOwnedTransactionLifecycleUseCase,
       actors,

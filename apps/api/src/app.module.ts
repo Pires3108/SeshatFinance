@@ -11,6 +11,7 @@ import {
   GetOwnedTransactionUseCase,
   GetOwnedTransactionClassificationUseCase,
   ListOwnedTransactionTagsUseCase,
+  ListOwnedTransactionsBetweenUseCase,
   ListOwnedCategoriesUseCase,
   ListOwnedCostCentersUseCase,
   ListOwnedTagsUseCase,
@@ -34,6 +35,7 @@ import {
   type CostCenterRepository,
   type TagRepository,
   type TransactionRepository,
+  type TransactionTimelineRepository,
   type TransactionTagRepository,
   type TransactionClassificationRepository,
 } from '@seshat/application';
@@ -222,6 +224,14 @@ import { UserProfileController } from './users/user-profile.controller.js';
         assignments: TransactionTagRepository,
       ): ListOwnedTransactionTagsUseCase =>
         new ListOwnedTransactionTagsUseCase(transactions, assignments),
+    },
+    {
+      inject: [LazyTransactionRepository],
+      provide: ListOwnedTransactionsBetweenUseCase,
+      useFactory: (
+        transactions: TransactionTimelineRepository,
+      ): ListOwnedTransactionsBetweenUseCase =>
+        new ListOwnedTransactionsBetweenUseCase(transactions),
     },
     {
       inject: [

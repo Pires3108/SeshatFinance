@@ -52,6 +52,13 @@ export class TransactionVersionConflictError extends Error {
   }
 }
 
+export class InvalidTransactionInstantRangeError extends Error {
+  public constructor() {
+    super('Transaction instant range must be valid and non-empty.');
+    this.name = 'InvalidTransactionInstantRangeError';
+  }
+}
+
 export class CreateTransactionUseCase {
   public constructor(
     private readonly transactions: TransactionRepository,
@@ -118,6 +125,35 @@ export class ListOwnedAccountTransactionsUseCase {
       throw new TransactionAccountUnavailableError();
     }
     return this.transactions.listForAccountOwner(accountId, actorId);
+  }
+}
+
+export interface TransactionTimelineRepository {
+  listForOwnerBetween(
+    ownerId: string,
+    from: Date,
+    to: Date,
+  ): Promise<readonly Transaction[]>;
+}
+
+export class ListOwnedTransactionsBetweenUseCase {
+  public constructor(
+    private readonly transactions: TransactionTimelineRepository,
+  ) {}
+
+  public execute(
+    actorId: string,
+    from: Date,
+    to: Date,
+  ): Promise<readonly Transaction[]> {
+    if (
+      Number.isNaN(from.getTime()) ||
+      Number.isNaN(to.getTime()) ||
+      from >= to
+    ) {
+      throw new InvalidTransactionInstantRangeError();
+    }
+    return this.transactions.listForOwnerBetween(actorId, from, to);
   }
 }
 

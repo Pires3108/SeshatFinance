@@ -2,7 +2,9 @@ import {
   ChangeOwnedTransactionLifecycleUseCase,
   CreateTransactionUseCase,
   GetOwnedTransactionUseCase,
+  InvalidTransactionInstantRangeError,
   ListOwnedAccountTransactionsUseCase,
+  ListOwnedTransactionsBetweenUseCase,
   OwnedTransactionNotFoundError,
   TransactionAccountUnavailableError,
   TransactionVersionConflictError,
@@ -29,6 +31,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UnauthorizedException,
   UseGuards,
@@ -41,6 +44,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
   type SchemaObject,
@@ -77,9 +81,14 @@ const lifecycleSchema = z.object({
     'restore-from-trash',
   ]),
 });
+const instantRangeSchema = z.object({
+  from: z.iso.datetime({ offset: true }),
+  to: z.iso.datetime({ offset: true }),
+});
 type CreateRequest = z.infer<typeof createSchema>;
 type UpdateRequest = z.infer<typeof updateSchema>;
 type LifecycleRequest = z.infer<typeof lifecycleSchema>;
+type InstantRangeRequest = z.infer<typeof instantRangeSchema>;
 type Response = Readonly<{
   accountId: string;
   amount: string;
@@ -149,6 +158,8 @@ export class TransactionController {
     private readonly getTransaction: GetOwnedTransactionUseCase,
     @Inject(ListOwnedAccountTransactionsUseCase)
     private readonly listTransactions: ListOwnedAccountTransactionsUseCase,
+    @Inject(ListOwnedTransactionsBetweenUseCase)
+    private readonly listTransactionsBetween: ListOwnedTransactionsBetweenUseCase,
     @Inject(UpdateOwnedTransactionUseCase)
     private readonly updateTransaction: UpdateOwnedTransactionUseCase,
     @Inject(ChangeOwnedTransactionLifecycleUseCase)
@@ -194,6 +205,36 @@ export class TransactionController {
     try {
       return (
         await this.listTransactions.execute(accountId, this.actorId(request))
+      ).map(mapTransaction);
+    } catch (error) {
+      throw mapError(error);
+    }
+  }
+
+  @Get('transactions')
+  @ApiOperation({
+    summary: 'List owned transactions in an explicit instant range',
+  })
+  @ApiQuery({
+    format: 'date-time',
+    name: 'from',
+    required: true,
+    type: 'string',
+  })
+  @ApiQuery({ format: 'date-time', name: 'to', required: true, type: 'string' })
+  @ApiOkResponse({ schema: { items: responseSchema, type: 'array' } })
+  public async listBetween(
+    @Req() request: FastifyRequest,
+    @Query(new ZodValidationPipe(instantRangeSchema))
+    query: InstantRangeRequest,
+  ): Promise<readonly Response[]> {
+    try {
+      return (
+        await this.listTransactionsBetween.execute(
+          this.actorId(request),
+          new Date(query.from),
+          new Date(query.to),
+        )
       ).map(mapTransaction);
     } catch (error) {
       throw mapError(error);
@@ -324,6 +365,7 @@ function mapError(error: unknown): Error {
   if (
     error instanceof InvalidCurrencyError ||
     error instanceof InvalidMoneyAmountError ||
+    error instanceof InvalidTransactionInstantRangeError ||
     error instanceof InvalidTransactionError ||
     error instanceof TransactionLifecycleError
   )

@@ -103,6 +103,20 @@ describe('PrismaTransactionRepository', () => {
         'e89b6ad0-7838-4a2c-9a21-c775ea78e22a',
       ),
     ).resolves.toBeNull();
+    await expect(
+      transactions.listForOwnerBetween(
+        ownerId,
+        new Date('2026-09-20T10:00:00.000Z'),
+        new Date('2026-09-20T12:00:00.000Z'),
+      ),
+    ).resolves.toHaveLength(1);
+    await expect(
+      transactions.listForOwnerBetween(
+        ownerId,
+        new Date('2026-09-20T10:00:00.000Z'),
+        new Date('2026-09-20T11:00:00.000Z'),
+      ),
+    ).resolves.toEqual([]);
 
     transaction.updateDetails(
       {

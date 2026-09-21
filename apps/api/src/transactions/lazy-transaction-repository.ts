@@ -24,6 +24,14 @@ export class LazyTransactionRepository implements TransactionRepository {
   ): Promise<readonly Transaction[]> {
     return this.getRepository().listForAccountOwner(accountId, ownerId);
   }
+
+  public listForOwnerBetween(
+    ownerId: string,
+    from: Date,
+    to: Date,
+  ): Promise<readonly Transaction[]> {
+    return this.getRepository().listForOwnerBetween(ownerId, from, to);
+  }
   public save(
     transaction: Transaction,
     expectedVersion: number,
