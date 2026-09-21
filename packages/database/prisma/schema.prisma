@@ -140,6 +140,40 @@ model BalanceAdjustment {
   @@map("balance_adjustments")
 }
 
+enum FinancialAuditAction {
+  created
+  updated
+  archived
+  unarchived
+  moved_to_trash      @map("moved-to-trash")
+  restored_from_trash @map("restored-from-trash")
+
+  @@map("financial_audit_action")
+}
+
+enum FinancialAuditResourceType {
+  account
+  transaction
+  transfer
+  balance_adjustment @map("balance-adjustment")
+
+  @@map("financial_audit_resource_type")
+}
+
+model FinancialAuditEvent {
+  id           String                     @id @db.Uuid
+  ownerId      String                     @map("owner_id") @db.Uuid
+  actorId      String                     @map("actor_id") @db.Uuid
+  action       FinancialAuditAction
+  resourceType FinancialAuditResourceType @map("resource_type")
+  resourceId   String                     @map("resource_id") @db.Uuid
+  occurredAt   DateTime                   @map("occurred_at") @db.Timestamptz(6)
+
+  @@index([ownerId, occurredAt, id])
+  @@index([ownerId, resourceType, resourceId, occurredAt])
+  @@map("financial_audit_events")
+}
+
 model Category {
   id                         String        @id @db.Uuid
   ownerId                    String        @map("owner_id") @db.Uuid
