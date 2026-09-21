@@ -1,6 +1,8 @@
 import type { TagRepository } from '../classifications/manage-tag.js';
 import {
   OwnedTransactionNotFoundError,
+  TransactionRequiresTransferMutationError,
+  type TransactionFinancialLinkRepository,
   type TransactionRepository,
 } from './create-transaction.js';
 
@@ -29,6 +31,7 @@ export class InvalidOwnedTagSelectionError extends Error {
 export class SetOwnedTransactionTagsUseCase {
   public constructor(
     private readonly transactions: TransactionRepository,
+    private readonly financialLinks: TransactionFinancialLinkRepository,
     private readonly tags: TagRepository,
     private readonly assignments: TransactionTagRepository,
   ) {}
@@ -45,6 +48,13 @@ export class SetOwnedTransactionTagsUseCase {
       )) === null
     ) {
       throw new OwnedTransactionNotFoundError();
+    }
+    const transferId = await this.financialLinks.findTransferIdByEntryForOwner(
+      command.transactionId,
+      command.actorId,
+    );
+    if (transferId !== null) {
+      throw new TransactionRequiresTransferMutationError(transferId);
     }
     const tagIds = [...new Set(command.tagIds)];
     const selectedTags = await Promise.all(

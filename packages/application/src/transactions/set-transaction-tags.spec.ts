@@ -2,7 +2,11 @@ import { Tag, Transaction } from '@seshat/domain';
 import { describe, expect, it } from 'vitest';
 
 import type { TagRepository } from '../classifications/manage-tag.js';
-import type { TransactionRepository } from './create-transaction.js';
+import {
+  TransactionRequiresTransferMutationError,
+  type TransactionFinancialLinkRepository,
+  type TransactionRepository,
+} from './create-transaction.js';
 import {
   InvalidOwnedTagSelectionError,
   SetOwnedTransactionTagsUseCase,
@@ -33,6 +37,14 @@ function transactions(value: Transaction): TransactionRepository {
     listForAccountOwner: (): Promise<readonly Transaction[]> =>
       Promise.resolve([]),
     save: (): Promise<boolean> => Promise.resolve(true),
+  };
+}
+
+function links(
+  transferId: string | null = null,
+): TransactionFinancialLinkRepository {
+  return {
+    findTransferIdByEntryForOwner: () => Promise.resolve(transferId),
   };
 }
 
@@ -74,6 +86,7 @@ describe('SetOwnedTransactionTagsUseCase', () => {
     };
     const useCase = new SetOwnedTransactionTagsUseCase(
       transactions(value),
+      links(),
       tags([first, second]),
       assignments,
     );
@@ -97,6 +110,7 @@ describe('SetOwnedTransactionTagsUseCase', () => {
     };
     const useCase = new SetOwnedTransactionTagsUseCase(
       transactions(value),
+      links(),
       tags([foreignTag]),
       assignments,
     );
@@ -108,5 +122,26 @@ describe('SetOwnedTransactionTagsUseCase', () => {
         transactionId: value.id,
       }),
     ).rejects.toBeInstanceOf(InvalidOwnedTagSelectionError);
+  });
+
+  it('rejects isolated tag changes for a transfer entry', async () => {
+    const value = transaction();
+    const useCase = new SetOwnedTransactionTagsUseCase(
+      transactions(value),
+      links('transfer-id'),
+      tags([]),
+      {
+        listTagIdsForOwner: () => Promise.resolve([]),
+        replaceForOwner: () => Promise.resolve('updated'),
+      },
+    );
+
+    await expect(
+      useCase.execute({
+        actorId: value.ownerId,
+        tagIds: [],
+        transactionId: value.id,
+      }),
+    ).rejects.toBeInstanceOf(TransactionRequiresTransferMutationError);
   });
 });

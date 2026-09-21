@@ -1,9 +1,14 @@
-import type { TransactionRepository } from '@seshat/application';
+import type {
+  TransactionFinancialLinkRepository,
+  TransactionRepository,
+} from '@seshat/application';
 import { Transaction } from '@seshat/domain';
 
 import type { PrismaClient } from '../generated/prisma/client.js';
 
-export class PrismaTransactionRepository implements TransactionRepository {
+export class PrismaTransactionRepository
+  implements TransactionRepository, TransactionFinancialLinkRepository
+{
   public constructor(private readonly client: PrismaClient) {}
 
   public async insert(transaction: Transaction): Promise<void> {
@@ -88,6 +93,23 @@ export class PrismaTransactionRepository implements TransactionRepository {
       },
     });
     return result.count === 1;
+  }
+
+  public async findTransferIdByEntryForOwner(
+    transactionId: string,
+    ownerId: string,
+  ): Promise<string | null> {
+    const transfer = await this.client.transfer.findFirst({
+      select: { id: true },
+      where: {
+        OR: [
+          { sourceTransactionId: transactionId },
+          { destinationTransactionId: transactionId },
+        ],
+        ownerId,
+      },
+    });
+    return transfer?.id ?? null;
   }
 }
 

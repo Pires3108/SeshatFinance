@@ -3,11 +3,13 @@ import {
   ListOwnedTransactionTagsUseCase,
   OwnedTransactionNotFoundError,
   SetOwnedTransactionTagsUseCase,
+  TransactionRequiresTransferMutationError,
 } from '@seshat/application';
 import {
   BadRequestException,
   Body,
   Controller,
+  ConflictException,
   Get,
   Inject,
   NotFoundException,
@@ -21,6 +23,7 @@ import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiBody,
+  ApiConflictResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -117,6 +120,7 @@ export class TransactionTagController {
     description: 'A selected tag is not owned by the actor',
   })
   @ApiNotFoundResponse({ description: 'Owned transaction was not found' })
+  @ApiConflictResponse({ description: 'Transaction belongs to a transfer' })
   public async replace(
     @Req() request: FastifyRequest,
     @Param('transactionId', new ZodValidationPipe(idSchema))
@@ -149,6 +153,10 @@ function mapError(error: unknown): Error {
   if (error instanceof InvalidOwnedTagSelectionError)
     return new BadRequestException(
       'Every selected tag must belong to the actor.',
+    );
+  if (error instanceof TransactionRequiresTransferMutationError)
+    return new ConflictException(
+      'Transfer entries must be changed through the transfer endpoint.',
     );
   return error instanceof Error
     ? error
