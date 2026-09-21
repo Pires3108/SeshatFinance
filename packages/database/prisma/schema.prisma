@@ -78,6 +78,7 @@ model Transaction {
   currencyCode           String               @map("currency_code") @db.Char(3)
   currencyMinorUnitScale Int                  @map("currency_minor_unit_scale") @db.SmallInt
   description            String?
+  observations           String?
   occurredAt             DateTime             @map("occurred_at") @db.Timestamptz(6)
   lifecycle              TransactionLifecycle @default(active)
   archivedAt             DateTime?            @map("archived_at") @db.Timestamptz(6)

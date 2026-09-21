@@ -39,6 +39,7 @@ describe('PrismaTransactionRepository', () => {
         description: 'Updated transaction',
         kind: 'expense',
         lifecycle: 'active',
+        observations: null,
         occurredAt: new Date('2026-09-21T10:30:00.000Z'),
         trashedAt: null,
         updatedAt: new Date('2026-09-21T12:00:00.000Z'),

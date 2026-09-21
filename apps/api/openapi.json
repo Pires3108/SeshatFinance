@@ -1671,6 +1671,10 @@
                     "enum": ["income", "expense"],
                     "type": "string"
                   },
+                  "observations": {
+                    "nullable": true,
+                    "type": "string"
+                  },
                   "occurredAt": {
                     "format": "date-time",
                     "type": "string"
@@ -1682,6 +1686,7 @@
                   "currencyMinorUnitScale",
                   "description",
                   "kind",
+                  "observations",
                   "occurredAt"
                 ],
                 "type": "object"
@@ -1738,6 +1743,10 @@
                       "enum": ["active", "archived", "trashed"],
                       "type": "string"
                     },
+                    "observations": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "occurredAt": {
                       "format": "date-time",
                       "type": "string"
@@ -1767,6 +1776,7 @@
                     "id",
                     "kind",
                     "lifecycle",
+                    "observations",
                     "occurredAt",
                     "trashedAt",
                     "updatedAt",
@@ -1852,6 +1862,10 @@
                         "enum": ["active", "archived", "trashed"],
                         "type": "string"
                       },
+                      "observations": {
+                        "nullable": true,
+                        "type": "string"
+                      },
                       "occurredAt": {
                         "format": "date-time",
                         "type": "string"
@@ -1881,6 +1895,7 @@
                       "id",
                       "kind",
                       "lifecycle",
+                      "observations",
                       "occurredAt",
                       "trashedAt",
                       "updatedAt",
@@ -1969,6 +1984,10 @@
                       "enum": ["active", "archived", "trashed"],
                       "type": "string"
                     },
+                    "observations": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "occurredAt": {
                       "format": "date-time",
                       "type": "string"
@@ -1998,6 +2017,7 @@
                     "id",
                     "kind",
                     "lifecycle",
+                    "observations",
                     "occurredAt",
                     "trashedAt",
                     "updatedAt",
@@ -2056,12 +2076,22 @@
                     "enum": ["income", "expense"],
                     "type": "string"
                   },
+                  "observations": {
+                    "nullable": true,
+                    "type": "string"
+                  },
                   "occurredAt": {
                     "format": "date-time",
                     "type": "string"
                   }
                 },
-                "required": ["amount", "description", "kind", "occurredAt"],
+                "required": [
+                  "amount",
+                  "description",
+                  "kind",
+                  "observations",
+                  "occurredAt"
+                ],
                 "type": "object"
               }
             }
@@ -2116,6 +2146,10 @@
                       "enum": ["active", "archived", "trashed"],
                       "type": "string"
                     },
+                    "observations": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "occurredAt": {
                       "format": "date-time",
                       "type": "string"
@@ -2145,6 +2179,7 @@
                     "id",
                     "kind",
                     "lifecycle",
+                    "observations",
                     "occurredAt",
                     "trashedAt",
                     "updatedAt",
@@ -2257,6 +2292,10 @@
                       "enum": ["active", "archived", "trashed"],
                       "type": "string"
                     },
+                    "observations": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "occurredAt": {
                       "format": "date-time",
                       "type": "string"
@@ -2286,6 +2325,7 @@
                     "id",
                     "kind",
                     "lifecycle",
+                    "observations",
                     "occurredAt",
                     "trashedAt",
                     "updatedAt",

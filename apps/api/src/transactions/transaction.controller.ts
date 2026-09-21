@@ -62,6 +62,7 @@ const createSchema = z.object({
   currencyMinorUnitScale: z.number().int().min(0).max(18),
   description: z.string().trim().min(1).nullable(),
   kind: z.enum(['income', 'expense']),
+  observations: z.string().trim().min(1).nullable(),
   occurredAt: z.iso.datetime({ offset: true }),
 });
 const updateSchema = createSchema.omit({
@@ -90,6 +91,7 @@ type Response = Readonly<{
   id: string;
   kind: TransactionSnapshot['kind'];
   lifecycle: TransactionSnapshot['lifecycle'];
+  observations: string | null;
   occurredAt: string;
   trashedAt: string | null;
   updatedAt: string;
@@ -108,6 +110,7 @@ const responseSchema: SchemaObject = {
     id: { format: 'uuid', type: 'string' },
     kind: { enum: ['income', 'expense'], type: 'string' },
     lifecycle: { enum: ['active', 'archived', 'trashed'], type: 'string' },
+    observations: { nullable: true, type: 'string' },
     occurredAt: { format: 'date-time', type: 'string' },
     trashedAt: { format: 'date-time', nullable: true, type: 'string' },
     updatedAt: { format: 'date-time', type: 'string' },
@@ -124,6 +127,7 @@ const responseSchema: SchemaObject = {
     'id',
     'kind',
     'lifecycle',
+    'observations',
     'occurredAt',
     'trashedAt',
     'updatedAt',
@@ -302,6 +306,7 @@ function mapTransaction(transaction: Transaction): Response {
     id: value.id,
     kind: value.kind,
     lifecycle: value.lifecycle,
+    observations: value.observations,
     occurredAt: value.occurredAt.toISOString(),
     trashedAt: value.trashedAt?.toISOString() ?? null,
     updatedAt: value.updatedAt.toISOString(),
@@ -336,7 +341,7 @@ function updateBodySchema(): SchemaObject {
   return {
     ...schema,
     properties,
-    required: ['amount', 'description', 'kind', 'occurredAt'],
+    required: ['amount', 'description', 'kind', 'observations', 'occurredAt'],
   };
 }
 
@@ -353,6 +358,7 @@ function createBodySchema(): SchemaObject {
       currencyMinorUnitScale: { maximum: 18, minimum: 0, type: 'integer' },
       description: { nullable: true, type: 'string' },
       kind: { enum: ['income', 'expense'], type: 'string' },
+      observations: { nullable: true, type: 'string' },
       occurredAt: { format: 'date-time', type: 'string' },
     },
     required: [
@@ -361,6 +367,7 @@ function createBodySchema(): SchemaObject {
       'currencyMinorUnitScale',
       'description',
       'kind',
+      'observations',
       'occurredAt',
     ],
     type: 'object',

@@ -82,11 +82,13 @@ describe('CreateTransactionUseCase', () => {
       currencyMinorUnitScale: 2,
       description: 'Receita',
       kind: 'income',
+      observations: 'Confirmada no banco',
       occurredAt: new Date('2026-09-20T11:00:00.000Z'),
     });
 
     expect(repository.inserted).toBe(result);
     expect(result.amount.toDecimal()).toBe('12.34');
+    expect(result.toSnapshot().observations).toBe('Confirmada no banco');
   });
 
   it('rejects accounts not owned by the actor', async () => {
@@ -139,11 +141,16 @@ describe('owned transaction changes', () => {
       amount: '9.99',
       description: 'Corrigida',
       kind: 'expense',
+      observations: 'Conferida no extrato',
       occurredAt: new Date('2026-09-19T11:00:00.000Z'),
       transactionId: 'transaction-id',
     });
 
-    expect(result.toSnapshot()).toMatchObject({ kind: 'expense', version: 2 });
+    expect(result.toSnapshot()).toMatchObject({
+      kind: 'expense',
+      observations: 'Conferida no extrato',
+      version: 2,
+    });
     expect(result.amount.toDecimal()).toBe('9.99');
   });
 
