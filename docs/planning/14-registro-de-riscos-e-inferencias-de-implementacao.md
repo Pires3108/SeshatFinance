@@ -86,6 +86,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** definir a máquina de estados pública das entidades, incluindo criação, desativação, reativação, exclusão e comportamento nas consultas e vínculos históricos.
 - **Limite atual:** não implementar persistência nem contratos públicos de entidade até a decisão. Vínculos opcionais por texto ou referência futura não devem exigir cadastro, e alterações cadastrais nunca devem reescrever silenciosamente o histórico.
 
+### RII-012 — Limites calendáricos das visões temporais
+
+- **Estado:** aberto.
+- **Referências:** RF-067 a RF-069; CA-004; US-030.
+- **Risco:** as visões diária, semanal e mensal não definem qual fuso converte o instante da movimentação em data civil, qual dia inicia a semana nem a convenção dos limites do período. Inferir esses pontos pode omitir ou duplicar movimentações próximas à meia-noite, à mudança de mês ou a transições de horário de verão.
+- **Decisão necessária:** definir o fuso autoritativo por usuário ou contexto compartilhado, o primeiro dia da semana e intervalos calendáricos semiabertos canônicos, incluindo o comportamento quando o fuso for alterado.
+- **Limite atual:** consultas internas podem evoluir com intervalos explícitos de instantes `[from, to)`, ownership e ordenação determinística; endpoints ou rótulos que afirmem representar dia, semana ou mês não devem ser publicados antes da decisão.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
