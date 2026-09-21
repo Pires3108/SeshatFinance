@@ -36,6 +36,8 @@ describe('PrismaTransferRepository', () => {
     for (const path of [
       '../../prisma/migrations/20260920040000_create_accounts/migration.sql',
       '../../prisma/migrations/20260920133000_create_transactions/migration.sql',
+      '../../prisma/migrations/20260920190000_create_tags/migration.sql',
+      '../../prisma/migrations/20260920200000_assign_transaction_tags/migration.sql',
       '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
       '../../prisma/migrations/20260921150000_create_transfers/migration.sql',
     ]) {
