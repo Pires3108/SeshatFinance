@@ -93,10 +93,28 @@ model Transaction {
   subcategory            Category?            @relation("transaction_subcategory", fields: [subcategoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
   costCenterId           String?              @map("cost_center_id") @db.Uuid
   costCenter             CostCenter?          @relation(fields: [costCenterId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  outgoingTransfer       Transfer?             @relation("transfer_source")
+  incomingTransfer       Transfer?             @relation("transfer_destination")
 
   @@unique([id, ownerId])
   @@index([ownerId, accountId, occurredAt])
   @@map("transactions")
+}
+
+model Transfer {
+  id                       String      @id @db.Uuid
+  ownerId                  String      @map("owner_id") @db.Uuid
+  sourceTransactionId      String      @map("source_transaction_id") @db.Uuid
+  sourceTransaction        Transaction @relation("transfer_source", fields: [sourceTransactionId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  destinationTransactionId String      @map("destination_transaction_id") @db.Uuid
+  destinationTransaction   Transaction @relation("transfer_destination", fields: [destinationTransactionId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  createdAt                DateTime    @map("created_at") @db.Timestamptz(6)
+
+  @@unique([id, ownerId])
+  @@unique([sourceTransactionId, ownerId])
+  @@unique([destinationTransactionId, ownerId])
+  @@index([ownerId, createdAt])
+  @@map("transfers")
 }
 
 model Category {
