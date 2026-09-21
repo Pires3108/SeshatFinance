@@ -9,3 +9,4 @@ export { PrismaBalanceAdjustmentRepository } from './adjustments/prisma-balance-
 export { PrismaCategoryRepository } from './classifications/prisma-category-repository.js';
 export { PrismaTagRepository } from './classifications/prisma-tag-repository.js';
 export { PrismaCostCenterRepository } from './classifications/prisma-cost-center-repository.js';
+export { PrismaFinancialAuditEventRepository } from './audit/prisma-financial-audit-event-repository.js';

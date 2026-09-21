@@ -94,13 +94,13 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** definir o fuso autoritativo por usuário ou contexto compartilhado, o primeiro dia da semana e intervalos calendáricos semiabertos canônicos, incluindo o comportamento quando o fuso for alterado.
 - **Limite atual:** consultas internas podem evoluir com intervalos explícitos de instantes `[from, to)`, ownership e ordenação determinística; endpoints ou rótulos que afirmem representar dia, semana ou mês não devem ser publicados antes da decisão.
 
-### RII-013 — Conteúdo sensível e retenção da auditoria
+### RII-013 — Conteúdo sensível e expiração da auditoria
 
-- **Estado:** aberto.
+- **Estado:** parcialmente aberto.
 - **Referências:** RF-088; RF-089; RNF-023; RNF-032; INV-041; US-035; US-101; US-112.
-- **Risco:** “valores relevantes” não define quais estados anteriores e posteriores podem ser armazenados, mascarados ou exibidos, e os requisitos ainda não fixam prazo de retenção. Um payload genérico pode duplicar descrições, valores financeiros ou outros dados sensíveis e ampliar indevidamente acesso e retenção.
-- **Decisão necessária:** aprovar uma lista permitida por ação e recurso, regras de mascaramento, prazo de retenção e tratamento após eliminação da conta, além da visibilidade por papel em contextos compartilhados.
-- **Limite atual:** eventos financeiros registram somente identificador, proprietário, ator, ação, tipo e identificador do recurso e instante. Não armazenar snapshots, descrições ou valores em payload de auditoria até a decisão; a consulta pública permanece reservada para US-112.
+- **Risco:** “valores relevantes” não define quais estados anteriores e posteriores podem ser armazenados, mascarados ou exibidos. Um payload genérico pode duplicar descrições, valores financeiros ou outros dados sensíveis e ampliar indevidamente o acesso. RNF-058 fixa retenção por 12 meses ou até a eliminação da conta, mas a exceção por investigação de segurança ainda exige uma autorização documentada e um processo operacional verificável.
+- **Decisão necessária:** aprovar uma lista permitida por ação e recurso, regras de mascaramento, visibilidade por papel em contextos compartilhados e o processo de expiração ou anonimização, inclusive para a exceção de investigação de segurança.
+- **Limite atual:** eventos financeiros registram somente identificador, proprietário, ator, ação, tipo e identificador do recurso e instante. Não armazenar snapshots, descrições ou valores em payload de auditoria até a decisão; implementar a expiração em US-101 e manter a consulta pública reservada para US-112.
 
 ## 3. Itens resolvidos
 
