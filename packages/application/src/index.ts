@@ -111,3 +111,10 @@ export {
   type CreateTransferCommand,
   type TransferRepository,
 } from './transfers/create-transfer.js';
+export {
+  BalanceAdjustmentAccountUnavailableError,
+  BalanceAdjustmentBalanceConflictError,
+  CreateBalanceAdjustmentUseCase,
+  type BalanceAdjustmentRepository,
+  type CreateBalanceAdjustmentCommand,
+} from './adjustments/create-balance-adjustment.js';
