@@ -50,7 +50,12 @@ function toPersistedAction(
 function toPersistedResourceType(
   resourceType: ReturnType<FinancialAuditEvent['toSnapshot']>['resourceType'],
 ): FinancialAuditResourceType {
-  return resourceType === 'balance-adjustment'
-    ? 'balance_adjustment'
-    : resourceType;
+  switch (resourceType) {
+    case 'balance-adjustment':
+      return 'balance_adjustment';
+    case 'credit-card':
+      return 'credit_card';
+    default:
+      return resourceType;
+  }
 }
