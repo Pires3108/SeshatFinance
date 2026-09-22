@@ -184,6 +184,122 @@ describe('PrismaTransferRepository', () => {
     ).toBe(true);
     await expect(client.financialAuditEvent.count()).resolves.toBe(5);
   });
+
+  it('persists only one copy when the same transfer is submitted concurrently', async () => {
+    if (client === undefined || repository === undefined) {
+      throw new Error('Transfer persistence is unavailable.');
+    }
+    const beforeTransfers = await client.transfer.count();
+    const beforeTransactions = await client.transaction.count();
+    const beforeAuditEvents = await client.financialAuditEvent.count();
+    const concurrent = transfer(
+      '60606060-6060-4060-8060-606060606060',
+      '61616161-6161-4161-8161-616161616161',
+      '62626262-6262-4262-8262-626262626262',
+    );
+
+    const outcomes = await Promise.allSettled([
+      repository.insertAtomically(
+        concurrent,
+        auditEvent(
+          concurrent,
+          'created',
+          '63636363-6363-4363-8363-636363636363',
+        ),
+      ),
+      repository.insertAtomically(
+        concurrent,
+        auditEvent(
+          concurrent,
+          'created',
+          '64646464-6464-4464-8464-646464646464',
+        ),
+      ),
+    ]);
+
+    expect(outcomes.map(({ status }) => status).sort()).toEqual([
+      'fulfilled',
+      'rejected',
+    ]);
+    await expect(client.transfer.count()).resolves.toBe(beforeTransfers + 1);
+    await expect(client.transaction.count()).resolves.toBe(
+      beforeTransactions + 2,
+    );
+    await expect(client.financialAuditEvent.count()).resolves.toBe(
+      beforeAuditEvents + 1,
+    );
+  });
+
+  it('applies a concurrent lifecycle change to both entries only once', async () => {
+    if (client === undefined || repository === undefined) {
+      throw new Error('Transfer persistence is unavailable.');
+    }
+    const concurrent = transfer(
+      '70707070-7070-4070-8070-707070707070',
+      '71717171-7171-4171-8171-717171717171',
+      '72727272-7272-4272-8272-727272727272',
+    );
+    await repository.insertAtomically(
+      concurrent,
+      auditEvent(concurrent, 'created', '73737373-7373-4373-8373-737373737373'),
+    );
+    const first = await repository.findByIdForOwner(
+      concurrent.id,
+      concurrent.ownerId,
+    );
+    const second = await repository.findByIdForOwner(
+      concurrent.id,
+      concurrent.ownerId,
+    );
+    if (first === null || second === null) {
+      throw new Error('Concurrent transfer was not restored.');
+    }
+    first.moveToTrash(new Date('2026-09-21T15:00:00.000Z'));
+    second.moveToTrash(new Date('2026-09-21T15:00:00.000Z'));
+    const beforeAuditEvents = await client.financialAuditEvent.count();
+
+    const outcomes = await Promise.all([
+      repository.saveAtomically(
+        first,
+        1,
+        1,
+        auditEvent(
+          first,
+          'moved-to-trash',
+          '74747474-7474-4474-8474-747474747474',
+        ),
+      ),
+      repository.saveAtomically(
+        second,
+        1,
+        1,
+        auditEvent(
+          second,
+          'moved-to-trash',
+          '75757575-7575-4575-8575-757575757575',
+        ),
+      ),
+    ]);
+
+    expect(outcomes.sort()).toEqual([false, true]);
+    const rows = await client.transaction.findMany({
+      where: {
+        id: {
+          in: [
+            concurrent.toSnapshot().source.id,
+            concurrent.toSnapshot().destination.id,
+          ],
+        },
+      },
+    });
+    expect(rows).toHaveLength(2);
+    expect(
+      rows.every((row) => row.lifecycle === 'trashed' && row.version === 2),
+    ).toBe(true);
+    await expect(client.financialAuditEvent.count()).resolves.toBe(
+      beforeAuditEvents + 1,
+    );
+  });
 });
 
 function account(id: string): Account {

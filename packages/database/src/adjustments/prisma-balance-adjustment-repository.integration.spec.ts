@@ -134,6 +134,37 @@ describe('PrismaBalanceAdjustmentRepository', () => {
       beforeAdjustments,
     );
   });
+
+  it('allows only one concurrent adjustment for the same previous balance', async () => {
+    if (client === undefined || repository === undefined) throw unavailable();
+    const beforeTransactions = await client.transaction.count();
+    const beforeAdjustments = await client.balanceAdjustment.count();
+    const beforeAuditEvents = await client.financialAuditEvent.count();
+    const first = adjustment('130.50', '140.00');
+    const second = adjustment('130.50', '150.00');
+
+    const outcomes = await Promise.all([
+      repository.insertAtomically(
+        first,
+        adjustmentAuditEvent(first, 'cccccccc-cccc-4ccc-8ccc-cccccccccccc'),
+      ),
+      repository.insertAtomically(
+        second,
+        adjustmentAuditEvent(second, 'dddddddd-dddd-4ddd-8ddd-dddddddddddd'),
+      ),
+    ]);
+
+    expect(outcomes.sort()).toEqual([false, true]);
+    await expect(client.transaction.count()).resolves.toBe(
+      beforeTransactions + 1,
+    );
+    await expect(client.balanceAdjustment.count()).resolves.toBe(
+      beforeAdjustments + 1,
+    );
+    await expect(client.financialAuditEvent.count()).resolves.toBe(
+      beforeAuditEvents + 1,
+    );
+  });
 });
 
 function account(): Account {
