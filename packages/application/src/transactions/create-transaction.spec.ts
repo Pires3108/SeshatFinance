@@ -3,6 +3,7 @@ import {
   Account,
   AccountType,
   Currency,
+  type FinancialAuditEvent,
   Money,
   type Transaction,
 } from '@seshat/domain';
@@ -25,9 +26,14 @@ class RecordingTransactions
   implements TransactionRepository, TransactionFinancialLinkRepository
 {
   public inserted: Transaction | undefined;
+  public auditEvents: FinancialAuditEvent[] = [];
   public transferId: string | null = null;
-  public insert(transaction: Transaction): Promise<void> {
+  public insert(
+    transaction: Transaction,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<void> {
     this.inserted = transaction;
+    this.auditEvents.push(auditEvent);
     return Promise.resolve();
   }
   public findByIdForOwner(
@@ -43,7 +49,12 @@ class RecordingTransactions
   public listForAccountOwner(): Promise<readonly Transaction[]> {
     return Promise.resolve([]);
   }
-  public save(): Promise<boolean> {
+  public save(
+    _transaction: Transaction,
+    _expectedVersion: number,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<boolean> {
+    this.auditEvents.push(auditEvent);
     return Promise.resolve(true);
   }
   public findTransferIdByEntryForOwner(): Promise<string | null> {
@@ -98,6 +109,12 @@ describe('CreateTransactionUseCase', () => {
     });
 
     expect(repository.inserted).toBe(result);
+    expect(repository.auditEvents[0]?.toSnapshot()).toMatchObject({
+      action: 'created',
+      actorId: 'owner-id',
+      resourceId: 'transaction-id',
+      resourceType: 'transaction',
+    });
     expect(result.amount.toDecimal()).toBe('12.34');
     expect(result.toSnapshot().observations).toBe('Confirmada no banco');
   });
@@ -150,6 +167,7 @@ describe('owned transaction changes', () => {
       {
         now: (): Date => new Date('2026-09-20T14:00:00.000Z'),
       },
+      { generate: (): string => 'update-audit-id' },
     );
 
     const result = await update.execute({
@@ -168,6 +186,11 @@ describe('owned transaction changes', () => {
       version: 2,
     });
     expect(result.amount.toDecimal()).toBe('9.99');
+    expect(repository.auditEvents.at(-1)?.toSnapshot()).toMatchObject({
+      action: 'updated',
+      id: 'update-audit-id',
+      resourceId: 'transaction-id',
+    });
   });
 
   it('moves an owned record to trash and removes its balance effect', async () => {
@@ -193,6 +216,7 @@ describe('owned transaction changes', () => {
       {
         now: (): Date => new Date('2026-09-20T14:00:00.000Z'),
       },
+      { generate: (): string => 'lifecycle-audit-id' },
     );
 
     const result = await change.execute({
@@ -202,6 +226,11 @@ describe('owned transaction changes', () => {
     });
 
     expect(result.balanceEffect().isZero()).toBe(true);
+    expect(repository.auditEvents.at(-1)?.toSnapshot()).toMatchObject({
+      action: 'moved-to-trash',
+      id: 'lifecycle-audit-id',
+      resourceId: 'transaction-id',
+    });
   });
 
   it('rejects isolated changes to an entry linked to a transfer', async () => {
@@ -230,11 +259,13 @@ describe('owned transaction changes', () => {
       repository,
       accounts(),
       clock,
+      { generate: (): string => 'update-audit-id' },
     );
     const lifecycle = new ChangeOwnedTransactionLifecycleUseCase(
       repository,
       repository,
       clock,
+      { generate: (): string => 'lifecycle-audit-id' },
     );
 
     await expect(

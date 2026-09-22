@@ -5,6 +5,7 @@ import {
   Account,
   AccountType,
   Currency,
+  FinancialAuditEvent,
   Money,
   Tag,
   Transaction,
@@ -42,6 +43,7 @@ describe('PrismaTransactionTagRepository', () => {
       '../../prisma/migrations/20260920210000_create_cost_centers/migration.sql',
       '../../prisma/migrations/20260921010000_assign_transaction_classifications/migration.sql',
       '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
+      '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
     ];
     const migrationClient = new Client({
       connectionString: container.getConnectionUri(),
@@ -112,7 +114,7 @@ describe('PrismaTransactionTagRepository', () => {
       ownerId,
     });
     await accounts.insert(account);
-    await transactions.insert(transaction);
+    await transactions.insert(transaction, auditEvent(transaction));
     await tags.insert(first);
     await tags.insert(second);
 
@@ -130,3 +132,15 @@ describe('PrismaTransactionTagRepository', () => {
     ).resolves.toEqual([second.id]);
   });
 });
+
+function auditEvent(transaction: Transaction): FinancialAuditEvent {
+  return FinancialAuditEvent.create({
+    action: 'created',
+    actorId: transaction.ownerId,
+    id: crypto.randomUUID(),
+    occurredAt: new Date('2026-09-20T12:01:00.000Z'),
+    ownerId: transaction.ownerId,
+    resourceId: transaction.id,
+    resourceType: 'transaction',
+  });
+}

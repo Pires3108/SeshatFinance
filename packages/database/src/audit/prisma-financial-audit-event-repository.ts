@@ -10,19 +10,28 @@ export class PrismaFinancialAuditEventRepository {
   public constructor(private readonly client: PrismaClient) {}
 
   public async insert(event: FinancialAuditEvent): Promise<void> {
-    const snapshot = event.toSnapshot();
-    await this.client.financialAuditEvent.create({
-      data: {
-        action: toPersistedAction(snapshot.action),
-        actorId: snapshot.actorId,
-        id: snapshot.id,
-        occurredAt: snapshot.occurredAt,
-        ownerId: snapshot.ownerId,
-        resourceId: snapshot.resourceId,
-        resourceType: toPersistedResourceType(snapshot.resourceType),
-      },
-    });
+    await insertFinancialAuditEvent(this.client, event);
   }
+}
+
+type FinancialAuditEventClient = Pick<PrismaClient, 'financialAuditEvent'>;
+
+export async function insertFinancialAuditEvent(
+  client: FinancialAuditEventClient,
+  event: FinancialAuditEvent,
+): Promise<void> {
+  const snapshot = event.toSnapshot();
+  await client.financialAuditEvent.create({
+    data: {
+      action: toPersistedAction(snapshot.action),
+      actorId: snapshot.actorId,
+      id: snapshot.id,
+      occurredAt: snapshot.occurredAt,
+      ownerId: snapshot.ownerId,
+      resourceId: snapshot.resourceId,
+      resourceType: toPersistedResourceType(snapshot.resourceType),
+    },
+  });
 }
 
 function toPersistedAction(

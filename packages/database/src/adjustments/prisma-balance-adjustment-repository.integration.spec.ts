@@ -6,6 +6,7 @@ import {
   AccountType,
   BalanceAdjustment,
   Currency,
+  FinancialAuditEvent,
   Money,
   Transaction,
 } from '@seshat/domain';
@@ -50,6 +51,7 @@ describe('PrismaBalanceAdjustmentRepository', () => {
       '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
       '../../prisma/migrations/20260921150000_create_transfers/migration.sql',
       '../../prisma/migrations/20260921170000_create_balance_adjustments/migration.sql',
+      '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
     ]) {
       await migrationClient.query(
         await readFile(new URL(path, import.meta.url), 'utf8'),
@@ -84,7 +86,11 @@ describe('PrismaBalanceAdjustmentRepository', () => {
 
   it('rejects a stale previous balance without partial writes', async () => {
     if (client === undefined || repository === undefined) throw unavailable();
-    await new PrismaTransactionRepository(client).insert(existingIncome());
+    const income = existingIncome();
+    await new PrismaTransactionRepository(client).insert(
+      income,
+      auditEvent(income),
+    );
     const beforeTransactions = await client.transaction.count();
     const beforeAdjustments = await client.balanceAdjustment.count();
 
@@ -137,6 +143,18 @@ function existingIncome(): Transaction {
     kind: 'income',
     occurredAt: new Date('2026-09-21T12:30:00.000Z'),
     ownerId,
+  });
+}
+
+function auditEvent(transaction: Transaction): FinancialAuditEvent {
+  return FinancialAuditEvent.create({
+    action: 'created',
+    actorId: transaction.ownerId,
+    id: crypto.randomUUID(),
+    occurredAt: new Date('2026-09-21T12:30:00.000Z'),
+    ownerId: transaction.ownerId,
+    resourceId: transaction.id,
+    resourceType: 'transaction',
   });
 }
 

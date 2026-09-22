@@ -7,6 +7,7 @@ import {
   Category,
   CostCenter,
   Currency,
+  FinancialAuditEvent,
   Money,
   Transaction,
 } from '@seshat/domain';
@@ -48,6 +49,7 @@ describe('PrismaTransactionClassificationRepository', () => {
       '../../prisma/migrations/20260920210000_create_cost_centers/migration.sql',
       '../../prisma/migrations/20260921010000_assign_transaction_classifications/migration.sql',
       '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
+      '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
     ];
     const migrationClient = new Client({
       connectionString: container.getConnectionUri(),
@@ -108,7 +110,10 @@ describe('PrismaTransactionClassificationRepository', () => {
         ownerId,
       });
       await new PrismaAccountRepository(prisma).insert(account);
-      await new PrismaTransactionRepository(prisma).insert(transaction);
+      await new PrismaTransactionRepository(prisma).insert(
+        transaction,
+        auditEvent(transaction),
+      );
       await new PrismaCategoryRepository(prisma).insert(category);
       await new PrismaCategoryRepository(prisma).insert(child);
       await new PrismaCostCenterRepository(prisma).insert(costCenter);
@@ -140,3 +145,15 @@ describe('PrismaTransactionClassificationRepository', () => {
     ).resolves.toEqual(selection);
   });
 });
+
+function auditEvent(transaction: Transaction): FinancialAuditEvent {
+  return FinancialAuditEvent.create({
+    action: 'created',
+    actorId: transaction.ownerId,
+    id: crypto.randomUUID(),
+    occurredAt: new Date('2026-09-21T12:01:00.000Z'),
+    ownerId: transaction.ownerId,
+    resourceId: transaction.id,
+    resourceType: 'transaction',
+  });
+}

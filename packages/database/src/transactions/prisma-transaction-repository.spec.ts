@@ -1,4 +1,9 @@
-import { Currency, Money, Transaction } from '@seshat/domain';
+import {
+  Currency,
+  FinancialAuditEvent,
+  Money,
+  Transaction,
+} from '@seshat/domain';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { PrismaClient } from '../generated/prisma/client.js';
@@ -50,8 +55,13 @@ describe('PrismaTransactionRepository', () => {
 
   it('persists edited amount and kind with the optimistic version', async () => {
     const updateMany = vi.fn().mockResolvedValue({ count: 1 });
+    const createAuditEvent = vi.fn().mockResolvedValue({});
     const client = {
-      transaction: { updateMany },
+      $transaction: (operation: (transaction: unknown) => unknown) =>
+        operation({
+          financialAuditEvent: { create: createAuditEvent },
+          transaction: { updateMany },
+        }),
     } as unknown as PrismaClient;
     const repository = new PrismaTransactionRepository(client);
     const transaction = Transaction.create({
@@ -74,7 +84,9 @@ describe('PrismaTransactionRepository', () => {
       new Date('2026-09-21T12:00:00.000Z'),
     );
 
-    await expect(repository.save(transaction, 1)).resolves.toBe(true);
+    await expect(
+      repository.save(transaction, 1, auditEvent(transaction)),
+    ).resolves.toBe(true);
     expect(updateMany).toHaveBeenCalledWith({
       data: {
         amountMinorUnits: '42375',
@@ -94,5 +106,18 @@ describe('PrismaTransactionRepository', () => {
         version: 1,
       },
     });
+    expect(createAuditEvent).toHaveBeenCalledOnce();
   });
 });
+
+function auditEvent(transaction: Transaction): FinancialAuditEvent {
+  return FinancialAuditEvent.create({
+    action: 'updated',
+    actorId: transaction.ownerId,
+    id: '32c8ebf6-da8e-4b5f-993d-c5602f7afebd',
+    occurredAt: new Date('2026-09-21T12:00:00.000Z'),
+    ownerId: transaction.ownerId,
+    resourceId: transaction.id,
+    resourceType: 'transaction',
+  });
+}
