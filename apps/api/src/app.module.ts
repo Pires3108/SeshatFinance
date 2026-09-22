@@ -277,6 +277,8 @@ import { UserProfileController } from './users/user-profile.controller.js';
           categories,
           costCenters,
           classifications,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
         ),
     },
     {
@@ -314,6 +316,8 @@ import { UserProfileController } from './users/user-profile.controller.js';
           transactions,
           tags,
           assignments,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
         ),
     },
     {

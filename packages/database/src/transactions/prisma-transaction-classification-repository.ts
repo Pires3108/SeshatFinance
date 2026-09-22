@@ -3,7 +3,9 @@ import type {
   TransactionClassificationRepository,
   TransactionClassificationSelection,
 } from '@seshat/application';
+import type { FinancialAuditEvent } from '@seshat/domain';
 
+import { insertFinancialAuditEvent } from '../audit/prisma-financial-audit-event-repository.js';
 import type { PrismaClient } from '../generated/prisma/client.js';
 
 export class PrismaTransactionClassificationRepository implements TransactionClassificationRepository {
@@ -24,10 +26,16 @@ export class PrismaTransactionClassificationRepository implements TransactionCla
     transactionId: string,
     ownerId: string,
     selection: TransactionClassificationSelection,
+    auditEvent: FinancialAuditEvent,
   ): Promise<ReplaceTransactionClassificationResult> {
     return this.client.$transaction(async (client) => {
       const transaction = await client.transaction.findFirst({
-        select: { id: true },
+        select: {
+          categoryId: true,
+          costCenterId: true,
+          id: true,
+          subcategoryId: true,
+        },
         where: { id: transactionId, ownerId },
       });
       if (transaction === null) return 'transaction-not-found';
@@ -57,10 +65,18 @@ export class PrismaTransactionClassificationRepository implements TransactionCla
         });
         if (costCenter === null) return 'cost-center-not-found';
       }
+      if (
+        transaction.categoryId === selection.categoryId &&
+        transaction.costCenterId === selection.costCenterId &&
+        transaction.subcategoryId === selection.subcategoryId
+      ) {
+        return 'unchanged';
+      }
       await client.transaction.update({
         data: selection,
         where: { id_ownerId: { id: transactionId, ownerId } },
       });
+      await insertFinancialAuditEvent(client, auditEvent);
       return 'updated';
     });
   }

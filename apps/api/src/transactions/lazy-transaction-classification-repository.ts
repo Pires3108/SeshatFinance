@@ -4,6 +4,7 @@ import type {
 } from '@seshat/application';
 import { PrismaTransactionClassificationRepository } from '@seshat/database';
 import { Injectable } from '@nestjs/common';
+import type { FinancialAuditEvent } from '@seshat/domain';
 
 import { LazyPrismaClient } from '../platform/lazy-prisma-client.js';
 
@@ -24,11 +25,13 @@ export class LazyTransactionClassificationRepository implements TransactionClass
     transactionId: string,
     ownerId: string,
     selection: TransactionClassificationSelection,
+    auditEvent: FinancialAuditEvent,
   ): ReturnType<TransactionClassificationRepository['replaceForOwner']> {
     return this.getRepository().replaceForOwner(
       transactionId,
       ownerId,
       selection,
+      auditEvent,
     );
   }
 

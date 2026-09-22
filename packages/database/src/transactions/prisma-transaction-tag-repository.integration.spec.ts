@@ -26,6 +26,7 @@ describe('PrismaTransactionTagRepository', () => {
   let tags: PrismaTagRepository | undefined;
   let transactions: PrismaTransactionRepository | undefined;
   let accounts: PrismaAccountRepository | undefined;
+  let client: ReturnType<typeof createPrismaClient> | undefined;
 
   beforeAll(async (): Promise<void> => {
     const container = await new PostgreSqlContainer('postgres:17-alpine')
@@ -56,6 +57,7 @@ describe('PrismaTransactionTagRepository', () => {
     }
     await migrationClient.end();
     const prisma = createPrismaClient(container.getConnectionUri());
+    client = prisma;
     disconnect = async (): Promise<void> => prisma.$disconnect();
     assignments = new PrismaTransactionTagRepository(prisma);
     tags = new PrismaTagRepository(prisma);
@@ -73,7 +75,8 @@ describe('PrismaTransactionTagRepository', () => {
       assignments === undefined ||
       tags === undefined ||
       transactions === undefined ||
-      accounts === undefined
+      accounts === undefined ||
+      client === undefined
     ) {
       throw new Error('Repositories were not initialized.');
     }
@@ -118,15 +121,46 @@ describe('PrismaTransactionTagRepository', () => {
     await tags.insert(first);
     await tags.insert(second);
 
+    const firstUpdateAudit = updatedAuditEvent(transaction);
     await expect(
-      assignments.replaceForOwner(transaction.id, ownerId, [
-        first.id,
-        second.id,
-      ]),
+      assignments.replaceForOwner(
+        transaction.id,
+        ownerId,
+        [first.id, second.id],
+        firstUpdateAudit,
+      ),
     ).resolves.toBe('updated');
     await expect(
-      assignments.replaceForOwner(transaction.id, ownerId, [second.id]),
+      assignments.replaceForOwner(
+        transaction.id,
+        ownerId,
+        [second.id],
+        updatedAuditEvent(transaction),
+      ),
     ).resolves.toBe('updated');
+    await expect(
+      assignments.listTagIdsForOwner(transaction.id, ownerId),
+    ).resolves.toEqual([second.id]);
+    await expect(client.financialAuditEvent.count()).resolves.toBe(4);
+
+    await expect(
+      assignments.replaceForOwner(
+        transaction.id,
+        ownerId,
+        [second.id],
+        updatedAuditEvent(transaction),
+      ),
+    ).resolves.toBe('unchanged');
+    await expect(client.financialAuditEvent.count()).resolves.toBe(4);
+
+    await expect(
+      assignments.replaceForOwner(
+        transaction.id,
+        ownerId,
+        [first.id],
+        firstUpdateAudit,
+      ),
+    ).rejects.toThrow();
     await expect(
       assignments.listTagIdsForOwner(transaction.id, ownerId),
     ).resolves.toEqual([second.id]);
@@ -139,6 +173,18 @@ function auditEvent(transaction: Transaction): FinancialAuditEvent {
     actorId: transaction.ownerId,
     id: crypto.randomUUID(),
     occurredAt: new Date('2026-09-20T12:01:00.000Z'),
+    ownerId: transaction.ownerId,
+    resourceId: transaction.id,
+    resourceType: 'transaction',
+  });
+}
+
+function updatedAuditEvent(transaction: Transaction): FinancialAuditEvent {
+  return FinancialAuditEvent.create({
+    action: 'updated',
+    actorId: transaction.ownerId,
+    id: crypto.randomUUID(),
+    occurredAt: new Date('2026-09-20T12:04:00.000Z'),
     ownerId: transaction.ownerId,
     resourceId: transaction.id,
     resourceType: 'transaction',
