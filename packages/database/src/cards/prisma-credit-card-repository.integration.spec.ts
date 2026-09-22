@@ -39,6 +39,7 @@ describe('PrismaCreditCardRepository', () => {
     await migrationClient.connect();
     for (const path of [
       '../../prisma/migrations/20260920040000_create_accounts/migration.sql',
+      '../../prisma/migrations/20260920133000_create_transactions/migration.sql',
       '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
       '../../prisma/migrations/20260922183000_add_credit_card_audit_resource/migration.sql',
       '../../prisma/migrations/20260922190000_create_credit_cards/migration.sql',
