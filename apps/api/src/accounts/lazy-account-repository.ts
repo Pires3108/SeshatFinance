@@ -1,5 +1,5 @@
 import type { AccountRepository } from '@seshat/application';
-import type { Account } from '@seshat/domain';
+import type { Account, FinancialAuditEvent } from '@seshat/domain';
 import { PrismaAccountRepository } from '@seshat/database';
 import { Injectable } from '@nestjs/common';
 
@@ -11,8 +11,11 @@ export class LazyAccountRepository implements AccountRepository {
 
   public constructor(private readonly prisma: LazyPrismaClient) {}
 
-  public insert(account: Account): Promise<void> {
-    return this.getRepository().insert(account);
+  public insert(
+    account: Account,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<void> {
+    return this.getRepository().insert(account, auditEvent);
   }
 
   public findByIdForOwner(
@@ -29,8 +32,12 @@ export class LazyAccountRepository implements AccountRepository {
     return this.getRepository().listForOwner(ownerId, lifecycle);
   }
 
-  public save(account: Account, expectedVersion: number): Promise<boolean> {
-    return this.getRepository().save(account, expectedVersion);
+  public save(
+    account: Account,
+    expectedVersion: number,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<boolean> {
+    return this.getRepository().save(account, expectedVersion, auditEvent);
   }
 
   private getRepository(): PrismaAccountRepository {

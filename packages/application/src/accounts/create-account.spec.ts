@@ -1,4 +1,4 @@
-import type { Account } from '@seshat/domain';
+import type { Account, FinancialAuditEvent } from '@seshat/domain';
 import { describe, expect, it } from 'vitest';
 
 import type { Clock } from '../ports/clock.js';
@@ -15,11 +15,16 @@ import {
 
 class RecordingAccountRepository implements AccountRepository {
   public inserted: Account | undefined;
+  public auditEvents: FinancialAuditEvent[] = [];
   public persistedVersion: number | undefined;
   public forceConflict = false;
 
-  public insert(account: Account): Promise<void> {
+  public insert(
+    account: Account,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<void> {
     this.inserted = account;
+    this.auditEvents.push(auditEvent);
     this.persistedVersion = account.toSnapshot().version;
     return Promise.resolve();
   }
@@ -34,11 +39,16 @@ class RecordingAccountRepository implements AccountRepository {
     );
   }
 
-  public save(account: Account, expectedVersion: number): Promise<boolean> {
+  public save(
+    account: Account,
+    expectedVersion: number,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<boolean> {
     if (this.forceConflict || this.persistedVersion !== expectedVersion) {
       return Promise.resolve(false);
     }
     this.inserted = account;
+    this.auditEvents.push(auditEvent);
     this.persistedVersion = account.toSnapshot().version;
     return Promise.resolve(true);
   }
@@ -87,6 +97,12 @@ describe('CreateAccountUseCase', () => {
       ownerId: 'owner-id',
     });
     expect(repository.inserted?.initialBalance.toDecimal()).toBe('125.30');
+    expect(repository.auditEvents[0]?.toSnapshot()).toMatchObject({
+      action: 'created',
+      actorId: 'owner-id',
+      resourceId: '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
+      resourceType: 'account',
+    });
   });
 });
 
@@ -145,9 +161,13 @@ describe('UpdateOwnedAccountDetailsUseCase', () => {
       name: 'Conta',
       typeKey: 'checking-account',
     });
-    const update = new UpdateOwnedAccountDetailsUseCase(repository, {
-      now: (): Date => new Date('2026-09-20T13:00:00.000Z'),
-    });
+    const update = new UpdateOwnedAccountDetailsUseCase(
+      repository,
+      {
+        now: (): Date => new Date('2026-09-20T13:00:00.000Z'),
+      },
+      { generate: (): string => 'update-audit-id' },
+    );
 
     const result = await update.execute({
       accountId: 'account-id',
@@ -168,6 +188,11 @@ describe('UpdateOwnedAccountDetailsUseCase', () => {
       name: 'Reserva',
       type: { key: 'savings-account' },
       version: 2,
+    });
+    expect(repository.auditEvents.at(-1)?.toSnapshot()).toMatchObject({
+      action: 'updated',
+      id: 'update-audit-id',
+      resourceId: 'account-id',
     });
   });
 });
@@ -192,9 +217,13 @@ describe('ChangeOwnedAccountLifecycleUseCase', () => {
       name: 'Conta',
       typeKey: 'checking-account',
     });
-    const change = new ChangeOwnedAccountLifecycleUseCase(repository, {
-      now: (): Date => new Date('2026-09-20T13:00:00.000Z'),
-    });
+    const change = new ChangeOwnedAccountLifecycleUseCase(
+      repository,
+      {
+        now: (): Date => new Date('2026-09-20T13:00:00.000Z'),
+      },
+      { generate: (): string => 'lifecycle-audit-id' },
+    );
 
     const result = await change.execute({
       accountId: 'account-id',
@@ -205,6 +234,11 @@ describe('ChangeOwnedAccountLifecycleUseCase', () => {
     expect(result.toSnapshot()).toMatchObject({
       lifecycle: 'archived',
       version: 2,
+    });
+    expect(repository.auditEvents.at(-1)?.toSnapshot()).toMatchObject({
+      action: 'archived',
+      id: 'lifecycle-audit-id',
+      resourceId: 'account-id',
     });
   });
 
@@ -227,9 +261,13 @@ describe('ChangeOwnedAccountLifecycleUseCase', () => {
       typeKey: 'checking-account',
     });
     repository.forceConflict = true;
-    const change = new ChangeOwnedAccountLifecycleUseCase(repository, {
-      now: (): Date => new Date('2026-09-20T13:00:00.000Z'),
-    });
+    const change = new ChangeOwnedAccountLifecycleUseCase(
+      repository,
+      {
+        now: (): Date => new Date('2026-09-20T13:00:00.000Z'),
+      },
+      { generate: (): string => 'audit-id' },
+    );
 
     await expect(
       change.execute({

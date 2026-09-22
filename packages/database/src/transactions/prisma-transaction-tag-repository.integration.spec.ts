@@ -113,7 +113,7 @@ describe('PrismaTransactionTagRepository', () => {
       name: 'Casa',
       ownerId,
     });
-    await accounts.insert(account);
+    await accounts.insert(account, accountAuditEvent(account));
     await transactions.insert(transaction, auditEvent(transaction));
     await tags.insert(first);
     await tags.insert(second);
@@ -142,5 +142,17 @@ function auditEvent(transaction: Transaction): FinancialAuditEvent {
     ownerId: transaction.ownerId,
     resourceId: transaction.id,
     resourceType: 'transaction',
+  });
+}
+
+function accountAuditEvent(accountValue: Account): FinancialAuditEvent {
+  return FinancialAuditEvent.create({
+    action: 'created',
+    actorId: accountValue.ownerId,
+    id: crypto.randomUUID(),
+    occurredAt: new Date('2026-09-20T12:00:00.000Z'),
+    ownerId: accountValue.ownerId,
+    resourceId: accountValue.id,
+    resourceType: 'account',
   });
 }

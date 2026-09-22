@@ -414,7 +414,11 @@ import { UserProfileController } from './users/user-profile.controller.js';
       useFactory: (
         accounts: AccountRepository,
       ): UpdateOwnedAccountDetailsUseCase =>
-        new UpdateOwnedAccountDetailsUseCase(accounts, new SystemClock()),
+        new UpdateOwnedAccountDetailsUseCase(
+          accounts,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
     },
     {
       inject: [LazyAccountRepository],
@@ -422,7 +426,11 @@ import { UserProfileController } from './users/user-profile.controller.js';
       useFactory: (
         accounts: AccountRepository,
       ): ChangeOwnedAccountLifecycleUseCase =>
-        new ChangeOwnedAccountLifecycleUseCase(accounts, new SystemClock()),
+        new ChangeOwnedAccountLifecycleUseCase(
+          accounts,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
     },
     {
       inject: [LazyUserProfileRepository],
