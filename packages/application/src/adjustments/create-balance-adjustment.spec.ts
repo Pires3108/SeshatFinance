@@ -2,6 +2,7 @@ import {
   Account,
   AccountType,
   Currency,
+  type FinancialAuditEvent,
   Money,
   Transaction,
 } from '@seshat/domain';
@@ -69,13 +70,15 @@ describe('CreateBalanceAdjustmentUseCase', () => {
     let captured:
       | Parameters<BalanceAdjustmentRepository['insertAtomically']>[0]
       | undefined;
+    let capturedAuditEvent: FinancialAuditEvent | undefined;
     const adjustments: BalanceAdjustmentRepository = {
-      insertAtomically: (adjustment) => {
+      insertAtomically: (adjustment, auditEvent) => {
         captured = adjustment;
+        capturedAuditEvent = auditEvent;
         return Promise.resolve(true);
       },
     };
-    const ids = ['adjustment-id', 'transaction-id'];
+    const ids = ['adjustment-id', 'transaction-id', 'audit-event-id'];
     const useCase = new CreateBalanceAdjustmentUseCase(
       accountRepository(activeAccount()),
       transactionRepository([existing]),
@@ -98,6 +101,13 @@ describe('CreateBalanceAdjustmentUseCase', () => {
       previousBalance: { amount: '85.00' },
       reportedBalance: { amount: '92.50' },
       transaction: { kind: 'income' },
+    });
+    expect(capturedAuditEvent?.toSnapshot()).toMatchObject({
+      action: 'created',
+      actorId: ownerId,
+      id: 'audit-event-id',
+      resourceId: 'adjustment-id',
+      resourceType: 'balance-adjustment',
     });
   });
 

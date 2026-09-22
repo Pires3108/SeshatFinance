@@ -1,5 +1,5 @@
 import type { BalanceAdjustmentRepository } from '@seshat/application';
-import type { BalanceAdjustment } from '@seshat/domain';
+import type { BalanceAdjustment, FinancialAuditEvent } from '@seshat/domain';
 import { PrismaBalanceAdjustmentRepository } from '@seshat/database';
 import { Injectable } from '@nestjs/common';
 
@@ -11,8 +11,11 @@ export class LazyBalanceAdjustmentRepository implements BalanceAdjustmentReposit
 
   public constructor(private readonly prisma: LazyPrismaClient) {}
 
-  public insertAtomically(adjustment: BalanceAdjustment): Promise<boolean> {
-    return this.getRepository().insertAtomically(adjustment);
+  public insertAtomically(
+    adjustment: BalanceAdjustment,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<boolean> {
+    return this.getRepository().insertAtomically(adjustment, auditEvent);
   }
 
   private getRepository(): PrismaBalanceAdjustmentRepository {

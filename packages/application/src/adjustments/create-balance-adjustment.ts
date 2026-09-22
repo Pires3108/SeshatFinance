@@ -1,6 +1,7 @@
 import {
   BalanceAdjustment,
   calculateAccountBalance,
+  FinancialAuditEvent,
   Money,
 } from '@seshat/domain';
 
@@ -18,7 +19,10 @@ export type CreateBalanceAdjustmentCommand = Readonly<{
 }>;
 
 export interface BalanceAdjustmentRepository {
-  insertAtomically(adjustment: BalanceAdjustment): Promise<boolean>;
+  insertAtomically(
+    adjustment: BalanceAdjustment,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<boolean>;
 }
 
 export class BalanceAdjustmentAccountUnavailableError extends Error {
@@ -62,9 +66,10 @@ export class CreateBalanceAdjustmentUseCase {
       account.initialBalance,
       transactions,
     );
+    const at = this.clock.now();
     const adjustment = BalanceAdjustment.create({
       accountId: account.id,
-      createdAt: this.clock.now(),
+      createdAt: at,
       id: this.identifiers.generate(),
       justification: command.justification,
       occurredAt: command.occurredAt,
@@ -76,7 +81,18 @@ export class CreateBalanceAdjustmentUseCase {
       ),
       transactionId: this.identifiers.generate(),
     });
-    const inserted = await this.adjustments.insertAtomically(adjustment);
+    const inserted = await this.adjustments.insertAtomically(
+      adjustment,
+      FinancialAuditEvent.create({
+        action: 'created',
+        actorId: command.actorId,
+        id: this.identifiers.generate(),
+        occurredAt: at,
+        ownerId: command.actorId,
+        resourceId: adjustment.id,
+        resourceType: 'balance-adjustment',
+      }),
+    );
     if (!inserted) throw new BalanceAdjustmentBalanceConflictError();
     return adjustment;
   }

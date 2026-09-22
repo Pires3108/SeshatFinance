@@ -73,10 +73,15 @@ describe('PrismaBalanceAdjustmentRepository', () => {
   it('inserts the entry and audit metadata in one transaction', async () => {
     if (client === undefined || repository === undefined) throw unavailable();
 
+    const created = adjustment('100.00', '125.50');
     await expect(
-      repository.insertAtomically(adjustment('100.00', '125.50')),
+      repository.insertAtomically(
+        created,
+        adjustmentAuditEvent(created, 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'),
+      ),
     ).resolves.toBe(true);
     await expect(client.transaction.count()).resolves.toBe(1);
+    await expect(client.financialAuditEvent.count()).resolves.toBe(1);
     const row = await client.balanceAdjustment.findFirstOrThrow();
     expect(row.justification).toBe('Synthetic reconciliation');
     expect(row.previousBalanceMinorUnits.toFixed(0)).toBe('10000');
@@ -93,10 +98,33 @@ describe('PrismaBalanceAdjustmentRepository', () => {
     );
     const beforeTransactions = await client.transaction.count();
     const beforeAdjustments = await client.balanceAdjustment.count();
+    const beforeAuditEvents = await client.financialAuditEvent.count();
 
+    const stale = adjustment('125.50', '130.00');
     await expect(
-      repository.insertAtomically(adjustment('125.50', '130.00')),
+      repository.insertAtomically(
+        stale,
+        adjustmentAuditEvent(stale, 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),
+      ),
     ).resolves.toBe(false);
+    await expect(client.transaction.count()).resolves.toBe(beforeTransactions);
+    await expect(client.balanceAdjustment.count()).resolves.toBe(
+      beforeAdjustments,
+    );
+    await expect(client.financialAuditEvent.count()).resolves.toBe(
+      beforeAuditEvents,
+    );
+
+    const auditFailure = adjustment('130.50', '140.00');
+    await expect(
+      repository.insertAtomically(
+        auditFailure,
+        adjustmentAuditEvent(
+          auditFailure,
+          'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        ),
+      ),
+    ).rejects.toThrow();
     await expect(client.transaction.count()).resolves.toBe(beforeTransactions);
     await expect(client.balanceAdjustment.count()).resolves.toBe(
       beforeAdjustments,
@@ -155,6 +183,21 @@ function auditEvent(transaction: Transaction): FinancialAuditEvent {
     ownerId: transaction.ownerId,
     resourceId: transaction.id,
     resourceType: 'transaction',
+  });
+}
+
+function adjustmentAuditEvent(
+  adjustmentValue: BalanceAdjustment,
+  id: string,
+): FinancialAuditEvent {
+  return FinancialAuditEvent.create({
+    action: 'created',
+    actorId: adjustmentValue.ownerId,
+    id,
+    occurredAt: new Date('2026-09-21T12:00:00.000Z'),
+    ownerId: adjustmentValue.ownerId,
+    resourceId: adjustmentValue.id,
+    resourceType: 'balance-adjustment',
   });
 }
 
