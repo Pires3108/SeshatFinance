@@ -1,4 +1,10 @@
-import { Account, AccountType, Currency, Money } from '@seshat/domain';
+import {
+  Account,
+  AccountType,
+  Currency,
+  FinancialAuditEvent,
+  Money,
+} from '@seshat/domain';
 
 import type { Clock } from '../ports/clock.js';
 import type { IdentifierGenerator } from '../ports/identifier-generator.js';
@@ -17,13 +23,17 @@ export type CreateAccountCommand = Readonly<{
 }>;
 
 export interface AccountRepository {
-  insert(account: Account): Promise<void>;
+  insert(account: Account, auditEvent: FinancialAuditEvent): Promise<void>;
   findByIdForOwner(id: string, ownerId: string): Promise<Account | null>;
   listForOwner(
     ownerId: string,
     lifecycle?: Account['lifecycle'],
   ): Promise<readonly Account[]>;
-  save(account: Account, expectedVersion: number): Promise<boolean>;
+  save(
+    account: Account,
+    expectedVersion: number,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<boolean>;
 }
 
 export type AccountLifecycleAction =
@@ -55,9 +65,10 @@ export class CreateAccountUseCase {
       command.currencyCode,
       command.currencyMinorUnitScale,
     );
+    const at = this.clock.now();
     const account = Account.create({
       color: command.color,
-      createdAt: this.clock.now(),
+      createdAt: at,
       description: command.description,
       icon: command.icon,
       id: this.identifiers.generate(),
@@ -67,7 +78,18 @@ export class CreateAccountUseCase {
       ownerId: command.actorId,
       type: AccountType.create(command.typeKey),
     });
-    await this.accounts.insert(account);
+    await this.accounts.insert(
+      account,
+      FinancialAuditEvent.create({
+        action: 'created',
+        actorId: command.actorId,
+        id: this.identifiers.generate(),
+        occurredAt: at,
+        ownerId: command.actorId,
+        resourceId: account.id,
+        resourceType: 'account',
+      }),
+    );
     return account;
   }
 }
@@ -106,6 +128,7 @@ export class UpdateOwnedAccountDetailsUseCase {
   public constructor(
     private readonly accounts: AccountRepository,
     private readonly clock: Clock,
+    private readonly identifiers: IdentifierGenerator,
   ) {}
 
   public async execute(
@@ -117,6 +140,7 @@ export class UpdateOwnedAccountDetailsUseCase {
     );
     if (account === null) throw new OwnedAccountNotFoundError();
     const expectedVersion = account.toSnapshot().version;
+    const at = this.clock.now();
     account.updateDetails(
       {
         color: command.color,
@@ -126,9 +150,23 @@ export class UpdateOwnedAccountDetailsUseCase {
         name: command.name,
         type: AccountType.create(command.typeKey),
       },
-      this.clock.now(),
+      at,
     );
-    if (!(await this.accounts.save(account, expectedVersion))) {
+    if (
+      !(await this.accounts.save(
+        account,
+        expectedVersion,
+        FinancialAuditEvent.create({
+          action: 'updated',
+          actorId: command.actorId,
+          id: this.identifiers.generate(),
+          occurredAt: at,
+          ownerId: command.actorId,
+          resourceId: account.id,
+          resourceType: 'account',
+        }),
+      ))
+    ) {
       throw new AccountVersionConflictError();
     }
     return account;
@@ -139,6 +177,7 @@ export class ChangeOwnedAccountLifecycleUseCase {
   public constructor(
     private readonly accounts: AccountRepository,
     private readonly clock: Clock,
+    private readonly identifiers: IdentifierGenerator,
   ) {}
 
   public async execute(command: {
@@ -167,9 +206,38 @@ export class ChangeOwnedAccountLifecycleUseCase {
         account.restoreFromTrash(at);
         break;
     }
-    if (!(await this.accounts.save(account, expectedVersion))) {
+    if (
+      !(await this.accounts.save(
+        account,
+        expectedVersion,
+        FinancialAuditEvent.create({
+          action: lifecycleAuditAction(command.action),
+          actorId: command.actorId,
+          id: this.identifiers.generate(),
+          occurredAt: at,
+          ownerId: command.actorId,
+          resourceId: account.id,
+          resourceType: 'account',
+        }),
+      ))
+    ) {
       throw new AccountVersionConflictError();
     }
     return account;
+  }
+}
+
+function lifecycleAuditAction(
+  action: AccountLifecycleAction,
+): 'archived' | 'unarchived' | 'moved-to-trash' | 'restored-from-trash' {
+  switch (action) {
+    case 'archive':
+      return 'archived';
+    case 'unarchive':
+      return 'unarchived';
+    case 'move-to-trash':
+      return 'moved-to-trash';
+    case 'restore-from-trash':
+      return 'restored-from-trash';
   }
 }

@@ -81,7 +81,7 @@ describe('PrismaTransactionRepository', () => {
       ownerId,
       type: AccountType.create('checking-account'),
     });
-    await accounts.insert(account);
+    await accounts.insert(account, accountAuditEvent(account));
     const transaction = Transaction.create({
       accountId: account.id,
       amount: Money.fromDecimal(
@@ -161,7 +161,7 @@ describe('PrismaTransactionRepository', () => {
       ownerId,
     );
     expect(persisted?.toSnapshot()).toEqual(transaction.toSnapshot());
-    await expect(prisma.financialAuditEvent.count()).resolves.toBe(2);
+    await expect(prisma.financialAuditEvent.count()).resolves.toBe(3);
     await expect(
       transactions.save(
         transaction,
@@ -173,7 +173,7 @@ describe('PrismaTransactionRepository', () => {
         ),
       ),
     ).resolves.toBe(false);
-    await expect(prisma.financialAuditEvent.count()).resolves.toBe(2);
+    await expect(prisma.financialAuditEvent.count()).resolves.toBe(3);
 
     const rolledBack = Transaction.create({
       accountId: account.id,
@@ -214,5 +214,17 @@ function auditEvent(
     ownerId: transaction.ownerId,
     resourceId: transaction.id,
     resourceType: 'transaction',
+  });
+}
+
+function accountAuditEvent(accountValue: Account): FinancialAuditEvent {
+  return FinancialAuditEvent.create({
+    action: 'created',
+    actorId: accountValue.ownerId,
+    id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+    occurredAt: new Date('2026-09-20T12:00:00.000Z'),
+    ownerId: accountValue.ownerId,
+    resourceId: accountValue.id,
+    resourceType: 'account',
   });
 }

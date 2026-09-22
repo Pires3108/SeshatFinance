@@ -56,8 +56,10 @@ describe('PrismaTransferRepository', () => {
     disconnect = async (): Promise<void> => prisma.$disconnect();
     repository = new PrismaTransferRepository(prisma);
     const accounts = new PrismaAccountRepository(prisma);
-    await accounts.insert(account('11111111-1111-4111-8111-111111111111'));
-    await accounts.insert(account('22222222-2222-4222-8222-222222222222'));
+    const source = account('11111111-1111-4111-8111-111111111111');
+    const destination = account('22222222-2222-4222-8222-222222222222');
+    await accounts.insert(source, accountAuditEvent(source));
+    await accounts.insert(destination, accountAuditEvent(destination));
   }, 60_000);
 
   afterAll(async (): Promise<void> => {
@@ -81,7 +83,7 @@ describe('PrismaTransferRepository', () => {
 
     await expect(client.transfer.count()).resolves.toBe(1);
     await expect(client.transaction.count()).resolves.toBe(2);
-    await expect(client.financialAuditEvent.count()).resolves.toBe(1);
+    await expect(client.financialAuditEvent.count()).resolves.toBe(3);
 
     const duplicate = transfer(
       'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
@@ -100,7 +102,7 @@ describe('PrismaTransferRepository', () => {
     ).rejects.toThrow();
     await expect(client.transfer.count()).resolves.toBe(1);
     await expect(client.transaction.count()).resolves.toBe(2);
-    await expect(client.financialAuditEvent.count()).resolves.toBe(1);
+    await expect(client.financialAuditEvent.count()).resolves.toBe(3);
   });
 
   it('restores and updates both entries atomically with optimistic locking', async () => {
@@ -180,7 +182,7 @@ describe('PrismaTransferRepository', () => {
         (row) => row.lifecycle === 'trashed' && row.version === 2,
       ),
     ).toBe(true);
-    await expect(client.financialAuditEvent.count()).resolves.toBe(3);
+    await expect(client.financialAuditEvent.count()).resolves.toBe(5);
   });
 });
 
@@ -212,6 +214,18 @@ function auditEvent(
     ownerId: transferValue.ownerId,
     resourceId: transferValue.id,
     resourceType: 'transfer',
+  });
+}
+
+function accountAuditEvent(accountValue: Account): FinancialAuditEvent {
+  return FinancialAuditEvent.create({
+    action: 'created',
+    actorId: accountValue.ownerId,
+    id: crypto.randomUUID(),
+    occurredAt: new Date('2026-09-21T10:00:00.000Z'),
+    ownerId: accountValue.ownerId,
+    resourceId: accountValue.id,
+    resourceType: 'account',
   });
 }
 

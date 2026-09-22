@@ -109,7 +109,10 @@ describe('PrismaTransactionClassificationRepository', () => {
         name: 'Casa',
         ownerId,
       });
-      await new PrismaAccountRepository(prisma).insert(account);
+      await new PrismaAccountRepository(prisma).insert(
+        account,
+        accountAuditEvent(account),
+      );
       await new PrismaTransactionRepository(prisma).insert(
         transaction,
         auditEvent(transaction),
@@ -155,5 +158,17 @@ function auditEvent(transaction: Transaction): FinancialAuditEvent {
     ownerId: transaction.ownerId,
     resourceId: transaction.id,
     resourceType: 'transaction',
+  });
+}
+
+function accountAuditEvent(accountValue: Account): FinancialAuditEvent {
+  return FinancialAuditEvent.create({
+    action: 'created',
+    actorId: accountValue.ownerId,
+    id: crypto.randomUUID(),
+    occurredAt: new Date('2026-09-21T12:00:00.000Z'),
+    ownerId: accountValue.ownerId,
+    resourceId: accountValue.id,
+    resourceType: 'account',
   });
 }

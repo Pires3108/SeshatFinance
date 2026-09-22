@@ -62,7 +62,11 @@ describe('PrismaBalanceAdjustmentRepository', () => {
     client = prisma;
     disconnect = async (): Promise<void> => prisma.$disconnect();
     repository = new PrismaBalanceAdjustmentRepository(prisma);
-    await new PrismaAccountRepository(prisma).insert(account());
+    const persistedAccount = account();
+    await new PrismaAccountRepository(prisma).insert(
+      persistedAccount,
+      accountAuditEvent(persistedAccount),
+    );
   }, 60_000);
 
   afterAll(async (): Promise<void> => {
@@ -81,7 +85,7 @@ describe('PrismaBalanceAdjustmentRepository', () => {
       ),
     ).resolves.toBe(true);
     await expect(client.transaction.count()).resolves.toBe(1);
-    await expect(client.financialAuditEvent.count()).resolves.toBe(1);
+    await expect(client.financialAuditEvent.count()).resolves.toBe(2);
     const row = await client.balanceAdjustment.findFirstOrThrow();
     expect(row.justification).toBe('Synthetic reconciliation');
     expect(row.previousBalanceMinorUnits.toFixed(0)).toBe('10000');
@@ -198,6 +202,18 @@ function adjustmentAuditEvent(
     ownerId: adjustmentValue.ownerId,
     resourceId: adjustmentValue.id,
     resourceType: 'balance-adjustment',
+  });
+}
+
+function accountAuditEvent(accountValue: Account): FinancialAuditEvent {
+  return FinancialAuditEvent.create({
+    action: 'created',
+    actorId: accountValue.ownerId,
+    id: crypto.randomUUID(),
+    occurredAt: new Date('2026-09-21T10:00:00.000Z'),
+    ownerId: accountValue.ownerId,
+    resourceId: accountValue.id,
+    resourceType: 'account',
   });
 }
 
