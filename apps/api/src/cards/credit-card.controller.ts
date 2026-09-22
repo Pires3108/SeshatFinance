@@ -2,6 +2,8 @@ import {
   CreateCreditCardUseCase,
   CreditCardCurrencyMismatchError,
   CreditCardPaymentAccountUnavailableError,
+  GetOwnedCreditCardUseCase,
+  ListOwnedCreditCardsUseCase,
 } from '@seshat/application';
 import {
   InvalidCreditCardError,
@@ -13,8 +15,10 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Inject,
   NotFoundException,
+  Param,
   Post,
   Req,
   UnauthorizedException,
@@ -24,8 +28,10 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiCreatedResponse,
+  ApiOkResponse,
   ApiNotFoundResponse,
   ApiOperation,
+  ApiParam,
   ApiTags,
   ApiUnauthorizedResponse,
   type SchemaObject,
@@ -50,6 +56,7 @@ const createSchema = z.object({
   name: z.string().trim().min(1),
   paymentAccountId: z.uuid(),
 });
+const cardIdSchema = z.uuid();
 
 type CreateRequest = z.infer<typeof createSchema>;
 type Response = Readonly<{
@@ -102,6 +109,10 @@ export class CreditCardController {
   public constructor(
     @Inject(CreateCreditCardUseCase)
     private readonly createCard: CreateCreditCardUseCase,
+    @Inject(GetOwnedCreditCardUseCase)
+    private readonly getCard: GetOwnedCreditCardUseCase,
+    @Inject(ListOwnedCreditCardsUseCase)
+    private readonly listCards: ListOwnedCreditCardsUseCase,
     @Inject(AuthenticatedActorContext)
     private readonly actors: AuthenticatedActorContext,
   ) {}
@@ -125,6 +136,34 @@ export class CreditCardController {
     } catch (error) {
       throw mapError(error);
     }
+  }
+
+  @Get()
+  @ApiOperation({
+    summary: 'List credit cards owned by the authenticated user',
+  })
+  @ApiOkResponse({ schema: { items: responseSchema, type: 'array' } })
+  public async list(
+    @Req() request: FastifyRequest,
+  ): Promise<readonly Response[]> {
+    const cards = await this.listCards.execute(this.actorId(request));
+    return cards.map(mapCard);
+  }
+
+  @Get(':cardId')
+  @ApiOperation({
+    summary: 'Get a credit card owned by the authenticated user',
+  })
+  @ApiParam({ format: 'uuid', name: 'cardId', type: 'string' })
+  @ApiOkResponse({ schema: responseSchema })
+  @ApiNotFoundResponse({ description: 'Owned credit card was not found' })
+  public async get(
+    @Req() request: FastifyRequest,
+    @Param('cardId', new ZodValidationPipe(cardIdSchema)) cardId: string,
+  ): Promise<Response> {
+    const card = await this.getCard.execute(cardId, this.actorId(request));
+    if (card === null) throw new NotFoundException('Credit card not found.');
+    return mapCard(card);
   }
 
   private actorId(request: FastifyRequest): string {

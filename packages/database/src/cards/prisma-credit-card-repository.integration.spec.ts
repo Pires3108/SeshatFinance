@@ -119,6 +119,23 @@ describe('PrismaCreditCardRepository', () => {
       client.creditCard.findUnique({ where: { id: card.id } }),
     ).resolves.toBeNull();
   });
+
+  it('restores exact values and isolates reads by owner', async () => {
+    if (repository === undefined) throw unavailable();
+    const id = '22222222-2222-4222-8222-222222222222';
+    const found = await repository.findByIdForOwner(id, ownerId);
+    expect(found?.limit.toDecimal()).toBe('3500.00');
+    expect(found?.paymentAccountId).toBe(accountId);
+    await expect(
+      repository.findByIdForOwner(id, '88888888-8888-4888-8888-888888888888'),
+    ).resolves.toBeNull();
+    expect(
+      (await repository.listForOwner(ownerId)).map((card) => card.id),
+    ).toContain(id);
+    await expect(
+      repository.listForOwner('88888888-8888-4888-8888-888888888888'),
+    ).resolves.toEqual([]);
+  });
 });
 
 function account(): Account {
