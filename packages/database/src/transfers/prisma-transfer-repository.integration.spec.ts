@@ -5,6 +5,7 @@ import {
   Account,
   AccountType,
   Currency,
+  FinancialAuditEvent,
   Money,
   Transfer,
 } from '@seshat/domain';
@@ -43,6 +44,7 @@ describe('PrismaTransferRepository', () => {
       '../../prisma/migrations/20260921010000_assign_transaction_classifications/migration.sql',
       '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
       '../../prisma/migrations/20260921150000_create_transfers/migration.sql',
+      '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
     ]) {
       await migrationClient.query(
         await readFile(new URL(path, import.meta.url), 'utf8'),
@@ -67,28 +69,38 @@ describe('PrismaTransferRepository', () => {
     if (client === undefined || repository === undefined) {
       throw new Error('Transfer persistence is unavailable.');
     }
+    const created = transfer(
+      'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+    );
     await repository.insertAtomically(
-      transfer(
-        'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-        'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-        'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
-      ),
+      created,
+      auditEvent(created, 'created', '10101010-1010-4010-8010-101010101010'),
     );
 
     await expect(client.transfer.count()).resolves.toBe(1);
     await expect(client.transaction.count()).resolves.toBe(2);
+    await expect(client.financialAuditEvent.count()).resolves.toBe(1);
 
+    const duplicate = transfer(
+      'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+      'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+    );
     await expect(
       repository.insertAtomically(
-        transfer(
-          'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
-          'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
-          'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+        duplicate,
+        auditEvent(
+          duplicate,
+          'created',
+          '20202020-2020-4020-8020-202020202020',
         ),
       ),
     ).rejects.toThrow();
     await expect(client.transfer.count()).resolves.toBe(1);
     await expect(client.transaction.count()).resolves.toBe(2);
+    await expect(client.financialAuditEvent.count()).resolves.toBe(1);
   });
 
   it('restores and updates both entries atomically with optimistic locking', async () => {
@@ -96,12 +108,14 @@ describe('PrismaTransferRepository', () => {
       throw new Error('Transfer persistence is unavailable.');
     }
     const transferId = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
+    const created = transfer(
+      transferId,
+      '12121212-1212-4212-8212-121212121212',
+      '34343434-3434-4434-8434-343434343434',
+    );
     await repository.insertAtomically(
-      transfer(
-        transferId,
-        '12121212-1212-4212-8212-121212121212',
-        '34343434-3434-4434-8434-343434343434',
-      ),
+      created,
+      auditEvent(created, 'created', '30303030-3030-4030-8030-303030303030'),
     );
     const persisted = await repository.findByIdForOwner(
       transferId,
@@ -110,9 +124,18 @@ describe('PrismaTransferRepository', () => {
     if (persisted === null) throw new Error('Transfer was not restored.');
     persisted.moveToTrash(new Date('2026-09-21T13:00:00.000Z'));
 
-    await expect(repository.saveAtomically(persisted, 1, 1)).resolves.toBe(
-      true,
-    );
+    await expect(
+      repository.saveAtomically(
+        persisted,
+        1,
+        1,
+        auditEvent(
+          persisted,
+          'moved-to-trash',
+          '40404040-4040-4040-8040-404040404040',
+        ),
+      ),
+    ).resolves.toBe(true);
     const trashed = await client.transaction.findMany({
       orderBy: { id: 'asc' },
       where: {
@@ -130,9 +153,18 @@ describe('PrismaTransferRepository', () => {
     ).toBe(true);
 
     persisted.restoreFromTrash(new Date('2026-09-21T14:00:00.000Z'));
-    await expect(repository.saveAtomically(persisted, 2, 1)).resolves.toBe(
-      false,
-    );
+    await expect(
+      repository.saveAtomically(
+        persisted,
+        2,
+        1,
+        auditEvent(
+          persisted,
+          'restored-from-trash',
+          '50505050-5050-4050-8050-505050505050',
+        ),
+      ),
+    ).resolves.toBe(false);
     const rolledBack = await client.transaction.findMany({
       where: {
         id: {
@@ -148,6 +180,7 @@ describe('PrismaTransferRepository', () => {
         (row) => row.lifecycle === 'trashed' && row.version === 2,
       ),
     ).toBe(true);
+    await expect(client.financialAuditEvent.count()).resolves.toBe(3);
   });
 });
 
@@ -163,6 +196,22 @@ function account(id: string): Account {
     name: id,
     ownerId: '99999999-9999-4999-8999-999999999999',
     type: AccountType.create('checking-account'),
+  });
+}
+
+function auditEvent(
+  transferValue: Transfer,
+  action: 'created' | 'moved-to-trash' | 'restored-from-trash',
+  id: string,
+): FinancialAuditEvent {
+  return FinancialAuditEvent.create({
+    action,
+    actorId: transferValue.ownerId,
+    id,
+    occurredAt: new Date('2026-09-21T13:00:00.000Z'),
+    ownerId: transferValue.ownerId,
+    resourceId: transferValue.id,
+    resourceType: 'transfer',
   });
 }
 
