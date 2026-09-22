@@ -1,4 +1,8 @@
 import type { TagRepository } from '../classifications/manage-tag.js';
+import { FinancialAuditEventFactory } from '../audit/create-financial-audit-event.js';
+import type { Clock } from '../ports/clock.js';
+import type { IdentifierGenerator } from '../ports/identifier-generator.js';
+import type { FinancialAuditEvent } from '@seshat/domain';
 import {
   OwnedTransactionNotFoundError,
   TransactionRequiresTransferMutationError,
@@ -7,7 +11,7 @@ import {
 } from './create-transaction.js';
 
 export type ReplaceTransactionTagsResult =
-  'updated' | 'transaction-not-found' | 'tag-not-found';
+  'updated' | 'unchanged' | 'transaction-not-found' | 'tag-not-found';
 
 export interface TransactionTagRepository {
   listTagIdsForOwner(
@@ -18,6 +22,7 @@ export interface TransactionTagRepository {
     transactionId: string,
     ownerId: string,
     tagIds: readonly string[],
+    auditEvent: FinancialAuditEvent,
   ): Promise<ReplaceTransactionTagsResult>;
 }
 
@@ -34,7 +39,13 @@ export class SetOwnedTransactionTagsUseCase {
     private readonly financialLinks: TransactionFinancialLinkRepository,
     private readonly tags: TagRepository,
     private readonly assignments: TransactionTagRepository,
-  ) {}
+    clock: Clock,
+    identifiers: IdentifierGenerator,
+  ) {
+    this.auditEvents = new FinancialAuditEventFactory(clock, identifiers);
+  }
+
+  private readonly auditEvents: FinancialAuditEventFactory;
 
   public async execute(command: {
     actorId: string;
@@ -67,6 +78,13 @@ export class SetOwnedTransactionTagsUseCase {
       command.transactionId,
       command.actorId,
       tagIds,
+      this.auditEvents.create({
+        action: 'updated',
+        actorId: command.actorId,
+        ownerId: command.actorId,
+        resourceId: command.transactionId,
+        resourceType: 'transaction',
+      }),
     );
     if (result === 'transaction-not-found') {
       throw new OwnedTransactionNotFoundError();

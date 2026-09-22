@@ -34,6 +34,7 @@ describe('PrismaTransactionClassificationRepository', () => {
       }>)
     | undefined;
   let repository: PrismaTransactionClassificationRepository | undefined;
+  let client: ReturnType<typeof createPrismaClient> | undefined;
 
   beforeAll(async (): Promise<void> => {
     const container = await new PostgreSqlContainer('postgres:17-alpine')
@@ -62,6 +63,7 @@ describe('PrismaTransactionClassificationRepository', () => {
     }
     await migrationClient.end();
     const prisma = createPrismaClient(container.getConnectionUri());
+    client = prisma;
     disconnect = async (): Promise<void> => prisma.$disconnect();
     repository = new PrismaTransactionClassificationRepository(prisma);
     setup = async () => {
@@ -130,7 +132,11 @@ describe('PrismaTransactionClassificationRepository', () => {
   });
 
   it('replaces an owned classification selection atomically', async () => {
-    if (repository === undefined || setup === undefined) {
+    if (
+      repository === undefined ||
+      setup === undefined ||
+      client === undefined
+    ) {
       throw new Error('Repository was not initialized.');
     }
     const { category, child, costCenter, ownerId, transaction } = await setup();
@@ -140,9 +146,38 @@ describe('PrismaTransactionClassificationRepository', () => {
       subcategoryId: child.id,
     };
 
+    const updateAudit = updatedAuditEvent(transaction);
     await expect(
-      repository.replaceForOwner(transaction.id, ownerId, selection),
+      repository.replaceForOwner(
+        transaction.id,
+        ownerId,
+        selection,
+        updateAudit,
+      ),
     ).resolves.toBe('updated');
+    await expect(
+      repository.getForOwner(transaction.id, ownerId),
+    ).resolves.toEqual(selection);
+    await expect(client.financialAuditEvent.count()).resolves.toBe(3);
+
+    await expect(
+      repository.replaceForOwner(
+        transaction.id,
+        ownerId,
+        selection,
+        updatedAuditEvent(transaction),
+      ),
+    ).resolves.toBe('unchanged');
+    await expect(client.financialAuditEvent.count()).resolves.toBe(3);
+
+    await expect(
+      repository.replaceForOwner(
+        transaction.id,
+        ownerId,
+        { categoryId: null, costCenterId: null, subcategoryId: null },
+        updateAudit,
+      ),
+    ).rejects.toThrow();
     await expect(
       repository.getForOwner(transaction.id, ownerId),
     ).resolves.toEqual(selection);
@@ -155,6 +190,18 @@ function auditEvent(transaction: Transaction): FinancialAuditEvent {
     actorId: transaction.ownerId,
     id: crypto.randomUUID(),
     occurredAt: new Date('2026-09-21T12:01:00.000Z'),
+    ownerId: transaction.ownerId,
+    resourceId: transaction.id,
+    resourceType: 'transaction',
+  });
+}
+
+function updatedAuditEvent(transaction: Transaction): FinancialAuditEvent {
+  return FinancialAuditEvent.create({
+    action: 'updated',
+    actorId: transaction.ownerId,
+    id: crypto.randomUUID(),
+    occurredAt: new Date('2026-09-21T12:05:00.000Z'),
     ownerId: transaction.ownerId,
     resourceId: transaction.id,
     resourceType: 'transaction',

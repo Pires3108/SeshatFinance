@@ -1,4 +1,4 @@
-import { Tag, Transaction } from '@seshat/domain';
+import { Tag, Transaction, type FinancialAuditEvent } from '@seshat/domain';
 import { describe, expect, it } from 'vitest';
 
 import type { TagRepository } from '../classifications/manage-tag.js';
@@ -77,10 +77,12 @@ describe('SetOwnedTransactionTagsUseCase', () => {
     const first = tag('first-tag-id');
     const second = tag('second-tag-id');
     let replaced: readonly string[] = [];
+    let auditEvent: FinancialAuditEvent | undefined;
     const assignments: TransactionTagRepository = {
       listTagIdsForOwner: (): Promise<readonly string[]> => Promise.resolve([]),
-      replaceForOwner: (_transactionId, _ownerId, tagIds) => {
+      replaceForOwner: (_transactionId, _ownerId, tagIds, event) => {
         replaced = tagIds;
+        auditEvent = event;
         return Promise.resolve('updated');
       },
     };
@@ -89,6 +91,8 @@ describe('SetOwnedTransactionTagsUseCase', () => {
       links(),
       tags([first, second]),
       assignments,
+      { now: () => now },
+      { generate: () => 'audit-event-id' },
     );
 
     const result = await useCase.execute({
@@ -99,6 +103,15 @@ describe('SetOwnedTransactionTagsUseCase', () => {
 
     expect(result).toEqual([first.id, second.id]);
     expect(replaced).toEqual(result);
+    expect(auditEvent?.toSnapshot()).toEqual({
+      action: 'updated',
+      actorId: value.ownerId,
+      id: 'audit-event-id',
+      occurredAt: now,
+      ownerId: value.ownerId,
+      resourceId: value.id,
+      resourceType: 'transaction',
+    });
   });
 
   it('rejects a tag owned by another actor before replacement', async () => {
@@ -113,6 +126,8 @@ describe('SetOwnedTransactionTagsUseCase', () => {
       links(),
       tags([foreignTag]),
       assignments,
+      { now: () => now },
+      { generate: () => 'audit-event-id' },
     );
 
     await expect(
@@ -134,6 +149,8 @@ describe('SetOwnedTransactionTagsUseCase', () => {
         listTagIdsForOwner: () => Promise.resolve([]),
         replaceForOwner: () => Promise.resolve('updated'),
       },
+      { now: () => now },
+      { generate: () => 'audit-event-id' },
     );
 
     await expect(

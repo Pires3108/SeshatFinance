@@ -1,6 +1,7 @@
 import type { TransactionTagRepository } from '@seshat/application';
 import { PrismaTransactionTagRepository } from '@seshat/database';
 import { Injectable } from '@nestjs/common';
+import type { FinancialAuditEvent } from '@seshat/domain';
 
 import { LazyPrismaClient } from '../platform/lazy-prisma-client.js';
 
@@ -21,8 +22,14 @@ export class LazyTransactionTagRepository implements TransactionTagRepository {
     transactionId: string,
     ownerId: string,
     tagIds: readonly string[],
+    auditEvent: FinancialAuditEvent,
   ): ReturnType<TransactionTagRepository['replaceForOwner']> {
-    return this.getRepository().replaceForOwner(transactionId, ownerId, tagIds);
+    return this.getRepository().replaceForOwner(
+      transactionId,
+      ownerId,
+      tagIds,
+      auditEvent,
+    );
   }
 
   private getRepository(): PrismaTransactionTagRepository {

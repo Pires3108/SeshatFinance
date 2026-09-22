@@ -1,5 +1,9 @@
 import type { CategoryRepository } from '../classifications/manage-category.js';
 import type { CostCenterRepository } from '../classifications/manage-cost-center.js';
+import { FinancialAuditEventFactory } from '../audit/create-financial-audit-event.js';
+import type { Clock } from '../ports/clock.js';
+import type { IdentifierGenerator } from '../ports/identifier-generator.js';
+import type { FinancialAuditEvent } from '@seshat/domain';
 import {
   OwnedTransactionNotFoundError,
   TransactionRequiresTransferMutationError,
@@ -15,6 +19,7 @@ export type TransactionClassificationSelection = Readonly<{
 
 export type ReplaceTransactionClassificationResult =
   | 'updated'
+  | 'unchanged'
   | 'transaction-not-found'
   | 'category-not-found'
   | 'subcategory-not-found'
@@ -29,6 +34,7 @@ export interface TransactionClassificationRepository {
     transactionId: string,
     ownerId: string,
     selection: TransactionClassificationSelection,
+    auditEvent: FinancialAuditEvent,
   ): Promise<ReplaceTransactionClassificationResult>;
 }
 
@@ -57,7 +63,13 @@ export class SetOwnedTransactionClassificationUseCase {
     private readonly categories: CategoryRepository,
     private readonly costCenters: CostCenterRepository,
     private readonly classifications: TransactionClassificationRepository,
-  ) {}
+    clock: Clock,
+    identifiers: IdentifierGenerator,
+  ) {
+    this.auditEvents = new FinancialAuditEventFactory(clock, identifiers);
+  }
+
+  private readonly auditEvents: FinancialAuditEventFactory;
 
   public async execute(command: {
     actorId: string;
@@ -91,11 +103,18 @@ export class SetOwnedTransactionClassificationUseCase {
       command.transactionId,
       command.actorId,
       selection,
+      this.auditEvents.create({
+        action: 'updated',
+        actorId: command.actorId,
+        ownerId: command.actorId,
+        resourceId: command.transactionId,
+        resourceType: 'transaction',
+      }),
     );
     if (result === 'transaction-not-found') {
       throw new OwnedTransactionNotFoundError();
     }
-    if (result !== 'updated') {
+    if (result !== 'updated' && result !== 'unchanged') {
       throw new InvalidOwnedTransactionClassificationError();
     }
     return selection;

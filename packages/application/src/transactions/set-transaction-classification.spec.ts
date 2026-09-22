@@ -4,6 +4,7 @@ import {
   Currency,
   Money,
   Transaction,
+  type FinancialAuditEvent,
 } from '@seshat/domain';
 import { describe, expect, it } from 'vitest';
 
@@ -52,6 +53,7 @@ function createUseCase(values: {
   categories: readonly Category[];
   costCenters?: readonly CostCenter[];
   onReplace?: (selection: TransactionClassificationSelection) => void;
+  onAudit?: (event: FinancialAuditEvent) => void;
   transferId?: string | null;
 }): SetOwnedTransactionClassificationUseCase {
   const transactions: TransactionRepository = {
@@ -96,8 +98,9 @@ function createUseCase(values: {
         costCenterId: null,
         subcategoryId: null,
       }),
-    replaceForOwner: (_transactionId, _actorId, selection) => {
+    replaceForOwner: (_transactionId, _actorId, selection, auditEvent) => {
       values.onReplace?.(selection);
+      values.onAudit?.(auditEvent);
       return Promise.resolve('updated');
     },
   };
@@ -107,6 +110,8 @@ function createUseCase(values: {
     categories,
     costCenters,
     classifications,
+    { now: () => now },
+    { generate: () => 'audit-event-id' },
   );
 }
 
@@ -121,11 +126,15 @@ describe('SetOwnedTransactionClassificationUseCase', () => {
       ownerId,
     });
     let replaced: TransactionClassificationSelection | undefined;
+    let auditEvent: FinancialAuditEvent | undefined;
     const useCase = createUseCase({
       categories: [root, child],
       costCenters: [center],
       onReplace: (selection) => {
         replaced = selection;
+      },
+      onAudit: (event) => {
+        auditEvent = event;
       },
     });
 
@@ -138,6 +147,15 @@ describe('SetOwnedTransactionClassificationUseCase', () => {
     });
 
     expect(result).toEqual(replaced);
+    expect(auditEvent?.toSnapshot()).toEqual({
+      action: 'updated',
+      actorId: ownerId,
+      id: 'audit-event-id',
+      occurredAt: now,
+      ownerId,
+      resourceId: 'transaction-id',
+      resourceType: 'transaction',
+    });
   });
 
   it('rejects a child from another root', async () => {
