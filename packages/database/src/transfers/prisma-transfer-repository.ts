@@ -2,8 +2,13 @@ import type {
   TransferLifecycleRepository,
   TransferRepository,
 } from '@seshat/application';
-import { Transaction, Transfer } from '@seshat/domain';
+import {
+  Transaction,
+  Transfer,
+  type FinancialAuditEvent,
+} from '@seshat/domain';
 
+import { insertFinancialAuditEvent } from '../audit/prisma-financial-audit-event-repository.js';
 import type { Prisma, PrismaClient } from '../generated/prisma/client.js';
 
 export class PrismaTransferRepository
@@ -11,7 +16,10 @@ export class PrismaTransferRepository
 {
   public constructor(private readonly client: PrismaClient) {}
 
-  public async insertAtomically(transfer: Transfer): Promise<void> {
+  public async insertAtomically(
+    transfer: Transfer,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<void> {
     const snapshot = transfer.toSnapshot();
     await this.client.$transaction(async (client) => {
       await client.transaction.create({
@@ -29,6 +37,7 @@ export class PrismaTransferRepository
           sourceTransactionId: snapshot.source.id,
         },
       });
+      await insertFinancialAuditEvent(client, auditEvent);
     });
   }
 
@@ -56,6 +65,7 @@ export class PrismaTransferRepository
     transfer: Transfer,
     expectedSourceVersion: number,
     expectedDestinationVersion: number,
+    auditEvent: FinancialAuditEvent,
   ): Promise<boolean> {
     const snapshot = transfer.toSnapshot();
     try {
@@ -78,6 +88,7 @@ export class PrismaTransferRepository
           },
         });
         if (destination.count !== 1) throw new TransferPersistenceConflict();
+        await insertFinancialAuditEvent(client, auditEvent);
       });
       return true;
     } catch (error) {

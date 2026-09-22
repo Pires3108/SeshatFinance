@@ -159,7 +159,11 @@ import { UserProfileController } from './users/user-profile.controller.js';
       useFactory: (
         transfers: TransferLifecycleRepository,
       ): ChangeOwnedTransferLifecycleUseCase =>
-        new ChangeOwnedTransferLifecycleUseCase(transfers, new SystemClock()),
+        new ChangeOwnedTransferLifecycleUseCase(
+          transfers,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
     },
     {
       inject: [LazyCostCenterRepository],

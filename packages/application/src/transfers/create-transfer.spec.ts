@@ -2,6 +2,7 @@ import {
   Account,
   AccountType,
   Currency,
+  type FinancialAuditEvent,
   Money,
   type Transfer,
 } from '@seshat/domain';
@@ -68,9 +69,11 @@ function command(): CreateTransferCommand {
 describe('CreateTransferUseCase', () => {
   it('persists both sides through one atomic repository call', async () => {
     let inserted: Transfer | undefined;
+    let auditEvent: FinancialAuditEvent | undefined;
     const repository: TransferRepository = {
-      insertAtomically: (transfer) => {
+      insertAtomically: (transfer, event) => {
         inserted = transfer;
+        auditEvent = event;
         return Promise.resolve();
       },
     };
@@ -78,6 +81,7 @@ describe('CreateTransferUseCase', () => {
       'transfer-id',
       'source-entry-id',
       'destination-entry-id',
+      'audit-event-id',
     ];
     const useCase = new CreateTransferUseCase(
       accounts([account('source-id'), account('destination-id')]),
@@ -95,6 +99,13 @@ describe('CreateTransferUseCase', () => {
       source: { id: 'source-entry-id', kind: 'expense' },
     });
     expect(result.netBalanceEffect().toDecimal()).toBe('0.00');
+    expect(auditEvent?.toSnapshot()).toMatchObject({
+      action: 'created',
+      actorId: ownerId,
+      id: 'audit-event-id',
+      resourceId: 'transfer-id',
+      resourceType: 'transfer',
+    });
   });
 
   it('rejects a missing or foreign account', async () => {
@@ -131,21 +142,27 @@ describe('ChangeOwnedTransferLifecycleUseCase', () => {
   it('persists both entries with their independent expected versions', async () => {
     const created = await createTransfer();
     let saved: Transfer | undefined;
+    let auditEvent: FinancialAuditEvent | undefined;
     let versions: readonly number[] = [];
     const repository: TransferLifecycleRepository = {
       findByIdForOwner: (id, actorId) =>
         Promise.resolve(
           id === created.id && actorId === created.ownerId ? created : null,
         ),
-      saveAtomically: (transfer, sourceVersion, destinationVersion) => {
+      saveAtomically: (transfer, sourceVersion, destinationVersion, event) => {
         saved = transfer;
         versions = [sourceVersion, destinationVersion];
+        auditEvent = event;
         return Promise.resolve(true);
       },
     };
-    const useCase = new ChangeOwnedTransferLifecycleUseCase(repository, {
-      now: () => new Date('2026-09-21T13:00:00.000Z'),
-    });
+    const useCase = new ChangeOwnedTransferLifecycleUseCase(
+      repository,
+      {
+        now: () => new Date('2026-09-21T13:00:00.000Z'),
+      },
+      { generate: () => 'lifecycle-audit-id' },
+    );
 
     const result = await useCase.execute({
       action: 'move-to-trash',
@@ -159,6 +176,11 @@ describe('ChangeOwnedTransferLifecycleUseCase', () => {
       destination: { lifecycle: 'trashed', version: 2 },
       source: { lifecycle: 'trashed', version: 2 },
     });
+    expect(auditEvent?.toSnapshot()).toMatchObject({
+      action: 'moved-to-trash',
+      id: 'lifecycle-audit-id',
+      resourceId: 'transfer-id',
+    });
   });
 
   it('does not reveal a missing or foreign transfer', async () => {
@@ -168,6 +190,7 @@ describe('ChangeOwnedTransferLifecycleUseCase', () => {
         saveAtomically: () => Promise.resolve(true),
       },
       { now: () => new Date('2026-09-21T13:00:00.000Z') },
+      { generate: () => 'audit-id' },
     );
 
     await expect(
@@ -187,6 +210,7 @@ describe('ChangeOwnedTransferLifecycleUseCase', () => {
         saveAtomically: () => Promise.resolve(false),
       },
       { now: () => new Date('2026-09-21T13:00:00.000Z') },
+      { generate: () => 'audit-id' },
     );
 
     await expect(
@@ -204,6 +228,7 @@ async function createTransfer(): Promise<Transfer> {
     'transfer-id',
     'source-entry-id',
     'destination-entry-id',
+    'audit-event-id',
   ];
   return new CreateTransferUseCase(
     accounts([account('source-id'), account('destination-id')]),

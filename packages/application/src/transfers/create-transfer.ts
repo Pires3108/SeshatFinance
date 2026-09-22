@@ -1,4 +1,4 @@
-import { Currency, Money, Transfer } from '@seshat/domain';
+import { Currency, FinancialAuditEvent, Money, Transfer } from '@seshat/domain';
 
 import type { AccountRepository } from '../accounts/create-account.js';
 import type { Clock } from '../ports/clock.js';
@@ -17,7 +17,10 @@ export type CreateTransferCommand = Readonly<{
 }>;
 
 export interface TransferRepository {
-  insertAtomically(transfer: Transfer): Promise<void>;
+  insertAtomically(
+    transfer: Transfer,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<void>;
 }
 
 export interface TransferLifecycleRepository {
@@ -26,6 +29,7 @@ export interface TransferLifecycleRepository {
     transfer: Transfer,
     expectedSourceVersion: number,
     expectedDestinationVersion: number,
+    auditEvent: FinancialAuditEvent,
   ): Promise<boolean>;
 }
 
@@ -96,9 +100,10 @@ export class CreateTransferUseCase {
     const transferId = this.identifiers.generate();
     const sourceTransactionId = this.identifiers.generate();
     const destinationTransactionId = this.identifiers.generate();
+    const at = this.clock.now();
     const transfer = Transfer.create({
       amount: Money.fromDecimal(command.amount, currency),
-      createdAt: this.clock.now(),
+      createdAt: at,
       description: command.description,
       destinationAccountId: destination.id,
       destinationTransactionId,
@@ -109,7 +114,18 @@ export class CreateTransferUseCase {
       sourceAccountId: source.id,
       sourceTransactionId,
     });
-    await this.transfers.insertAtomically(transfer);
+    await this.transfers.insertAtomically(
+      transfer,
+      FinancialAuditEvent.create({
+        action: 'created',
+        actorId: command.actorId,
+        id: this.identifiers.generate(),
+        occurredAt: at,
+        ownerId: command.actorId,
+        resourceId: transfer.id,
+        resourceType: 'transfer',
+      }),
+    );
     return transfer;
   }
 }
@@ -121,6 +137,7 @@ export class ChangeOwnedTransferLifecycleUseCase {
   public constructor(
     private readonly transfers: TransferLifecycleRepository,
     private readonly clock: Clock,
+    private readonly identifiers: IdentifierGenerator,
   ) {}
 
   public async execute(command: {
@@ -153,8 +170,32 @@ export class ChangeOwnedTransferLifecycleUseCase {
       transfer,
       before.source.version,
       before.destination.version,
+      FinancialAuditEvent.create({
+        action: lifecycleAuditAction(command.action),
+        actorId: command.actorId,
+        id: this.identifiers.generate(),
+        occurredAt: at,
+        ownerId: command.actorId,
+        resourceId: transfer.id,
+        resourceType: 'transfer',
+      }),
     );
     if (!saved) throw new TransferVersionConflictError();
     return transfer;
+  }
+}
+
+function lifecycleAuditAction(
+  action: TransferLifecycleAction,
+): 'archived' | 'unarchived' | 'moved-to-trash' | 'restored-from-trash' {
+  switch (action) {
+    case 'archive':
+      return 'archived';
+    case 'unarchive':
+      return 'unarchived';
+    case 'move-to-trash':
+      return 'moved-to-trash';
+    case 'restore-from-trash':
+      return 'restored-from-trash';
   }
 }

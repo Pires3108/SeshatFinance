@@ -2,7 +2,7 @@ import type {
   TransferLifecycleRepository,
   TransferRepository,
 } from '@seshat/application';
-import type { Transfer } from '@seshat/domain';
+import type { FinancialAuditEvent, Transfer } from '@seshat/domain';
 import { PrismaTransferRepository } from '@seshat/database';
 import { Injectable } from '@nestjs/common';
 
@@ -16,8 +16,11 @@ export class LazyTransferRepository
 
   public constructor(private readonly prisma: LazyPrismaClient) {}
 
-  public insertAtomically(transfer: Transfer): Promise<void> {
-    return this.getRepository().insertAtomically(transfer);
+  public insertAtomically(
+    transfer: Transfer,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<void> {
+    return this.getRepository().insertAtomically(transfer, auditEvent);
   }
 
   public findByIdForOwner(
@@ -31,11 +34,13 @@ export class LazyTransferRepository
     transfer: Transfer,
     expectedSourceVersion: number,
     expectedDestinationVersion: number,
+    auditEvent: FinancialAuditEvent,
   ): Promise<boolean> {
     return this.getRepository().saveAtomically(
       transfer,
       expectedSourceVersion,
       expectedDestinationVersion,
+      auditEvent,
     );
   }
 
