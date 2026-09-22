@@ -129,3 +129,10 @@ export {
   FinancialAuditEventFactory,
   type CreateFinancialAuditEventCommand,
 } from './audit/create-financial-audit-event.js';
+export {
+  CreateCreditCardUseCase,
+  CreditCardCurrencyMismatchError,
+  CreditCardPaymentAccountUnavailableError,
+  type CreateCreditCardCommand,
+  type CreditCardRepository,
+} from './cards/create-credit-card.js';

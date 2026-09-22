@@ -74,3 +74,9 @@ export {
   type FinancialAuditEventSnapshot,
   type FinancialAuditResourceType,
 } from './audit/financial-audit-event.js';
+export {
+  CreditCard,
+  InvalidCreditCardError,
+  type CreateCreditCardProperties,
+  type CreditCardSnapshot,
+} from './cards/credit-card.js';
