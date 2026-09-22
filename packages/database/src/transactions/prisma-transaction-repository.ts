@@ -2,36 +2,43 @@ import type {
   TransactionFinancialLinkRepository,
   TransactionRepository,
 } from '@seshat/application';
-import { Transaction } from '@seshat/domain';
+import { Transaction, type FinancialAuditEvent } from '@seshat/domain';
 
 import type { PrismaClient } from '../generated/prisma/client.js';
+import { insertFinancialAuditEvent } from '../audit/prisma-financial-audit-event-repository.js';
 
 export class PrismaTransactionRepository
   implements TransactionRepository, TransactionFinancialLinkRepository
 {
   public constructor(private readonly client: PrismaClient) {}
 
-  public async insert(transaction: Transaction): Promise<void> {
+  public async insert(
+    transaction: Transaction,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<void> {
     const snapshot = transaction.toSnapshot();
-    await this.client.transaction.create({
-      data: {
-        accountId: snapshot.accountId,
-        amountMinorUnits: transaction.amount.toMinorUnits().toString(),
-        archivedAt: snapshot.archivedAt,
-        createdAt: snapshot.createdAt,
-        currencyCode: snapshot.amount.currency.code,
-        currencyMinorUnitScale: snapshot.amount.currency.minorUnitScale,
-        description: snapshot.description,
-        id: snapshot.id,
-        kind: snapshot.kind,
-        lifecycle: snapshot.lifecycle,
-        observations: snapshot.observations,
-        occurredAt: snapshot.occurredAt,
-        ownerId: snapshot.ownerId,
-        trashedAt: snapshot.trashedAt,
-        updatedAt: snapshot.updatedAt,
-        version: snapshot.version,
-      },
+    await this.client.$transaction(async (client) => {
+      await client.transaction.create({
+        data: {
+          accountId: snapshot.accountId,
+          amountMinorUnits: transaction.amount.toMinorUnits().toString(),
+          archivedAt: snapshot.archivedAt,
+          createdAt: snapshot.createdAt,
+          currencyCode: snapshot.amount.currency.code,
+          currencyMinorUnitScale: snapshot.amount.currency.minorUnitScale,
+          description: snapshot.description,
+          id: snapshot.id,
+          kind: snapshot.kind,
+          lifecycle: snapshot.lifecycle,
+          observations: snapshot.observations,
+          occurredAt: snapshot.occurredAt,
+          ownerId: snapshot.ownerId,
+          trashedAt: snapshot.trashedAt,
+          updatedAt: snapshot.updatedAt,
+          version: snapshot.version,
+        },
+      });
+      await insertFinancialAuditEvent(client, auditEvent);
     });
   }
 
@@ -71,28 +78,33 @@ export class PrismaTransactionRepository
   public async save(
     transaction: Transaction,
     expectedVersion: number,
+    auditEvent: FinancialAuditEvent,
   ): Promise<boolean> {
     const snapshot = transaction.toSnapshot();
-    const result = await this.client.transaction.updateMany({
-      data: {
-        amountMinorUnits: transaction.amount.toMinorUnits().toString(),
-        archivedAt: snapshot.archivedAt,
-        description: snapshot.description,
-        kind: snapshot.kind,
-        lifecycle: snapshot.lifecycle,
-        observations: snapshot.observations,
-        occurredAt: snapshot.occurredAt,
-        trashedAt: snapshot.trashedAt,
-        updatedAt: snapshot.updatedAt,
-        version: snapshot.version,
-      },
-      where: {
-        id: snapshot.id,
-        ownerId: snapshot.ownerId,
-        version: expectedVersion,
-      },
+    return this.client.$transaction(async (client) => {
+      const result = await client.transaction.updateMany({
+        data: {
+          amountMinorUnits: transaction.amount.toMinorUnits().toString(),
+          archivedAt: snapshot.archivedAt,
+          description: snapshot.description,
+          kind: snapshot.kind,
+          lifecycle: snapshot.lifecycle,
+          observations: snapshot.observations,
+          occurredAt: snapshot.occurredAt,
+          trashedAt: snapshot.trashedAt,
+          updatedAt: snapshot.updatedAt,
+          version: snapshot.version,
+        },
+        where: {
+          id: snapshot.id,
+          ownerId: snapshot.ownerId,
+          version: expectedVersion,
+        },
+      });
+      if (result.count !== 1) return false;
+      await insertFinancialAuditEvent(client, auditEvent);
+      return true;
     });
-    return result.count === 1;
   }
 
   public async findTransferIdByEntryForOwner(

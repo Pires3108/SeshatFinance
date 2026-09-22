@@ -1,5 +1,6 @@
 import {
   Currency,
+  FinancialAuditEvent,
   Money,
   Transaction,
   type TransactionKind,
@@ -10,13 +11,20 @@ import type { Clock } from '../ports/clock.js';
 import type { IdentifierGenerator } from '../ports/identifier-generator.js';
 
 export interface TransactionRepository {
-  insert(transaction: Transaction): Promise<void>;
+  insert(
+    transaction: Transaction,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<void>;
   findByIdForOwner(id: string, ownerId: string): Promise<Transaction | null>;
   listForAccountOwner(
     accountId: string,
     ownerId: string,
   ): Promise<readonly Transaction[]>;
-  save(transaction: Transaction, expectedVersion: number): Promise<boolean>;
+  save(
+    transaction: Transaction,
+    expectedVersion: number,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<boolean>;
 }
 
 export interface TransactionFinancialLinkRepository {
@@ -98,10 +106,11 @@ export class CreateTransactionUseCase {
     if (!currency.equals(account.initialBalance.currency)) {
       throw new TransactionAccountUnavailableError();
     }
+    const at = this.clock.now();
     const transaction = Transaction.create({
       accountId: account.id,
       amount: Money.fromDecimal(command.amount, currency),
-      createdAt: this.clock.now(),
+      createdAt: at,
       description: command.description,
       id: this.identifiers.generate(),
       kind: command.kind,
@@ -109,7 +118,16 @@ export class CreateTransactionUseCase {
       occurredAt: command.occurredAt,
       ownerId: command.actorId,
     });
-    await this.transactions.insert(transaction);
+    const auditEvent = FinancialAuditEvent.create({
+      action: 'created',
+      actorId: command.actorId,
+      id: this.identifiers.generate(),
+      occurredAt: at,
+      ownerId: command.actorId,
+      resourceId: transaction.id,
+      resourceType: 'transaction',
+    });
+    await this.transactions.insert(transaction, auditEvent);
     return transaction;
   }
 }
@@ -187,6 +205,7 @@ export class UpdateOwnedTransactionUseCase {
     private readonly financialLinks: TransactionFinancialLinkRepository,
     private readonly accounts: AccountRepository,
     private readonly clock: Clock,
+    private readonly identifiers: IdentifierGenerator,
   ) {}
 
   public async execute(
@@ -203,6 +222,7 @@ export class UpdateOwnedTransactionUseCase {
     );
     if (account === null) throw new TransactionAccountUnavailableError();
     const expectedVersion = transaction.toSnapshot().version;
+    const at = this.clock.now();
     transaction.updateDetails(
       {
         amount: Money.fromDecimal(
@@ -217,9 +237,21 @@ export class UpdateOwnedTransactionUseCase {
             : command.observations,
         occurredAt: command.occurredAt,
       },
-      this.clock.now(),
+      at,
     );
-    await this.save(transaction, expectedVersion);
+    await this.save(
+      transaction,
+      expectedVersion,
+      FinancialAuditEvent.create({
+        action: 'updated',
+        actorId: command.actorId,
+        id: this.identifiers.generate(),
+        occurredAt: at,
+        ownerId: command.actorId,
+        resourceId: transaction.id,
+        resourceType: 'transaction',
+      }),
+    );
     return transaction;
   }
 
@@ -251,8 +283,11 @@ export class UpdateOwnedTransactionUseCase {
   private async save(
     transaction: Transaction,
     expectedVersion: number,
+    auditEvent: FinancialAuditEvent,
   ): Promise<void> {
-    if (!(await this.transactions.save(transaction, expectedVersion))) {
+    if (
+      !(await this.transactions.save(transaction, expectedVersion, auditEvent))
+    ) {
       throw new TransactionVersionConflictError();
     }
   }
@@ -266,6 +301,7 @@ export class ChangeOwnedTransactionLifecycleUseCase {
     private readonly transactions: TransactionRepository,
     private readonly financialLinks: TransactionFinancialLinkRepository,
     private readonly clock: Clock,
+    private readonly identifiers: IdentifierGenerator,
   ) {}
 
   public async execute(command: {
@@ -301,9 +337,35 @@ export class ChangeOwnedTransactionLifecycleUseCase {
         transaction.restoreFromTrash(at);
         break;
     }
-    if (!(await this.transactions.save(transaction, expectedVersion))) {
+    const auditEvent = FinancialAuditEvent.create({
+      action: lifecycleAuditAction(command.action),
+      actorId: command.actorId,
+      id: this.identifiers.generate(),
+      occurredAt: at,
+      ownerId: command.actorId,
+      resourceId: transaction.id,
+      resourceType: 'transaction',
+    });
+    if (
+      !(await this.transactions.save(transaction, expectedVersion, auditEvent))
+    ) {
       throw new TransactionVersionConflictError();
     }
     return transaction;
+  }
+}
+
+function lifecycleAuditAction(
+  action: TransactionLifecycleAction,
+): 'archived' | 'unarchived' | 'moved-to-trash' | 'restored-from-trash' {
+  switch (action) {
+    case 'archive':
+      return 'archived';
+    case 'unarchive':
+      return 'unarchived';
+    case 'move-to-trash':
+      return 'moved-to-trash';
+    case 'restore-from-trash':
+      return 'restored-from-trash';
   }
 }

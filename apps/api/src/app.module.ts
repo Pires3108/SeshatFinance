@@ -339,6 +339,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
           transactions,
           accounts,
           new SystemClock(),
+          new SystemIdentifierGenerator(),
         ),
     },
     {
@@ -352,6 +353,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
           transactions,
           transactions,
           new SystemClock(),
+          new SystemIdentifierGenerator(),
         ),
     },
     {

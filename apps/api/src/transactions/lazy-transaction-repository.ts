@@ -2,7 +2,7 @@ import type {
   TransactionFinancialLinkRepository,
   TransactionRepository,
 } from '@seshat/application';
-import type { Transaction } from '@seshat/domain';
+import type { FinancialAuditEvent, Transaction } from '@seshat/domain';
 import { PrismaTransactionRepository } from '@seshat/database';
 import { Injectable } from '@nestjs/common';
 
@@ -14,8 +14,11 @@ export class LazyTransactionRepository
 {
   private repository: PrismaTransactionRepository | undefined;
   public constructor(private readonly prisma: LazyPrismaClient) {}
-  public insert(transaction: Transaction): Promise<void> {
-    return this.getRepository().insert(transaction);
+  public insert(
+    transaction: Transaction,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<void> {
+    return this.getRepository().insert(transaction, auditEvent);
   }
   public findByIdForOwner(
     id: string,
@@ -40,8 +43,9 @@ export class LazyTransactionRepository
   public save(
     transaction: Transaction,
     expectedVersion: number,
+    auditEvent: FinancialAuditEvent,
   ): Promise<boolean> {
-    return this.getRepository().save(transaction, expectedVersion);
+    return this.getRepository().save(transaction, expectedVersion, auditEvent);
   }
 
   public findTransferIdByEntryForOwner(
