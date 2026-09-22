@@ -110,6 +110,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** definir cardinalidade, limite acumulado, compatibilidade de moeda e conta, estados de ciclo de vida elegíveis e propagação de alterações, arquivamento, lixeira e restauração, além da apresentação canônica do valor líquido.
 - **Limite atual:** não implementar persistência, contrato público nem cálculo de saldo ou despesa líquida para reembolsos vinculados até a decisão. Receitas comuns permanecem suportadas, mas não devem ser classificadas ou vinculadas como reembolso por inferência.
 
+### RII-015 — Materialização do ciclo do cartão
+
+- **Estado:** aberto.
+- **Referências:** RF-038; RF-043; RN-022; RN-024; US-038; US-040; US-042.
+- **Risco:** os requisitos pedem dias de fechamento e vencimento, mas não definem como materializá-los em meses que não possuem o dia configurado, se fins de semana ou feriados deslocam datas, nem como determinar o mês de vencimento quando o fechamento é posterior ao vencimento no calendário civil. Inferir essas regras pode associar compras à fatura errada, antecipar obrigações ou classificar uma fatura como vencida indevidamente.
+- **Decisão necessária:** definir a regra canônica para meses curtos, a existência ou não de ajuste por dia útil, a relação mensal entre fechamento e vencimento, o fuso autoritativo e os limites inclusivos ou exclusivos usados para associar compras ao ciclo.
+- **Limite atual:** o cadastro pode persistir dias civis válidos de 1 a 31 como configuração declarada pelo usuário, sem prometer uma data efetiva. Não materializar ciclos, atribuir compras a faturas, emitir alertas ou calcular atraso antes da decisão.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
