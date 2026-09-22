@@ -3,6 +3,7 @@ import {
   ChangeOwnedTransferLifecycleUseCase,
   ChangeOwnedAccountLifecycleUseCase,
   CreateBalanceAdjustmentUseCase,
+  CreateCreditCardUseCase,
   CreateCategoryUseCase,
   CreateCostCenterUseCase,
   CreateTagUseCase,
@@ -35,6 +36,7 @@ import {
   type UserProfileRepository,
   type AccountRepository,
   type BalanceAdjustmentRepository,
+  type CreditCardRepository,
   type CategoryRepository,
   type CostCenterRepository,
   type TagRepository,
@@ -54,6 +56,8 @@ import { AccountBalanceController } from './accounts/account-balance.controller.
 import { LazyAccountRepository } from './accounts/lazy-account-repository.js';
 import { BalanceAdjustmentController } from './adjustments/balance-adjustment.controller.js';
 import { LazyBalanceAdjustmentRepository } from './adjustments/lazy-balance-adjustment-repository.js';
+import { CreditCardController } from './cards/credit-card.controller.js';
+import { LazyCreditCardRepository } from './cards/lazy-credit-card-repository.js';
 import { AuthConfiguration } from './auth/auth-configuration.js';
 import { AuthController } from './auth/auth.controller.js';
 import { AuthenticatedActorContext } from './auth/authenticated-actor-context.js';
@@ -90,6 +94,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     AccountBalanceController,
     AccountController,
     BalanceAdjustmentController,
+    CreditCardController,
     AuthController,
     CategoryController,
     CostCenterController,
@@ -111,6 +116,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyPrismaClient,
     LazyAccountRepository,
     LazyBalanceAdjustmentRepository,
+    LazyCreditCardRepository,
     LazyCategoryRepository,
     LazyCostCenterRepository,
     LazyTagRepository,
@@ -119,6 +125,20 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyTransactionTagRepository,
     LazyTransferRepository,
     LazyUserProfileRepository,
+    {
+      inject: [LazyAccountRepository, LazyCreditCardRepository],
+      provide: CreateCreditCardUseCase,
+      useFactory: (
+        accounts: AccountRepository,
+        cards: CreditCardRepository,
+      ): CreateCreditCardUseCase =>
+        new CreateCreditCardUseCase(
+          accounts,
+          cards,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
     {
       inject: [
         LazyAccountRepository,

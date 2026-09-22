@@ -10,3 +10,4 @@ export { PrismaCategoryRepository } from './classifications/prisma-category-repo
 export { PrismaTagRepository } from './classifications/prisma-tag-repository.js';
 export { PrismaCostCenterRepository } from './classifications/prisma-cost-center-repository.js';
 export { PrismaFinancialAuditEventRepository } from './audit/prisma-financial-audit-event-repository.js';
+export { PrismaCreditCardRepository } from './cards/prisma-credit-card-repository.js';
