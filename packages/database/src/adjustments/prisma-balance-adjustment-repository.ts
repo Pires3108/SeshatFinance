@@ -1,6 +1,11 @@
 import type { BalanceAdjustmentRepository } from '@seshat/application';
-import type { BalanceAdjustment, TransactionSnapshot } from '@seshat/domain';
+import type {
+  BalanceAdjustment,
+  FinancialAuditEvent,
+  TransactionSnapshot,
+} from '@seshat/domain';
 
+import { insertFinancialAuditEvent } from '../audit/prisma-financial-audit-event-repository.js';
 import { Prisma, type PrismaClient } from '../generated/prisma/client.js';
 
 type CurrentBalanceRow = Readonly<{
@@ -12,6 +17,7 @@ export class PrismaBalanceAdjustmentRepository implements BalanceAdjustmentRepos
 
   public async insertAtomically(
     adjustment: BalanceAdjustment,
+    auditEvent: FinancialAuditEvent,
   ): Promise<boolean> {
     const snapshot = adjustment.toSnapshot();
     try {
@@ -70,6 +76,7 @@ export class PrismaBalanceAdjustmentRepository implements BalanceAdjustmentRepos
               transactionId: snapshot.transaction.id,
             },
           });
+          await insertFinancialAuditEvent(client, auditEvent);
           return true;
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
