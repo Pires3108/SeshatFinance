@@ -118,6 +118,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** definir a regra canônica para meses curtos, a existência ou não de ajuste por dia útil, a relação mensal entre fechamento e vencimento, o fuso autoritativo e os limites inclusivos ou exclusivos usados para associar compras ao ciclo.
 - **Limite atual:** o cadastro pode persistir dias civis válidos de 1 a 31 como configuração declarada pelo usuário, sem prometer uma data efetiva. Não materializar ciclos, atribuir compras a faturas, emitir alertas ou calcular atraso antes da decisão.
 
+### RII-016 — Semântica dos dados de posição de investimento
+
+- **Estado:** aberto.
+- **Referências:** RF-051; RF-052; RN-034; RN-037; US-054 a US-057; INV-028; INV-029.
+- **Risco:** quantidade, preço médio, taxa, impostos e liquidez não têm unidade, escala, periodicidade ou formato canônicos definidos. Tratar preço médio como dinheiro arredondado à menor fração da moeda, por exemplo, pode perder precisão no custo de uma posição; interpretar taxa ou imposto como percentual em vez de valor pode distorcer patrimônio e rentabilidade.
+- **Decisão necessária:** definir precisão e unidade da quantidade por tipo de ativo, precisão e moeda do preço unitário, semântica e periodicidade de taxas e impostos, representação da liquidez e regras de arredondamento para custo e valor atual.
+- **Limite atual:** expor somente o catálogo estável dos onze tipos previstos em RF-051. Não persistir posições nem calcular custo, rendimento ou valor atual antes da decisão.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.

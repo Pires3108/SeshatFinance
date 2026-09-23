@@ -230,6 +230,23 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/investment-types": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List supported manual investment types */
+        readonly get: operations["InvestmentTypeController_list"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/auth/password-recovery-requests": {
         readonly parameters: {
             readonly query?: never;
@@ -1329,6 +1346,36 @@ export interface operations {
                         readonly status: "ok";
                     };
                 };
+            };
+        };
+    };
+    readonly InvestmentTypeController_list: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        /** @enum {string} */
+                        readonly key: "treasury-direct" | "cdb" | "lci" | "lca" | "savings" | "stock" | "fii" | "etf" | "cryptocurrency" | "investment-fund" | "private-pension";
+                        readonly label: string;
+                    }[];
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

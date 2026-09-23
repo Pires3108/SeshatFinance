@@ -1821,6 +1821,59 @@
         "tags": ["health"]
       }
     },
+    "/api/v1/investment-types": {
+      "get": {
+        "operationId": "InvestmentTypeController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "properties": {
+                      "key": {
+                        "enum": [
+                          "treasury-direct",
+                          "cdb",
+                          "lci",
+                          "lca",
+                          "savings",
+                          "stock",
+                          "fii",
+                          "etf",
+                          "cryptocurrency",
+                          "investment-fund",
+                          "private-pension"
+                        ],
+                        "type": "string"
+                      },
+                      "label": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["key", "label"],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List supported manual investment types",
+        "tags": ["investments"]
+      }
+    },
     "/api/v1/auth/password-recovery-requests": {
       "post": {
         "operationId": "PasswordRecoveryController_request",
