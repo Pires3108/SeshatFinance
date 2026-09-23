@@ -1,8 +1,14 @@
-import type { BalanceAdjustmentRepository } from '@seshat/application';
 import type {
-  BalanceAdjustment,
-  FinancialAuditEvent,
-  TransactionSnapshot,
+  BalanceAdjustmentHistoryItem,
+  BalanceAdjustmentHistoryRepository,
+  BalanceAdjustmentRepository,
+} from '@seshat/application';
+import {
+  Currency,
+  Money,
+  type BalanceAdjustment,
+  type FinancialAuditEvent,
+  type TransactionSnapshot,
 } from '@seshat/domain';
 
 import { insertFinancialAuditEvent } from '../audit/prisma-financial-audit-event-repository.js';
@@ -12,7 +18,9 @@ type CurrentBalanceRow = Readonly<{
   current_balance_minor_units: string;
 }>;
 
-export class PrismaBalanceAdjustmentRepository implements BalanceAdjustmentRepository {
+export class PrismaBalanceAdjustmentRepository
+  implements BalanceAdjustmentRepository, BalanceAdjustmentHistoryRepository
+{
   public constructor(private readonly client: PrismaClient) {}
 
   public async insertAtomically(
@@ -90,6 +98,64 @@ export class PrismaBalanceAdjustmentRepository implements BalanceAdjustmentRepos
       }
       throw error;
     }
+  }
+
+  public async listForAccountOwner(
+    accountId: string,
+    ownerId: string,
+  ): Promise<readonly BalanceAdjustmentHistoryItem[]> {
+    const rows = await this.client.balanceAdjustment.findMany({
+      include: { transaction: true },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      where: { accountId, ownerId },
+    });
+    return rows.map((row) => {
+      const currency = Currency.create(
+        row.currencyCode,
+        row.currencyMinorUnitScale,
+      );
+      const previousBalance = Money.fromMinorUnits(
+        BigInt(row.previousBalanceMinorUnits.toFixed(0)),
+        currency,
+      );
+      const reportedBalance = Money.fromMinorUnits(
+        BigInt(row.reportedBalanceMinorUnits.toFixed(0)),
+        currency,
+      );
+      const difference = Money.fromMinorUnits(
+        BigInt(row.differenceMinorUnits.toFixed(0)),
+        currency,
+      );
+      const transactionAmount = Money.fromMinorUnits(
+        BigInt(row.transaction.amountMinorUnits.toFixed(0)),
+        currency,
+      );
+      const expectedAmount =
+        difference.toMinorUnits() < 0n ? difference.negate() : difference;
+      if (
+        !reportedBalance.subtract(previousBalance).equals(difference) ||
+        !transactionAmount.equals(expectedAmount) ||
+        row.transaction.accountId !== row.accountId ||
+        row.transaction.currencyCode !== currency.code ||
+        row.transaction.currencyMinorUnitScale !== currency.minorUnitScale ||
+        row.transaction.kind !==
+          (difference.toMinorUnits() > 0n ? 'income' : 'expense')
+      ) {
+        throw new Error('Persisted balance adjustment is inconsistent.');
+      }
+      return {
+        accountId: row.accountId,
+        createdAt: row.createdAt,
+        difference,
+        id: row.id,
+        justification: row.justification,
+        occurredAt: row.transaction.occurredAt,
+        previousBalance,
+        reportedBalance,
+        transactionId: row.transactionId,
+        transactionKind: row.transaction.kind,
+      };
+    });
   }
 }
 

@@ -81,7 +81,8 @@ export type paths = {
             readonly path?: never;
             readonly cookie?: never;
         };
-        readonly get?: never;
+        /** List the reconciliation history of an owned account */
+        readonly get: operations["BalanceAdjustmentController_list"];
         readonly put?: never;
         /** Reconcile an owned account to a user-reported balance */
         readonly post: operations["BalanceAdjustmentController_create"];
@@ -796,6 +797,60 @@ export interface operations {
                         readonly updatedAt: string;
                         readonly version: number;
                     };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned account was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly BalanceAdjustmentController_list: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly accountId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        /** Format: uuid */
+                        readonly accountId: string;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly difference: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly justification: string;
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                        readonly previousBalance: string;
+                        readonly reportedBalance: string;
+                        /** Format: uuid */
+                        readonly transactionId: string;
+                        /** @enum {string} */
+                        readonly transactionKind: "income" | "expense";
+                    }[];
                 };
             };
             /** @description Bearer token missing or invalid */

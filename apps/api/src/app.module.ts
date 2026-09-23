@@ -3,6 +3,7 @@ import {
   ChangeOwnedTransferLifecycleUseCase,
   ChangeOwnedAccountLifecycleUseCase,
   CreateBalanceAdjustmentUseCase,
+  ListOwnedBalanceAdjustmentsUseCase,
   CreateCreditCardUseCase,
   GetOwnedCreditCardUseCase,
   ListOwnedCreditCardsUseCase,
@@ -39,6 +40,7 @@ import {
   type UserProfileRepository,
   type AccountRepository,
   type BalanceAdjustmentRepository,
+  type BalanceAdjustmentHistoryRepository,
   type CreditCardRepository,
   type CategoryRepository,
   type CostCenterRepository,
@@ -180,6 +182,15 @@ import { UserProfileController } from './users/user-profile.controller.js';
           new SystemClock(),
           new SystemIdentifierGenerator(),
         ),
+    },
+    {
+      inject: [LazyAccountRepository, LazyBalanceAdjustmentRepository],
+      provide: ListOwnedBalanceAdjustmentsUseCase,
+      useFactory: (
+        accounts: AccountRepository,
+        adjustments: BalanceAdjustmentHistoryRepository,
+      ): ListOwnedBalanceAdjustmentsUseCase =>
+        new ListOwnedBalanceAdjustmentsUseCase(accounts, adjustments),
     },
     {
       inject: [LazyAccountRepository, LazyTransferRepository],

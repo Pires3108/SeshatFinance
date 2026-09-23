@@ -93,6 +93,23 @@ describe('PrismaBalanceAdjustmentRepository', () => {
     expect(row.differenceMinorUnits.toFixed(0)).toBe('2550');
   });
 
+  it('reads exact reconciliation history for the owner only', async () => {
+    if (repository === undefined) throw unavailable();
+
+    const items = await repository.listForAccountOwner(accountId, ownerId);
+    expect(items).toHaveLength(1);
+    expect(items[0]?.previousBalance.toDecimal()).toBe('100.00');
+    expect(items[0]?.reportedBalance.toDecimal()).toBe('125.50');
+    expect(items[0]?.difference.toDecimal()).toBe('25.50');
+    expect(items[0]?.transactionKind).toBe('income');
+    await expect(
+      repository.listForAccountOwner(
+        accountId,
+        '88888888-8888-4888-8888-888888888888',
+      ),
+    ).resolves.toEqual([]);
+  });
+
   it('rejects a stale previous balance without partial writes', async () => {
     if (client === undefined || repository === undefined) throw unavailable();
     const income = existingIncome();
