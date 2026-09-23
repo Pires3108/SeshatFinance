@@ -413,10 +413,28 @@ export type paths = {
             readonly path?: never;
             readonly cookie?: never;
         };
-        readonly get?: never;
+        /** List transfers owned by the authenticated user */
+        readonly get: operations["TransferController_list"];
         readonly put?: never;
         /** Record a transfer declared by the authenticated user */
         readonly post: operations["TransferController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/transfers/{transferId}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get an owned transfer pair */
+        readonly get: operations["TransferController_get"];
+        readonly put?: never;
+        readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -2183,6 +2201,60 @@ export interface operations {
             };
         };
     };
+    readonly TransferController_list: {
+        readonly parameters: {
+            readonly query?: {
+                readonly lifecycle?: "active" | "archived" | "trashed";
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        readonly amount: string;
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly description: string | null;
+                        /** Format: uuid */
+                        readonly destinationAccountId: string;
+                        /** Format: uuid */
+                        readonly destinationTransactionId: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        readonly observations: string | null;
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                        /** Format: uuid */
+                        readonly sourceAccountId: string;
+                        /** Format: uuid */
+                        readonly sourceTransactionId: string;
+                        /** Format: date-time */
+                        readonly trashedAt: string | null;
+                    }[];
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly TransferController_create: {
         readonly parameters: {
             readonly query?: never;
@@ -2250,6 +2322,67 @@ export interface operations {
                 content?: never;
             };
             /** @description An owned active account was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TransferController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly transferId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly amount: string;
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly description: string | null;
+                        /** Format: uuid */
+                        readonly destinationAccountId: string;
+                        /** Format: uuid */
+                        readonly destinationTransactionId: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        readonly observations: string | null;
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                        /** Format: uuid */
+                        readonly sourceAccountId: string;
+                        /** Format: uuid */
+                        readonly sourceTransactionId: string;
+                        /** Format: date-time */
+                        readonly trashedAt: string | null;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned transfer not found */
             readonly 404: {
                 headers: {
                     readonly [name: string]: unknown;

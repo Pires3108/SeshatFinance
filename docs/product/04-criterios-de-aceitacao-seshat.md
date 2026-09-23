@@ -29,6 +29,7 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 ### CA-005 — Transferência
 
 **Dado** duas contas do usuário, **quando** ele registrar uma transferência ocorrida fora da Seshat Finance, **então** origem e destino organizacionais serão atualizados atomicamente, o patrimônio permanecerá igual e nenhuma ordem será enviada a terceiros.  
+**Dado** uma transferência registrada, **quando** seu proprietário consultar a lista ou o detalhe, **então** verá o par de lançamentos e seu estado; outro usuário não terá acesso.
 **Referências:** RF-028; RN-003, RN-008, RN-009; RNF-049.
 
 ### CA-006 — Ajuste

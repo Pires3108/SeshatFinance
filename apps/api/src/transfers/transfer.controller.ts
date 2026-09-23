@@ -1,6 +1,8 @@
 import {
   ChangeOwnedTransferLifecycleUseCase,
   CreateTransferUseCase,
+  GetOwnedTransferUseCase,
+  ListOwnedTransfersUseCase,
   OwnedTransferNotFoundError,
   TransferAccountUnavailableError,
   TransferCurrencyMismatchError,
@@ -18,12 +20,14 @@ import {
   Body,
   Controller,
   ConflictException,
+  Get,
   Inject,
   NotFoundException,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   Req,
   UnauthorizedException,
   UseGuards,
@@ -37,6 +41,7 @@ import {
   ApiOperation,
   ApiOkResponse,
   ApiParam,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
   type SchemaObject,
@@ -69,6 +74,7 @@ const lifecycleSchema = z.object({
     'restore-from-trash',
   ]),
 });
+const lifecycleFilterSchema = z.enum(['active', 'archived', 'trashed']);
 type CreateRequest = z.infer<typeof createSchema>;
 type LifecycleRequest = z.infer<typeof lifecycleSchema>;
 type Response = Readonly<{
@@ -136,11 +142,51 @@ export class TransferController {
   public constructor(
     @Inject(CreateTransferUseCase)
     private readonly createTransfer: CreateTransferUseCase,
+    @Inject(GetOwnedTransferUseCase)
+    private readonly getTransfer: GetOwnedTransferUseCase,
+    @Inject(ListOwnedTransfersUseCase)
+    private readonly listTransfers: ListOwnedTransfersUseCase,
     @Inject(ChangeOwnedTransferLifecycleUseCase)
     private readonly changeLifecycle: ChangeOwnedTransferLifecycleUseCase,
     @Inject(AuthenticatedActorContext)
     private readonly actors: AuthenticatedActorContext,
   ) {}
+
+  @Get()
+  @ApiOperation({ summary: 'List transfers owned by the authenticated user' })
+  @ApiQuery({
+    enum: ['active', 'archived', 'trashed'],
+    name: 'lifecycle',
+    required: false,
+  })
+  @ApiOkResponse({ schema: { items: responseSchema, type: 'array' } })
+  public async list(
+    @Req() request: FastifyRequest,
+    @Query('lifecycle', new ZodValidationPipe(lifecycleFilterSchema.optional()))
+    lifecycle?: z.infer<typeof lifecycleFilterSchema>,
+  ): Promise<readonly Response[]> {
+    return (
+      await this.listTransfers.execute(this.actorId(request), lifecycle)
+    ).map(mapTransfer);
+  }
+
+  @Get(':transferId')
+  @ApiOperation({ summary: 'Get an owned transfer pair' })
+  @ApiParam({ format: 'uuid', name: 'transferId', type: 'string' })
+  @ApiOkResponse({ schema: responseSchema })
+  @ApiNotFoundResponse({ description: 'Owned transfer not found' })
+  public async get(
+    @Req() request: FastifyRequest,
+    @Param('transferId', new ParseUUIDPipe({ version: '4' }))
+    transferId: string,
+  ): Promise<Response> {
+    const transfer = await this.getTransfer.execute(
+      transferId,
+      this.actorId(request),
+    );
+    if (transfer === null) throw new NotFoundException('Transfer not found.');
+    return mapTransfer(transfer);
+  }
 
   @Post()
   @ApiOperation({
