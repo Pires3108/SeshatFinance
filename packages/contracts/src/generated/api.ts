@@ -1592,7 +1592,9 @@ export interface operations {
     };
     readonly TransactionController_list: {
         readonly parameters: {
-            readonly query?: never;
+            readonly query?: {
+                readonly lifecycle?: "active" | "archived" | "trashed";
+            };
             readonly header?: never;
             readonly path: {
                 readonly accountId: string;
@@ -1713,6 +1715,7 @@ export interface operations {
     readonly TransactionController_listBetween: {
         readonly parameters: {
             readonly query: {
+                readonly lifecycle?: "active" | "archived" | "trashed";
                 readonly to: string;
                 readonly from: string;
             };

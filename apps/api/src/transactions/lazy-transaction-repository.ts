@@ -2,7 +2,11 @@ import type {
   TransactionFinancialLinkRepository,
   TransactionRepository,
 } from '@seshat/application';
-import type { FinancialAuditEvent, Transaction } from '@seshat/domain';
+import type {
+  FinancialAuditEvent,
+  Transaction,
+  TransactionLifecycle,
+} from '@seshat/domain';
 import { PrismaTransactionRepository } from '@seshat/database';
 import { Injectable } from '@nestjs/common';
 
@@ -29,16 +33,27 @@ export class LazyTransactionRepository
   public listForAccountOwner(
     accountId: string,
     ownerId: string,
+    lifecycle?: TransactionLifecycle,
   ): Promise<readonly Transaction[]> {
-    return this.getRepository().listForAccountOwner(accountId, ownerId);
+    return this.getRepository().listForAccountOwner(
+      accountId,
+      ownerId,
+      lifecycle,
+    );
   }
 
   public listForOwnerBetween(
     ownerId: string,
     from: Date,
     to: Date,
+    lifecycle?: TransactionLifecycle,
   ): Promise<readonly Transaction[]> {
-    return this.getRepository().listForOwnerBetween(ownerId, from, to);
+    return this.getRepository().listForOwnerBetween(
+      ownerId,
+      from,
+      to,
+      lifecycle,
+    );
   }
   public save(
     transaction: Transaction,

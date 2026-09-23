@@ -7,12 +7,13 @@ import {
   Money,
   type Transaction,
 } from '@seshat/domain';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   ChangeOwnedTransactionLifecycleUseCase,
   CreateTransactionUseCase,
   InvalidTransactionInstantRangeError,
+  ListOwnedAccountTransactionsUseCase,
   ListOwnedTransactionsBetweenUseCase,
   TransactionAccountUnavailableError,
   TransactionRequiresTransferMutationError,
@@ -139,6 +140,26 @@ describe('CreateTransactionUseCase', () => {
         occurredAt: new Date('2026-09-20T11:00:00.000Z'),
       }),
     ).rejects.toBeInstanceOf(TransactionAccountUnavailableError);
+  });
+});
+
+describe('ListOwnedAccountTransactionsUseCase', () => {
+  it('forwards an explicit trash filter only for an owned account', async () => {
+    const repository = new RecordingTransactions();
+    const list = vi.spyOn(repository, 'listForAccountOwner');
+    const useCase = new ListOwnedAccountTransactionsUseCase(
+      repository,
+      accounts(),
+    );
+
+    await expect(
+      useCase.execute('account-id', 'owner-id', 'trashed'),
+    ).resolves.toEqual([]);
+    expect(list).toHaveBeenCalledWith('account-id', 'owner-id', 'trashed');
+    await expect(
+      useCase.execute('account-id', 'foreign-owner', 'trashed'),
+    ).rejects.toThrow(TransactionAccountUnavailableError);
+    expect(list).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -293,10 +314,16 @@ describe('owned transaction changes', () => {
 describe('ListOwnedTransactionsBetweenUseCase', () => {
   it('passes an explicit half-open range with the actor ownership', async () => {
     let received:
-      Readonly<{ from: Date; ownerId: string; to: Date }> | undefined;
+      | Readonly<{
+          from: Date;
+          lifecycle: string | undefined;
+          ownerId: string;
+          to: Date;
+        }>
+      | undefined;
     const timeline: TransactionTimelineRepository = {
-      listForOwnerBetween: (ownerId, from, to) => {
-        received = { from, ownerId, to };
+      listForOwnerBetween: (ownerId, from, to, lifecycle) => {
+        received = { from, lifecycle, ownerId, to };
         return Promise.resolve([]);
       },
     };
@@ -304,8 +331,15 @@ describe('ListOwnedTransactionsBetweenUseCase', () => {
     const from = new Date('2026-09-20T00:00:00.000Z');
     const to = new Date('2026-09-21T00:00:00.000Z');
 
-    await expect(useCase.execute('owner-id', from, to)).resolves.toEqual([]);
-    expect(received).toEqual({ from, ownerId: 'owner-id', to });
+    await expect(
+      useCase.execute('owner-id', from, to, 'archived'),
+    ).resolves.toEqual([]);
+    expect(received).toEqual({
+      from,
+      lifecycle: 'archived',
+      ownerId: 'owner-id',
+      to,
+    });
   });
 
   it('rejects empty or reversed ranges before querying persistence', () => {

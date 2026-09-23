@@ -114,6 +114,12 @@ describe('PrismaTransactionRepository', () => {
       transactions.listForAccountOwner(account.id, ownerId),
     ).resolves.toHaveLength(1);
     await expect(
+      transactions.listForAccountOwner(account.id, ownerId, 'active'),
+    ).resolves.toHaveLength(1);
+    await expect(
+      transactions.listForAccountOwner(account.id, ownerId, 'trashed'),
+    ).resolves.toEqual([]);
+    await expect(
       transactions.findByIdForOwner(
         transaction.id,
         'e89b6ad0-7838-4a2c-9a21-c775ea78e22a',
@@ -124,6 +130,7 @@ describe('PrismaTransactionRepository', () => {
         ownerId,
         new Date('2026-09-20T10:00:00.000Z'),
         new Date('2026-09-20T12:00:00.000Z'),
+        'active',
       ),
     ).resolves.toHaveLength(1);
     await expect(
@@ -199,11 +206,53 @@ describe('PrismaTransactionRepository', () => {
       transactions.findByIdForOwner(rolledBack.id, ownerId),
     ).resolves.toBeNull();
   });
+
+  it('finds trashed records only when explicitly filtered', async () => {
+    if (transactions === undefined) throw new Error('Repository unavailable.');
+    const ownerId = 'b36bfe2a-f319-49a8-aade-2a536ea3af38';
+    const accountId = '7c2c7a54-73fe-49a3-b0ea-19034bf22baf';
+    const transactionId = '86684068-45d9-4e14-b454-f7e556b867e7';
+    const transaction = await transactions.findByIdForOwner(
+      transactionId,
+      ownerId,
+    );
+    if (transaction === null) throw new Error('Transaction unavailable.');
+    const expectedVersion = transaction.toSnapshot().version;
+    transaction.moveToTrash(new Date('2026-09-21T13:00:00.000Z'));
+    await transactions.save(
+      transaction,
+      expectedVersion,
+      auditEvent(
+        transaction,
+        'moved-to-trash',
+        'ffffffff-ffff-4fff-8fff-ffffffffffff',
+      ),
+    );
+
+    expect(
+      (
+        await transactions.listForAccountOwner(accountId, ownerId, 'trashed')
+      ).map((item) => item.id),
+    ).toEqual([transactionId]);
+    await expect(
+      transactions.listForAccountOwner(accountId, ownerId, 'active'),
+    ).resolves.toEqual([]);
+    expect(
+      (
+        await transactions.listForOwnerBetween(
+          ownerId,
+          new Date('2026-09-21T00:00:00.000Z'),
+          new Date('2026-09-22T00:00:00.000Z'),
+          'trashed',
+        )
+      ).map((item) => item.id),
+    ).toEqual([transactionId]);
+  });
 });
 
 function auditEvent(
   transaction: Transaction,
-  action: 'created' | 'updated',
+  action: 'created' | 'updated' | 'moved-to-trash',
   id: string,
 ): FinancialAuditEvent {
   return FinancialAuditEvent.create({

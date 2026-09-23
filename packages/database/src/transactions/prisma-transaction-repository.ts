@@ -55,10 +55,15 @@ export class PrismaTransactionRepository
   public async listForAccountOwner(
     accountId: string,
     ownerId: string,
+    lifecycle?: Transaction['lifecycle'],
   ): Promise<readonly Transaction[]> {
     const rows = await this.client.transaction.findMany({
       orderBy: [{ occurredAt: 'asc' }, { id: 'asc' }],
-      where: { accountId, ownerId },
+      where: {
+        accountId,
+        ownerId,
+        ...(lifecycle === undefined ? {} : { lifecycle }),
+      },
     });
     return rows.map(restoreTransaction);
   }
@@ -67,10 +72,15 @@ export class PrismaTransactionRepository
     ownerId: string,
     from: Date,
     to: Date,
+    lifecycle?: Transaction['lifecycle'],
   ): Promise<readonly Transaction[]> {
     const rows = await this.client.transaction.findMany({
       orderBy: [{ occurredAt: 'asc' }, { id: 'asc' }],
-      where: { occurredAt: { gte: from, lt: to }, ownerId },
+      where: {
+        occurredAt: { gte: from, lt: to },
+        ownerId,
+        ...(lifecycle === undefined ? {} : { lifecycle }),
+      },
     });
     return rows.map(restoreTransaction);
   }

@@ -83,8 +83,10 @@ const lifecycleSchema = z.object({
     'restore-from-trash',
   ]),
 });
+const lifecycleFilterSchema = z.enum(['active', 'archived', 'trashed']);
 const instantRangeSchema = z.object({
   from: z.iso.datetime({ offset: true }),
+  lifecycle: lifecycleFilterSchema.optional(),
   to: z.iso.datetime({ offset: true }),
 });
 type CreateRequest = z.infer<typeof createSchema>;
@@ -199,14 +201,25 @@ export class TransactionController {
   @Get('accounts/:accountId/transactions')
   @ApiOperation({ summary: 'List transactions for an owned account' })
   @ApiParam({ format: 'uuid', name: 'accountId', type: 'string' })
+  @ApiQuery({
+    enum: ['active', 'archived', 'trashed'],
+    name: 'lifecycle',
+    required: false,
+  })
   @ApiOkResponse({ schema: { items: responseSchema, type: 'array' } })
   public async list(
     @Req() request: FastifyRequest,
     @Param('accountId', new ZodValidationPipe(idSchema)) accountId: string,
+    @Query('lifecycle', new ZodValidationPipe(lifecycleFilterSchema.optional()))
+    lifecycle?: z.infer<typeof lifecycleFilterSchema>,
   ): Promise<readonly Response[]> {
     try {
       return (
-        await this.listTransactions.execute(accountId, this.actorId(request))
+        await this.listTransactions.execute(
+          accountId,
+          this.actorId(request),
+          lifecycle,
+        )
       ).map(mapTransaction);
     } catch (error) {
       throw mapError(error);
@@ -224,6 +237,11 @@ export class TransactionController {
     type: 'string',
   })
   @ApiQuery({ format: 'date-time', name: 'to', required: true, type: 'string' })
+  @ApiQuery({
+    enum: ['active', 'archived', 'trashed'],
+    name: 'lifecycle',
+    required: false,
+  })
   @ApiOkResponse({ schema: { items: responseSchema, type: 'array' } })
   public async listBetween(
     @Req() request: FastifyRequest,
@@ -236,6 +254,7 @@ export class TransactionController {
           this.actorId(request),
           new Date(query.from),
           new Date(query.to),
+          query.lifecycle,
         )
       ).map(mapTransaction);
     } catch (error) {
