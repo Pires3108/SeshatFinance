@@ -23,6 +23,7 @@ import {
   ListOwnedTagsUseCase,
   ListOwnedAccountsUseCase,
   ListOwnedAccountTransactionsUseCase,
+  ListInvestmentTypesUseCase,
   RegisterUserUseCase,
   ResolveAuthenticatedActorUseCase,
   RequestPasswordRecoveryUseCase,
@@ -75,6 +76,7 @@ import { LazyCostCenterRepository } from './classifications/lazy-cost-center-rep
 import { LazyTagRepository } from './classifications/lazy-tag-repository.js';
 import { TagController } from './classifications/tag.controller.js';
 import { HealthController } from './health/health.controller.js';
+import { InvestmentTypeController } from './investments/investment-type.controller.js';
 import { CorrelationContext } from './platform/correlation-context.js';
 import { PrivacySafeLogger } from './platform/privacy-safe-logger.js';
 import { LazyPrismaClient } from './platform/lazy-prisma-client.js';
@@ -101,6 +103,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     CategoryController,
     CostCenterController,
     HealthController,
+    InvestmentTypeController,
     PasswordRecoveryController,
     TagController,
     TransactionController,
@@ -110,6 +113,11 @@ import { UserProfileController } from './users/user-profile.controller.js';
     UserProfileController,
   ],
   providers: [
+    {
+      provide: ListInvestmentTypesUseCase,
+      useFactory: (): ListInvestmentTypesUseCase =>
+        new ListInvestmentTypesUseCase(),
+    },
     AuthConfiguration,
     AuthenticatedActorContext,
     BearerAuthGuard,

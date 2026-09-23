@@ -80,3 +80,10 @@ export {
   type CreateCreditCardProperties,
   type CreditCardSnapshot,
 } from './cards/credit-card.js';
+export {
+  InvestmentType,
+  InvalidInvestmentTypeError,
+  investmentTypeKeys,
+  type InvestmentTypeKey,
+  type InvestmentTypeSnapshot,
+} from './investments/investment-type.js';
