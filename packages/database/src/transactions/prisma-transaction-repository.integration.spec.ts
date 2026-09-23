@@ -248,6 +248,106 @@ describe('PrismaTransactionRepository', () => {
       ).map((item) => item.id),
     ).toEqual([transactionId]);
   });
+
+  it('sums exact active and archived effects without loading trashed or foreign records', async () => {
+    if (accounts === undefined || transactions === undefined) {
+      throw new Error('Repositories unavailable.');
+    }
+    const ownerId = '11111111-1111-4111-8111-111111111111';
+    const accountId = '22222222-2222-4222-8222-222222222222';
+    const currency = Currency.create('BHD', 3);
+    const account = Account.create({
+      color: null,
+      createdAt: new Date('2026-09-20T12:00:00.000Z'),
+      description: null,
+      icon: null,
+      id: accountId,
+      initialBalance: Money.fromDecimal('0', currency),
+      institution: null,
+      name: 'Aggregate fixture',
+      ownerId,
+      type: AccountType.create('checking-account'),
+    });
+    await accounts.insert(
+      account,
+      FinancialAuditEvent.create({
+        action: 'created',
+        actorId: ownerId,
+        id: '33333333-3333-4333-8333-333333333333',
+        occurredAt: new Date('2026-09-20T12:00:00.000Z'),
+        ownerId,
+        resourceId: accountId,
+        resourceType: 'account',
+      }),
+    );
+
+    const entries = [
+      {
+        id: '44444444-4444-4444-8444-444444444444',
+        kind: 'income' as const,
+        amount: '12345678901234567890.125',
+        lifecycle: 'active',
+      },
+      {
+        id: '55555555-5555-4555-8555-555555555555',
+        kind: 'expense' as const,
+        amount: '1.125',
+        lifecycle: 'archived',
+      },
+      {
+        id: '66666666-6666-4666-8666-666666666666',
+        kind: 'income' as const,
+        amount: '500.000',
+        lifecycle: 'trashed',
+      },
+    ];
+    const auditIds = [
+      '77777777-7777-4777-8777-777777777777',
+      '88888888-8888-4888-8888-888888888888',
+      '99999999-9999-4999-8999-999999999999',
+    ];
+    for (const [index, entry] of entries.entries()) {
+      const transaction = Transaction.create({
+        accountId,
+        amount: Money.fromDecimal(entry.amount, currency),
+        createdAt: new Date('2026-09-20T13:00:00.000Z'),
+        description: null,
+        id: entry.id,
+        kind: entry.kind,
+        occurredAt: new Date('2026-09-20T11:00:00.000Z'),
+        ownerId,
+      });
+      if (entry.lifecycle === 'archived') {
+        transaction.archive(new Date('2026-09-20T14:00:00.000Z'));
+      }
+      if (entry.lifecycle === 'trashed') {
+        transaction.moveToTrash(new Date('2026-09-20T14:00:00.000Z'));
+      }
+      await transactions.insert(
+        transaction,
+        auditEvent(transaction, 'created', auditIds[index] ?? ''),
+      );
+    }
+
+    const effects = await transactions.sumBalanceEffectsForAccountOwner(
+      accountId,
+      ownerId,
+    );
+    expect(
+      effects
+        .reduce(
+          (balance, effect) => balance.add(effect),
+          Money.fromDecimal('0', currency),
+        )
+        .toDecimal(),
+    ).toBe('12345678901234567889.000');
+    await expect(
+      transactions.sumBalanceEffectsForAccountOwner(
+        accountId,
+        'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      ),
+    ).resolves.toEqual([]);
+  });
 });
 
 function auditEvent(

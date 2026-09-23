@@ -1,14 +1,23 @@
 import type {
+  AccountTransactionBalanceRepository,
   TransactionFinancialLinkRepository,
   TransactionRepository,
 } from '@seshat/application';
-import { Transaction, type FinancialAuditEvent } from '@seshat/domain';
+import {
+  Currency,
+  Money,
+  Transaction,
+  type FinancialAuditEvent,
+} from '@seshat/domain';
 
 import type { PrismaClient } from '../generated/prisma/client.js';
 import { insertFinancialAuditEvent } from '../audit/prisma-financial-audit-event-repository.js';
 
 export class PrismaTransactionRepository
-  implements TransactionRepository, TransactionFinancialLinkRepository
+  implements
+    TransactionRepository,
+    TransactionFinancialLinkRepository,
+    AccountTransactionBalanceRepository
 {
   public constructor(private readonly client: PrismaClient) {}
 
@@ -66,6 +75,31 @@ export class PrismaTransactionRepository
       },
     });
     return rows.map(restoreTransaction);
+  }
+
+  public async sumBalanceEffectsForAccountOwner(
+    accountId: string,
+    ownerId: string,
+  ): Promise<readonly Money[]> {
+    const groups = await this.client.transaction.groupBy({
+      _sum: { amountMinorUnits: true },
+      by: ['kind', 'currencyCode', 'currencyMinorUnitScale'],
+      where: {
+        accountId,
+        lifecycle: { in: ['active', 'archived'] },
+        ownerId,
+      },
+    });
+    return groups.map((group) => {
+      const amount = group._sum.amountMinorUnits;
+      if (amount === null)
+        throw new Error('Transaction balance sum is missing.');
+      const minorUnits = BigInt(amount.toFixed(0));
+      return Money.fromMinorUnits(
+        group.kind === 'income' ? minorUnits : -minorUnits,
+        Currency.create(group.currencyCode, group.currencyMinorUnitScale),
+      );
+    });
   }
 
   public async listForOwnerBetween(

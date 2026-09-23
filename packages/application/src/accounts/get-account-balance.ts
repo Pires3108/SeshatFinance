@@ -1,24 +1,33 @@
-import { calculateAccountBalance, type Money } from '@seshat/domain';
+import type { Money } from '@seshat/domain';
 
-import type { TransactionRepository } from '../transactions/create-transaction.js';
 import {
   OwnedAccountNotFoundError,
   type AccountRepository,
 } from './create-account.js';
 
+export interface AccountTransactionBalanceRepository {
+  sumBalanceEffectsForAccountOwner(
+    accountId: string,
+    ownerId: string,
+  ): Promise<readonly Money[]>;
+}
+
 export class GetOwnedAccountBalanceUseCase {
   public constructor(
     private readonly accounts: AccountRepository,
-    private readonly transactions: TransactionRepository,
+    private readonly transactions: AccountTransactionBalanceRepository,
   ) {}
 
   public async execute(accountId: string, actorId: string): Promise<Money> {
     const account = await this.accounts.findByIdForOwner(accountId, actorId);
     if (account === null) throw new OwnedAccountNotFoundError();
-    const transactions = await this.transactions.listForAccountOwner(
+    const effects = await this.transactions.sumBalanceEffectsForAccountOwner(
       accountId,
       actorId,
     );
-    return calculateAccountBalance(account.initialBalance, transactions);
+    return effects.reduce(
+      (balance, effect) => balance.add(effect),
+      account.initialBalance,
+    );
   }
 }

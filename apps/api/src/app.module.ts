@@ -42,6 +42,7 @@ import {
   UpdateOwnedTransactionUseCase,
   type UserProfileRepository,
   type AccountRepository,
+  type AccountTransactionBalanceRepository,
   type BalanceAdjustmentRepository,
   type BalanceAdjustmentHistoryRepository,
   type CreditCardRepository,
@@ -480,7 +481,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
       provide: GetOwnedAccountBalanceUseCase,
       useFactory: (
         accounts: AccountRepository,
-        transactions: TransactionRepository,
+        transactions: AccountTransactionBalanceRepository,
       ): GetOwnedAccountBalanceUseCase =>
         new GetOwnedAccountBalanceUseCase(accounts, transactions),
     },
