@@ -126,6 +126,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** definir precisão e unidade da quantidade por tipo de ativo, precisão e moeda do preço unitário, semântica e periodicidade de taxas e impostos, representação da liquidez e regras de arredondamento para custo e valor atual.
 - **Limite atual:** expor somente o catálogo estável dos onze tipos previstos em RF-051. Não persistir posições nem calcular custo, rendimento ou valor atual antes da decisão.
 
+### RII-017 — Idempotência de comandos financeiros compostos
+
+- **Estado:** aberto; prioridade alta para US-032, US-033 e US-037.
+- **Referências:** RNF-049; INV-007 a INV-011; US-032, US-033, US-037.
+- **Risco:** transferências e ajustes são persistidos atomicamente, mas os casos de uso geram novos identificadores em cada requisição. Se a gravação tiver sucesso e a resposta se perder, repetir o mesmo `POST` pode criar outro par ou outro ajuste. A restrição de unicidade dos identificadores internos e o teste de duas inserções com o mesmo identificador não comprovam idempotência de tentativas HTTP distintas.
+- **Decisão necessária:** definir chave de idempotência fornecida pelo cliente, escopo por proprietário e operação, prazo de retenção, comparação do conteúdo da requisição, resposta para a mesma chave com conteúdo diferente, comportamento durante execução concorrente e resposta a uma repetição depois de alterações no ciclo de vida do registro. A reserva da chave, os registros financeiros e a auditoria devem ser gravados na mesma transação.
+- **Limite atual:** não afirmar que `POST /api/v1/transfers` ou `POST /api/v1/accounts/:accountId/balance-adjustments` é idempotente por requisição. Preservar a atomicidade existente e não adicionar política de repetição implícita, baseada apenas em valores ou intervalo de tempo, pois dois eventos legítimos podem ter dados iguais.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
