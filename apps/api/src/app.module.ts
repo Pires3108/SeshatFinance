@@ -4,6 +4,8 @@ import {
   ChangeOwnedAccountLifecycleUseCase,
   CreateBalanceAdjustmentUseCase,
   CreateCreditCardUseCase,
+  GetOwnedCreditCardUseCase,
+  ListOwnedCreditCardsUseCase,
   CreateCategoryUseCase,
   CreateCostCenterUseCase,
   CreateTagUseCase,
@@ -138,6 +140,18 @@ import { UserProfileController } from './users/user-profile.controller.js';
           new SystemClock(),
           new SystemIdentifierGenerator(),
         ),
+    },
+    {
+      inject: [LazyCreditCardRepository],
+      provide: GetOwnedCreditCardUseCase,
+      useFactory: (cards: CreditCardRepository): GetOwnedCreditCardUseCase =>
+        new GetOwnedCreditCardUseCase(cards),
+    },
+    {
+      inject: [LazyCreditCardRepository],
+      provide: ListOwnedCreditCardsUseCase,
+      useFactory: (cards: CreditCardRepository): ListOwnedCreditCardsUseCase =>
+        new ListOwnedCreditCardsUseCase(cards),
     },
     {
       inject: [

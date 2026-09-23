@@ -98,10 +98,28 @@ export type paths = {
             readonly path?: never;
             readonly cookie?: never;
         };
-        readonly get?: never;
+        /** List credit cards owned by the authenticated user */
+        readonly get: operations["CreditCardController_list"];
         readonly put?: never;
         /** Register an owned organizational credit card */
         readonly post: operations["CreditCardController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/credit-cards/{cardId}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get a credit card owned by the authenticated user */
+        readonly get: operations["CreditCardController_get"];
+        readonly put?: never;
+        readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -849,6 +867,46 @@ export interface operations {
             };
         };
     };
+    readonly CreditCardController_list: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        readonly brand: string;
+                        readonly closingDay: number;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly dueDay: number;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly limit: string;
+                        readonly name: string;
+                        /** Format: uuid */
+                        readonly paymentAccountId: string;
+                    }[];
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly CreditCardController_create: {
         readonly parameters: {
             readonly query?: never;
@@ -902,6 +960,55 @@ export interface operations {
                 content?: never;
             };
             /** @description Owned active account was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CreditCardController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly cardId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly brand: string;
+                        readonly closingDay: number;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly dueDay: number;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly limit: string;
+                        readonly name: string;
+                        /** Format: uuid */
+                        readonly paymentAccountId: string;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned credit card was not found */
             readonly 404: {
                 headers: {
                     readonly [name: string]: unknown;

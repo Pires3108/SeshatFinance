@@ -131,6 +131,8 @@ export {
 } from './audit/create-financial-audit-event.js';
 export {
   CreateCreditCardUseCase,
+  GetOwnedCreditCardUseCase,
+  ListOwnedCreditCardsUseCase,
   CreditCardCurrencyMismatchError,
   CreditCardPaymentAccountUnavailableError,
   type CreateCreditCardCommand,

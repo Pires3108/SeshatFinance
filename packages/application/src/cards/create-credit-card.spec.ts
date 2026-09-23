@@ -70,6 +70,8 @@ describe('CreateCreditCardUseCase', () => {
         auditEvent = event;
         return Promise.resolve();
       },
+      findByIdForOwner: () => Promise.resolve(null),
+      listForOwner: () => Promise.resolve([]),
     };
     const identifiers = ['card-id', 'audit-id'];
     const useCase = new CreateCreditCardUseCase(
@@ -98,7 +100,11 @@ describe('CreateCreditCardUseCase', () => {
   it('rejects a missing or foreign payment account', async () => {
     const useCase = new CreateCreditCardUseCase(
       accounts(null),
-      { insert: () => Promise.resolve() },
+      {
+        insert: () => Promise.resolve(),
+        findByIdForOwner: () => Promise.resolve(null),
+        listForOwner: () => Promise.resolve([]),
+      },
       { now: () => new Date() },
       { generate: () => 'id' },
     );
@@ -111,7 +117,11 @@ describe('CreateCreditCardUseCase', () => {
   it('rejects a limit in a different currency', async () => {
     const useCase = new CreateCreditCardUseCase(
       accounts(account(Currency.create('USD', 2))),
-      { insert: () => Promise.resolve() },
+      {
+        insert: () => Promise.resolve(),
+        findByIdForOwner: () => Promise.resolve(null),
+        listForOwner: () => Promise.resolve([]),
+      },
       { now: () => new Date() },
       { generate: () => 'id' },
     );

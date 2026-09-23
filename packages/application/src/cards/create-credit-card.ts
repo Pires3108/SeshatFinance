@@ -23,6 +23,24 @@ export type CreateCreditCardCommand = Readonly<{
 
 export interface CreditCardRepository {
   insert(card: CreditCard, auditEvent: FinancialAuditEvent): Promise<void>;
+  findByIdForOwner(id: string, ownerId: string): Promise<CreditCard | null>;
+  listForOwner(ownerId: string): Promise<readonly CreditCard[]>;
+}
+
+export class GetOwnedCreditCardUseCase {
+  public constructor(private readonly cards: CreditCardRepository) {}
+
+  public execute(id: string, actorId: string): Promise<CreditCard | null> {
+    return this.cards.findByIdForOwner(id, actorId);
+  }
+}
+
+export class ListOwnedCreditCardsUseCase {
+  public constructor(private readonly cards: CreditCardRepository) {}
+
+  public execute(actorId: string): Promise<readonly CreditCard[]> {
+    return this.cards.listForOwner(actorId);
+  }
 }
 
 export class CreditCardPaymentAccountUnavailableError extends Error {
