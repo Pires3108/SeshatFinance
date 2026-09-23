@@ -29,6 +29,7 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Risco:** os requisitos delegam o armazenamento seguro ao provedor de identidade, mas não definem comprimento mínimo, composição, verificação contra senhas comprometidas ou mensagens de orientação.
 - **Decisão necessária:** definir a política no Supabase Auth e refletir a mesma orientação na interface, sem manter uma segunda política divergente na API.
 - **Limite atual:** a API valida somente presença e limites estruturais; o provedor aplica a política efetiva até a decisão ser registrada.
+- **Interface atual:** o formulário web de cadastro replica somente esses limites estruturais; não promete nem impõe uma política de força de senha ainda não decidida.
 
 ### RII-005 — Persistência e expiração da sessão web
 
@@ -37,6 +38,7 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Risco:** retornar tokens ao JavaScript ou aceitar apenas a expiração padrão do Supabase não comprova cookies HttpOnly, 30 minutos de inatividade nem o máximo absoluto de 12 horas.
 - **Decisão necessária:** definir se a API manterá uma sessão opaca própria ou um envelope de refresh token no servidor, incluindo revogação, rotação, inatividade e múltiplos dispositivos.
 - **Limite atual:** autenticação e tradução da sessão ficam isoladas no adaptador; nenhum endpoint de login ou cookie é publicado até essa estratégia preservar todos os requisitos.
+- **Interface atual:** o cadastro web permite solicitar a confirmação de e-mail, mas não apresenta entrada na conta nem afirma que CA-001 esteja completo.
 
 ### RII-006 — Política progressiva de limitação de autenticação
 
