@@ -1,18 +1,14 @@
-import {
-  Account,
-  AccountType,
-  Currency,
-  Money,
-  Transaction,
-} from '@seshat/domain';
+import { Account, AccountType, Currency, Money } from '@seshat/domain';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { TransactionRepository } from '../transactions/create-transaction.js';
 import {
   OwnedAccountNotFoundError,
   type AccountRepository,
 } from './create-account.js';
-import { GetOwnedAccountBalanceUseCase } from './get-account-balance.js';
+import {
+  GetOwnedAccountBalanceUseCase,
+  type AccountTransactionBalanceRepository,
+} from './get-account-balance.js';
 
 const currency = Currency.create('BRL', 2);
 
@@ -43,43 +39,24 @@ function accounts(value: Account): AccountRepository {
   };
 }
 
-function transactions(values: readonly Transaction[]): TransactionRepository {
+function transactions(
+  values: readonly Money[],
+): AccountTransactionBalanceRepository {
   return {
-    findByIdForOwner: (): Promise<Transaction | null> => Promise.resolve(null),
-    insert: (): Promise<void> => Promise.resolve(),
-    listForAccountOwner: (): Promise<readonly Transaction[]> =>
+    sumBalanceEffectsForAccountOwner: (): Promise<readonly Money[]> =>
       Promise.resolve(values),
-    save: (): Promise<boolean> => Promise.resolve(true),
   };
 }
 
 describe('GetOwnedAccountBalanceUseCase', () => {
-  it('calculates initial balance plus only effective owned records', async () => {
+  it('adds exact grouped income and expense effects to the initial balance', async () => {
     const ownedAccount = account();
-    const income = Transaction.create({
-      accountId: ownedAccount.id,
-      amount: Money.fromDecimal('25.10', currency),
-      createdAt: new Date('2026-09-20T13:00:00.000Z'),
-      description: null,
-      id: 'income-id',
-      kind: 'income',
-      occurredAt: new Date('2026-09-20T11:00:00.000Z'),
-      ownerId: ownedAccount.ownerId,
-    });
-    const trashedExpense = Transaction.create({
-      accountId: ownedAccount.id,
-      amount: Money.fromDecimal('10.00', currency),
-      createdAt: new Date('2026-09-20T13:00:00.000Z'),
-      description: null,
-      id: 'expense-id',
-      kind: 'expense',
-      occurredAt: new Date('2026-09-20T11:00:00.000Z'),
-      ownerId: ownedAccount.ownerId,
-    });
-    trashedExpense.moveToTrash(new Date('2026-09-20T14:00:00.000Z'));
     const useCase = new GetOwnedAccountBalanceUseCase(
       accounts(ownedAccount),
-      transactions([income, trashedExpense]),
+      transactions([
+        Money.fromDecimal('25.10', currency),
+        Money.fromDecimal('-10.00', currency),
+      ]),
     );
 
     const balance = await useCase.execute(
@@ -88,20 +65,29 @@ describe('GetOwnedAccountBalanceUseCase', () => {
     );
 
     expect(balance.currency).toEqual(currency);
-    expect(balance.toDecimal()).toBe('125.10');
+    expect(balance.toDecimal()).toBe('115.10');
   });
 
   it('does not query financial records when the actor does not own the account', async () => {
-    const listForAccountOwner = vi.fn().mockResolvedValue([]);
+    const sumBalanceEffectsForAccountOwner = vi.fn().mockResolvedValue([]);
     const repository = transactions([]);
     const useCase = new GetOwnedAccountBalanceUseCase(accounts(account()), {
       ...repository,
-      listForAccountOwner,
+      sumBalanceEffectsForAccountOwner,
     });
 
     await expect(
       useCase.execute('account-id', 'foreign-owner'),
     ).rejects.toThrow(OwnedAccountNotFoundError);
-    expect(listForAccountOwner).not.toHaveBeenCalled();
+    expect(sumBalanceEffectsForAccountOwner).not.toHaveBeenCalled();
+  });
+
+  it('rejects a persisted balance effect in another currency', async () => {
+    const useCase = new GetOwnedAccountBalanceUseCase(
+      accounts(account()),
+      transactions([Money.fromDecimal('1.00', Currency.create('USD', 2))]),
+    );
+
+    await expect(useCase.execute('account-id', 'owner-id')).rejects.toThrow();
   });
 });

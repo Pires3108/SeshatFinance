@@ -1,9 +1,11 @@
 import type {
+  AccountTransactionBalanceRepository,
   TransactionFinancialLinkRepository,
   TransactionRepository,
 } from '@seshat/application';
 import type {
   FinancialAuditEvent,
+  Money,
   Transaction,
   TransactionLifecycle,
 } from '@seshat/domain';
@@ -14,7 +16,10 @@ import { LazyPrismaClient } from '../platform/lazy-prisma-client.js';
 
 @Injectable()
 export class LazyTransactionRepository
-  implements TransactionRepository, TransactionFinancialLinkRepository
+  implements
+    TransactionRepository,
+    TransactionFinancialLinkRepository,
+    AccountTransactionBalanceRepository
 {
   private repository: PrismaTransactionRepository | undefined;
   public constructor(private readonly prisma: LazyPrismaClient) {}
@@ -39,6 +44,16 @@ export class LazyTransactionRepository
       accountId,
       ownerId,
       lifecycle,
+    );
+  }
+
+  public sumBalanceEffectsForAccountOwner(
+    accountId: string,
+    ownerId: string,
+  ): Promise<readonly Money[]> {
+    return this.getRepository().sumBalanceEffectsForAccountOwner(
+      accountId,
+      ownerId,
     );
   }
 
