@@ -4,6 +4,7 @@ import {
   Money,
   Transaction,
   type TransactionKind,
+  type TransactionLifecycle,
 } from '@seshat/domain';
 
 import type { AccountRepository } from '../accounts/create-account.js';
@@ -19,6 +20,7 @@ export interface TransactionRepository {
   listForAccountOwner(
     accountId: string,
     ownerId: string,
+    lifecycle?: TransactionLifecycle,
   ): Promise<readonly Transaction[]>;
   save(
     transaction: Transaction,
@@ -152,11 +154,12 @@ export class ListOwnedAccountTransactionsUseCase {
   public async execute(
     accountId: string,
     actorId: string,
+    lifecycle?: TransactionLifecycle,
   ): Promise<readonly Transaction[]> {
     if ((await this.accounts.findByIdForOwner(accountId, actorId)) === null) {
       throw new TransactionAccountUnavailableError();
     }
-    return this.transactions.listForAccountOwner(accountId, actorId);
+    return this.transactions.listForAccountOwner(accountId, actorId, lifecycle);
   }
 }
 
@@ -165,6 +168,7 @@ export interface TransactionTimelineRepository {
     ownerId: string,
     from: Date,
     to: Date,
+    lifecycle?: TransactionLifecycle,
   ): Promise<readonly Transaction[]>;
 }
 
@@ -177,6 +181,7 @@ export class ListOwnedTransactionsBetweenUseCase {
     actorId: string,
     from: Date,
     to: Date,
+    lifecycle?: TransactionLifecycle,
   ): Promise<readonly Transaction[]> {
     if (
       Number.isNaN(from.getTime()) ||
@@ -185,7 +190,7 @@ export class ListOwnedTransactionsBetweenUseCase {
     ) {
       throw new InvalidTransactionInstantRangeError();
     }
-    return this.transactions.listForOwnerBetween(actorId, from, to);
+    return this.transactions.listForOwnerBetween(actorId, from, to, lifecycle);
   }
 }
 

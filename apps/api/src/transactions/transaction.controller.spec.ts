@@ -81,11 +81,13 @@ describe('TransactionController', () => {
     await controller.list(
       request(actors),
       '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
+      'trashed',
     );
 
     expect(execute).toHaveBeenCalledWith(
       '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
       'actor-id',
+      'trashed',
     );
   });
 
@@ -104,6 +106,7 @@ describe('TransactionController', () => {
 
     await controller.listBetween(request(actors), {
       from: '2026-09-20T00:00:00.000Z',
+      lifecycle: 'archived',
       to: '2026-09-21T00:00:00.000Z',
     });
 
@@ -111,6 +114,7 @@ describe('TransactionController', () => {
       'actor-id',
       new Date('2026-09-20T00:00:00.000Z'),
       new Date('2026-09-21T00:00:00.000Z'),
+      'archived',
     );
   });
 

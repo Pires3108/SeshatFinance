@@ -2422,6 +2422,15 @@
         "operationId": "TransactionController_list",
         "parameters": [
           {
+            "name": "lifecycle",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": ["active", "archived", "trashed"],
+              "type": "string"
+            }
+          },
+          {
             "name": "accountId",
             "required": true,
             "in": "path",
@@ -2544,6 +2553,15 @@
       "get": {
         "operationId": "TransactionController_listBetween",
         "parameters": [
+          {
+            "name": "lifecycle",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": ["active", "archived", "trashed"],
+              "type": "string"
+            }
+          },
           {
             "name": "to",
             "required": true,
