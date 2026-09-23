@@ -28,6 +28,7 @@
 
 - [Backlog, roadmap e sprints](planning/13-backlog-roadmap-e-sprints-seshat-finance.md)
 - [Registro de riscos e inferências de implementação](planning/14-registro-de-riscos-e-inferencias-de-implementacao.md)
+- [Estado do desenvolvimento em 23/09/2026](planning/15-estado-do-desenvolvimento-2026-09-23.md)
 
 ## Configuração do Codex
 
