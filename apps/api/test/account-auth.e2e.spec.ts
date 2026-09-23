@@ -53,6 +53,9 @@ describe('Financial API authorization', () => {
       '/api/v1/accounts/7c2c7a54-73fe-49a3-b0ea-19034bf22baf/transactions',
     ],
     ['POST', '/api/v1/credit-cards'],
+    ['POST', '/api/v1/categories'],
+    ['POST', '/api/v1/cost-centers'],
+    ['POST', '/api/v1/tags'],
     ['POST', '/api/v1/transfers'],
     ['PATCH', '/api/v1/accounts/7c2c7a54-73fe-49a3-b0ea-19034bf22baf'],
     [
@@ -68,9 +71,14 @@ describe('Financial API authorization', () => {
       'PATCH',
       '/api/v1/transfers/c722103a-e28a-482c-b6e9-e3320d8a44e3/lifecycle',
     ],
+    [
+      'PUT',
+      '/api/v1/transactions/c722103a-e28a-482c-b6e9-e3320d8a44e3/classification',
+    ],
+    ['PUT', '/api/v1/transactions/c722103a-e28a-482c-b6e9-e3320d8a44e3/tags'],
   ])('rejects anonymous %s %s before financial writes', async (method, url) => {
     const response = await application.inject({
-      method: method as 'POST' | 'PATCH',
+      method: method as 'POST' | 'PATCH' | 'PUT',
       payload: {},
       url,
     });
