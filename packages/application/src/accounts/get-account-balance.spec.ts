@@ -5,10 +5,13 @@ import {
   Money,
   Transaction,
 } from '@seshat/domain';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { TransactionRepository } from '../transactions/create-transaction.js';
-import type { AccountRepository } from './create-account.js';
+import {
+  OwnedAccountNotFoundError,
+  type AccountRepository,
+} from './create-account.js';
 import { GetOwnedAccountBalanceUseCase } from './get-account-balance.js';
 
 const currency = Currency.create('BRL', 2);
@@ -86,5 +89,19 @@ describe('GetOwnedAccountBalanceUseCase', () => {
 
     expect(balance.currency).toEqual(currency);
     expect(balance.toDecimal()).toBe('125.10');
+  });
+
+  it('does not query financial records when the actor does not own the account', async () => {
+    const listForAccountOwner = vi.fn().mockResolvedValue([]);
+    const repository = transactions([]);
+    const useCase = new GetOwnedAccountBalanceUseCase(accounts(account()), {
+      ...repository,
+      listForAccountOwner,
+    });
+
+    await expect(
+      useCase.execute('account-id', 'foreign-owner'),
+    ).rejects.toThrow(OwnedAccountNotFoundError);
+    expect(listForAccountOwner).not.toHaveBeenCalled();
   });
 });

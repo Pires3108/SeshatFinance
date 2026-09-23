@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configureApplication } from '../src/platform/configure-application.js';
 
-describe('Account API authorization', () => {
+describe('Financial API authorization', () => {
   let application: NestFastifyApplication;
 
   beforeEach(async () => {
@@ -36,6 +36,27 @@ describe('Account API authorization', () => {
       payload: {},
       url: '/api/v1/accounts',
     });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toMatchObject({
+      error: { code: 'UNAUTHENTICATED' },
+    });
+  });
+
+  it.each([
+    ['GET', '/api/v1/accounts'],
+    ['GET', '/api/v1/accounts/7c2c7a54-73fe-49a3-b0ea-19034bf22baf'],
+    ['GET', '/api/v1/accounts/7c2c7a54-73fe-49a3-b0ea-19034bf22baf/balance'],
+    [
+      'GET',
+      '/api/v1/accounts/7c2c7a54-73fe-49a3-b0ea-19034bf22baf/transactions',
+    ],
+    ['GET', '/api/v1/transactions'],
+    ['GET', '/api/v1/transactions/c722103a-e28a-482c-b6e9-e3320d8a44e3'],
+    ['GET', '/api/v1/credit-cards'],
+    ['GET', '/api/v1/credit-cards/c722103a-e28a-482c-b6e9-e3320d8a44e3'],
+  ])('rejects anonymous %s %s before financial reads', async (method, url) => {
+    const response = await application.inject({ method: method as 'GET', url });
 
     expect(response.statusCode).toBe(401);
     expect(response.json()).toMatchObject({
