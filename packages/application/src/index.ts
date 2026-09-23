@@ -127,6 +127,11 @@ export {
   type CreateBalanceAdjustmentCommand,
 } from './adjustments/create-balance-adjustment.js';
 export {
+  ListOwnedBalanceAdjustmentsUseCase,
+  type BalanceAdjustmentHistoryItem,
+  type BalanceAdjustmentHistoryRepository,
+} from './adjustments/list-balance-adjustments.js';
+export {
   FinancialAuditEventFactory,
   type CreateFinancialAuditEventCommand,
 } from './audit/create-financial-audit-event.js';

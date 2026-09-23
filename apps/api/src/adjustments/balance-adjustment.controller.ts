@@ -2,6 +2,9 @@ import {
   BalanceAdjustmentAccountUnavailableError,
   BalanceAdjustmentBalanceConflictError,
   CreateBalanceAdjustmentUseCase,
+  ListOwnedBalanceAdjustmentsUseCase,
+  OwnedAccountNotFoundError,
+  type BalanceAdjustmentHistoryItem,
 } from '@seshat/application';
 import {
   CurrencyMismatchError,
@@ -14,6 +17,7 @@ import {
   Body,
   ConflictException,
   Controller,
+  Get,
   Inject,
   NotFoundException,
   Param,
@@ -28,6 +32,7 @@ import {
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiNotFoundResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiTags,
@@ -107,9 +112,33 @@ export class BalanceAdjustmentController {
   public constructor(
     @Inject(CreateBalanceAdjustmentUseCase)
     private readonly createAdjustment: CreateBalanceAdjustmentUseCase,
+    @Inject(ListOwnedBalanceAdjustmentsUseCase)
+    private readonly listAdjustments: ListOwnedBalanceAdjustmentsUseCase,
     @Inject(AuthenticatedActorContext)
     private readonly actors: AuthenticatedActorContext,
   ) {}
+
+  @Get()
+  @ApiOperation({
+    summary: 'List the reconciliation history of an owned account',
+  })
+  @ApiParam({ format: 'uuid', name: 'accountId', type: 'string' })
+  @ApiOkResponse({ schema: { items: responseSchema, type: 'array' } })
+  @ApiNotFoundResponse({ description: 'Owned account was not found' })
+  public async list(
+    @Req() request: FastifyRequest,
+    @Param('accountId', new ZodValidationPipe(idSchema)) accountId: string,
+  ): Promise<readonly Response[]> {
+    try {
+      const items = await this.listAdjustments.execute(
+        accountId,
+        this.actorId(request),
+      );
+      return items.map(mapHistoryItem);
+    } catch (error) {
+      throw mapError(error);
+    }
+  }
 
   @Post()
   @ApiOperation({
@@ -165,8 +194,28 @@ function mapAdjustment(adjustment: BalanceAdjustment): Response {
   };
 }
 
+function mapHistoryItem(item: BalanceAdjustmentHistoryItem): Response {
+  return {
+    accountId: item.accountId,
+    createdAt: item.createdAt.toISOString(),
+    currencyCode: item.difference.currency.code,
+    currencyMinorUnitScale: item.difference.currency.minorUnitScale,
+    difference: item.difference.toDecimal(),
+    id: item.id,
+    justification: item.justification,
+    occurredAt: item.occurredAt.toISOString(),
+    previousBalance: item.previousBalance.toDecimal(),
+    reportedBalance: item.reportedBalance.toDecimal(),
+    transactionId: item.transactionId,
+    transactionKind: item.transactionKind,
+  };
+}
+
 function mapError(error: unknown): Error {
   if (error instanceof BalanceAdjustmentAccountUnavailableError) {
+    return new NotFoundException('Account not found.');
+  }
+  if (error instanceof OwnedAccountNotFoundError) {
     return new NotFoundException('Account not found.');
   }
   if (error instanceof BalanceAdjustmentBalanceConflictError) {

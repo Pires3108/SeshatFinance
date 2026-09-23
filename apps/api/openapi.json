@@ -806,6 +806,112 @@
       }
     },
     "/api/v1/accounts/{accountId}/balance-adjustments": {
+      "get": {
+        "operationId": "BalanceAdjustmentController_list",
+        "parameters": [
+          {
+            "name": "accountId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "properties": {
+                      "accountId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "currencyCode": {
+                        "pattern": "^[A-Z]{3}$",
+                        "type": "string"
+                      },
+                      "currencyMinorUnitScale": {
+                        "maximum": 18,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "difference": {
+                        "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "justification": {
+                        "type": "string"
+                      },
+                      "occurredAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "previousBalance": {
+                        "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "reportedBalance": {
+                        "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "transactionId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "transactionKind": {
+                        "enum": ["income", "expense"],
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "accountId",
+                      "createdAt",
+                      "currencyCode",
+                      "currencyMinorUnitScale",
+                      "difference",
+                      "id",
+                      "justification",
+                      "occurredAt",
+                      "previousBalance",
+                      "reportedBalance",
+                      "transactionId",
+                      "transactionKind"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned account was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the reconciliation history of an owned account",
+        "tags": ["accounts"]
+      },
       "post": {
         "operationId": "BalanceAdjustmentController_create",
         "parameters": [

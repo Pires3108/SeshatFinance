@@ -49,6 +49,10 @@ describe('Financial API authorization', () => {
     ['GET', '/api/v1/accounts/7c2c7a54-73fe-49a3-b0ea-19034bf22baf/balance'],
     [
       'GET',
+      '/api/v1/accounts/7c2c7a54-73fe-49a3-b0ea-19034bf22baf/balance-adjustments',
+    ],
+    [
+      'GET',
       '/api/v1/accounts/7c2c7a54-73fe-49a3-b0ea-19034bf22baf/transactions',
     ],
     ['GET', '/api/v1/transactions'],
