@@ -74,6 +74,23 @@ export type paths = {
         readonly patch: operations["AccountController_lifecycle"];
         readonly trace?: never;
     };
+    readonly "/api/v1/account-types": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List default account types */
+        readonly get: operations["AccountTypeController_list"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/accounts/{accountId}/balance-adjustments": {
         readonly parameters: {
             readonly query?: never;
@@ -826,6 +843,36 @@ export interface operations {
             };
             /** @description Owned account was not found */
             readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly AccountTypeController_list: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        /** @enum {string} */
+                        readonly key: "checking-account" | "savings-account" | "cash-wallet" | "reserve" | "credit-card" | "investment-account";
+                        readonly label: string;
+                    }[];
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
                 headers: {
                     readonly [name: string]: unknown;
                 };

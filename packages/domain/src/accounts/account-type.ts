@@ -1,5 +1,16 @@
 const accountTypeKeyPattern = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 
+export const defaultAccountTypeKeys = [
+  'checking-account',
+  'savings-account',
+  'cash-wallet',
+  'reserve',
+  'credit-card',
+  'investment-account',
+] as const;
+
+export type DefaultAccountTypeKey = (typeof defaultAccountTypeKeys)[number];
+
 export type AccountTypeSnapshot = Readonly<{
   key: string;
 }>;

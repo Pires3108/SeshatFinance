@@ -21,7 +21,9 @@ export {
 export {
   AccountType,
   InvalidAccountTypeError,
+  defaultAccountTypeKeys,
   type AccountTypeSnapshot,
+  type DefaultAccountTypeKey,
 } from './accounts/account-type.js';
 export {
   calculateAccountBalance,

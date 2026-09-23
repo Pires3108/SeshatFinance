@@ -805,6 +805,54 @@
         "tags": ["accounts"]
       }
     },
+    "/api/v1/account-types": {
+      "get": {
+        "operationId": "AccountTypeController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "properties": {
+                      "key": {
+                        "enum": [
+                          "checking-account",
+                          "savings-account",
+                          "cash-wallet",
+                          "reserve",
+                          "credit-card",
+                          "investment-account"
+                        ],
+                        "type": "string"
+                      },
+                      "label": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["key", "label"],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List default account types",
+        "tags": ["accounts"]
+      }
+    },
     "/api/v1/accounts/{accountId}/balance-adjustments": {
       "get": {
         "operationId": "BalanceAdjustmentController_list",
