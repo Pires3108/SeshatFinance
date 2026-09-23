@@ -45,6 +45,7 @@ describe('Financial API authorization', () => {
 
   it.each([
     ['GET', '/api/v1/accounts'],
+    ['GET', '/api/v1/account-types'],
     ['GET', '/api/v1/accounts/7c2c7a54-73fe-49a3-b0ea-19034bf22baf'],
     ['GET', '/api/v1/accounts/7c2c7a54-73fe-49a3-b0ea-19034bf22baf/balance'],
     [

@@ -27,6 +27,7 @@ import {
   ListOwnedAccountsUseCase,
   ListOwnedAccountTransactionsUseCase,
   ListInvestmentTypesUseCase,
+  ListDefaultAccountTypesUseCase,
   RegisterUserUseCase,
   ResolveAuthenticatedActorUseCase,
   RequestPasswordRecoveryUseCase,
@@ -61,6 +62,7 @@ import { createClient } from '@supabase/supabase-js';
 
 import { AccountController } from './accounts/account.controller.js';
 import { AccountBalanceController } from './accounts/account-balance.controller.js';
+import { AccountTypeController } from './accounts/account-type.controller.js';
 import { LazyAccountRepository } from './accounts/lazy-account-repository.js';
 import { BalanceAdjustmentController } from './adjustments/balance-adjustment.controller.js';
 import { LazyBalanceAdjustmentRepository } from './adjustments/lazy-balance-adjustment-repository.js';
@@ -102,6 +104,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
   controllers: [
     AccountBalanceController,
     AccountController,
+    AccountTypeController,
     BalanceAdjustmentController,
     CreditCardController,
     AuthController,
@@ -118,6 +121,11 @@ import { UserProfileController } from './users/user-profile.controller.js';
     UserProfileController,
   ],
   providers: [
+    {
+      provide: ListDefaultAccountTypesUseCase,
+      useFactory: (): ListDefaultAccountTypesUseCase =>
+        new ListDefaultAccountTypesUseCase(),
+    },
     {
       provide: ListInvestmentTypesUseCase,
       useFactory: (): ListInvestmentTypesUseCase =>

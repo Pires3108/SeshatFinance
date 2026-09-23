@@ -19,6 +19,7 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 ### CA-003 — Conta e saldo
 
 **Dado** usuário autenticado, **quando** cadastrar conta válida com saldo inicial, **então** ela aparecerá na lista e o consolidado será atualizado exatamente uma vez.  
+**Dado** o catálogo padrão de tipos de conta, **quando** consultá-lo, **então** os tipos previstos em RF-016 serão apresentados em português sem impedir chaves personalizadas.
 **Referências:** RF-015 a RF-020; RN-002 a RN-005.
 
 ### CA-004 — Receita e despesa
