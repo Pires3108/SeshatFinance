@@ -3415,6 +3415,127 @@
       }
     },
     "/api/v1/transfers": {
+      "get": {
+        "operationId": "TransferController_list",
+        "parameters": [
+          {
+            "name": "lifecycle",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": ["active", "archived", "trashed"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "properties": {
+                      "amount": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "archivedAt": {
+                        "format": "date-time",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "currencyCode": {
+                        "pattern": "^[A-Z]{3}$",
+                        "type": "string"
+                      },
+                      "currencyMinorUnitScale": {
+                        "maximum": 18,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "description": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "destinationAccountId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "destinationTransactionId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "lifecycle": {
+                        "enum": ["active", "archived", "trashed"],
+                        "type": "string"
+                      },
+                      "observations": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "occurredAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "sourceAccountId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "sourceTransactionId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "trashedAt": {
+                        "format": "date-time",
+                        "nullable": true,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "archivedAt",
+                      "createdAt",
+                      "currencyCode",
+                      "currencyMinorUnitScale",
+                      "description",
+                      "destinationAccountId",
+                      "destinationTransactionId",
+                      "id",
+                      "lifecycle",
+                      "observations",
+                      "occurredAt",
+                      "sourceAccountId",
+                      "sourceTransactionId",
+                      "trashedAt"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List transfers owned by the authenticated user",
+        "tags": ["transfers"]
+      },
       "post": {
         "operationId": "TransferController_create",
         "parameters": [],
@@ -3581,6 +3702,129 @@
           }
         ],
         "summary": "Record a transfer declared by the authenticated user",
+        "tags": ["transfers"]
+      }
+    },
+    "/api/v1/transfers/{transferId}": {
+      "get": {
+        "operationId": "TransferController_get",
+        "parameters": [
+          {
+            "name": "transferId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "amount": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "description": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "destinationAccountId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "destinationTransactionId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "lifecycle": {
+                      "enum": ["active", "archived", "trashed"],
+                      "type": "string"
+                    },
+                    "observations": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "occurredAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "sourceAccountId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "sourceTransactionId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "trashedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "archivedAt",
+                    "createdAt",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "description",
+                    "destinationAccountId",
+                    "destinationTransactionId",
+                    "id",
+                    "lifecycle",
+                    "observations",
+                    "occurredAt",
+                    "sourceAccountId",
+                    "sourceTransactionId",
+                    "trashedAt"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned transfer not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get an owned transfer pair",
         "tags": ["transfers"]
       }
     },

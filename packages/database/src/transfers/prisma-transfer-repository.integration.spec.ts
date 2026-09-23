@@ -84,6 +84,23 @@ describe('PrismaTransferRepository', () => {
     await expect(client.transfer.count()).resolves.toBe(1);
     await expect(client.transaction.count()).resolves.toBe(2);
     await expect(client.financialAuditEvent.count()).resolves.toBe(3);
+    expect(
+      (
+        await repository.listForOwner(
+          '99999999-9999-4999-8999-999999999999',
+          'active',
+        )
+      ).map((item) => item.id),
+    ).toContain(created.id);
+    await expect(
+      repository.listForOwner('88888888-8888-4888-8888-888888888888'),
+    ).resolves.toEqual([]);
+    await expect(
+      repository.findByIdForOwner(
+        created.id,
+        '88888888-8888-4888-8888-888888888888',
+      ),
+    ).resolves.toBeNull();
 
     const duplicate = transfer(
       'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
@@ -153,6 +170,22 @@ describe('PrismaTransferRepository', () => {
     expect(
       trashed.every((row) => row.lifecycle === 'trashed' && row.version === 2),
     ).toBe(true);
+    expect(
+      (
+        await repository.listForOwner(
+          '99999999-9999-4999-8999-999999999999',
+          'trashed',
+        )
+      ).map((item) => item.id),
+    ).toContain(transferId);
+    expect(
+      (
+        await repository.listForOwner(
+          '99999999-9999-4999-8999-999999999999',
+          'active',
+        )
+      ).map((item) => item.id),
+    ).not.toContain(transferId);
 
     persisted.restoreFromTrash(new Date('2026-09-21T14:00:00.000Z'));
     await expect(

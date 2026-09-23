@@ -1,8 +1,13 @@
 import type {
   TransferLifecycleRepository,
+  TransferReadRepository,
   TransferRepository,
 } from '@seshat/application';
-import type { FinancialAuditEvent, Transfer } from '@seshat/domain';
+import type {
+  FinancialAuditEvent,
+  Transfer,
+  TransactionLifecycle,
+} from '@seshat/domain';
 import { PrismaTransferRepository } from '@seshat/database';
 import { Injectable } from '@nestjs/common';
 
@@ -10,7 +15,10 @@ import { LazyPrismaClient } from '../platform/lazy-prisma-client.js';
 
 @Injectable()
 export class LazyTransferRepository
-  implements TransferRepository, TransferLifecycleRepository
+  implements
+    TransferRepository,
+    TransferLifecycleRepository,
+    TransferReadRepository
 {
   private repository: PrismaTransferRepository | undefined;
 
@@ -28,6 +36,13 @@ export class LazyTransferRepository
     ownerId: string,
   ): Promise<Transfer | null> {
     return this.getRepository().findByIdForOwner(id, ownerId);
+  }
+
+  public listForOwner(
+    ownerId: string,
+    lifecycle?: TransactionLifecycle,
+  ): Promise<readonly Transfer[]> {
+    return this.getRepository().listForOwner(ownerId, lifecycle);
   }
 
   public saveAtomically(

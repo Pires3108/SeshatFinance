@@ -120,6 +120,11 @@ export {
   type TransferRepository,
 } from './transfers/create-transfer.js';
 export {
+  GetOwnedTransferUseCase,
+  ListOwnedTransfersUseCase,
+  type TransferReadRepository,
+} from './transfers/read-transfers.js';
+export {
   BalanceAdjustmentAccountUnavailableError,
   BalanceAdjustmentBalanceConflictError,
   CreateBalanceAdjustmentUseCase,

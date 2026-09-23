@@ -58,6 +58,8 @@ describe('Financial API authorization', () => {
     ['GET', '/api/v1/transactions'],
     ['GET', '/api/v1/transactions/c722103a-e28a-482c-b6e9-e3320d8a44e3'],
     ['GET', '/api/v1/credit-cards'],
+    ['GET', '/api/v1/transfers'],
+    ['GET', '/api/v1/transfers/c722103a-e28a-482c-b6e9-e3320d8a44e3'],
     ['GET', '/api/v1/credit-cards/c722103a-e28a-482c-b6e9-e3320d8a44e3'],
     ['GET', '/api/v1/investment-types'],
   ])('rejects anonymous %s %s before financial reads', async (method, url) => {

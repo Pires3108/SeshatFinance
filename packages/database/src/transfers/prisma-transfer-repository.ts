@@ -1,18 +1,23 @@
 import type {
   TransferLifecycleRepository,
+  TransferReadRepository,
   TransferRepository,
 } from '@seshat/application';
 import {
   Transaction,
   Transfer,
   type FinancialAuditEvent,
+  type TransactionLifecycle,
 } from '@seshat/domain';
 
 import { insertFinancialAuditEvent } from '../audit/prisma-financial-audit-event-repository.js';
 import type { Prisma, PrismaClient } from '../generated/prisma/client.js';
 
 export class PrismaTransferRepository
-  implements TransferRepository, TransferLifecycleRepository
+  implements
+    TransferRepository,
+    TransferLifecycleRepository,
+    TransferReadRepository
 {
   public constructor(private readonly client: PrismaClient) {}
 
@@ -59,6 +64,32 @@ export class PrismaTransferRepository
       ownerId: row.ownerId,
       source: restoreTransaction(row.sourceTransaction).toSnapshot(),
     });
+  }
+
+  public async listForOwner(
+    ownerId: string,
+    lifecycle?: TransactionLifecycle,
+  ): Promise<readonly Transfer[]> {
+    const rows = await this.client.transfer.findMany({
+      include: { destinationTransaction: true, sourceTransaction: true },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      where: {
+        ownerId,
+        ...(lifecycle === undefined
+          ? {}
+          : { sourceTransaction: { lifecycle } }),
+      },
+    });
+    return rows.map((row) =>
+      Transfer.restore({
+        destination: restoreTransaction(
+          row.destinationTransaction,
+        ).toSnapshot(),
+        id: row.id,
+        ownerId: row.ownerId,
+        source: restoreTransaction(row.sourceTransaction).toSnapshot(),
+      }),
+    );
   }
 
   public async saveAtomically(

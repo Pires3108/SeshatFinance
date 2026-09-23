@@ -1,6 +1,8 @@
 import type {
   ChangeOwnedTransferLifecycleUseCase,
   CreateTransferUseCase,
+  GetOwnedTransferUseCase,
+  ListOwnedTransfersUseCase,
 } from '@seshat/application';
 import { Currency, Money, Transfer } from '@seshat/domain';
 import type { FastifyRequest } from 'fastify';
@@ -37,6 +39,8 @@ describe('TransferController', () => {
     const execute = vi.fn().mockResolvedValue(transfer());
     const controller = new TransferController(
       { execute } as unknown as CreateTransferUseCase,
+      { execute: vi.fn() } as unknown as GetOwnedTransferUseCase,
+      { execute: vi.fn() } as unknown as ListOwnedTransfersUseCase,
       { execute: vi.fn() } as unknown as ChangeOwnedTransferLifecycleUseCase,
       actors,
     );
@@ -70,6 +74,8 @@ describe('TransferController', () => {
     const execute = vi.fn().mockResolvedValue(value);
     const controller = new TransferController(
       { execute: vi.fn() } as unknown as CreateTransferUseCase,
+      { execute: vi.fn() } as unknown as GetOwnedTransferUseCase,
+      { execute: vi.fn() } as unknown as ListOwnedTransfersUseCase,
       { execute } as unknown as ChangeOwnedTransferLifecycleUseCase,
       actors,
     );
@@ -90,5 +96,30 @@ describe('TransferController', () => {
       trashedAt: '2026-09-21T13:00:00.000Z',
     });
     expect(response).not.toHaveProperty('ownerId');
+  });
+
+  it('reads only the verified actor’s transfer and supports an explicit trash filter', async () => {
+    const actors = new AuthenticatedActorContext();
+    const value = transfer();
+    const get = vi.fn().mockResolvedValue(value);
+    const list = vi.fn().mockResolvedValue([value]);
+    const controller = new TransferController(
+      { execute: vi.fn() } as unknown as CreateTransferUseCase,
+      { execute: get } as unknown as GetOwnedTransferUseCase,
+      { execute: list } as unknown as ListOwnedTransfersUseCase,
+      { execute: vi.fn() } as unknown as ChangeOwnedTransferLifecycleUseCase,
+      actors,
+    );
+
+    const detail = await controller.get(request(actors), value.id);
+    const items = await controller.list(request(actors), 'trashed');
+    expect(get).toHaveBeenCalledWith(value.id, 'actor-id');
+    expect(list).toHaveBeenCalledWith('actor-id', 'trashed');
+    expect(items).toEqual([detail]);
+    expect(detail).not.toHaveProperty('ownerId');
+    get.mockResolvedValueOnce(null);
+    await expect(
+      controller.get(request(actors), value.id),
+    ).rejects.toMatchObject({ status: 404 });
   });
 });
