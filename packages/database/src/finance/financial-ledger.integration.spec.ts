@@ -12,6 +12,7 @@ import {
   Currency,
   FinancialAuditEvent,
   Money,
+  Transaction,
   Transfer,
 } from '@seshat/domain';
 import { Client } from 'pg';
@@ -232,6 +233,149 @@ describe('financial ledger across accounts, transfers, and adjustments', () => {
     await expect(client.transaction.count()).resolves.toBe(3);
     await expect(client.financialAuditEvent.count()).resolves.toBe(7);
   });
+
+  it('sums decimal entries exactly and preserves archived effects', async () => {
+    if (accounts === undefined || transactions === undefined) {
+      throw new Error('Financial repositories are unavailable.');
+    }
+    const accountId = '10101010-1010-4010-8010-101010101010';
+    const ownedAccount = account(accountId, '0.00');
+    await accounts.insert(
+      ownedAccount,
+      audit(
+        '20202020-2020-4020-8020-202020202020',
+        accountId,
+        'account',
+        'created',
+        '2026-09-23T09:00:00.000Z',
+      ),
+    );
+    const balances = new GetOwnedAccountBalanceUseCase(accounts, transactions);
+    const entries = [
+      {
+        id: '30303030-3030-4030-8030-303030303030',
+        auditId: '40404040-4040-4040-8040-404040404040',
+        amount: '0.10',
+        kind: 'income',
+      },
+      {
+        id: '50505050-5050-4050-8050-505050505050',
+        auditId: '60606060-6060-4060-8060-606060606060',
+        amount: '0.20',
+        kind: 'income',
+      },
+      {
+        id: '70707070-7070-4070-8070-707070707070',
+        auditId: '80808080-8080-4080-8080-808080808080',
+        amount: '0.05',
+        kind: 'expense',
+      },
+    ] as const;
+    const created: Transaction[] = [];
+    for (const entry of entries) {
+      const transaction = Transaction.create({
+        accountId,
+        amount: Money.fromDecimal(entry.amount, currency),
+        createdAt: new Date('2026-09-23T10:00:00.000Z'),
+        description: null,
+        id: entry.id,
+        kind: entry.kind,
+        occurredAt: new Date('2026-09-23T10:00:00.000Z'),
+        ownerId,
+      });
+      await transactions.insert(
+        transaction,
+        audit(
+          entry.auditId,
+          entry.id,
+          'transaction',
+          'created',
+          '2026-09-23T10:00:00.000Z',
+        ),
+      );
+      created.push(transaction);
+    }
+    expect((await balances.execute(accountId, ownerId)).toDecimal()).toBe(
+      '0.25',
+    );
+
+    const archivedEntry = created[0];
+    if (archivedEntry === undefined)
+      throw new Error('Missing synthetic entry.');
+    const entryVersion = archivedEntry.toSnapshot().version;
+    archivedEntry.archive(new Date('2026-09-23T11:00:00.000Z'));
+    await expect(
+      transactions.save(
+        archivedEntry,
+        entryVersion,
+        audit(
+          '90909090-9090-4090-8090-909090909090',
+          archivedEntry.id,
+          'transaction',
+          'archived',
+          '2026-09-23T11:00:00.000Z',
+        ),
+      ),
+    ).resolves.toBe(true);
+    const accountVersion = ownedAccount.toSnapshot().version;
+    ownedAccount.archive(new Date('2026-09-23T12:00:00.000Z'));
+    await expect(
+      accounts.save(
+        ownedAccount,
+        accountVersion,
+        audit(
+          'a0a0a0a0-a0a0-40a0-80a0-a0a0a0a0a0a0',
+          accountId,
+          'account',
+          'archived',
+          '2026-09-23T12:00:00.000Z',
+        ),
+      ),
+    ).resolves.toBe(true);
+    expect((await balances.execute(accountId, ownerId)).toDecimal()).toBe(
+      '0.25',
+    );
+
+    const trashedEntry = created[1];
+    if (trashedEntry === undefined) throw new Error('Missing synthetic entry.');
+    const trashVersion = trashedEntry.toSnapshot().version;
+    trashedEntry.moveToTrash(new Date('2026-09-23T13:00:00.000Z'));
+    await expect(
+      transactions.save(
+        trashedEntry,
+        trashVersion,
+        audit(
+          'b0b0b0b0-b0b0-40b0-80b0-b0b0b0b0b0b0',
+          trashedEntry.id,
+          'transaction',
+          'moved-to-trash',
+          '2026-09-23T13:00:00.000Z',
+        ),
+      ),
+    ).resolves.toBe(true);
+    expect((await balances.execute(accountId, ownerId)).toDecimal()).toBe(
+      '0.05',
+    );
+
+    const restoreVersion = trashedEntry.toSnapshot().version;
+    trashedEntry.restoreFromTrash(new Date('2026-09-23T14:00:00.000Z'));
+    await expect(
+      transactions.save(
+        trashedEntry,
+        restoreVersion,
+        audit(
+          'c0c0c0c0-c0c0-40c0-80c0-c0c0c0c0c0c0',
+          trashedEntry.id,
+          'transaction',
+          'restored-from-trash',
+          '2026-09-23T14:00:00.000Z',
+        ),
+      ),
+    ).resolves.toBe(true);
+    expect((await balances.execute(accountId, ownerId)).toDecimal()).toBe(
+      '0.25',
+    );
+  });
 });
 
 function account(id: string, initialBalance: string): Account {
@@ -252,7 +396,7 @@ function account(id: string, initialBalance: string): Account {
 function audit(
   id: string,
   resourceId: string,
-  resourceType: 'account' | 'transfer' | 'balance-adjustment',
+  resourceType: 'account' | 'transfer' | 'balance-adjustment' | 'transaction',
   action: 'created' | 'archived' | 'moved-to-trash' | 'restored-from-trash',
   at: string,
 ): FinancialAuditEvent {
