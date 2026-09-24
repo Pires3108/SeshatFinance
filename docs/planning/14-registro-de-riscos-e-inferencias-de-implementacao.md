@@ -12,6 +12,7 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Referências:** ADR-011; US-099.
 - **Risco:** escolher um provedor antes de verificar limites, portabilidade e requisitos operacionais criaria dependência prematura.
 - **Limite atual:** manter web, API e worker portáveis; não configurar produção nem credenciais de provedor.
+- **Evidência atual:** os previews conectados ao projeto externo `agent-waiter` executam o build do repositório com sucesso, mas falham depois por uma configuração de diretório de saída que exige `public`. Essa configuração não deve ser alterada pela aplicação sem confirmar qual artefato esse projeto deve publicar.
 - **Decisão necessária:** selecionar o provedor antes do primeiro deploy, com custos e limites vigentes documentados.
 
 ### RII-003 — Validação local da migration PostgreSQL
