@@ -10,7 +10,7 @@ describe('CreateFamilyGroupUseCase', () => {
   it('persists a group together with the authenticated actor as owner', async () => {
     const insert = vi.fn().mockResolvedValue(undefined);
     const useCase = new CreateFamilyGroupUseCase(
-      { insert, listForMember: vi.fn() } as unknown as FamilyGroupRepository,
+      { insert, listForMember: vi.fn() } satisfies FamilyGroupRepository,
       { now: (): Date => new Date('2026-09-24T12:00:00.000Z') } satisfies Clock,
       { generate: (): string => 'group-id' } satisfies IdentifierGenerator,
     );
