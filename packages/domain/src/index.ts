@@ -89,3 +89,16 @@ export {
   type InvestmentTypeKey,
   type InvestmentTypeSnapshot,
 } from './investments/investment-type.js';
+export {
+  FamilyGroup,
+  FamilyGroupMembership,
+  InvalidFamilyGroupError,
+  familyGroupRoles,
+  type FamilyGroupMembershipSnapshot,
+  type FamilyGroupRole,
+  type FamilyGroupSnapshot,
+} from './family/family-group.js';
+export {
+  hasFamilyGroupCapability,
+  type FamilyGroupCapability,
+} from './family/family-group-policy.js';
