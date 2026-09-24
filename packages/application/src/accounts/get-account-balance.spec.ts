@@ -1,4 +1,10 @@
-import { Account, AccountType, Currency, Money } from '@seshat/domain';
+import {
+  Account,
+  AccountType,
+  Currency,
+  CurrencyMismatchError,
+  Money,
+} from '@seshat/domain';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -88,6 +94,8 @@ describe('GetOwnedAccountBalanceUseCase', () => {
       transactions([Money.fromDecimal('1.00', Currency.create('USD', 2))]),
     );
 
-    await expect(useCase.execute('account-id', 'owner-id')).rejects.toThrow();
+    await expect(
+      useCase.execute('account-id', 'owner-id'),
+    ).rejects.toBeInstanceOf(CurrencyMismatchError);
   });
 });
