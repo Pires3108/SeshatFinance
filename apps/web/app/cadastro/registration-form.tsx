@@ -48,8 +48,12 @@ export function RegistrationForm(): ReactNode {
         </div>
       ) : (
         <>
-          <p>Todos os campos são obrigatórios.</p>
+          <p id="registration-instructions">
+            Todos os campos são obrigatórios.
+          </p>
           <form
+            aria-busy={state === 'submitting'}
+            aria-describedby="registration-instructions"
             onSubmit={(event) => {
               void handleSubmit(event);
             }}
@@ -62,6 +66,7 @@ export function RegistrationForm(): ReactNode {
                 autoComplete="name"
                 maxLength={120}
                 required
+                aria-describedby="registration-instructions"
               />
             </div>
             <div className="field">
@@ -73,6 +78,7 @@ export function RegistrationForm(): ReactNode {
                 autoComplete="email"
                 maxLength={320}
                 required
+                aria-describedby="registration-instructions"
               />
             </div>
             <div className="field">
@@ -84,6 +90,7 @@ export function RegistrationForm(): ReactNode {
                 autoComplete="new-password"
                 maxLength={1024}
                 required
+                aria-describedby="registration-instructions"
               />
             </div>
             <button
@@ -94,7 +101,7 @@ export function RegistrationForm(): ReactNode {
               {state === 'submitting' ? 'Enviando…' : 'Criar conta'}
             </button>
             {state === 'error' && (
-              <p className="form-message error" role="alert">
+              <p className="form-message error" role="alert" tabIndex={-1}>
                 Não foi possível enviar o cadastro. Confira os dados e tente
                 novamente.
               </p>
