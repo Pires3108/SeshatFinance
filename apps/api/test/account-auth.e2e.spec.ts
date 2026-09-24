@@ -43,6 +43,19 @@ describe('Financial API authorization', () => {
     });
   });
 
+  it('rejects a transfer lifecycle change without a verified bearer actor', async () => {
+    const response = await application.inject({
+      method: 'PATCH',
+      payload: { action: 'archive' },
+      url: '/api/v1/transfers/c722103a-e28a-482c-b6e9-e3320d8a44e3/lifecycle',
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toMatchObject({
+      error: { code: 'UNAUTHENTICATED' },
+    });
+  });
+
   it.each([
     ['/api/v1/accounts/7c2c7a54-73fe-49a3-b0ea-19034bf22baf/lifecycle'],
     ['/api/v1/transactions/c722103a-e28a-482c-b6e9-e3320d8a44e3/lifecycle'],
