@@ -144,6 +144,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** aprovar moeda e conversão, associação de contas, fontes e limites de contribuição, e semântica calendária do prazo e situação da meta.
 - **Limite atual:** não persistir metas, contribuições, progresso ou reserva derivada até a decisão. A classificação de conta existente permanece independente e não deve ser apresentada como reserva de meta por inferência.
 
+### RII-019 — Semântica de empréstimos e pagamentos parciais
+
+- **Estado:** aberto.
+- **Referências:** RF-035; RN-018 a RN-021; US-044 a US-047.
+- **Risco:** empréstimos não definem a ordem de apropriação de pagamentos parciais entre juros e principal, tratamento de atraso, quitação antecipada, renegociação e vencimentos em meses curtos. Inferir essas regras altera saldo pendente e juros apresentados.
+- **Decisão necessária:** aprovar calendário de vencimento, prioridade de alocação, regras de amortização, atraso, antecipação e situação do contrato.
+- **Limite atual:** não persistir empréstimos, parcelas, saldo pendente ou pagamentos parciais até a decisão e a matriz de arredondamento do RII-007.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
