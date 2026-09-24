@@ -5,10 +5,12 @@ import {
   CreateBalanceAdjustmentUseCase,
   ListOwnedBalanceAdjustmentsUseCase,
   CreateCreditCardUseCase,
+  CreateFamilyGroupUseCase,
   GetOwnedCreditCardUseCase,
   GetOwnedTransferUseCase,
   ListOwnedTransfersUseCase,
   ListOwnedCreditCardsUseCase,
+  ListOwnFamilyGroupsUseCase,
   CreateCategoryUseCase,
   CreateCostCenterUseCase,
   CreateTagUseCase,
@@ -46,6 +48,7 @@ import {
   type BalanceAdjustmentRepository,
   type BalanceAdjustmentHistoryRepository,
   type CreditCardRepository,
+  type FamilyGroupRepository,
   type CategoryRepository,
   type CostCenterRepository,
   type TagRepository,
@@ -69,6 +72,8 @@ import { BalanceAdjustmentController } from './adjustments/balance-adjustment.co
 import { LazyBalanceAdjustmentRepository } from './adjustments/lazy-balance-adjustment-repository.js';
 import { CreditCardController } from './cards/credit-card.controller.js';
 import { LazyCreditCardRepository } from './cards/lazy-credit-card-repository.js';
+import { FamilyGroupController } from './family/family-group.controller.js';
+import { LazyFamilyGroupRepository } from './family/lazy-family-group-repository.js';
 import { AuthConfiguration } from './auth/auth-configuration.js';
 import { AuthController } from './auth/auth.controller.js';
 import { AuthenticatedActorContext } from './auth/authenticated-actor-context.js';
@@ -108,6 +113,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     AccountTypeController,
     BalanceAdjustmentController,
     CreditCardController,
+    FamilyGroupController,
     AuthController,
     CategoryController,
     CostCenterController,
@@ -141,6 +147,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyAccountRepository,
     LazyBalanceAdjustmentRepository,
     LazyCreditCardRepository,
+    LazyFamilyGroupRepository,
     LazyCategoryRepository,
     LazyCostCenterRepository,
     LazyTagRepository,
@@ -149,6 +156,22 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyTransactionTagRepository,
     LazyTransferRepository,
     LazyUserProfileRepository,
+    {
+      inject: [LazyFamilyGroupRepository],
+      provide: CreateFamilyGroupUseCase,
+      useFactory: (groups: FamilyGroupRepository): CreateFamilyGroupUseCase =>
+        new CreateFamilyGroupUseCase(
+          groups,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyFamilyGroupRepository],
+      provide: ListOwnFamilyGroupsUseCase,
+      useFactory: (groups: FamilyGroupRepository): ListOwnFamilyGroupsUseCase =>
+        new ListOwnFamilyGroupsUseCase(groups),
+    },
     {
       inject: [LazyAccountRepository, LazyCreditCardRepository],
       provide: CreateCreditCardUseCase,

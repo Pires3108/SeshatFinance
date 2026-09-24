@@ -169,6 +169,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** aprovar o catálogo e as versões dos conjuntos exportáveis, colunas/campos e ordenação canônicas, representação de moeda/valores/nulos, tratamento de registros arquivados e da lixeira, fuso e formato de data/hora, além do comportamento para filtros sem resultado e exportações grandes.
 - **Limite atual:** não publicar endpoints nem gerar CSV, JSON, XLSX ou PDF antes da decisão. Toda futura exportação deve derivar a autorização do ator autenticado e incluir apenas dados autorizados, sem expor modelos Prisma ou arquivos privados.
 
+### RII-022 — Convites e saída de grupos familiares
+
+- **Estado:** aberto.
+- **Referências:** RF-009, RF-014; RN-049 a RN-053; US-102 a US-105; CA-019.
+- **Risco:** convite, aceite e saída não definem destinatário elegível, expiração, reenvio, revogação, limite de convites simultâneos nem o comportamento de um convite quando a identidade ainda não existe. Também não definem a experiência de saída quando a pessoa possui papéis ou registros compartilhados, além da proibição já estabelecida para o último proprietário. Inferir esses fluxos pode conceder associação à pessoa errada ou deixar acesso ativo após uma remoção.
+- **Decisão necessária:** aprovar o identificador do convidado, validade e revogação do convite, regras de reenvio e aceite, transições de papéis na entrada e na saída, e a auditoria mínima permitida para esses eventos.
+- **Limite atual:** implementar apenas a criação de um grupo sem metadados adicionais e a associação atômica do ator autenticado como proprietário. Não publicar convite, aceite, remoção, saída, transferência de propriedade ou contas compartilhadas até a decisão.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.

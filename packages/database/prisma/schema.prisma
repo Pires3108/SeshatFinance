@@ -20,6 +20,35 @@ model UserProfile {
   @@map("user_profiles")
 }
 
+enum FamilyGroupRole {
+  owner
+  administrator
+  member
+  viewer
+
+  @@map("family_group_role")
+}
+
+model FamilyGroup {
+  id        String                  @id @db.Uuid
+  createdAt DateTime                @map("created_at") @db.Timestamptz(6)
+  members   FamilyGroupMembership[]
+
+  @@map("family_groups")
+}
+
+model FamilyGroupMembership {
+  groupId  String          @map("group_id") @db.Uuid
+  userId   String          @map("user_id") @db.Uuid
+  role     FamilyGroupRole
+  joinedAt DateTime        @map("joined_at") @db.Timestamptz(6)
+  group    FamilyGroup     @relation(fields: [groupId], references: [id], onDelete: Restrict)
+
+  @@id([groupId, userId])
+  @@index([userId, joinedAt, groupId])
+  @@map("family_group_memberships")
+}
+
 enum AccountLifecycle {
   active
   archived

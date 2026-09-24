@@ -144,6 +144,24 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/family-groups": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List family groups of the authenticated user */
+        readonly get: operations["FamilyGroupController_list"];
+        readonly put?: never;
+        /** Create a family group with the authenticated user as its owner */
+        readonly post: operations["FamilyGroupController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/auth/registrations": {
         readonly parameters: {
             readonly query?: never;
@@ -1147,6 +1165,72 @@ export interface operations {
             };
             /** @description Owned credit card was not found */
             readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly FamilyGroupController_list: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        /** Format: uuid */
+                        readonly groupId: string;
+                        /** Format: date-time */
+                        readonly joinedAt: string;
+                        /** @enum {string} */
+                        readonly role: "owner" | "administrator" | "member" | "viewer";
+                    }[];
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly FamilyGroupController_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly groupId: string;
+                        /** Format: date-time */
+                        readonly joinedAt: string;
+                        /** @enum {string} */
+                        readonly role: "owner" | "administrator" | "member" | "viewer";
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
                 headers: {
                     readonly [name: string]: unknown;
                 };

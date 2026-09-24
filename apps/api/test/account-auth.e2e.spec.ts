@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { configureApplication } from '../src/platform/configure-application.js';
 
-describe('Financial API authorization', () => {
+describe('Protected API authorization', () => {
   let application: NestFastifyApplication;
 
   beforeEach(async () => {
@@ -35,6 +35,18 @@ describe('Financial API authorization', () => {
       method: 'POST',
       payload: {},
       url: '/api/v1/accounts',
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toMatchObject({
+      error: { code: 'UNAUTHENTICATED' },
+    });
+  });
+
+  it('rejects family group creation without a verified bearer actor', async () => {
+    const response = await application.inject({
+      method: 'POST',
+      url: '/api/v1/family-groups',
     });
 
     expect(response.statusCode).toBe(401);
@@ -82,8 +94,9 @@ describe('Financial API authorization', () => {
     ['GET', '/api/v1/transfers'],
     ['GET', '/api/v1/transfers/c722103a-e28a-482c-b6e9-e3320d8a44e3'],
     ['GET', '/api/v1/credit-cards/c722103a-e28a-482c-b6e9-e3320d8a44e3'],
+    ['GET', '/api/v1/family-groups'],
     ['GET', '/api/v1/investment-types'],
-  ])('rejects anonymous %s %s before financial reads', async (method, url) => {
+  ])('rejects anonymous %s %s before protected reads', async (method, url) => {
     const response = await application.inject({ method: method as 'GET', url });
 
     expect(response.statusCode).toBe(401);

@@ -153,3 +153,8 @@ export {
   type CreateCreditCardCommand,
   type CreditCardRepository,
 } from './cards/create-credit-card.js';
+export {
+  CreateFamilyGroupUseCase,
+  ListOwnFamilyGroupsUseCase,
+  type FamilyGroupRepository,
+} from './family/create-family-group.js';
