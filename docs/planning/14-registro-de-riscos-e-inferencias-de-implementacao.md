@@ -136,6 +136,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** definir chave de idempotência fornecida pelo cliente, escopo por proprietário e operação, prazo de retenção, comparação do conteúdo da requisição, resposta para a mesma chave com conteúdo diferente, comportamento durante execução concorrente e resposta a uma repetição depois de alterações no ciclo de vida do registro. A reserva da chave, os registros financeiros e a auditoria devem ser gravados na mesma transação.
 - **Limite atual:** não afirmar que `POST /api/v1/transfers` ou `POST /api/v1/accounts/:accountId/balance-adjustments` é idempotente por requisição. Preservar a atomicidade existente e não adicionar política de repetição implícita, baseada apenas em valores ou intervalo de tempo, pois dois eventos legítimos podem ter dados iguais.
 
+### RII-021 — Contrato de portabilidade e datas da exportação
+
+- **Estado:** aberto.
+- **Referências:** RF-081 a RF-084; RN-045; US-082 a US-085; INV-035.
+- **Risco:** os requisitos fixam CSV UTF-8 separado por vírgula e datas no padrão brasileiro, mas não definem quais entidades e campos compõem cada exportação, a versão e a estrutura do JSON, a ordenação, a forma de representar valores monetários e nulos, nem o fuso que converte um instante em data brasileira. Inferir esse contrato pode gerar arquivos não importáveis, expor campos não autorizados ou deslocar registros no tempo.
+- **Decisão necessária:** aprovar o catálogo e as versões dos conjuntos exportáveis, colunas/campos e ordenação canônicas, representação de moeda/valores/nulos, tratamento de registros arquivados e da lixeira, fuso e formato de data/hora, além do comportamento para filtros sem resultado e exportações grandes.
+- **Limite atual:** não publicar endpoints nem gerar CSV, JSON, XLSX ou PDF antes da decisão. Toda futura exportação deve derivar a autorização do ator autenticado e incluir apenas dados autorizados, sem expor modelos Prisma ou arquivos privados.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
