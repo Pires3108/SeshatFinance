@@ -1,7 +1,7 @@
 import type { FamilyGroupRepository } from '@seshat/application';
 import {
-  type FamilyGroup,
-  type FamilyGroupMembership,
+  FamilyGroup,
+  FamilyGroupMembership,
   type FamilyGroupMembershipSnapshot,
 } from '@seshat/domain';
 
@@ -15,6 +15,11 @@ export class PrismaFamilyGroupRepository implements FamilyGroupRepository {
     ownerMembership: FamilyGroupMembership,
   ): Promise<void> {
     const owner = ownerMembership.toSnapshot();
+    if (owner.groupId !== group.id || owner.role !== 'owner') {
+      throw new Error(
+        'A family group must be created with its matching owner membership.',
+      );
+    }
     await this.client.familyGroup.create({
       data: {
         createdAt: group.toSnapshot().createdAt,
