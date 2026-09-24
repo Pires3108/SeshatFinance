@@ -136,6 +136,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** definir chave de idempotência fornecida pelo cliente, escopo por proprietário e operação, prazo de retenção, comparação do conteúdo da requisição, resposta para a mesma chave com conteúdo diferente, comportamento durante execução concorrente e resposta a uma repetição depois de alterações no ciclo de vida do registro. A reserva da chave, os registros financeiros e a auditoria devem ser gravados na mesma transação.
 - **Limite atual:** não afirmar que `POST /api/v1/transfers` ou `POST /api/v1/accounts/:accountId/balance-adjustments` é idempotente por requisição. Preservar a atomicidade existente e não adicionar política de repetição implícita, baseada apenas em valores ou intervalo de tempo, pois dois eventos legítimos podem ter dados iguais.
 
+### RII-020 — Semântica civil das recorrências e dos eventos futuros
+
+- **Estado:** aberto.
+- **Referências:** RF-036, RF-037, RF-057 a RF-063; RN-027 a RN-030; US-059 a US-064; INV-020, INV-021, INV-023 e INV-024.
+- **Risco:** as regras não definem o fuso horário autoritativo, a ancoragem de uma recorrência mensal em meses curtos, o primeiro dia da semana, a interpretação de recorrências personalizadas nem os limites inclusivos de início, fim e quantidade de ocorrências. Também não determinam se o prazo de 14 dias para arquivamento de evento opcional usa data civil ou instante. Inferir essas regras pode gerar, omitir ou arquivar projeções em datas diferentes das declaradas pelo usuário.
+- **Decisão necessária:** aprovar o modelo de tempo civil, as regras de ajuste de dia inexistente, a semântica de cada frequência e recorrência personalizada, os limites de início/fim/contagem e o critério temporal para vencimento e arquivamento. A confirmação de um evento também depende da política de idempotência do RII-017.
+- **Limite atual:** não persistir regras de recorrência, materializar ocorrências, calcular vencimento ou converter eventos projetados em movimentações efetivadas até a decisão. Consultas internas já existentes por intervalo explícito de instantes `[from, to)` permanecem independentes.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
