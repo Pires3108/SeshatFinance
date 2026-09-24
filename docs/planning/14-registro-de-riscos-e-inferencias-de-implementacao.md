@@ -136,6 +136,38 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** definir chave de idempotência fornecida pelo cliente, escopo por proprietário e operação, prazo de retenção, comparação do conteúdo da requisição, resposta para a mesma chave com conteúdo diferente, comportamento durante execução concorrente e resposta a uma repetição depois de alterações no ciclo de vida do registro. A reserva da chave, os registros financeiros e a auditoria devem ser gravados na mesma transação.
 - **Limite atual:** não afirmar que `POST /api/v1/transfers` ou `POST /api/v1/accounts/:accountId/balance-adjustments` é idempotente por requisição. Preservar a atomicidade existente e não adicionar política de repetição implícita, baseada apenas em valores ou intervalo de tempo, pois dois eventos legítimos podem ter dados iguais.
 
+### RII-018 — Semântica de metas e reservas
+
+- **Estado:** aberto.
+- **Referências:** RF-047 a RF-050; RN-031 a RN-033; US-049 a US-053.
+- **Risco:** alvo, valor inicial, contas associadas, contribuições e prazo não definem compatibilidade de moeda, cardinalidade das contas, fontes elegíveis de contribuição nem fuso do prazo. Inferir essas regras pode contar saldo duas vezes, aceitar progresso em moeda incompatível ou antecipar uma situação vencida.
+- **Decisão necessária:** aprovar moeda e conversão, associação de contas, fontes e limites de contribuição, e semântica calendária do prazo e situação da meta.
+- **Limite atual:** não persistir metas, contribuições, progresso ou reserva derivada até a decisão. A classificação de conta existente permanece independente e não deve ser apresentada como reserva de meta por inferência.
+
+### RII-019 — Semântica de empréstimos e pagamentos parciais
+
+- **Estado:** aberto.
+- **Referências:** RF-035; RN-018 a RN-021; US-044 a US-047.
+- **Risco:** empréstimos não definem a ordem de apropriação de pagamentos parciais entre juros e principal, tratamento de atraso, quitação antecipada, renegociação e vencimentos em meses curtos. Inferir essas regras altera saldo pendente e juros apresentados.
+- **Decisão necessária:** aprovar calendário de vencimento, prioridade de alocação, regras de amortização, atraso, antecipação e situação do contrato.
+- **Limite atual:** não persistir empréstimos, parcelas, saldo pendente ou pagamentos parciais até a decisão e a matriz de arredondamento do RII-007.
+
+### RII-020 — Semântica civil das recorrências e dos eventos futuros
+
+- **Estado:** aberto.
+- **Referências:** RF-036, RF-037, RF-057 a RF-063; RN-027 a RN-030; US-059 a US-064; INV-020, INV-021, INV-023 e INV-024.
+- **Risco:** as regras não definem o fuso horário autoritativo, a ancoragem de uma recorrência mensal em meses curtos, o primeiro dia da semana, a interpretação de recorrências personalizadas nem os limites inclusivos de início, fim e quantidade de ocorrências. Também não determinam se o prazo de 14 dias para arquivamento de evento opcional usa data civil ou instante. Inferir essas regras pode gerar, omitir ou arquivar projeções em datas diferentes das declaradas pelo usuário.
+- **Decisão necessária:** aprovar o modelo de tempo civil, as regras de ajuste de dia inexistente, a semântica de cada frequência e recorrência personalizada, os limites de início/fim/contagem e o critério temporal para vencimento e arquivamento. A confirmação de um evento também depende da política de idempotência do RII-017.
+- **Limite atual:** não persistir regras de recorrência, materializar ocorrências, calcular vencimento ou converter eventos projetados em movimentações efetivadas até a decisão. Consultas internas já existentes por intervalo explícito de instantes `[from, to)` permanecem independentes.
+
+### RII-021 — Contrato de portabilidade e datas da exportação
+
+- **Estado:** aberto.
+- **Referências:** RF-081 a RF-084; RN-045; US-082 a US-085; INV-035.
+- **Risco:** os requisitos fixam CSV UTF-8 separado por vírgula e datas no padrão brasileiro, mas não definem quais entidades e campos compõem cada exportação, a versão e a estrutura do JSON, a ordenação, a forma de representar valores monetários e nulos, nem o fuso que converte um instante em data brasileira. Inferir esse contrato pode gerar arquivos não importáveis, expor campos não autorizados ou deslocar registros no tempo.
+- **Decisão necessária:** aprovar o catálogo e as versões dos conjuntos exportáveis, colunas/campos e ordenação canônicas, representação de moeda/valores/nulos, tratamento de registros arquivados e da lixeira, fuso e formato de data/hora, além do comportamento para filtros sem resultado e exportações grandes.
+- **Limite atual:** não publicar endpoints nem gerar CSV, JSON, XLSX ou PDF antes da decisão. Toda futura exportação deve derivar a autorização do ator autenticado e incluir apenas dados autorizados, sem expor modelos Prisma ou arquivos privados.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
