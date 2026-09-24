@@ -1,8 +1,8 @@
 import type { FamilyGroupRepository } from '@seshat/application';
-import {
+import type {
   FamilyGroup,
   FamilyGroupMembership,
-  type FamilyGroupMembershipSnapshot,
+  FamilyGroupMembershipSnapshot,
 } from '@seshat/domain';
 
 import type { PrismaClient } from '../generated/prisma/client.js';
