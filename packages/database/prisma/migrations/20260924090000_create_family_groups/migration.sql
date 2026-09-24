@@ -18,3 +18,7 @@ CREATE TABLE "family_group_memberships" (
 
 CREATE INDEX "family_group_memberships_user_id_joined_at_group_id_idx"
   ON "family_group_memberships"("user_id", "joined_at", "group_id");
+
+CREATE UNIQUE INDEX "family_group_memberships_single_owner_idx"
+  ON "family_group_memberships"("group_id")
+  WHERE "role" = 'owner';
