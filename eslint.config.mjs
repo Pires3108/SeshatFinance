@@ -10,6 +10,7 @@ export default tseslint.config(
       '**/coverage/**',
       '**/node_modules/**',
       'packages/contracts/src/generated/**',
+      'apps/web/public/service-worker.js',
     ],
   },
   eslint.configs.recommended,

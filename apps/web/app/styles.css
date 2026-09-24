@@ -11,6 +11,14 @@
 body {
   margin: 0;
 }
+.offline-page {
+  display: grid;
+  align-content: center;
+  min-height: 100vh;
+  max-width: 42rem;
+  margin: auto;
+  padding: 2rem;
+}
 button,
 input {
   font: inherit;
