@@ -14,7 +14,7 @@ export default function HomePage(): ReactNode {
         </Link>
         <Link href="/cadastro">Criar conta</Link>
       </header>
-      <main className="page-grid" id="main-content">
+      <main className="page-grid" id="main-content" tabIndex={-1}>
         <section className="intro" aria-labelledby="page-title">
           <span className="section-label">Clareza para suas finanças</span>
           <h1 id="page-title">Um lugar para entender seu dinheiro.</h1>
