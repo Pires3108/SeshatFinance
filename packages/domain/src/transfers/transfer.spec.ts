@@ -62,6 +62,24 @@ describe('Transfer', () => {
     });
   });
 
+  it.each([
+    ['archive', 'archived'],
+    ['moveToTrash', 'trashed'],
+  ] as const)(
+    'keeps both entries coherent when %s changes the lifecycle',
+    (action, expectedLifecycle) => {
+      const transfer = Transfer.create(base);
+
+      transfer[action](new Date('2026-09-21T15:00:00.000Z'));
+
+      const snapshot = transfer.toSnapshot();
+      expect(snapshot.source.lifecycle).toBe(expectedLifecycle);
+      expect(snapshot.destination.lifecycle).toBe(expectedLifecycle);
+      expect(snapshot.source.version).toBe(snapshot.destination.version);
+      expect(transfer.netBalanceEffect().toDecimal()).toBe('0.00');
+    },
+  );
+
   it('rejects restoring an incoherent persisted pair', () => {
     const snapshot = Transfer.create(base).toSnapshot();
 
