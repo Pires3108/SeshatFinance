@@ -1419,6 +1419,93 @@
         "tags": ["credit-cards"]
       }
     },
+    "/api/v1/family-groups": {
+      "post": {
+        "operationId": "FamilyGroupController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "groupId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "joinedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "role": {
+                      "enum": ["owner", "administrator", "member", "viewer"],
+                      "type": "string"
+                    }
+                  },
+                  "required": ["groupId", "joinedAt", "role"],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a family group with the authenticated user as its owner",
+        "tags": ["family-groups"]
+      },
+      "get": {
+        "operationId": "FamilyGroupController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "properties": {
+                      "groupId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "joinedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "role": {
+                        "enum": ["owner", "administrator", "member", "viewer"],
+                        "type": "string"
+                      }
+                    },
+                    "required": ["groupId", "joinedAt", "role"],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List family groups of the authenticated user",
+        "tags": ["family-groups"]
+      }
+    },
     "/api/v1/auth/registrations": {
       "post": {
         "operationId": "AuthController_register",
