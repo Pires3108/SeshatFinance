@@ -136,6 +136,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** definir chave de idempotência fornecida pelo cliente, escopo por proprietário e operação, prazo de retenção, comparação do conteúdo da requisição, resposta para a mesma chave com conteúdo diferente, comportamento durante execução concorrente e resposta a uma repetição depois de alterações no ciclo de vida do registro. A reserva da chave, os registros financeiros e a auditoria devem ser gravados na mesma transação.
 - **Limite atual:** não afirmar que `POST /api/v1/transfers` ou `POST /api/v1/accounts/:accountId/balance-adjustments` é idempotente por requisição. Preservar a atomicidade existente e não adicionar política de repetição implícita, baseada apenas em valores ou intervalo de tempo, pois dois eventos legítimos podem ter dados iguais.
 
+### RII-018 — Semântica de metas e reservas
+
+- **Estado:** aberto.
+- **Referências:** RF-047 a RF-050; RN-031 a RN-033; US-049 a US-053.
+- **Risco:** alvo, valor inicial, contas associadas, contribuições e prazo não definem compatibilidade de moeda, cardinalidade das contas, fontes elegíveis de contribuição nem fuso do prazo. Inferir essas regras pode contar saldo duas vezes, aceitar progresso em moeda incompatível ou antecipar uma situação vencida.
+- **Decisão necessária:** aprovar moeda e conversão, associação de contas, fontes e limites de contribuição, e semântica calendária do prazo e situação da meta.
+- **Limite atual:** não persistir metas, contribuições, progresso ou reserva derivada até a decisão. A classificação de conta existente permanece independente e não deve ser apresentada como reserva de meta por inferência.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
