@@ -150,4 +150,28 @@ describe('TransactionController', () => {
       }),
     );
   });
+
+  it('changes record lifecycle using the verified actor', async () => {
+    const actors = new AuthenticatedActorContext();
+    const execute = vi.fn().mockResolvedValue(transaction());
+    const controller = new TransactionController(
+      { execute: vi.fn() } as unknown as CreateTransactionUseCase,
+      { execute: vi.fn() } as unknown as GetOwnedTransactionUseCase,
+      { execute: vi.fn() } as unknown as ListOwnedAccountTransactionsUseCase,
+      { execute: vi.fn() } as unknown as ListOwnedTransactionsBetweenUseCase,
+      { execute: vi.fn() } as unknown as UpdateOwnedTransactionUseCase,
+      { execute } as unknown as ChangeOwnedTransactionLifecycleUseCase,
+      actors,
+    );
+    await controller.lifecycle(
+      request(actors),
+      '86684068-45d9-4e14-b454-f7e556b867e7',
+      { action: 'archive' },
+    );
+    expect(execute).toHaveBeenCalledWith({
+      action: 'archive',
+      actorId: 'actor-id',
+      transactionId: '86684068-45d9-4e14-b454-f7e556b867e7',
+    });
+  });
 });
