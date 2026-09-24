@@ -151,4 +151,27 @@ describe('AccountController', () => {
       typeKey: 'checking-account',
     });
   });
+
+  it('changes lifecycle using the verified actor', async () => {
+    const actors = new AuthenticatedActorContext();
+    const execute = vi.fn().mockResolvedValue(account());
+    const controller = new AccountController(
+      { execute: vi.fn() } as unknown as CreateAccountUseCase,
+      { execute: vi.fn() } as unknown as GetOwnedAccountUseCase,
+      { execute: vi.fn() } as unknown as ListOwnedAccountsUseCase,
+      { execute: vi.fn() } as unknown as UpdateOwnedAccountDetailsUseCase,
+      { execute } as unknown as ChangeOwnedAccountLifecycleUseCase,
+      actors,
+    );
+    await controller.lifecycle(
+      request(actors),
+      '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
+      { action: 'move-to-trash' },
+    );
+    expect(execute).toHaveBeenCalledWith({
+      accountId: '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
+      action: 'move-to-trash',
+      actorId: 'actor-id',
+    });
+  });
 });
