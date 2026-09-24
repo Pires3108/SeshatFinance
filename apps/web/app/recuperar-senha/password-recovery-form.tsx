@@ -1,11 +1,24 @@
 'use client';
 
-import { useState, type ReactNode, type SyntheticEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type SyntheticEvent,
+} from 'react';
 
 export function PasswordRecoveryForm(): ReactNode {
   const [state, setState] = useState<
     'idle' | 'submitting' | 'success' | 'error'
   >('idle');
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  const successRef = useRef<HTMLDivElement>(null);
+
+  useEffect((): void => {
+    if (state === 'error') errorRef.current?.focus();
+    if (state === 'success') successRef.current?.focus();
+  }, [state]);
 
   async function submit(event: SyntheticEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -28,7 +41,12 @@ export function PasswordRecoveryForm(): ReactNode {
     <section className="form-panel" aria-labelledby="recovery-form-title">
       <h2 id="recovery-form-title">Recuperar senha</h2>
       {state === 'success' ? (
-        <div className="success-panel" role="status" tabIndex={-1}>
+        <div
+          className="success-panel"
+          ref={successRef}
+          role="status"
+          tabIndex={-1}
+        >
           <strong>Confira seu e-mail.</strong>
           <p>
             Se o endereço estiver cadastrado, você receberá instruções para
@@ -59,7 +77,12 @@ export function PasswordRecoveryForm(): ReactNode {
             {state === 'submitting' ? 'Enviando…' : 'Enviar instruções'}
           </button>
           {state === 'error' && (
-            <p className="form-message error" role="alert">
+            <p
+              className="form-message error"
+              ref={errorRef}
+              role="alert"
+              tabIndex={-1}
+            >
               Não foi possível enviar a solicitação. Tente novamente.
             </p>
           )}
