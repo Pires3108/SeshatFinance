@@ -1,11 +1,24 @@
 'use client';
 
-import { useState, type ReactNode, type SyntheticEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type SyntheticEvent,
+} from 'react';
 
 export function RegistrationForm(): ReactNode {
   const [state, setState] = useState<
     'idle' | 'submitting' | 'success' | 'error'
   >('idle');
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  const successRef = useRef<HTMLDivElement>(null);
+
+  useEffect((): void => {
+    if (state === 'error') errorRef.current?.focus();
+    if (state === 'success') successRef.current?.focus();
+  }, [state]);
 
   async function handleSubmit(
     event: SyntheticEvent<HTMLFormElement>,
@@ -39,7 +52,12 @@ export function RegistrationForm(): ReactNode {
     <section className="form-panel" aria-labelledby="form-title">
       <h2 id="form-title">Criar conta</h2>
       {state === 'success' ? (
-        <div className="success-panel" role="status">
+        <div
+          className="success-panel"
+          ref={successRef}
+          role="status"
+          tabIndex={-1}
+        >
           <strong>Confira seu e-mail.</strong>
           <p>
             Se o cadastro foi recebido, você encontrará uma mensagem com as
@@ -48,12 +66,21 @@ export function RegistrationForm(): ReactNode {
         </div>
       ) : (
         <>
-          <p>Todos os campos são obrigatórios.</p>
+          <p id="registration-instructions">
+            Todos os campos são obrigatórios.
+          </p>
           <form
+            aria-busy={state === 'submitting'}
+            aria-describedby="registration-instructions"
             onSubmit={(event) => {
               void handleSubmit(event);
             }}
           >
+            {state === 'submitting' && (
+              <p className="form-message" role="status">
+                Enviando cadastro…
+              </p>
+            )}
             <div className="field">
               <label htmlFor="display-name">Nome</label>
               <input
@@ -62,6 +89,7 @@ export function RegistrationForm(): ReactNode {
                 autoComplete="name"
                 maxLength={120}
                 required
+                aria-describedby="registration-instructions"
               />
             </div>
             <div className="field">
@@ -73,6 +101,7 @@ export function RegistrationForm(): ReactNode {
                 autoComplete="email"
                 maxLength={320}
                 required
+                aria-describedby="registration-instructions"
               />
             </div>
             <div className="field">
@@ -84,6 +113,7 @@ export function RegistrationForm(): ReactNode {
                 autoComplete="new-password"
                 maxLength={1024}
                 required
+                aria-describedby="registration-instructions"
               />
             </div>
             <button
@@ -94,7 +124,12 @@ export function RegistrationForm(): ReactNode {
               {state === 'submitting' ? 'Enviando…' : 'Criar conta'}
             </button>
             {state === 'error' && (
-              <p className="form-message error" role="alert">
+              <p
+                className="form-message error"
+                ref={errorRef}
+                role="alert"
+                tabIndex={-1}
+              >
                 Não foi possível enviar o cadastro. Confira os dados e tente
                 novamente.
               </p>
