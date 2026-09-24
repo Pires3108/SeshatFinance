@@ -44,6 +44,25 @@ describe('Financial API authorization', () => {
   });
 
   it.each([
+    ['/api/v1/accounts/7c2c7a54-73fe-49a3-b0ea-19034bf22baf/lifecycle'],
+    ['/api/v1/transactions/c722103a-e28a-482c-b6e9-e3320d8a44e3/lifecycle'],
+  ])(
+    'rejects an anonymous lifecycle change before validating the payload at %s',
+    async (url) => {
+      const response = await application.inject({
+        method: 'PATCH',
+        payload: {},
+        url,
+      });
+
+      expect(response.statusCode).toBe(401);
+      expect(response.json()).toMatchObject({
+        error: { code: 'UNAUTHENTICATED' },
+      });
+    },
+  );
+
+  it.each([
     ['GET', '/api/v1/accounts'],
     ['GET', '/api/v1/account-types'],
     ['GET', '/api/v1/accounts/7c2c7a54-73fe-49a3-b0ea-19034bf22baf'],
