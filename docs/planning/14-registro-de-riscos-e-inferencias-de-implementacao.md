@@ -177,6 +177,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** aprovar o identificador do convidado, validade e revogação do convite, regras de reenvio e aceite, transições de papéis na entrada e na saída, e a auditoria mínima permitida para esses eventos.
 - **Limite atual:** implementar apenas a criação de um grupo sem metadados adicionais e a associação atômica do ator autenticado como proprietário. Não publicar convite, aceite, remoção, saída, transferência de propriedade ou contas compartilhadas até a decisão.
 
+### RII-023 — Semântica e ciclo de vida das notificações internas
+
+- **Estado:** aberto.
+- **Referências:** RF-085 a RF-087; RN-054 a RN-056; US-086; US-087.
+- **Risco:** os requisitos pedem uma central e preferências de notificações, mas não definem o catálogo e o versionamento dos tipos de alerta, seus estados de leitura, ocultação ou arquivamento, os padrões de preferência, quais avisos financeiros ou de segurança são críticos e não podem ser desativados, nem as regras de deduplicação, reemissão, retenção, mascaramento e vínculo com o evento de origem. Inferir essas regras pode silenciar um aviso crítico, duplicar alertas, reter conteúdo financeiro sensível ou apontar para um recurso que a pessoa não pode mais acessar.
+- **Decisão necessária:** aprovar tipos e severidades, estados e transições, padrões de preferência, avisos obrigatórios, deduplicação e reemissão, prazo de retenção, conteúdo permitido e mascaramento, autorização para o recurso vinculado e comportamento depois de arquivar, restaurar ou remover a origem.
+- **Limite atual:** não persistir central, preferências, gatilhos, contadores ou links de notificação até a decisão. A auditoria financeira append-only existente permanece independente e não deve ser usada como central de notificações por inferência.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
