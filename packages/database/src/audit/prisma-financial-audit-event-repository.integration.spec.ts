@@ -56,11 +56,20 @@ describe('PrismaFinancialAuditEventRepository', () => {
   it('persists the immutable event metadata', async () => {
     if (client === undefined || repository === undefined) throw unavailable();
 
-    await expect(
-      client.financialAuditEvent.findUniqueOrThrow({
-        where: { id: eventId },
-      }),
-    ).resolves.toMatchObject({
+    const record = await client.financialAuditEvent.findUniqueOrThrow({
+      where: { id: eventId },
+    });
+
+    expect(Object.keys(record).sort()).toEqual([
+      'action',
+      'actorId',
+      'id',
+      'occurredAt',
+      'ownerId',
+      'resourceId',
+      'resourceType',
+    ]);
+    expect(record).toMatchObject({
       action: 'moved_to_trash',
       actorId,
       ownerId,
