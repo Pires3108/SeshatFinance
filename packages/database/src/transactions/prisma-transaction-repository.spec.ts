@@ -51,6 +51,22 @@ describe('PrismaTransactionRepository', () => {
         ownerId: 'owner-id',
       },
     });
+
+    await repository.listForOwnerBetween('owner-id', from, to, 'active', {
+      accountId: 'account-id',
+      kind: 'expense',
+      occurredAtOrder: 'desc',
+    });
+    expect(findMany).toHaveBeenLastCalledWith({
+      orderBy: [{ occurredAt: 'desc' }, { id: 'asc' }],
+      where: {
+        accountId: 'account-id',
+        kind: 'expense',
+        lifecycle: 'active',
+        occurredAt: { gte: from, lt: to },
+        ownerId: 'owner-id',
+      },
+    });
   });
 
   it('persists edited amount and kind with the optimistic version', async () => {

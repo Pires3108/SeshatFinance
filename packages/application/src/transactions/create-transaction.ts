@@ -169,8 +169,15 @@ export interface TransactionTimelineRepository {
     from: Date,
     to: Date,
     lifecycle?: TransactionLifecycle,
+    filters?: TransactionTimelineFilters,
   ): Promise<readonly Transaction[]>;
 }
+
+export type TransactionTimelineFilters = Readonly<{
+  accountId?: string;
+  kind?: TransactionKind;
+  occurredAtOrder?: 'asc' | 'desc';
+}>;
 
 export class ListOwnedTransactionsBetweenUseCase {
   public constructor(
@@ -182,6 +189,7 @@ export class ListOwnedTransactionsBetweenUseCase {
     from: Date,
     to: Date,
     lifecycle?: TransactionLifecycle,
+    filters?: TransactionTimelineFilters,
   ): Promise<readonly Transaction[]> {
     if (
       Number.isNaN(from.getTime()) ||
@@ -190,7 +198,13 @@ export class ListOwnedTransactionsBetweenUseCase {
     ) {
       throw new InvalidTransactionInstantRangeError();
     }
-    return this.transactions.listForOwnerBetween(actorId, from, to, lifecycle);
+    return this.transactions.listForOwnerBetween(
+      actorId,
+      from,
+      to,
+      lifecycle,
+      filters,
+    );
   }
 }
 

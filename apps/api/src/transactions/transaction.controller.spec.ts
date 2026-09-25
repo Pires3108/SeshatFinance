@@ -105,8 +105,11 @@ describe('TransactionController', () => {
     );
 
     await controller.listBetween(request(actors), {
+      accountId: '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
       from: '2026-09-20T00:00:00.000Z',
+      kind: 'expense',
       lifecycle: 'archived',
+      occurredAtOrder: 'desc',
       to: '2026-09-21T00:00:00.000Z',
     });
 
@@ -115,6 +118,11 @@ describe('TransactionController', () => {
       new Date('2026-09-20T00:00:00.000Z'),
       new Date('2026-09-21T00:00:00.000Z'),
       'archived',
+      {
+        accountId: '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
+        kind: 'expense',
+        occurredAtOrder: 'desc',
+      },
     );
   });
 

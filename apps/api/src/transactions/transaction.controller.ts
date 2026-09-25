@@ -85,8 +85,11 @@ const lifecycleSchema = z.object({
 });
 const lifecycleFilterSchema = z.enum(['active', 'archived', 'trashed']);
 const instantRangeSchema = z.object({
+  accountId: idSchema.optional(),
   from: z.iso.datetime({ offset: true }),
+  kind: z.enum(['income', 'expense']).optional(),
   lifecycle: lifecycleFilterSchema.optional(),
+  occurredAtOrder: z.enum(['asc', 'desc']).optional(),
   to: z.iso.datetime({ offset: true }),
 });
 type CreateRequest = z.infer<typeof createSchema>;
@@ -237,11 +240,14 @@ export class TransactionController {
     type: 'string',
   })
   @ApiQuery({ format: 'date-time', name: 'to', required: true, type: 'string' })
+  @ApiQuery({ format: 'uuid', name: 'accountId', required: false })
+  @ApiQuery({ enum: ['income', 'expense'], name: 'kind', required: false })
   @ApiQuery({
     enum: ['active', 'archived', 'trashed'],
     name: 'lifecycle',
     required: false,
   })
+  @ApiQuery({ enum: ['asc', 'desc'], name: 'occurredAtOrder', required: false })
   @ApiOkResponse({ schema: { items: responseSchema, type: 'array' } })
   public async listBetween(
     @Req() request: FastifyRequest,
@@ -255,6 +261,15 @@ export class TransactionController {
           new Date(query.from),
           new Date(query.to),
           query.lifecycle,
+          {
+            ...(query.accountId === undefined
+              ? {}
+              : { accountId: query.accountId }),
+            ...(query.kind === undefined ? {} : { kind: query.kind }),
+            ...(query.occurredAtOrder === undefined
+              ? {}
+              : { occurredAtOrder: query.occurredAtOrder }),
+          },
         )
       ).map(mapTransaction);
     } catch (error) {
