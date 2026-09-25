@@ -126,11 +126,60 @@ describe('PrismaAccountRepository', () => {
       ),
     ).resolves.toBe(false);
     await expect(client.financialAuditEvent.count()).resolves.toBe(2);
-    expect(
-      (
-        await repository.findByIdForOwner(account.id, account.ownerId)
-      )?.toSnapshot().lifecycle,
-    ).toBe('archived');
+    const archived = await repository.findByIdForOwner(
+      account.id,
+      account.ownerId,
+    );
+    if (archived === null)
+      throw new Error('Archived account was not restored.');
+    const archivedAt = archived.toSnapshot().archivedAt;
+    expect(archivedAt).toEqual(new Date('2026-09-20T13:00:00.000Z'));
+
+    archived.moveToTrash(new Date('2026-09-20T14:00:00.000Z'));
+    await expect(
+      repository.save(
+        archived,
+        2,
+        auditEvent(
+          archived,
+          'moved-to-trash',
+          'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+        ),
+      ),
+    ).resolves.toBe(true);
+    const trashed = await repository.findByIdForOwner(
+      account.id,
+      account.ownerId,
+    );
+    if (trashed === null) throw new Error('Trashed account was not restored.');
+    trashed.restoreFromTrash(new Date('2026-09-20T15:00:00.000Z'));
+    await expect(
+      repository.save(
+        trashed,
+        3,
+        auditEvent(
+          trashed,
+          'restored-from-trash',
+          'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+        ),
+      ),
+    ).resolves.toBe(true);
+    const restoredAfterTrash = await repository.findByIdForOwner(
+      account.id,
+      account.ownerId,
+    );
+    expect(restoredAfterTrash?.toSnapshot()).toMatchObject({
+      archivedAt,
+      lifecycle: 'archived',
+      trashedAt: null,
+      version: 4,
+    });
+    await expect(
+      repository.listForOwner(account.ownerId, 'archived'),
+    ).resolves.toHaveLength(1);
+    await expect(
+      repository.listForOwner(account.ownerId, 'trashed'),
+    ).resolves.toEqual([]);
 
     const rolledBack = Account.create({
       color: null,
@@ -162,7 +211,7 @@ describe('PrismaAccountRepository', () => {
 
 function auditEvent(
   account: Account,
-  action: 'archived' | 'created',
+  action: 'archived' | 'created' | 'moved-to-trash' | 'restored-from-trash',
   id: string,
 ): FinancialAuditEvent {
   return FinancialAuditEvent.create({
