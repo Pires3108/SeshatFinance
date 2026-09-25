@@ -266,6 +266,23 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/health/ready": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Check API persistence readiness */
+        readonly get: operations["HealthController_getReadiness"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/investment-types": {
         readonly parameters: {
             readonly query?: never;
@@ -1550,6 +1567,37 @@ export interface operations {
                         readonly status: "ok";
                     };
                 };
+            };
+        };
+    };
+    readonly HealthController_getReadiness: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** @enum {string} */
+                        readonly service: "api";
+                        /** @enum {string} */
+                        readonly status: "ok";
+                    };
+                };
+            };
+            /** @description Persistence is unavailable */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
