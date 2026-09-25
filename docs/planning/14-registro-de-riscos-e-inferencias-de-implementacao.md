@@ -185,6 +185,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** aprovar tipos e severidades, estados e transições, padrões de preferência, avisos obrigatórios, deduplicação e reemissão, prazo de retenção, conteúdo permitido e mascaramento, autorização para o recurso vinculado e comportamento depois de arquivar, restaurar ou remover a origem.
 - **Limite atual:** não persistir central, preferências, gatilhos, contadores ou links de notificação até a decisão. A auditoria financeira append-only existente permanece independente e não deve ser usada como central de notificações por inferência.
 
+### RII-024 — Vulnerabilidades transitivas da linha atual do Prisma
+
+- **Estado:** aberto; prioridade alta de segurança.
+- **Referências:** RNF-033; RNF-057; US-093.
+- **Risco:** em 25/09/2026, `pnpm audit --prod --audit-level=high` identifica vulnerabilidades altas em `deepmerge-ts@7.1.5` e `mysql2@3.15.3`, dependências transitivas de `prisma@7.10.0` e `@prisma/client@7.10.0`. As versões corrigidas exigem, respectivamente, `deepmerge-ts >=8.0.0` e `mysql2 >=3.22.0`; a linha `@prisma/*@7` disponível permanece em 7.10.0. Forçar substituições transitivas de versão maior sem compatibilidade declarada pelo fornecedor pode quebrar geração, migração ou execução do cliente de banco.
+- **Decisão necessária:** aprovar uma versão de Prisma que remova as dependências vulneráveis, ou uma exceção temporal de risco com escopo, compensações, responsável, prazo de revisão e critério de encerramento. A decisão deve considerar se o caminho vulnerável é alcançável na implantação e a compatibilidade dos adaptadores e do esquema.
+- **Limite atual:** não declarar RNF-033 atendido por um gate bloqueante enquanto a auditoria alta falha. Não usar `pnpm.overrides` para elevar dependências transitivas fora da compatibilidade publicada do Prisma. Manter a evidência da auditoria e reavaliar a cada atualização de Prisma ou liberação.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
