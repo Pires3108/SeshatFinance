@@ -1864,7 +1864,10 @@ export interface operations {
     readonly TransactionController_listBetween: {
         readonly parameters: {
             readonly query: {
+                readonly occurredAtOrder?: "asc" | "desc";
                 readonly lifecycle?: "active" | "archived" | "trashed";
+                readonly kind?: "income" | "expense";
+                readonly accountId?: unknown;
                 readonly to: string;
                 readonly from: string;
             };

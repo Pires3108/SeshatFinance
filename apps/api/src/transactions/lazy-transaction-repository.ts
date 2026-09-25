@@ -2,6 +2,7 @@ import type {
   AccountTransactionBalanceRepository,
   TransactionFinancialLinkRepository,
   TransactionRepository,
+  TransactionTimelineFilters,
 } from '@seshat/application';
 import type {
   FinancialAuditEvent,
@@ -62,12 +63,14 @@ export class LazyTransactionRepository
     from: Date,
     to: Date,
     lifecycle?: TransactionLifecycle,
+    filters?: TransactionTimelineFilters,
   ): Promise<readonly Transaction[]> {
     return this.getRepository().listForOwnerBetween(
       ownerId,
       from,
       to,
       lifecycle,
+      filters,
     );
   }
   public save(

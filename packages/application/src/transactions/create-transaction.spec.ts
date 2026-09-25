@@ -317,13 +317,14 @@ describe('ListOwnedTransactionsBetweenUseCase', () => {
       | Readonly<{
           from: Date;
           lifecycle: string | undefined;
+          filters: unknown;
           ownerId: string;
           to: Date;
         }>
       | undefined;
     const timeline: TransactionTimelineRepository = {
-      listForOwnerBetween: (ownerId, from, to, lifecycle) => {
-        received = { from, lifecycle, ownerId, to };
+      listForOwnerBetween: (ownerId, from, to, lifecycle, filters) => {
+        received = { filters, from, lifecycle, ownerId, to };
         return Promise.resolve([]);
       },
     };
@@ -332,10 +333,19 @@ describe('ListOwnedTransactionsBetweenUseCase', () => {
     const to = new Date('2026-09-21T00:00:00.000Z');
 
     await expect(
-      useCase.execute('owner-id', from, to, 'archived'),
+      useCase.execute('owner-id', from, to, 'archived', {
+        accountId: 'account-id',
+        kind: 'income',
+        occurredAtOrder: 'desc',
+      }),
     ).resolves.toEqual([]);
     expect(received).toEqual({
       from,
+      filters: {
+        accountId: 'account-id',
+        kind: 'income',
+        occurredAtOrder: 'desc',
+      },
       lifecycle: 'archived',
       ownerId: 'owner-id',
       to,

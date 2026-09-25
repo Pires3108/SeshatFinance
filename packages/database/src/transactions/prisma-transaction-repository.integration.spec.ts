@@ -168,6 +168,34 @@ describe('PrismaTransactionRepository', () => {
       ownerId,
     );
     expect(persisted?.toSnapshot()).toEqual(transaction.toSnapshot());
+    const filteredRange = [
+      new Date('2026-09-21T00:00:00.000Z'),
+      new Date('2026-09-22T00:00:00.000Z'),
+    ] as const;
+    expect(
+      (
+        await transactions.listForOwnerBetween(
+          ownerId,
+          ...filteredRange,
+          'active',
+          { accountId: account.id, kind: 'expense', occurredAtOrder: 'desc' },
+        )
+      ).map((item) => item.id),
+    ).toEqual([transaction.id]);
+    await expect(
+      transactions.listForOwnerBetween(ownerId, ...filteredRange, 'active', {
+        accountId: account.id,
+        kind: 'income',
+      }),
+    ).resolves.toEqual([]);
+    await expect(
+      transactions.listForOwnerBetween(
+        'e89b6ad0-7838-4a2c-9a21-c775ea78e22a',
+        ...filteredRange,
+        'active',
+        { accountId: account.id, kind: 'expense' },
+      ),
+    ).resolves.toEqual([]);
     await expect(prisma.financialAuditEvent.count()).resolves.toBe(3);
     await expect(
       transactions.save(

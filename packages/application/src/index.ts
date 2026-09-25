@@ -92,6 +92,7 @@ export {
   type TransactionRepository,
   type TransactionFinancialLinkRepository,
   type TransactionTimelineRepository,
+  type TransactionTimelineFilters,
   type TransactionLifecycleAction,
   type UpdateOwnedTransactionCommand,
 } from './transactions/create-transaction.js';

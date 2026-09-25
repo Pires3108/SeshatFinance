@@ -2689,12 +2689,38 @@
         "operationId": "TransactionController_listBetween",
         "parameters": [
           {
+            "name": "occurredAtOrder",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": ["asc", "desc"],
+              "type": "string"
+            }
+          },
+          {
             "name": "lifecycle",
             "required": false,
             "in": "query",
             "schema": {
               "enum": ["active", "archived", "trashed"],
               "type": "string"
+            }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": ["income", "expense"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "accountId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid"
             }
           },
           {

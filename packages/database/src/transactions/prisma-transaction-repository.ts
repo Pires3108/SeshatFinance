@@ -2,6 +2,7 @@ import type {
   AccountTransactionBalanceRepository,
   TransactionFinancialLinkRepository,
   TransactionRepository,
+  TransactionTimelineFilters,
 } from '@seshat/application';
 import {
   Currency,
@@ -107,13 +108,21 @@ export class PrismaTransactionRepository
     from: Date,
     to: Date,
     lifecycle?: Transaction['lifecycle'],
+    filters?: TransactionTimelineFilters,
   ): Promise<readonly Transaction[]> {
     const rows = await this.client.transaction.findMany({
-      orderBy: [{ occurredAt: 'asc' }, { id: 'asc' }],
+      orderBy: [
+        { occurredAt: filters?.occurredAtOrder ?? 'asc' },
+        { id: 'asc' },
+      ],
       where: {
         occurredAt: { gte: from, lt: to },
         ownerId,
         ...(lifecycle === undefined ? {} : { lifecycle }),
+        ...(filters?.accountId === undefined
+          ? {}
+          : { accountId: filters.accountId }),
+        ...(filters?.kind === undefined ? {} : { kind: filters.kind }),
       },
     });
     return rows.map(restoreTransaction);
