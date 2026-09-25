@@ -8,12 +8,12 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-001 — Provedor de implantação
 
-- **Estado:** aberto.
+- **Estado:** parcialmente resolvido para a web; aberto para API, worker e operação de produção.
 - **Referências:** ADR-011; US-099.
 - **Risco:** escolher um provedor antes de verificar limites, portabilidade e requisitos operacionais criaria dependência prematura.
-- **Limite atual:** manter web, API e worker portáveis; não configurar produção nem credenciais de provedor.
-- **Evidência atual:** os previews conectados ao projeto externo `agent-waiter` executam o build do repositório com sucesso, mas falham depois por uma configuração de diretório de saída que exige `public`. Essa configuração não deve ser alterada pela aplicação sem confirmar qual artefato esse projeto deve publicar.
-- **Decisão necessária:** selecionar o provedor antes do primeiro deploy, com custos e limites vigentes documentados.
+- **Decisão confirmada:** o projeto Vercel `agent-waiter` publica a interface web do Seshat Finance. Em 2026-09-25, seu Framework Preset foi alterado de `Other` para `Next.js` e o Root Directory para `apps/web`, mantendo habilitada a inclusão dos arquivos externos à raiz para as dependências do monorepositório. O preview da branch `codex/s11-transaction-list-filters` e o deploy de produção do commit `d521af8` ficaram `Ready`; a página inicial respondeu em ambos.
+- **Limite atual:** essa configuração publica somente a web; não hospeda a API nem o worker, não define autenticação web e não comprova a operação completa do produto. Manter os três componentes portáveis e não incluir credenciais de provedor no repositório.
+- **Decisão ainda necessária:** definir a implantação e os requisitos operacionais de API, worker e serviços associados, incluindo custos, limites e estratégia de produção.
 
 ### RII-003 — Validação local da migration PostgreSQL
 
