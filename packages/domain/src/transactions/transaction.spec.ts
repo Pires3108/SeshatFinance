@@ -105,6 +105,26 @@ describe('Transaction', () => {
     });
   });
 
+  it('rejects an edit that changes the transaction currency', () => {
+    const value = transaction('income');
+
+    expect(() => {
+      value.updateDetails(
+        {
+          amount: Money.fromDecimal('30.50', Currency.create('USD', 2)),
+          description: 'Currency change attempt',
+          kind: 'income',
+          occurredAt: new Date('2026-09-20T11:00:00.000Z'),
+        },
+        new Date('2026-09-20T13:00:00.000Z'),
+      );
+    }).toThrow(InvalidTransactionError);
+    expect(value.toSnapshot()).toMatchObject({
+      amount: { currency: { code: 'BRL' } },
+      version: 1,
+    });
+  });
+
   it('restores an archived transaction to active after trash recovery', () => {
     const value = transaction('income');
     value.archive(new Date('2026-09-20T13:00:00.000Z'));
