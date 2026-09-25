@@ -89,6 +89,7 @@ import { LazyCostCenterRepository } from './classifications/lazy-cost-center-rep
 import { LazyTagRepository } from './classifications/lazy-tag-repository.js';
 import { TagController } from './classifications/tag.controller.js';
 import { HealthController } from './health/health.controller.js';
+import { DatabaseReadiness } from './health/database-readiness.js';
 import { InvestmentTypeController } from './investments/investment-type.controller.js';
 import { CorrelationContext } from './platform/correlation-context.js';
 import { PrivacySafeLogger } from './platform/privacy-safe-logger.js';
@@ -142,6 +143,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     AuthenticatedActorContext,
     BearerAuthGuard,
     CorrelationContext,
+    DatabaseReadiness,
     PrivacySafeLogger,
     LazyPrismaClient,
     LazyAccountRepository,

@@ -2062,6 +2062,44 @@
         "tags": ["health"]
       }
     },
+    "/api/v1/health/ready": {
+      "get": {
+        "operationId": "HealthController_getReadiness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "service": "api",
+                    "status": "ok"
+                  },
+                  "properties": {
+                    "service": {
+                      "type": "string",
+                      "enum": ["api"]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["ok"]
+                    }
+                  },
+                  "required": ["service", "status"],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Persistence is unavailable"
+          }
+        },
+        "summary": "Check API persistence readiness",
+        "tags": ["health"]
+      }
+    },
     "/api/v1/investment-types": {
       "get": {
         "operationId": "InvestmentTypeController_list",

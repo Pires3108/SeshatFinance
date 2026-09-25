@@ -3,9 +3,10 @@ import {
   FastifyAdapter,
   type NestFastifyApplication,
 } from '@nestjs/platform-fastify';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AppModule } from '../src/app.module.js';
+import { DatabaseReadiness } from '../src/health/database-readiness.js';
 import { configureApplication } from '../src/platform/configure-application.js';
 
 describe('API health', () => {
@@ -54,5 +55,40 @@ describe('API health', () => {
     });
 
     expect(response.headers['x-correlation-id']).toBe('integration-test-01');
+  });
+
+  it.each([
+    [true, 200],
+    [false, 503],
+  ])('reports persistence readiness %s with HTTP %s', async (ready, status) => {
+    const testingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(DatabaseReadiness)
+      .useValue({ isReady: vi.fn().mockResolvedValue(ready) })
+      .compile();
+    application = testingModule.createNestApplication<NestFastifyApplication>(
+      new FastifyAdapter(),
+      { logger: false },
+    );
+    configureApplication(application);
+    await application.init();
+    await application.getHttpAdapter().getInstance().ready();
+
+    const response = await application.inject({
+      method: 'GET',
+      url: '/api/v1/health/ready',
+    });
+
+    expect(response.statusCode).toBe(status);
+    if (ready) {
+      expect(response.json()).toEqual({ service: 'api', status: 'ok' });
+    } else {
+      expect(response.json()).toMatchObject({
+        error: { code: 'INTERNAL_ERROR' },
+      });
+      expect(response.body).not.toContain('DATABASE_URL');
+      expect(response.body).not.toContain('secret');
+    }
   });
 });
