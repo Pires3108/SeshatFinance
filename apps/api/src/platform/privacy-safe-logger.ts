@@ -37,17 +37,17 @@ export class PrivacySafeLogger implements LoggerService {
     this.logger.trace(this.fields(optionalParameters), safeEvent(message));
   }
 
-  private fields(optionalParameters: unknown[]): Record<string, string> {
-    const context = optionalParameters.find(
-      (parameter): parameter is string => typeof parameter === 'string',
-    );
+  private fields(_optionalParameters: unknown[]): Record<string, string> {
     return {
       correlationId: this.context.getCorrelationId() ?? 'unavailable',
-      context: context ?? 'Application',
+      context: 'Application',
+      hasOptionalParameters: String(_optionalParameters.length > 0),
     };
   }
 }
 
-function safeEvent(message: unknown): string {
-  return typeof message === 'string' ? message : 'application_event';
+function safeEvent(_message: unknown): string {
+  return typeof _message === 'string'
+    ? 'application_text_event'
+    : 'application_event';
 }
