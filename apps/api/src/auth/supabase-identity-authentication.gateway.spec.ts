@@ -28,9 +28,6 @@ describe('SupabaseIdentityAuthenticationGateway', () => {
     });
 
     expect(result).toEqual({
-      accessToken: 'synthetic-access-token',
-      expiresAt: new Date(1_799_790_000_000),
-      refreshToken: 'synthetic-refresh-token',
       userId: '00000000-0000-4000-8000-000000000001',
     });
   });

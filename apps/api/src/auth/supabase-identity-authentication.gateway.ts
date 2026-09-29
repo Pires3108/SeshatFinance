@@ -10,9 +10,6 @@ export type SupabaseAuthenticationClient = Readonly<{
       Readonly<{
         data: Readonly<{
           session: Readonly<{
-            access_token: string;
-            expires_at?: number;
-            refresh_token: string;
             user: Readonly<{ id: string }>;
           }> | null;
         }>;
@@ -39,14 +36,11 @@ export class SupabaseIdentityAuthenticationGateway implements IdentityAuthentica
   ): Promise<IdentitySession> {
     const { data, error } =
       await this.clientFactory().auth.signInWithPassword(command);
-    if (error || data.session?.expires_at === undefined) {
+    if (error || data.session === null) {
       throw new IdentityAuthenticationError();
     }
 
     return {
-      accessToken: data.session.access_token,
-      expiresAt: new Date(data.session.expires_at * 1000),
-      refreshToken: data.session.refresh_token,
       userId: data.session.user.id,
     };
   }
