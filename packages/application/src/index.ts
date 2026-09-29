@@ -55,6 +55,15 @@ export {
   type IdentitySession,
 } from './auth/authenticate-user.js';
 export {
+  InvalidOpaqueSessionError,
+  OpaqueSessionService,
+  isSessionActive,
+  type IssuedOpaqueSession,
+  type OpaqueSession,
+  type OpaqueSessionRepository,
+  type OpaqueSessionTokenService,
+} from './auth/opaque-session.js';
+export {
   RegisterUserUseCase,
   type IdentityRegistrationGateway,
   type RegisterUserCommand,

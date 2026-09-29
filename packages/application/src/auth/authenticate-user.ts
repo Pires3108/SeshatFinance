@@ -4,9 +4,6 @@ export type AuthenticateUserCommand = Readonly<{
 }>;
 
 export type IdentitySession = Readonly<{
-  accessToken: string;
-  expiresAt: Date;
-  refreshToken: string;
   userId: string;
 }>;
 

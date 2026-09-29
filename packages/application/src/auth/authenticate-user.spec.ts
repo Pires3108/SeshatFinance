@@ -9,9 +9,6 @@ import {
 describe('AuthenticateUserUseCase', () => {
   it('delegates credentials to the identity boundary', async () => {
     const session: IdentitySession = {
-      accessToken: 'synthetic-access-token',
-      expiresAt: new Date('2026-09-19T22:00:00.000Z'),
-      refreshToken: 'synthetic-refresh-token',
       userId: '00000000-0000-4000-8000-000000000001',
     };
     const authenticate = vi
