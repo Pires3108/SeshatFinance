@@ -162,6 +162,23 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/family-groups/{groupId}/members/{userId}/role": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        /** Change a family group membership role */
+        readonly patch: operations["FamilyGroupController_changeRole"];
+        readonly trace?: never;
+    };
     readonly "/api/v1/auth/registrations": {
         readonly parameters: {
             readonly query?: never;
@@ -1248,6 +1265,52 @@ export interface operations {
             };
             /** @description Bearer token missing or invalid */
             readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly FamilyGroupController_changeRole: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly userId: string;
+                readonly groupId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** @enum {string} */
+                    readonly role: "administrator" | "member" | "viewer";
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** @enum {string} */
+                        readonly role: "owner" | "administrator" | "member" | "viewer";
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Membership or role change is not allowed */
+            readonly 403: {
                 headers: {
                     readonly [name: string]: unknown;
                 };
