@@ -51,10 +51,7 @@ export class PrismaLinkedRefundRepository implements LinkedRefundRepository {
         const expense = await client.transaction.findFirst({
           where: { id: record.expenseTransactionId, ownerId },
         });
-        if (
-          expense?.kind !== 'expense' ||
-          expense.lifecycle === 'trashed'
-        ) {
+        if (expense?.kind !== 'expense' || expense.lifecycle === 'trashed') {
           throw new LinkedRefundUnavailableError();
         }
         await client.$queryRaw`

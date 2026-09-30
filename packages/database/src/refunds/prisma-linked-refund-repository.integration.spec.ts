@@ -202,7 +202,7 @@ describe('PrismaLinkedRefundRepository', () => {
 function makeRecord(
   kind: 'refund' | 'compensation',
   amount: string,
-    compensatesRefundId: string | null = null,
+  compensatesRefundId: string | null = null,
 ): LinkedRefundRecord {
   const entry = Transaction.create({
     accountId: incomingAccountId,
