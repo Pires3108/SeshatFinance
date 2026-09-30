@@ -72,7 +72,7 @@ A primeira versão será uma aplicação web responsiva e instalável como PWA, 
 - **RF-031 — Edição:** permitir editar movimentações, recalcular os saldos afetados e manter histórico de valores anteriores e novos.
 - **RF-032 — Exclusão lógica:** enviar movimentação para a lixeira, removendo seu efeito dos saldos e permitindo restauração.
 - **RF-033 — Anexos:** anexar comprovantes em PDF, JPG, PNG ou WebP, com pré-visualização e remoção controlada.
-- **RF-034 — Reembolso:** vincular reembolso ou estorno à despesa original e apresentar o valor líquido.
+- **RF-034 — Reembolso:** vincular uma ou mais receitas de reembolso ou estorno, parciais ou integrais, à despesa original e apresentar o valor líquido. Permitir lançamento compensatório vinculado com motivo para correção ou cancelamento, preservando o histórico e a escolha de apresentação entre receita separada e compensação visual da despesa.
 - **RF-035 — Empréstimos:** controlar credor ou devedor, principal, parcelas, vencimentos, saldo pendente, pagamentos parciais e situação.
 - **RF-036 — Recorrência:** cadastrar recorrências diárias, semanais, quinzenais, mensais, anuais ou personalizadas, com início, fim ou quantidade de ocorrências e pausa.
 - **RF-037 — Recorrência projetada:** gerar ocorrências apenas na projeção; uma ocorrência só se torna registro efetivado após o usuário declarar que aconteceu fora da plataforma.

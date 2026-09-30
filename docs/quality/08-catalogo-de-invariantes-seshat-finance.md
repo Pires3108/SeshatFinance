@@ -308,7 +308,17 @@ Uma restauração não pode produzir apenas um lado de transferência, fatura se
 
 **Referências:** RNF-015 a RNF-018; CA-023.
 
-## 11. Estratégias de automação
+## 11. Reembolsos vinculados
+
+### INV-046 — Reembolso vinculado preserva o livro e o limite
+
+Cada reembolso ou compensação é lançamento separado e auditado, com moeda igual à despesa original. A soma dos reembolsos fora da lixeira, deduzidas compensações fora da lixeira, permanece entre zero e o valor bruto da despesa. Criação, repetição idempotente, concorrência, arquivamento, lixeira e restauração preservam essa relação e não duplicam efeitos de saldo.
+
+**Verificação:** testes unitários de precisão e limite, integração PostgreSQL de gravação atômica e concorrente e transições de ciclo de vida.
+
+**Referências:** RF-026, RF-032, RF-034; RN-005, RN-011, RN-058, RN-059; CA-025.
+
+## 12. Estratégias de automação
 
 ### Testes por exemplo
 
@@ -336,7 +346,7 @@ Aplicar principalmente aos cálculos de saldo, juros, parcelas e autorização p
 
 Simular cliques repetidos, retries, duas sessões e filas concorrentes em conversão de projeção, transferências, quitação e reversão.
 
-## 12. Critério de adoção
+## 13. Critério de adoção
 
 Uma invariante P0 somente é considerada implementada quando:
 
