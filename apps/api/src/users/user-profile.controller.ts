@@ -35,6 +35,7 @@ const updateProfileSchema = z.object({
   displayName: z.string().trim().min(1).max(120).nullable(),
   locale: z.string().trim().min(2).max(16),
   presentationCurrency: z.string().regex(/^[A-Z]{3}$/u),
+  refundPresentation: z.enum(['separate-income', 'expense-offset']).optional(),
   timeZone: z.string().trim().min(1).max(64),
 });
 
@@ -45,6 +46,7 @@ type UserProfileResponse = Readonly<{
   id: string;
   locale: string;
   presentationCurrency: string;
+  refundPresentation: 'separate-income' | 'expense-offset';
   timeZone: string;
   updatedAt: string;
   version: number;
@@ -57,6 +59,10 @@ const profileResponseSchema: SchemaObject = {
     id: { type: 'string' },
     locale: { type: 'string' },
     presentationCurrency: { maxLength: 3, minLength: 3, type: 'string' },
+    refundPresentation: {
+      enum: ['separate-income', 'expense-offset'],
+      type: 'string',
+    },
     timeZone: { type: 'string' },
     updatedAt: { format: 'date-time', type: 'string' },
     version: { minimum: 1, type: 'integer' },
@@ -67,6 +73,7 @@ const profileResponseSchema: SchemaObject = {
     'id',
     'locale',
     'presentationCurrency',
+    'refundPresentation',
     'timeZone',
     'updatedAt',
     'version',
@@ -122,6 +129,10 @@ export class UserProfileController {
           pattern: '^[A-Z]{3}$',
           type: 'string',
         },
+        refundPresentation: {
+          enum: ['separate-income', 'expense-offset'],
+          type: 'string',
+        },
         timeZone: { maxLength: 64, minLength: 1, type: 'string' },
       },
       required: ['displayName', 'locale', 'presentationCurrency', 'timeZone'],
@@ -137,7 +148,13 @@ export class UserProfileController {
     return mapResponse(
       await this.updateProfile.execute({
         actorId: this.actorId(request),
-        ...body,
+        displayName: body.displayName,
+        locale: body.locale,
+        presentationCurrency: body.presentationCurrency,
+        timeZone: body.timeZone,
+        ...(body.refundPresentation === undefined
+          ? {}
+          : { refundPresentation: body.refundPresentation }),
       }),
     );
   }

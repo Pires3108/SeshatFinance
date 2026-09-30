@@ -5,6 +5,7 @@ import {
   InvalidTransactionInstantRangeError,
   ListOwnedAccountTransactionsUseCase,
   ListOwnedTransactionsBetweenUseCase,
+  LinkedRefundConflictError,
   OwnedTransactionNotFoundError,
   TransactionAccountUnavailableError,
   TransactionRequiresTransferMutationError,
@@ -407,6 +408,10 @@ function mapError(error: unknown): Error {
   if (error instanceof TransactionRequiresTransferMutationError)
     return new ConflictException(
       'Transfer entries must be changed through the transfer endpoint.',
+    );
+  if (error instanceof LinkedRefundConflictError)
+    return new ConflictException(
+      'O vínculo de reembolso impede essa alteração.',
     );
   if (
     error instanceof InvalidCurrencyError ||
