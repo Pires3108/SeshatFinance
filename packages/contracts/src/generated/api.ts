@@ -283,6 +283,24 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/transactions/{expenseTransactionId}/refunds": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Consultar reembolsos e valor líquido da despesa */
+        readonly get: operations["LinkedRefundController_list"];
+        readonly put?: never;
+        /** Registrar reembolso ou compensação vinculada */
+        readonly post: operations["LinkedRefundController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/investment-types": {
         readonly parameters: {
             readonly query?: never;
@@ -1601,6 +1619,158 @@ export interface operations {
             };
         };
     };
+    readonly LinkedRefundController_list: {
+        readonly parameters: {
+            readonly query?: {
+                readonly presentation?: "separate-income" | "expense-offset";
+            };
+            readonly header?: never;
+            readonly path: {
+                readonly expenseTransactionId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly expenseTransactionId: string;
+                        readonly gross: string;
+                        readonly refunded: string;
+                        readonly net: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly entries: readonly {
+                            /** Format: uuid */
+                            readonly id: string;
+                            /** @enum {string} */
+                            readonly kind: "refund" | "compensation";
+                            /** Format: uuid */
+                            readonly expenseTransactionId: string;
+                            /** Format: uuid */
+                            readonly entryTransactionId: string;
+                            /** Format: uuid */
+                            readonly accountId: string;
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                            readonly currencyMinorUnitScale: number;
+                            readonly description: string | null;
+                            /** Format: date-time */
+                            readonly occurredAt: string;
+                            /** @enum {string} */
+                            readonly lifecycle: "active" | "archived" | "trashed";
+                            /** Format: uuid */
+                            readonly compensatesRefundId: string | null;
+                            readonly reason: string | null;
+                            /** Format: date-time */
+                            readonly createdAt: string;
+                        }[];
+                        /** @enum {string} */
+                        readonly presentation: "separate-income" | "expense-offset";
+                        readonly displayedExpense: string;
+                        readonly displayedRefundIncome: string;
+                    };
+                };
+            };
+            /** @description Autenticação obrigatória */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Despesa não encontrada */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly LinkedRefundController_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                /** @description UUID da operação */
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly expenseTransactionId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Format: uuid */
+                    readonly accountId: string;
+                    readonly amount: string;
+                    readonly currencyCode: string;
+                    readonly currencyMinorUnitScale: number;
+                    readonly description: string | null;
+                    /** Format: date-time */
+                    readonly occurredAt: string;
+                    /** Format: uuid */
+                    readonly compensatesRefundId?: string;
+                    readonly reason?: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly kind: "refund" | "compensation";
+                        /** Format: uuid */
+                        readonly expenseTransactionId: string;
+                        /** Format: uuid */
+                        readonly entryTransactionId: string;
+                        /** Format: uuid */
+                        readonly accountId: string;
+                        readonly amount: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly description: string | null;
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        /** Format: uuid */
+                        readonly compensatesRefundId: string | null;
+                        readonly reason: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                    };
+                };
+            };
+            /** @description Autenticação obrigatória */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Limite, compensação ou chave de idempotência conflitante */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly InvestmentTypeController_list: {
         readonly parameters: {
             readonly query?: never;
@@ -2669,6 +2839,8 @@ export interface operations {
                         readonly id: string;
                         readonly locale: string;
                         readonly presentationCurrency: string;
+                        /** @enum {string} */
+                        readonly refundPresentation: "separate-income" | "expense-offset";
                         readonly timeZone: string;
                         /** Format: date-time */
                         readonly updatedAt: string;
@@ -2705,6 +2877,8 @@ export interface operations {
                     readonly displayName: string | null;
                     readonly locale: string;
                     readonly presentationCurrency: string;
+                    /** @enum {string} */
+                    readonly refundPresentation?: "separate-income" | "expense-offset";
                     readonly timeZone: string;
                 };
             };
@@ -2722,6 +2896,8 @@ export interface operations {
                         readonly id: string;
                         readonly locale: string;
                         readonly presentationCurrency: string;
+                        /** @enum {string} */
+                        readonly refundPresentation: "separate-income" | "expense-offset";
                         readonly timeZone: string;
                         /** Format: date-time */
                         readonly updatedAt: string;
