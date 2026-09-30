@@ -72,11 +72,20 @@ describe('PrismaTransactionRepository', () => {
   it('persists edited amount and kind with the optimistic version', async () => {
     const updateMany = vi.fn().mockResolvedValue({ count: 1 });
     const createAuditEvent = vi.fn().mockResolvedValue({});
+    const queryRaw = vi.fn().mockResolvedValue([]);
     const client = {
       $transaction: (operation: (transaction: unknown) => unknown) =>
         operation({
+          $queryRaw: queryRaw,
           financialAuditEvent: { create: createAuditEvent },
-          transaction: { updateMany },
+          refundLink: {
+            findFirst: vi.fn().mockResolvedValue(null),
+            findMany: vi.fn().mockResolvedValue([]),
+          },
+          transaction: {
+            findFirst: vi.fn().mockResolvedValue({ version: 1 }),
+            updateMany,
+          },
         }),
     } as unknown as PrismaClient;
     const repository = new PrismaTransactionRepository(client);

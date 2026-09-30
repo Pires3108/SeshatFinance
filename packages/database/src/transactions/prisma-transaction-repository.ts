@@ -1,3 +1,4 @@
+import { LinkedRefundConflictError } from '@seshat/application';
 import type {
   AccountTransactionBalanceRepository,
   TransactionFinancialLinkRepository,
@@ -5,6 +6,7 @@ import type {
   TransactionTimelineFilters,
 } from '@seshat/application';
 import {
+  calculateRefundSummary,
   Currency,
   Money,
   Transaction,
@@ -135,6 +137,82 @@ export class PrismaTransactionRepository
   ): Promise<boolean> {
     const snapshot = transaction.toSnapshot();
     return this.client.$transaction(async (client) => {
+      await client.$queryRaw`
+        SELECT id FROM transactions
+        WHERE id = ${snapshot.id}::uuid AND owner_id = ${snapshot.ownerId}::uuid
+        FOR UPDATE
+      `;
+      const persisted = await client.transaction.findFirst({
+        where: { id: snapshot.id, ownerId: snapshot.ownerId },
+      });
+      if (persisted?.version !== expectedVersion) {
+        return false;
+      }
+      const entryLink = await client.refundLink.findFirst({
+        where: { entryTransactionId: snapshot.id, ownerId: snapshot.ownerId },
+      });
+      const expenseId = entryLink?.expenseTransactionId ?? snapshot.id;
+      if (entryLink !== null) {
+        await client.$queryRaw`
+          SELECT id FROM transactions
+          WHERE id = ${expenseId}::uuid AND owner_id = ${snapshot.ownerId}::uuid
+          FOR UPDATE
+        `;
+      }
+      const links = await client.refundLink.findMany({
+        include: { entryTransaction: true },
+        where: { expenseTransactionId: expenseId, ownerId: snapshot.ownerId },
+      });
+      if (links.length > 0) {
+        if (
+          persisted.kind !== snapshot.kind ||
+          persisted.amountMinorUnits.toFixed(0) !==
+            transaction.amount.toMinorUnits().toString()
+        ) {
+          throw new LinkedRefundConflictError(
+            'Financial values of linked transactions cannot be edited.',
+          );
+        }
+        const expense =
+          entryLink === null
+            ? persisted
+            : await client.transaction.findFirst({
+                where: { id: expenseId, ownerId: snapshot.ownerId },
+              });
+        if (expense === null) throw new LinkedRefundConflictError();
+        const currency = Currency.create(
+          expense.currencyCode,
+          expense.currencyMinorUnitScale,
+        );
+        try {
+          calculateRefundSummary(
+            Money.fromMinorUnits(
+              BigInt(expense.amountMinorUnits.toFixed(0)),
+              currency,
+            ),
+            links.map((link) => ({
+              id: link.id,
+              amount: Money.fromMinorUnits(
+                BigInt(link.entryTransaction.amountMinorUnits.toFixed(0)),
+                Currency.create(
+                  link.entryTransaction.currencyCode,
+                  link.entryTransaction.currencyMinorUnitScale,
+                ),
+              ),
+              lifecycle:
+                link.entryTransactionId === snapshot.id
+                  ? snapshot.lifecycle
+                  : link.entryTransaction.lifecycle,
+              kind: link.kind,
+              compensatesRefundId: link.compensatesRefundId,
+            })),
+          );
+        } catch {
+          throw new LinkedRefundConflictError(
+            'Lifecycle change would invalidate linked refunds.',
+          );
+        }
+      }
       const result = await client.transaction.updateMany({
         data: {
           amountMinorUnits: transaction.amount.toMinorUnits().toString(),
@@ -183,7 +261,7 @@ type PersistedTransaction = Exclude<
   null
 >;
 
-function restoreTransaction(row: PersistedTransaction): Transaction {
+export function restoreTransaction(row: PersistedTransaction): Transaction {
   return Transaction.restore({
     accountId: row.accountId,
     amount: {

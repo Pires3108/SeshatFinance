@@ -6,6 +6,7 @@ export type UserProfile = Readonly<{
   locale: string;
   timeZone: string;
   presentationCurrency: string;
+  refundPresentation: 'separate-income' | 'expense-offset';
   createdAt: Date;
   updatedAt: Date;
   version: number;
@@ -17,6 +18,7 @@ export type UpdateOwnUserProfileCommand = Readonly<{
   locale: string;
   timeZone: string;
   presentationCurrency: string;
+  refundPresentation?: 'separate-income' | 'expense-offset';
 }>;
 
 export interface UserProfileRepository {
@@ -42,12 +44,17 @@ export class UpdateOwnUserProfileUseCase {
     command: UpdateOwnUserProfileCommand,
   ): Promise<UserProfile> {
     const instant = this.clock.now();
+    const existing = await this.profiles.findById(command.actorId);
     return this.profiles.upsert({
       id: command.actorId,
       displayName: command.displayName,
       locale: command.locale,
       timeZone: command.timeZone,
       presentationCurrency: command.presentationCurrency,
+      refundPresentation:
+        command.refundPresentation ??
+        existing?.refundPresentation ??
+        'separate-income',
       createdAt: instant,
       updatedAt: instant,
       version: 1,

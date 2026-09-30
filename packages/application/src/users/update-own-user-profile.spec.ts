@@ -40,6 +40,24 @@ describe('UpdateOwnUserProfileUseCase', () => {
 
     expect(result.id).toBe('7c2c7a54-73fe-49a3-b0ea-19034bf22baf');
     expect(repository.savedProfile?.updatedAt).toEqual(instant);
+    expect(result.refundPresentation).toBe('separate-income');
+    const updated = await useCase.execute({
+      actorId: result.id,
+      displayName: 'Nicolas',
+      locale: 'pt-BR',
+      timeZone: 'America/Sao_Paulo',
+      presentationCurrency: 'BRL',
+      refundPresentation: 'expense-offset',
+    });
+    expect(updated.refundPresentation).toBe('expense-offset');
+    const preserved = await useCase.execute({
+      actorId: result.id,
+      displayName: 'Nicolas',
+      locale: 'pt-BR',
+      timeZone: 'America/Sao_Paulo',
+      presentationCurrency: 'BRL',
+    });
+    expect(preserved.refundPresentation).toBe('expense-offset');
   });
 });
 

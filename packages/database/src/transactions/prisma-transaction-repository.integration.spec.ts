@@ -43,6 +43,7 @@ describe('PrismaTransactionRepository', () => {
       '../../prisma/migrations/20260921010000_assign_transaction_classifications/migration.sql',
       '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
       '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
+      '../../prisma/migrations/20260929170000_create_refund_links/migration.sql',
     ]) {
       await client.query(
         await readFile(new URL(path, import.meta.url), 'utf8'),

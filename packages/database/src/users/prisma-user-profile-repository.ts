@@ -21,6 +21,7 @@ export class PrismaUserProfileRepository implements UserProfileRepository {
         locale: profile.locale,
         timeZone: profile.timeZone,
         presentationCurrency: profile.presentationCurrency,
+        refundPresentation: profile.refundPresentation,
         createdAt: profile.createdAt,
         updatedAt: profile.updatedAt,
       },
@@ -29,6 +30,7 @@ export class PrismaUserProfileRepository implements UserProfileRepository {
         locale: profile.locale,
         timeZone: profile.timeZone,
         presentationCurrency: profile.presentationCurrency,
+        refundPresentation: profile.refundPresentation,
         updatedAt: profile.updatedAt,
         version: { increment: 1 },
       },
@@ -38,13 +40,25 @@ export class PrismaUserProfileRepository implements UserProfileRepository {
   }
 }
 
-function mapProfile(persisted: UserProfile): UserProfile {
+type PersistedUserProfile = Exclude<
+  Awaited<ReturnType<PrismaClient['userProfile']['findUnique']>>,
+  null
+>;
+
+function mapProfile(persisted: PersistedUserProfile): UserProfile {
+  if (
+    persisted.refundPresentation !== 'separate-income' &&
+    persisted.refundPresentation !== 'expense-offset'
+  ) {
+    throw new Error('Invalid persisted refund presentation.');
+  }
   return {
     id: persisted.id,
     displayName: persisted.displayName,
     locale: persisted.locale,
     timeZone: persisted.timeZone,
     presentationCurrency: persisted.presentationCurrency,
+    refundPresentation: persisted.refundPresentation,
     createdAt: persisted.createdAt,
     updatedAt: persisted.updatedAt,
     version: persisted.version,

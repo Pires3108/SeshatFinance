@@ -13,6 +13,7 @@ model UserProfile {
   locale               String   @default("pt-BR") @db.VarChar(16)
   timeZone             String   @default("America/Sao_Paulo") @map("time_zone") @db.VarChar(64)
   presentationCurrency String   @default("BRL") @map("presentation_currency") @db.Char(3)
+  refundPresentation   String   @default("separate-income") @map("refund_presentation") @db.VarChar(32)
   createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
   version              Int      @default(1)
@@ -147,10 +148,43 @@ model Transaction {
   outgoingTransfer       Transfer?            @relation("transfer_source")
   incomingTransfer       Transfer?            @relation("transfer_destination")
   balanceAdjustment      BalanceAdjustment?
+  refundExpenseLinks     RefundLink[]         @relation("refund_expense")
+  refundEntryLink        RefundLink?          @relation("refund_entry")
 
   @@unique([id, ownerId])
   @@index([ownerId, accountId, occurredAt])
   @@map("transactions")
+}
+
+enum RefundLinkKind {
+  refund
+  compensation
+
+  @@map("refund_link_kind")
+}
+
+model RefundLink {
+  id                   String         @id @db.Uuid
+  ownerId              String         @map("owner_id") @db.Uuid
+  expenseTransactionId String         @map("expense_transaction_id") @db.Uuid
+  expenseTransaction   Transaction    @relation("refund_expense", fields: [expenseTransactionId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  entryTransactionId   String         @map("entry_transaction_id") @db.Uuid
+  entryTransaction     Transaction    @relation("refund_entry", fields: [entryTransactionId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  kind                 RefundLinkKind
+  compensatesRefundId  String?        @map("compensates_refund_id") @db.Uuid
+  compensatesRefund    RefundLink?    @relation("refund_compensation", fields: [compensatesRefundId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  compensations        RefundLink[]   @relation("refund_compensation")
+  requestFingerprint   String         @map("request_fingerprint") @db.Char(64)
+  idempotencyKey       String         @map("idempotency_key") @db.Uuid
+  reason               String?
+  createdAt            DateTime       @map("created_at") @db.Timestamptz(6)
+
+  @@unique([id, ownerId])
+  @@unique([entryTransactionId, ownerId])
+  @@unique([ownerId, idempotencyKey])
+  @@index([ownerId, expenseTransactionId])
+  @@index([ownerId, compensatesRefundId])
+  @@map("refund_links")
 }
 
 model Transfer {
