@@ -76,6 +76,7 @@ export function canChangeFamilyGroupRole(
 ): boolean {
   if (currentRole === 'owner' || nextRole === 'owner') return false;
   if (!hasFamilyGroupCapability(actorRole, 'manage-members')) return false;
+  if (currentRole === nextRole) return true;
   return (
     nextRole !== 'administrator' ||
     hasFamilyGroupCapability(actorRole, 'manage-administrators')

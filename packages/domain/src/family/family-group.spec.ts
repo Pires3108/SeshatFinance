@@ -69,6 +69,13 @@ describe('FamilyGroup', () => {
     expect(
       canChangeFamilyGroupRole('administrator', 'administrator', 'member'),
     ).toBe(true);
+    expect(
+      canChangeFamilyGroupRole(
+        'administrator',
+        'administrator',
+        'administrator',
+      ),
+    ).toBe(true);
     expect(canChangeFamilyGroupRole('owner', 'owner', 'member')).toBe(false);
     expect(canChangeFamilyGroupRole('owner', 'member', 'owner')).toBe(false);
     expect(canRemoveFamilyGroupMember('owner', 'owner')).toBe(false);
