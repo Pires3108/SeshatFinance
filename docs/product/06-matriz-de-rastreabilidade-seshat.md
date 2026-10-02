@@ -34,7 +34,7 @@ Esta matriz relaciona áreas funcionais, requisitos, regras e critérios de acei
 | Backup diário retido por 14 dias                       | Reduz perda e interpreta “duas semanas” como retenção                       | RNF-015 a RNF-018                          |
 | WCAG 2.2 AA                                            | Padrão verificável atual                                                    | RNF-041 a RNF-046                          |
 | Monitoramento sem dados financeiros                    | Mede disponibilidade sem acesso de suporte                                  | RNF-013, RNF-019, RNF-040                  |
-| Câmbio manual no MVP                                   | Evita integração paga                                                       | RF-020; RN-037                             |
+| Câmbio manual no MVP                                   | Preserva origem e versões sem converter saldos antes da regra contábil      | RF-020; RN-002; CA-003; INV-029; US-022    |
 | Baselines mensuráveis                                  | Substitui itens indefinidos                                                 | RNF-006 a RNF-012                          |
 
 ## 3. Gestão de mudanças

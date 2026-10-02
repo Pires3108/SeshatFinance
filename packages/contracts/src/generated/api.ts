@@ -300,6 +300,42 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/manual-exchange-quotes": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List latest owned manual exchange quote versions */
+        readonly get: operations["ManualExchangeQuoteController_list"];
+        readonly put?: never;
+        /** Record an informational manual exchange quote */
+        readonly post: operations["ManualExchangeQuoteController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/manual-exchange-quotes/{quoteId}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get latest owned manual exchange quote version */
+        readonly get: operations["ManualExchangeQuoteController_get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        /** Append a corrected owned manual exchange quote version */
+        readonly patch: operations["ManualExchangeQuoteController_correct"];
+        readonly trace?: never;
+    };
     readonly "/api/v1/auth/password-recovery-requests": {
         readonly parameters: {
             readonly query?: never;
@@ -641,7 +677,8 @@ export interface operations {
             readonly content: {
                 readonly "application/json": {
                     readonly color: string | null;
-                    readonly currencyCode: string;
+                    /** @enum {string} */
+                    readonly currencyCode: "BRL" | "USD" | "EUR";
                     readonly currencyMinorUnitScale: number;
                     readonly description: string | null;
                     readonly icon: string | null;
@@ -1631,6 +1668,204 @@ export interface operations {
             };
         };
     };
+    readonly ManualExchangeQuoteController_list: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        /** Format: uuid */
+                        readonly authorId: string;
+                        /** Format: date-time */
+                        readonly effectiveAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly rate: string;
+                        /** Format: date-time */
+                        readonly recordedAt: string;
+                        readonly source: string;
+                        /** @enum {string} */
+                        readonly sourceCurrencyCode: "BRL" | "USD" | "EUR";
+                        /** @enum {string} */
+                        readonly targetCurrencyCode: "BRL" | "USD" | "EUR";
+                        readonly version: number;
+                    }[];
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly ManualExchangeQuoteController_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                readonly "Idempotency-Key": string;
+            };
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Format: date-time */
+                    readonly effectiveAt: string;
+                    readonly rate: string;
+                    readonly source: string;
+                    /** @enum {string} */
+                    readonly sourceCurrencyCode: "BRL" | "USD" | "EUR";
+                    /** @enum {string} */
+                    readonly targetCurrencyCode: "BRL" | "USD" | "EUR";
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly authorId: string;
+                        /** Format: date-time */
+                        readonly effectiveAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly rate: string;
+                        /** Format: date-time */
+                        readonly recordedAt: string;
+                        readonly source: string;
+                        /** @enum {string} */
+                        readonly sourceCurrencyCode: "BRL" | "USD" | "EUR";
+                        /** @enum {string} */
+                        readonly targetCurrencyCode: "BRL" | "USD" | "EUR";
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly ManualExchangeQuoteController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly quoteId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly authorId: string;
+                        /** Format: date-time */
+                        readonly effectiveAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly rate: string;
+                        /** Format: date-time */
+                        readonly recordedAt: string;
+                        readonly source: string;
+                        /** @enum {string} */
+                        readonly sourceCurrencyCode: "BRL" | "USD" | "EUR";
+                        /** @enum {string} */
+                        readonly targetCurrencyCode: "BRL" | "USD" | "EUR";
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly ManualExchangeQuoteController_correct: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly quoteId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Format: date-time */
+                    readonly effectiveAt: string;
+                    readonly rate: string;
+                    readonly source: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly authorId: string;
+                        /** Format: date-time */
+                        readonly effectiveAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly rate: string;
+                        /** Format: date-time */
+                        readonly recordedAt: string;
+                        readonly source: string;
+                        /** @enum {string} */
+                        readonly sourceCurrencyCode: "BRL" | "USD" | "EUR";
+                        /** @enum {string} */
+                        readonly targetCurrencyCode: "BRL" | "USD" | "EUR";
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly PasswordRecoveryController_request: {
         readonly parameters: {
             readonly query?: never;
@@ -1855,7 +2090,8 @@ export interface operations {
             readonly content: {
                 readonly "application/json": {
                     readonly amount: string;
-                    readonly currencyCode: string;
+                    /** @enum {string} */
+                    readonly currencyCode: "BRL" | "USD" | "EUR";
                     readonly currencyMinorUnitScale: number;
                     readonly description: string | null;
                     /** @enum {string} */
@@ -2448,7 +2684,8 @@ export interface operations {
             readonly content: {
                 readonly "application/json": {
                     readonly amount: string;
-                    readonly currencyCode: string;
+                    /** @enum {string} */
+                    readonly currencyCode: "BRL" | "USD" | "EUR";
                     readonly currencyMinorUnitScale: number;
                     readonly description: string | null;
                     /** Format: uuid */

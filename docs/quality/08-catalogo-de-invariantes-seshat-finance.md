@@ -202,7 +202,7 @@ Custo acumulado, valor atual e renda recebida permanecem grandezas separadas.
 
 ### INV-029 — Conversão preserva origem
 
-Consolidação em BRL conserva valor original, moeda, cotação manual e data de referência.
+Cotação manual conserva par de moedas, taxa decimal textual, origem, autor, vigência e versões anteriores. Repetir o mesmo comando não cria versão ou auditoria adicional. Quando houver consolidação em BRL aprovada, ela conservará valor original, moeda, cotação e data de referência; antes disso, não existe soma entre moedas distintas.
 
 **Referências:** RF-020; RN-037.
 

@@ -78,12 +78,12 @@
                     "type": "string"
                   },
                   "currencyCode": {
-                    "pattern": "^[A-Z]{3}$",
+                    "enum": ["BRL", "USD", "EUR"],
                     "type": "string"
                   },
                   "currencyMinorUnitScale": {
-                    "maximum": 18,
-                    "minimum": 0,
+                    "maximum": 2,
+                    "minimum": 2,
                     "type": "integer"
                   },
                   "description": {
@@ -2153,6 +2153,410 @@
         "tags": ["investments"]
       }
     },
+    "/api/v1/manual-exchange-quotes": {
+      "post": {
+        "operationId": "ManualExchangeQuoteController_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "effectiveAt": {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  "rate": {
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "source": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "sourceCurrencyCode": {
+                    "enum": ["BRL", "USD", "EUR"],
+                    "type": "string"
+                  },
+                  "targetCurrencyCode": {
+                    "enum": ["BRL", "USD", "EUR"],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "effectiveAt",
+                  "rate",
+                  "source",
+                  "sourceCurrencyCode",
+                  "targetCurrencyCode"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "authorId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "effectiveAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "rate": {
+                      "type": "string"
+                    },
+                    "recordedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "sourceCurrencyCode": {
+                      "enum": ["BRL", "USD", "EUR"],
+                      "type": "string"
+                    },
+                    "targetCurrencyCode": {
+                      "enum": ["BRL", "USD", "EUR"],
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "authorId",
+                    "effectiveAt",
+                    "id",
+                    "rate",
+                    "recordedAt",
+                    "source",
+                    "sourceCurrencyCode",
+                    "targetCurrencyCode",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record an informational manual exchange quote",
+        "tags": ["manual-exchange-quotes"]
+      },
+      "get": {
+        "operationId": "ManualExchangeQuoteController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "properties": {
+                      "authorId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "effectiveAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "rate": {
+                        "type": "string"
+                      },
+                      "recordedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "source": {
+                        "type": "string"
+                      },
+                      "sourceCurrencyCode": {
+                        "enum": ["BRL", "USD", "EUR"],
+                        "type": "string"
+                      },
+                      "targetCurrencyCode": {
+                        "enum": ["BRL", "USD", "EUR"],
+                        "type": "string"
+                      },
+                      "version": {
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "authorId",
+                      "effectiveAt",
+                      "id",
+                      "rate",
+                      "recordedAt",
+                      "source",
+                      "sourceCurrencyCode",
+                      "targetCurrencyCode",
+                      "version"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List latest owned manual exchange quote versions",
+        "tags": ["manual-exchange-quotes"]
+      }
+    },
+    "/api/v1/manual-exchange-quotes/{quoteId}": {
+      "get": {
+        "operationId": "ManualExchangeQuoteController_get",
+        "parameters": [
+          {
+            "name": "quoteId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "authorId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "effectiveAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "rate": {
+                      "type": "string"
+                    },
+                    "recordedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "sourceCurrencyCode": {
+                      "enum": ["BRL", "USD", "EUR"],
+                      "type": "string"
+                    },
+                    "targetCurrencyCode": {
+                      "enum": ["BRL", "USD", "EUR"],
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "authorId",
+                    "effectiveAt",
+                    "id",
+                    "rate",
+                    "recordedAt",
+                    "source",
+                    "sourceCurrencyCode",
+                    "targetCurrencyCode",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get latest owned manual exchange quote version",
+        "tags": ["manual-exchange-quotes"]
+      },
+      "patch": {
+        "operationId": "ManualExchangeQuoteController_correct",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "quoteId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "effectiveAt": {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  "rate": {
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "source": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": ["effectiveAt", "rate", "source"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "authorId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "effectiveAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "rate": {
+                      "type": "string"
+                    },
+                    "recordedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "sourceCurrencyCode": {
+                      "enum": ["BRL", "USD", "EUR"],
+                      "type": "string"
+                    },
+                    "targetCurrencyCode": {
+                      "enum": ["BRL", "USD", "EUR"],
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "authorId",
+                    "effectiveAt",
+                    "id",
+                    "rate",
+                    "recordedAt",
+                    "source",
+                    "sourceCurrencyCode",
+                    "targetCurrencyCode",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Append a corrected owned manual exchange quote version",
+        "tags": ["manual-exchange-quotes"]
+      }
+    },
     "/api/v1/auth/password-recovery-requests": {
       "post": {
         "operationId": "PasswordRecoveryController_request",
@@ -2447,12 +2851,12 @@
                     "type": "string"
                   },
                   "currencyCode": {
-                    "pattern": "^[A-Z]{3}$",
+                    "enum": ["BRL", "USD", "EUR"],
                     "type": "string"
                   },
                   "currencyMinorUnitScale": {
-                    "maximum": 18,
-                    "minimum": 0,
+                    "maximum": 2,
+                    "minimum": 2,
                     "type": "integer"
                   },
                   "description": {
@@ -3751,12 +4155,12 @@
                     "type": "string"
                   },
                   "currencyCode": {
-                    "pattern": "^[A-Z]{3}$",
+                    "enum": ["BRL", "USD", "EUR"],
                     "type": "string"
                   },
                   "currencyMinorUnitScale": {
-                    "maximum": 18,
-                    "minimum": 0,
+                    "maximum": 2,
+                    "minimum": 2,
                     "type": "integer"
                   },
                   "description": {
