@@ -95,9 +95,19 @@ export async function resumeTask(
 }
 
 export function createStoreFromEnvironment(): RedisTaskStore {
-  const endpoint = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (endpoint === undefined || token === undefined)
+  const connection = resolveRedisConnection(process.env);
+  if (connection === null)
     throw new Error('Task storage is not configured.');
-  return new RedisTaskStore(endpoint, token);
+  return new RedisTaskStore(connection.endpoint, connection.token);
+}
+
+export function resolveRedisConnection(
+  environment: NodeJS.ProcessEnv,
+): { readonly endpoint: string; readonly token: string } | null {
+  const endpoint =
+    environment.UPSTASH_REDIS_REST_URL ?? environment.KV_REST_API_URL;
+  const token =
+    environment.UPSTASH_REDIS_REST_TOKEN ?? environment.KV_REST_API_TOKEN;
+  if (endpoint === undefined || token === undefined) return null;
+  return { endpoint, token };
 }
