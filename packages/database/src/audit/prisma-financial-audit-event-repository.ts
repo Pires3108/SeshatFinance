@@ -55,6 +55,8 @@ function toPersistedResourceType(
       return 'balance_adjustment';
     case 'credit-card':
       return 'credit_card';
+    case 'manual-exchange-quote':
+      return 'manual_exchange_quote';
     default:
       return resourceType;
   }

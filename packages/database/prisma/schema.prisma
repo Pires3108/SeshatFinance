@@ -207,6 +207,7 @@ enum FinancialAuditResourceType {
   transfer
   balance_adjustment @map("balance-adjustment")
   credit_card        @map("credit-card")
+  manual_exchange_quote @map("manual-exchange-quote")
 
   @@map("financial_audit_resource_type")
 }
@@ -223,6 +224,27 @@ model FinancialAuditEvent {
   @@index([ownerId, occurredAt, id])
   @@index([ownerId, resourceType, resourceId, occurredAt])
   @@map("financial_audit_events")
+}
+
+model ManualExchangeQuoteVersion {
+  quoteId            String   @map("quote_id") @db.Uuid
+  version            Int
+  commandType        String   @map("command_type") @db.VarChar(8)
+  idempotencyKey     String   @map("idempotency_key") @db.VarChar(128)
+  ownerId            String   @map("owner_id") @db.Uuid
+  authorId           String   @map("author_id") @db.Uuid
+  sourceCurrencyCode String   @map("source_currency_code") @db.Char(3)
+  targetCurrencyCode String   @map("target_currency_code") @db.Char(3)
+  rate               String   @db.VarChar(1000)
+  source             String   @db.VarChar(120)
+  effectiveAt        DateTime @map("effective_at") @db.Timestamptz(6)
+  recordedAt         DateTime @map("recorded_at") @db.Timestamptz(6)
+
+  @@id([quoteId, version])
+  @@unique([ownerId, commandType, idempotencyKey])
+  @@index([ownerId, quoteId, version])
+  @@index([ownerId, recordedAt, quoteId])
+  @@map("manual_exchange_quote_versions")
 }
 
 model Category {
