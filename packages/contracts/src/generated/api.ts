@@ -4,6 +4,23 @@
  */
 
 export type paths = {
+    readonly "/api/v1/accounts/consolidation": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List exact owned balances and BRL consolidation availability */
+        readonly get: operations["AccountBalanceController_consolidation"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/accounts/{accountId}/balance": {
         readonly parameters: {
             readonly query?: never;
@@ -576,6 +593,59 @@ export type components = {
 };
 export type $defs = Record<string, never>;
 export interface operations {
+    readonly AccountBalanceController_consolidation: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly accountBalances: readonly {
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                            readonly currencyMinorUnitScale: number;
+                            /** Format: uuid */
+                            readonly accountId: string;
+                        }[];
+                        readonly brlConsolidation: {
+                            readonly balance: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                                readonly currencyMinorUnitScale: number;
+                            };
+                            /** @enum {string} */
+                            readonly status: "available";
+                        } | {
+                            /** @enum {string} */
+                            readonly reason: "conversion-policy-pending" | "currency-scale-mismatch";
+                            /** @enum {string} */
+                            readonly status: "unavailable";
+                        };
+                        readonly totalsByCurrency: readonly {
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                            readonly currencyMinorUnitScale: number;
+                        }[];
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly AccountBalanceController_get: {
         readonly parameters: {
             readonly query?: never;

@@ -31,6 +31,11 @@ export {
   type AccountTransactionBalanceRepository,
 } from './accounts/get-account-balance.js';
 export { ListDefaultAccountTypesUseCase } from './accounts/list-default-account-types.js';
+export {
+  GetOwnedBalanceSummaryUseCase,
+  type OwnedBalanceSummaryAccountRepository,
+  type OwnedBalanceSummary,
+} from './accounts/get-owned-balance-summary.js';
 export { ListInvestmentTypesUseCase } from './investments/list-investment-types.js';
 export {
   CategoryVersionConflictError,

@@ -23,6 +23,7 @@ import {
   CreateTransferUseCase,
   GetOwnedAccountUseCase,
   GetOwnedAccountBalanceUseCase,
+  GetOwnedBalanceSummaryUseCase,
   GetOwnedTransactionUseCase,
   GetOwnedTransactionClassificationUseCase,
   ListOwnedTransactionTagsUseCase,
@@ -48,6 +49,7 @@ import {
   UpdateOwnedTransactionUseCase,
   type UserProfileRepository,
   type AccountRepository,
+  type OwnedBalanceSummaryAccountRepository,
   type AccountTransactionBalanceRepository,
   type BalanceAdjustmentRepository,
   type BalanceAdjustmentHistoryRepository,
@@ -558,6 +560,15 @@ import { UserProfileController } from './users/user-profile.controller.js';
         transactions: AccountTransactionBalanceRepository,
       ): GetOwnedAccountBalanceUseCase =>
         new GetOwnedAccountBalanceUseCase(accounts, transactions),
+    },
+    {
+      inject: [LazyAccountRepository, GetOwnedAccountBalanceUseCase],
+      provide: GetOwnedBalanceSummaryUseCase,
+      useFactory: (
+        accounts: OwnedBalanceSummaryAccountRepository,
+        balances: GetOwnedAccountBalanceUseCase,
+      ): GetOwnedBalanceSummaryUseCase =>
+        new GetOwnedBalanceSummaryUseCase(accounts, balances),
     },
     {
       inject: [LazyAccountRepository],

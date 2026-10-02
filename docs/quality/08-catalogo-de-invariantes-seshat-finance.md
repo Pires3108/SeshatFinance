@@ -204,6 +204,8 @@ Custo acumulado, valor atual e renda recebida permanecem grandezas separadas.
 
 Cotação manual conserva par de moedas, taxa decimal textual, origem, autor, vigência e versões anteriores. Repetir o mesmo comando não cria versão ou auditoria adicional. Quando houver consolidação em BRL aprovada, ela conservará valor original, moeda, cotação e data de referência; antes disso, não existe soma entre moedas distintas.
 
+A consulta de saldos preserva cada valor com sua moeda e só agrega valores da mesma moeda. A presença de moeda diferente de BRL torna o total consolidado em BRL indisponível, com motivo explícito, independentemente de existir cotação manual ou informativa.
+
 **Referências:** RF-020; RN-037.
 
 ## 8. Importação e exportação

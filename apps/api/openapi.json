@@ -1,6 +1,152 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/accounts/consolidation": {
+      "get": {
+        "operationId": "AccountBalanceController_consolidation",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "accountBalances": {
+                      "items": {
+                        "properties": {
+                          "amount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "currencyCode": {
+                            "pattern": "^[A-Z]{3}$",
+                            "type": "string"
+                          },
+                          "currencyMinorUnitScale": {
+                            "maximum": 18,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "accountId": {
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "amount",
+                          "currencyCode",
+                          "currencyMinorUnitScale",
+                          "accountId"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "brlConsolidation": {
+                      "oneOf": [
+                        {
+                          "properties": {
+                            "balance": {
+                              "properties": {
+                                "amount": {
+                                  "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                  "type": "string"
+                                },
+                                "currencyCode": {
+                                  "pattern": "^[A-Z]{3}$",
+                                  "type": "string"
+                                },
+                                "currencyMinorUnitScale": {
+                                  "maximum": 18,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "amount",
+                                "currencyCode",
+                                "currencyMinorUnitScale"
+                              ],
+                              "type": "object"
+                            },
+                            "status": {
+                              "enum": ["available"],
+                              "type": "string"
+                            }
+                          },
+                          "required": ["balance", "status"],
+                          "type": "object"
+                        },
+                        {
+                          "properties": {
+                            "reason": {
+                              "enum": [
+                                "conversion-policy-pending",
+                                "currency-scale-mismatch"
+                              ],
+                              "type": "string"
+                            },
+                            "status": {
+                              "enum": ["unavailable"],
+                              "type": "string"
+                            }
+                          },
+                          "required": ["reason", "status"],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "totalsByCurrency": {
+                      "items": {
+                        "properties": {
+                          "amount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "currencyCode": {
+                            "pattern": "^[A-Z]{3}$",
+                            "type": "string"
+                          },
+                          "currencyMinorUnitScale": {
+                            "maximum": 18,
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "amount",
+                          "currencyCode",
+                          "currencyMinorUnitScale"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "accountBalances",
+                    "brlConsolidation",
+                    "totalsByCurrency"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List exact owned balances and BRL consolidation availability",
+        "tags": ["accounts"]
+      }
+    },
     "/api/v1/accounts/{accountId}/balance": {
       "get": {
         "operationId": "AccountBalanceController_get",

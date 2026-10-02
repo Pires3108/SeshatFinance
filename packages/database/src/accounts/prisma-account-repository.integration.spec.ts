@@ -100,6 +100,14 @@ describe('PrismaAccountRepository', () => {
     await expect(
       repository.listForOwner('e89b6ad0-7838-4a2c-9a21-c775ea78e22a'),
     ).resolves.toEqual([]);
+    await expect(
+      repository.listForOwnedBalanceSummary(account.ownerId),
+    ).resolves.toHaveLength(1);
+    await expect(
+      repository.listForOwnedBalanceSummary(
+        'e89b6ad0-7838-4a2c-9a21-c775ea78e22a',
+      ),
+    ).resolves.toEqual([]);
 
     if (restored === null) throw new Error('Account was not restored.');
     restored.archive(new Date('2026-09-20T13:00:00.000Z'));
@@ -134,6 +142,9 @@ describe('PrismaAccountRepository', () => {
       throw new Error('Archived account was not restored.');
     const archivedAt = archived.toSnapshot().archivedAt;
     expect(archivedAt).toEqual(new Date('2026-09-20T13:00:00.000Z'));
+    await expect(
+      repository.listForOwnedBalanceSummary(account.ownerId),
+    ).resolves.toHaveLength(1);
 
     archived.moveToTrash(new Date('2026-09-20T14:00:00.000Z'));
     await expect(
@@ -152,6 +163,9 @@ describe('PrismaAccountRepository', () => {
       account.ownerId,
     );
     if (trashed === null) throw new Error('Trashed account was not restored.');
+    await expect(
+      repository.listForOwnedBalanceSummary(account.ownerId),
+    ).resolves.toEqual([]);
     trashed.restoreFromTrash(new Date('2026-09-20T15:00:00.000Z'));
     await expect(
       repository.save(
@@ -180,6 +194,9 @@ describe('PrismaAccountRepository', () => {
     await expect(
       repository.listForOwner(account.ownerId, 'trashed'),
     ).resolves.toEqual([]);
+    await expect(
+      repository.listForOwnedBalanceSummary(account.ownerId),
+    ).resolves.toHaveLength(1);
 
     const rolledBack = Account.create({
       color: null,
