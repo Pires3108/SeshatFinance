@@ -1,0 +1,29 @@
+---
+description: Require event-driven waiting for GitHub Actions and Jira
+alwaysApply: true
+---
+
+# Event-driven external waits
+
+When CI or Jira work requires waiting, do not poll, use `--watch`, retry with
+sleep, or keep reasoning until a status changes. Use the deployed receiver:
+
+- Register the pending wait with `POST https://agent-waiter.vercel.app/api/tasks`.
+- The request must use the host's configured bearer credential; never expose or
+  request a secret in chat, code, logs, or commits.
+- Include a unique `taskHandle`, the original OpenAI `callId`, an HTTPS
+  `resumeUrl`, the provider resource ID, and an expiration time.
+- For GitHub, include `githubEvent` as `workflow_run` or `check_run`.
+- For Jira, include the Jira resource ID and explicit
+  `jiraTerminalStatusIds`. A Jira webhook only resumes a registered task when
+  its status changes to one of those IDs.
+
+After registration, end the model turn and let the signed callback resume the
+host. The production webhooks are already configured at:
+
+- `https://agent-waiter.vercel.app/api/github`
+- `https://agent-waiter.vercel.app/api/jira`
+
+A single read-only diagnostic lookup is allowed to choose the next action. If
+the active agent host cannot register a task or receive an HTTPS callback,
+report that integration gap instead of polling.
