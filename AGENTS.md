@@ -46,6 +46,16 @@
 - Use unit tests for Domain, PostgreSQL integration tests for persistence, and Playwright for critical journeys.
 - Run formatting, lint, type checking, and affected tests before completion.
 
+## Agent waiting policy
+
+- Do not use watch modes, retry loops, or periodic status checks to wait for CI
+  or Jira state changes.
+- For asynchronous CI and Jira work, register the pending task with the
+  `agent-waiter` service and end the model turn. Resume only from its signed
+  callback.
+- A single diagnostic status lookup is allowed when it informs the next action;
+  repeated lookups are not.
+
 ## Change discipline
 
 - Develop each backlog increment on its own descriptive branch; never commit directly to main.
