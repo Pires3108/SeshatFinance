@@ -2,6 +2,18 @@ export type { Clock } from './ports/clock.js';
 export type { IdentifierGenerator } from './ports/identifier-generator.js';
 export type { TransactionRunner } from './ports/transaction-runner.js';
 export {
+  CorrectOwnedManualExchangeQuoteUseCase,
+  CreateManualExchangeQuoteUseCase,
+  GetOwnedManualExchangeQuoteUseCase,
+  ListOwnedManualExchangeQuotesUseCase,
+  ManualExchangeQuoteVersionConflictError,
+  ManualExchangeQuoteIdempotencyConflictError,
+  InvalidManualExchangeQuoteIdempotencyKeyError,
+  OwnedManualExchangeQuoteNotFoundError,
+  type CreateManualExchangeQuoteCommand,
+  type ManualExchangeQuoteRepository,
+} from './money/manage-manual-exchange-quote.js';
+export {
   AccountVersionConflictError,
   ChangeOwnedAccountLifecycleUseCase,
   CreateAccountUseCase,
