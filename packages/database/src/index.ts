@@ -13,3 +13,4 @@ export { PrismaFinancialAuditEventRepository } from './audit/prisma-financial-au
 export { PrismaCreditCardRepository } from './cards/prisma-credit-card-repository.js';
 export { PrismaFamilyGroupRepository } from './family/prisma-family-group-repository.js';
 export { PrismaOpaqueSessionRepository } from './auth/prisma-opaque-session-repository.js';
+export { PrismaAuthenticationAttemptRepository } from './auth/prisma-authentication-attempt-repository.js';

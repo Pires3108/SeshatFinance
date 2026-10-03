@@ -87,6 +87,9 @@ importers:
       '@nestjs/testing':
         specifier: latest
         version: 12.0.3(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2))(@nestjs/core@12.0.3(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))
+      '@testcontainers/postgresql':
+        specifier: 12.1.0
+        version: 12.1.0(supports-color@10.2.2)
       '@types/node':
         specifier: latest
         version: 26.6.2

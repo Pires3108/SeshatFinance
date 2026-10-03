@@ -32,6 +32,16 @@ model UserSession {
   @@map("user_sessions")
 }
 
+model AuthenticationAttemptLimit {
+  identityHash   String    @id @map("identity_hash") @db.Char(64)
+  failedAttempts Int       @default(0) @map("failed_attempts")
+  lockoutCount   Int       @default(0) @map("lockout_count")
+  lockedUntil    DateTime? @map("locked_until") @db.Timestamptz(6)
+  updatedAt      DateTime  @map("updated_at") @db.Timestamptz(6)
+
+  @@map("authentication_attempt_limits")
+}
+
 enum FamilyGroupRole {
   owner
   administrator

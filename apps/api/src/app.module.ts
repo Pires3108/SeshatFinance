@@ -1,6 +1,7 @@
 import {
   ChangeOwnedTransactionLifecycleUseCase,
   AuthenticateUserUseCase,
+  RateLimitedIdentityAuthenticationGateway,
   ChangeOwnedTransferLifecycleUseCase,
   ChangeOwnedAccountLifecycleUseCase,
   CreateBalanceAdjustmentUseCase,
@@ -46,6 +47,7 @@ import {
   UpdateOwnedTransactionUseCase,
   type UserProfileRepository,
   type OpaqueSessionRepository,
+  type AuthenticationAttemptRepository,
   type AccountRepository,
   type AccountTransactionBalanceRepository,
   type BalanceAdjustmentRepository,
@@ -80,6 +82,7 @@ import { LazyFamilyGroupRepository } from './family/lazy-family-group-repository
 import { AuthConfiguration } from './auth/auth-configuration.js';
 import { CryptoOpaqueSessionTokens } from './auth/crypto-opaque-session-tokens.js';
 import { LazyOpaqueSessionRepository } from './auth/lazy-opaque-session-repository.js';
+import { LazyAuthenticationAttemptRepository } from './auth/lazy-authentication-attempt-repository.js';
 import { AuthController } from './auth/auth.controller.js';
 import { AuthenticatedActorContext } from './auth/authenticated-actor-context.js';
 import { BearerAuthGuard } from './auth/bearer-auth.guard.js';
@@ -155,6 +158,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     PrivacySafeLogger,
     LazyPrismaClient,
     LazyOpaqueSessionRepository,
+    LazyAuthenticationAttemptRepository,
     LazyAccountRepository,
     LazyBalanceAdjustmentRepository,
     LazyCreditCardRepository,
@@ -598,24 +602,31 @@ import { UserProfileController } from './users/user-profile.controller.js';
         ),
     },
     {
-      inject: [AuthConfiguration],
+      inject: [AuthConfiguration, LazyAuthenticationAttemptRepository],
       provide: AuthenticateUserUseCase,
-      useFactory: (configuration: AuthConfiguration): AuthenticateUserUseCase =>
+      useFactory: (
+        configuration: AuthConfiguration,
+        attempts: AuthenticationAttemptRepository,
+      ): AuthenticateUserUseCase =>
         new AuthenticateUserUseCase(
-          new SupabaseIdentityAuthenticationGateway(() => {
-            const values = configuration.read();
-            return createClient(
-              values.supabaseUrl,
-              values.supabasePublishableKey,
-              {
-                auth: {
-                  autoRefreshToken: false,
-                  detectSessionInUrl: false,
-                  persistSession: false,
+          new RateLimitedIdentityAuthenticationGateway(
+            new SupabaseIdentityAuthenticationGateway(() => {
+              const values = configuration.read();
+              return createClient(
+                values.supabaseUrl,
+                values.supabasePublishableKey,
+                {
+                  auth: {
+                    autoRefreshToken: false,
+                    detectSessionInUrl: false,
+                    persistSession: false,
+                  },
                 },
-              },
-            );
-          }),
+              );
+            }),
+            attempts,
+            new SystemClock(),
+          ),
         ),
     },
     {

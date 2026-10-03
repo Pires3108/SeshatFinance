@@ -3,6 +3,10 @@ import type {
   IdentityAuthenticationGateway,
   IdentitySession,
 } from '@seshat/application';
+import {
+  IdentityProviderUnavailableError,
+  InvalidIdentityCredentialsError,
+} from '@seshat/application';
 
 export type SupabaseAuthenticationClient = Readonly<{
   auth: Readonly<{
@@ -19,13 +23,6 @@ export type SupabaseAuthenticationClient = Readonly<{
   }>;
 }>;
 
-export class IdentityAuthenticationError extends Error {
-  public constructor() {
-    super('Identity authentication was not accepted.');
-    this.name = 'IdentityAuthenticationError';
-  }
-}
-
 export class SupabaseIdentityAuthenticationGateway implements IdentityAuthenticationGateway {
   public constructor(
     private readonly clientFactory: () => SupabaseAuthenticationClient,
@@ -36,12 +33,21 @@ export class SupabaseIdentityAuthenticationGateway implements IdentityAuthentica
   ): Promise<IdentitySession> {
     const { data, error } =
       await this.clientFactory().auth.signInWithPassword(command);
-    if (error || data.session === null) {
-      throw new IdentityAuthenticationError();
-    }
+    if (isCredentialRejection(error))
+      throw new InvalidIdentityCredentialsError();
+    if (error || data.session === null)
+      throw new IdentityProviderUnavailableError();
 
     return {
       userId: data.session.user.id,
     };
   }
+}
+
+function isCredentialRejection(error: unknown): boolean {
+  if (error === null || typeof error !== 'object' || !('code' in error))
+    return false;
+  return (
+    error.code === 'invalid_credentials' || error.code === 'email_not_confirmed'
+  );
 }

@@ -55,6 +55,14 @@ export {
   type IdentitySession,
 } from './auth/authenticate-user.js';
 export {
+  IdentityProviderUnavailableError,
+  InvalidIdentityCredentialsError,
+  RateLimitedIdentityAuthenticationGateway,
+  type AuthenticationAttempt,
+  type AuthenticationAttemptRepository,
+  type AuthenticationAttemptResult,
+} from './auth/rate-limited-identity-authentication.js';
+export {
   InvalidOpaqueSessionError,
   OpaqueSessionService,
   isSessionActive,

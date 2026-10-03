@@ -1,5 +1,7 @@
 import {
   AuthenticateUserUseCase,
+  IdentityProviderUnavailableError,
+  InvalidIdentityCredentialsError,
   OpaqueSessionService,
 } from '@seshat/application';
 import {
@@ -13,6 +15,7 @@ import {
   Post,
   Req,
   Res,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -61,8 +64,12 @@ export class SessionController {
     let userId: string;
     try {
       userId = (await this.authenticate.execute(credentials)).userId;
-    } catch {
-      throw new UnauthorizedException();
+    } catch (error) {
+      if (error instanceof InvalidIdentityCredentialsError)
+        throw new UnauthorizedException();
+      if (error instanceof IdentityProviderUnavailableError)
+        throw new ServiceUnavailableException();
+      throw new ServiceUnavailableException();
     }
     const session = await this.sessions.issue(userId);
     reply.header(

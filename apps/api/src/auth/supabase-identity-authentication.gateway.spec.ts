@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-
 import {
-  IdentityAuthenticationError,
-  SupabaseIdentityAuthenticationGateway,
-} from './supabase-identity-authentication.gateway.js';
+  IdentityProviderUnavailableError,
+  InvalidIdentityCredentialsError,
+} from '@seshat/application';
+
+import { SupabaseIdentityAuthenticationGateway } from './supabase-identity-authentication.gateway.js';
 
 describe('SupabaseIdentityAuthenticationGateway', () => {
   it('maps a provider session without exposing provider types', async () => {
@@ -32,12 +33,12 @@ describe('SupabaseIdentityAuthenticationGateway', () => {
     });
   });
 
-  it('uses one generic error for invalid credentials or missing sessions', async () => {
+  it('classifies invalid credentials without exposing provider details', async () => {
     const gateway = new SupabaseIdentityAuthenticationGateway(() => ({
       auth: {
         signInWithPassword: vi.fn().mockResolvedValue({
           data: { session: null },
-          error: new Error('provider detail'),
+          error: { code: 'invalid_credentials', message: 'provider detail' },
         }),
       },
     }));
@@ -47,6 +48,23 @@ describe('SupabaseIdentityAuthenticationGateway', () => {
         email: 'synthetic.user@example.test',
         password: 'synthetic-password-only-for-tests',
       }),
-    ).rejects.toBeInstanceOf(IdentityAuthenticationError);
+    ).rejects.toBeInstanceOf(InvalidIdentityCredentialsError);
+  });
+
+  it('treats unknown provider errors as unavailable rather than failed credentials', async () => {
+    const gateway = new SupabaseIdentityAuthenticationGateway(() => ({
+      auth: {
+        signInWithPassword: vi.fn().mockResolvedValue({
+          data: { session: null },
+          error: { code: 'unexpected_provider_failure' },
+        }),
+      },
+    }));
+    await expect(
+      gateway.authenticate({
+        email: 'synthetic.user@example.test',
+        password: 'synthetic-password-only-for-tests',
+      }),
+    ).rejects.toBeInstanceOf(IdentityProviderUnavailableError);
   });
 });
