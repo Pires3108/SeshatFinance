@@ -7,8 +7,10 @@ const hookPath = fileURLToPath(
   new URL('./require-webhook-waiter.mjs', import.meta.url),
 );
 
-test('allows a one-off GitHub status lookup', () => {
-  const result = runHook({ command: 'gh run view 123 --json status,conclusion' });
+test('allows a GitHub diagnostic lookup after a failure event', () => {
+  const result = runHook({
+    command: 'gh run view 123 --json status,conclusion',
+  });
 
   assert.equal(result.permission, 'allow');
 });
@@ -17,7 +19,7 @@ test('blocks GitHub watch mode', () => {
   const result = runHook({ command: 'gh run watch 123 --exit-status' });
 
   assert.equal(result.permission, 'deny');
-  assert.match(result.agent_message, /progress signal/u);
+  assert.match(result.agent_message, /signed webhook result/u);
 });
 
 test('blocks sleep loops that poll Jira', () => {
