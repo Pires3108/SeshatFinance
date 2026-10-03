@@ -7,13 +7,14 @@ export default {
     if (request.method !== 'POST')
       return json(405, { error: 'method_not_allowed' });
     const raw = await request.text();
-    if (
-      !verifyHmac(
-        raw,
-        request.headers.get('x-hub-signature'),
-        process.env.JIRA_WEBHOOK_SECRET ?? '',
-      )
-    ) {
+    const signature = request.headers.get('x-hub-signature');
+    const secret = process.env.JIRA_WEBHOOK_SECRET ?? '';
+    if (!verifyHmac(raw, signature, secret)) {
+      console.warn('jira_webhook_signature_rejected', {
+        signaturePresent: signature !== null,
+        signatureMethod: signature?.split('=', 1)[0] ?? null,
+        secretConfigured: secret.length > 0,
+      });
       return json(401, { error: 'invalid_signature' });
     }
     let event;
