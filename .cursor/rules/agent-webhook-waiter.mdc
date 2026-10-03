@@ -5,13 +5,16 @@ alwaysApply: true
 
 # Event-driven external waits
 
-When CI or Jira work requires waiting, do not poll, use `--watch`, retry with
-sleep, or keep reasoning until a status changes. The signed delivery is an
-observability signal only; it does not prove that a CI run or Jira item is
-complete. The production webhooks are already configured at:
+When CI or Jira work requires waiting, consume the signed webhook result from
+the Redis event queue with `tools/agent-waiter/scripts/wait-for-event.mjs`.
+Match the GitHub commit SHA and check name, or the Jira numeric issue ID and
+target status ID. Pass a UTC `--after` timestamp captured before the external
+operation. Do not poll GitHub or Jira, use `--watch`, or retry with sleep while
+waiting. A missing event does not prove completion. The production webhooks are
+configured at:
 
 - `https://agent-waiter.vercel.app/api/github`
 - `https://agent-waiter.vercel.app/api/jira`
 
-A single read-only diagnostic lookup is allowed at the decision point before
-declaring completion. Do not repeat lookups while waiting.
+Use the stored result as the completion signal. If the event store or delivery
+fails, report that the outcome is unverified and repair the delivery path.

@@ -1,5 +1,5 @@
 import type { Completion, PendingTask } from './core.js';
-import { lockKey, signCallback, taskKey } from './core.js';
+import { eventKey, lockKey, signCallback, taskKey } from './core.js';
 
 interface RedisResponse<T> {
   readonly result?: T;
@@ -54,6 +54,17 @@ export class RedisTaskStore {
     await this.command<number>(['DEL', lockKey(task)]);
   }
 
+  public async publishCompletion(completion: Completion): Promise<void> {
+    const keys = [eventKey(completion)];
+    if (completion.headSha !== undefined) {
+      keys.push(eventKey({ ...completion, resourceId: completion.headSha }));
+    }
+    for (const key of keys) {
+      await this.command<number>(['RPUSH', key, JSON.stringify(completion)]);
+      await this.command<number>(['EXPIRE', key, '86400']);
+    }
+  }
+
   private async command<T>(command: readonly string[]): Promise<T> {
     const response = await fetch(this.endpoint, {
       method: 'POST',
@@ -96,8 +107,7 @@ export async function resumeTask(
 
 export function createStoreFromEnvironment(): RedisTaskStore {
   const connection = resolveRedisConnection(process.env);
-  if (connection === null)
-    throw new Error('Task storage is not configured.');
+  if (connection === null) throw new Error('Task storage is not configured.');
   return new RedisTaskStore(connection.endpoint, connection.token);
 }
 

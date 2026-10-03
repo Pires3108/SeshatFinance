@@ -9,10 +9,12 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && node --test test/**/*.test.mjs",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "wait:event": "npm run build && node scripts/wait-for-event.mjs"
   },
   "devDependencies": {
     "@types/node": "latest",
+    "redis": "6.3.0",
     "typescript": "5.9.3"
   }
 }

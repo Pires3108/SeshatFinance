@@ -20,6 +20,16 @@ export interface Completion {
   readonly event: string;
   readonly outcome: 'success' | 'failure' | 'cancelled' | 'unknown';
   readonly completedAt: string;
+  readonly statusId?: string;
+  readonly observedAt?: string;
+  readonly headSha?: string;
+  readonly name?: string;
+}
+
+export function eventKey(
+  event: Pick<Completion, 'provider' | 'resourceId' | 'event'>,
+): string {
+  return `agent-waiter:event:${encodeKeyPart(event.provider)}:${encodeKeyPart(event.event)}:${encodeKeyPart(event.resourceId)}`;
 }
 
 const MAX_TEXT_LENGTH = 256;
@@ -159,6 +169,10 @@ function completionFromGitHub(
     event,
     outcome: githubOutcome(conclusion),
     completedAt,
+    ...(typeof resource.head_sha === 'string'
+      ? { headSha: resource.head_sha }
+      : {}),
+    ...(typeof resource.name === 'string' ? { name: resource.name } : {}),
   };
 }
 
