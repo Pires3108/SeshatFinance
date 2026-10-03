@@ -150,7 +150,11 @@ describe('shared HTTP authentication limit', () => {
     );
     expect(knownBlocked.statusCode).toBe(401);
     expect(unknownBlocked.statusCode).toBe(knownBlocked.statusCode);
-    expect(unknownBlocked.body).toBe(knownBlocked.body);
+    const withoutCorrelationId = (body: string): string =>
+      body.replace(/"correlationId":"[^"]+"/gu, '"correlationId":"<request>"');
+    expect(withoutCorrelationId(unknownBlocked.body)).toBe(
+      withoutCorrelationId(knownBlocked.body),
+    );
     expect(knownBlocked.headers['set-cookie']).toBeUndefined();
     expect(unknownBlocked.headers['set-cookie']).toBeUndefined();
     expect(issue).not.toHaveBeenCalled();
