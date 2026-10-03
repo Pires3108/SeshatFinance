@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   extractGitHubCompletion,
   extractJiraCompletion,
+  eventKey,
   parsePendingTask,
   taskKey,
   verifyHmac,
@@ -73,5 +74,21 @@ test('only treats completed GitHub runs and matching Jira issue payloads as even
       issue: { id: '10001', fields: { status: { id: '3' } } },
     }),
     { resourceId: '10001', statusId: '3' },
+  );
+});
+
+test('separates webhook event queues by provider, event and resource', () => {
+  const github = eventKey({
+    provider: 'github',
+    event: 'check_run',
+    resourceId: 'abc',
+  });
+  assert.notEqual(
+    github,
+    eventKey({ provider: 'github', event: 'workflow_run', resourceId: 'abc' }),
+  );
+  assert.notEqual(
+    github,
+    eventKey({ provider: 'jira', event: 'issue_updated', resourceId: 'abc' }),
   );
 });

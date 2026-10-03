@@ -32,6 +32,17 @@ valores financeiros nem corpos de eventos de provedores.
   conversa na API de agentes; o receptor não retoma sessões do Codex Desktop.
 - Falhas de callback devolvem erro ao provedor para permitir nova entrega.
 
+## Adendo — resultado observável pelo Codex Desktop
+
+O Codex Desktop não expõe `callId` e `resumeUrl` para registrar uma chamada
+pendente no contrato original. Por isso, o receptor também grava em Redis,
+com expiração de um dia, somente o tipo de evento, identificador, resultado de
+CI ou status do Jira e horário de observação. Um comando local aguarda a fila
+com `BLPOP` sobre a conexão TLS do Redis. O webhook só recebe `202` após a
+gravação; uma falha de armazenamento retorna `503` para nova entrega. Essa
+variante evita consultas repetidas às APIs do GitHub e do Jira e não dá acesso
+ao receptor a tabelas ou dados financeiros da aplicação.
+
 ## Alternativas consideradas
 
 - Polling com intervalos fixos: simples, mas consome tempo do agente e atrasa a
