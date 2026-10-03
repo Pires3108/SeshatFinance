@@ -7,9 +7,9 @@ if (isPollingCommand(command)) {
   respond({
     permission: 'deny',
     user_message:
-      'Espera ativa de CI ou Jira foi bloqueada. Registre uma tarefa no agent-waiter e aguarde o callback.',
+      'Espera ativa de CI ou Jira foi bloqueada. Use a entrega do webhook como sinal de progresso.',
     agent_message:
-      'Do not poll CI or Jira. Register the pending task with POST /api/tasks on the agent-waiter, end the current model turn, and resume only when its signed callback arrives. A single diagnostic status lookup is allowed; watch modes and retry/sleep loops are not.',
+      'Do not poll CI or Jira. Treat the signed agent-waiter delivery as a progress signal. Make one current-state lookup only when deciding whether to declare completion; watch modes and retry/sleep loops are not allowed.',
   });
 }
 

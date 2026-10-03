@@ -1,6 +1,5 @@
 import { extractGitHubCompletion, verifyHmac } from '../src/core.js';
-import { completeAndResume, json } from '../src/handler.js';
-import { createStoreFromEnvironment } from '../src/infrastructure.js';
+import { json } from '../src/handler.js';
 
 export default {
   async fetch(request: Request): Promise<Response> {
@@ -23,19 +22,7 @@ export default {
         JSON.parse(raw) as unknown,
       );
       if (completion === null) return json(202, { status: 'ignored' });
-      const result = await completeAndResume(
-        createStoreFromEnvironment(),
-        {
-          provider: 'github',
-          resourceId: completion.resourceId,
-          githubEvent: event === 'check_run' ? 'check_run' : 'workflow_run',
-        },
-        completion,
-        process.env.AGENT_WAITER_CALLBACK_SECRET ?? '',
-      );
-      return result === 'retry'
-        ? json(502, { error: 'resume_unavailable' })
-        : json(202, { status: result });
+      return json(202, { status: 'received' });
     } catch {
       return json(400, { error: 'invalid_webhook' });
     }
