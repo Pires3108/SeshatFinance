@@ -50,9 +50,8 @@
 
 - Do not use watch modes, retry loops, or periodic status checks to wait for CI
   or Jira state changes.
-- For asynchronous CI and Jira work, register the pending task with the
-  `agent-waiter` service and end the model turn. Resume only from its signed
-  callback.
+- Treat a signed webhook delivery as a progress signal only. Before declaring
+  CI or Jira work complete, make one current-state lookup at the decision point.
 - A single diagnostic status lookup is allowed when it informs the next action;
   repeated lookups are not.
 

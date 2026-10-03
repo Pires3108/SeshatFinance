@@ -17,7 +17,7 @@ test('blocks GitHub watch mode', () => {
   const result = runHook({ command: 'gh run watch 123 --exit-status' });
 
   assert.equal(result.permission, 'deny');
-  assert.match(result.agent_message, /Register the pending task/u);
+  assert.match(result.agent_message, /progress signal/u);
 });
 
 test('blocks sleep loops that poll Jira', () => {
