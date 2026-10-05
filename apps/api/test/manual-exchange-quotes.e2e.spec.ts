@@ -68,6 +68,7 @@ describe('manual exchange quote HTTP boundary', () => {
 
   beforeEach(async (): Promise<void> => {
     createQuote.execute.mockClear();
+    correctQuote.execute.mockClear();
     getQuote.execute.mockClear();
     const testingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -156,5 +157,45 @@ describe('manual exchange quote HTTP boundary', () => {
       quoteId,
       'e89b6ad0-7838-4a2c-9a21-c775ea78e22a',
     );
+  });
+
+  it('rejects currency changes in corrections instead of silently ignoring them', async () => {
+    const response = await application.inject({
+      headers: {
+        authorization: 'Bearer owner-token',
+        'idempotency-key': 'quote-correction-1',
+      },
+      method: 'PATCH',
+      url: `/api/v1/manual-exchange-quotes/${quoteId}`,
+      payload: {
+        effectiveAt: '2026-09-30T12:00:00.000Z',
+        rate: '5.2',
+        source: 'Synthetic declared source',
+        sourceCurrencyCode: 'EUR',
+        targetCurrencyCode: 'BRL',
+      },
+    });
+    expect(response.statusCode).toBe(400);
+    expect(correctQuote.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects a binary floating-point rate before executing a write', async () => {
+    const response = await application.inject({
+      headers: {
+        authorization: 'Bearer owner-token',
+        'idempotency-key': 'quote-numeric-rate-1',
+      },
+      method: 'POST',
+      url: '/api/v1/manual-exchange-quotes',
+      payload: {
+        effectiveAt: '2026-09-30T12:00:00.000Z',
+        rate: 5.2,
+        source: 'Synthetic declared source',
+        sourceCurrencyCode: 'USD',
+        targetCurrencyCode: 'BRL',
+      },
+    });
+    expect(response.statusCode).toBe(400);
+    expect(createQuote.execute).not.toHaveBeenCalled();
   });
 });

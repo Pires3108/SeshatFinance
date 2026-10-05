@@ -49,7 +49,7 @@ import { ZodValidationPipe } from '../platform/zod-validation.pipe.js';
 
 const idSchema = z.uuid();
 const idempotencyKeySchema = z.string().regex(/^[A-Za-z0-9._:-]{1,128}$/u);
-const createSchema = z.object({
+const createSchema = z.strictObject({
   effectiveAt: z.iso.datetime({ offset: true }),
   rate: z
     .string()
