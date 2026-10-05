@@ -86,8 +86,8 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Estado:** aberto.
 - **Referências:** RF-024; RF-025; RN-014; US-028.
 - **Risco:** o cadastro de pessoas, empresas e instituições exige um status, mas os requisitos não definem os estados permitidos, o estado inicial, as transições nem o efeito de desativar uma entidade já vinculada. Inferir essas regras pode ocultar vínculos válidos ou reescrever a interpretação do histórico financeiro.
-- **Decisão necessária:** definir a máquina de estados pública das entidades, incluindo criação, desativação, reativação, exclusão e comportamento nas consultas e vínculos históricos.
-- **Limite atual:** não implementar persistência nem contratos públicos de entidade até a decisão. Vínculos opcionais por texto ou referência futura não devem exigir cadastro, e alterações cadastrais nunca devem reescrever silenciosamente o histórico.
+- **Decisão aplicada em US-028:** estados públicos Ativa, Desativada, Mesclada e Eliminada/anonimizada. A criação inicia ativa; desativar preserva histórico e bloqueia novos vínculos; reativar restaura elegibilidade; mesclar redireciona vínculos futuros à principal com rastreabilidade. A eliminação só ocorre sem impedimentos financeiros, legais ou de auditoria, após painel de impacto.
+- **Decisão pendente para SESHAT-44:** definir critérios verificáveis de impedimento legal e de auditoria, quais dados cadastrais permanecem nos vínculos históricos e como RN-046/RN-047 se aplicam a entidades mescladas ou eliminadas. Até a decisão, não expor eliminação/anonimização. Vínculos opcionais por texto ou referência futura não exigem cadastro, e alterações cadastrais nunca reescrevem silenciosamente o histórico.
 
 ### RII-012 — Limites calendáricos das visões temporais
 
