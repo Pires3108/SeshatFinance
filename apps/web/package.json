@@ -8,14 +8,17 @@
     "lint": "eslint .",
     "start": "next start",
     "test": "vitest run --passWithNoTests",
+    "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@seshat/contracts": "workspace:*",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest"
