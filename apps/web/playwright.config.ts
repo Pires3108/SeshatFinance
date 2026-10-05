@@ -11,6 +11,7 @@ export default defineConfig({
   reporter: process.env.CI ? 'line' : 'list',
   use: {
     baseURL: `http://localhost:${String(port)}`,
+    serviceWorkers: 'block',
     trace: 'retain-on-failure',
   },
   projects: [
