@@ -36,6 +36,7 @@ import {
   OpaqueSessionService,
   ResolveAuthenticatedActorUseCase,
   RequestPasswordRecoveryUseCase,
+  CompletePasswordRecoveryUseCase,
   RenameOwnedCategoryUseCase,
   RenameOwnedCostCenterUseCase,
   RenameOwnedTagUseCase,
@@ -87,11 +88,13 @@ import { AuthController } from './auth/auth.controller.js';
 import { AuthenticatedActorContext } from './auth/authenticated-actor-context.js';
 import { BearerAuthGuard } from './auth/bearer-auth.guard.js';
 import { PasswordRecoveryController } from './auth/password-recovery.controller.js';
+import { PasswordRecoveryCompletionController } from './auth/password-recovery-completion.controller.js';
 import { SupabaseIdentityRegistrationGateway } from './auth/supabase-identity-registration.gateway.js';
 import { SupabaseIdentityAuthenticationGateway } from './auth/supabase-identity-authentication.gateway.js';
 import { SessionController } from './auth/session.controller.js';
 import { SupabaseIdentityTokenVerifier } from './auth/supabase-identity-token-verifier.js';
 import { SupabasePasswordRecoveryGateway } from './auth/supabase-password-recovery.gateway.js';
+import { SupabasePasswordRecoveryCompletionGateway } from './auth/supabase-password-recovery-completion.gateway.js';
 import { CategoryController } from './classifications/category.controller.js';
 import { CostCenterController } from './classifications/cost-center.controller.js';
 import { LazyCategoryRepository } from './classifications/lazy-category-repository.js';
@@ -131,6 +134,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     HealthController,
     InvestmentTypeController,
     PasswordRecoveryController,
+    PasswordRecoveryCompletionController,
     SessionController,
     TagController,
     TransactionController,
@@ -658,6 +662,29 @@ import { UserProfileController } from './users/user-profile.controller.js';
       ): RequestPasswordRecoveryUseCase =>
         new RequestPasswordRecoveryUseCase(
           new SupabasePasswordRecoveryGateway(() => {
+            const values = configuration.read();
+            return createClient(
+              values.supabaseUrl,
+              values.supabasePublishableKey,
+              {
+                auth: {
+                  autoRefreshToken: false,
+                  detectSessionInUrl: false,
+                  persistSession: false,
+                },
+              },
+            );
+          }),
+        ),
+    },
+    {
+      inject: [AuthConfiguration],
+      provide: CompletePasswordRecoveryUseCase,
+      useFactory: (
+        configuration: AuthConfiguration,
+      ): CompletePasswordRecoveryUseCase =>
+        new CompletePasswordRecoveryUseCase(
+          new SupabasePasswordRecoveryCompletionGateway(() => {
             const values = configuration.read();
             return createClient(
               values.supabaseUrl,

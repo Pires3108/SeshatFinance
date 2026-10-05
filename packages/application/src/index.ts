@@ -82,6 +82,11 @@ export {
   type RequestPasswordRecoveryCommand,
 } from './auth/request-password-recovery.js';
 export {
+  CompletePasswordRecoveryUseCase,
+  type CompletePasswordRecoveryCommand,
+  type PasswordRecoveryCompletionGateway,
+} from './auth/complete-password-recovery.js';
+export {
   ResolveAuthenticatedActorUseCase,
   type AuthenticatedActor,
   type IdentityTokenVerifier,

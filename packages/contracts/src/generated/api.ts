@@ -317,6 +317,23 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/auth/password-recovery-completions": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Complete password recovery with a one-time token */
+        readonly post: operations["PasswordRecoveryCompletionController_complete"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/auth/sessions": {
         readonly parameters: {
             readonly query?: never;
@@ -1677,6 +1694,31 @@ export interface operations {
                         readonly status: "accepted";
                     };
                 };
+            };
+        };
+    };
+    readonly PasswordRecoveryCompletionController_complete: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly tokenHash: string;
+                    readonly password: string;
+                };
+            };
+        };
+        readonly responses: {
+            /** @description The password was changed. */
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
