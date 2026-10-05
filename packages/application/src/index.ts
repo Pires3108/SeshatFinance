@@ -55,6 +55,14 @@ export {
   type IdentitySession,
 } from './auth/authenticate-user.js';
 export {
+  IdentityProviderUnavailableError,
+  InvalidIdentityCredentialsError,
+  RateLimitedIdentityAuthenticationGateway,
+  type AuthenticationAttempt,
+  type AuthenticationAttemptRepository,
+  type AuthenticationAttemptResult,
+} from './auth/rate-limited-identity-authentication.js';
+export {
   InvalidOpaqueSessionError,
   OpaqueSessionService,
   isSessionActive,
@@ -73,6 +81,11 @@ export {
   type PasswordRecoveryGateway,
   type RequestPasswordRecoveryCommand,
 } from './auth/request-password-recovery.js';
+export {
+  CompletePasswordRecoveryUseCase,
+  type CompletePasswordRecoveryCommand,
+  type PasswordRecoveryCompletionGateway,
+} from './auth/complete-password-recovery.js';
 export {
   ResolveAuthenticatedActorUseCase,
   type AuthenticatedActor,

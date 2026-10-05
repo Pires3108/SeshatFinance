@@ -2199,6 +2199,43 @@
         "tags": ["auth"]
       }
     },
+    "/api/v1/auth/password-recovery-completions": {
+      "post": {
+        "operationId": "PasswordRecoveryCompletionController_complete",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "tokenHash": {
+                    "minLength": 1,
+                    "maxLength": 512,
+                    "type": "string"
+                  },
+                  "password": {
+                    "minLength": 1,
+                    "maxLength": 1024,
+                    "type": "string"
+                  }
+                },
+                "required": ["tokenHash", "password"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "The password was changed."
+          }
+        },
+        "summary": "Complete password recovery with a one-time token",
+        "tags": ["auth"]
+      }
+    },
     "/api/v1/auth/sessions": {
       "post": {
         "operationId": "SessionController_login",

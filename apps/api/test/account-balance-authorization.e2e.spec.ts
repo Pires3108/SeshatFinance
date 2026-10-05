@@ -1,6 +1,7 @@
 import {
   GetOwnedAccountBalanceUseCase,
   OwnedAccountNotFoundError,
+  OpaqueSessionService,
   ResolveAuthenticatedActorUseCase,
 } from '@seshat/application';
 import { Test } from '@nestjs/testing';
@@ -28,10 +29,16 @@ describe('Account balance HTTP authorization', () => {
       .fn<GetOwnedAccountBalanceUseCase['execute']>()
       .mockRejectedValue(new OwnedAccountNotFoundError()),
   };
+  const sessions = {
+    resolve: vi
+      .fn<OpaqueSessionService['resolve']>()
+      .mockResolvedValue(authenticatedActorId),
+  };
 
   beforeEach(async (): Promise<void> => {
     resolveActor.execute.mockClear();
     getBalance.execute.mockClear();
+    sessions.resolve.mockClear();
     const testingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
@@ -39,6 +46,8 @@ describe('Account balance HTTP authorization', () => {
       .useValue(resolveActor)
       .overrideProvider(GetOwnedAccountBalanceUseCase)
       .useValue(getBalance)
+      .overrideProvider(OpaqueSessionService)
+      .useValue(sessions)
       .compile();
     application = testingModule.createNestApplication<NestFastifyApplication>(
       new FastifyAdapter(),
@@ -63,6 +72,24 @@ describe('Account balance HTTP authorization', () => {
     expect(response.statusCode).toBe(404);
     expect(response.json()).toMatchObject({ error: { code: 'NOT_FOUND' } });
     expect(resolveActor.execute).toHaveBeenCalledWith('actor-b-token');
+    expect(getBalance.execute).toHaveBeenCalledWith(
+      accountOwnedByAnotherActor,
+      authenticatedActorId,
+    );
+  });
+
+  it('uses the browser session actor to protect another actor account balance', async () => {
+    const token = 'a'.repeat(43);
+    const response = await application.inject({
+      headers: { cookie: `__Host-seshat_session=${token}` },
+      method: 'GET',
+      url: `/api/v1/accounts/${accountOwnedByAnotherActor}/balance`,
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toMatchObject({ error: { code: 'NOT_FOUND' } });
+    expect(sessions.resolve).toHaveBeenCalledWith(token);
+    expect(resolveActor.execute).not.toHaveBeenCalled();
     expect(getBalance.execute).toHaveBeenCalledWith(
       accountOwnedByAnotherActor,
       authenticatedActorId,

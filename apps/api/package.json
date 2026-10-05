@@ -9,7 +9,8 @@
     "lint": "eslint scripts src test",
     "openapi:generate": "tsx scripts/generate-openapi.ts && prettier --write openapi.json",
     "start": "node dist/main.js",
-    "test": "vitest run",
+    "test": "vitest run --exclude \"**/*.integration.spec.*\"",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "@nestjs/testing": "latest",
+    "@testcontainers/postgresql": "12.1.0",
     "@types/node": "latest",
     "tsx": "latest"
   }

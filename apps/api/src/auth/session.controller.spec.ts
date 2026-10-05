@@ -1,8 +1,13 @@
 import {
   AuthenticateUserUseCase,
+  IdentityProviderUnavailableError,
+  InvalidIdentityCredentialsError,
   type OpaqueSessionService,
 } from '@seshat/application';
-import { UnauthorizedException } from '@nestjs/common';
+import {
+  ServiceUnavailableException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -36,7 +41,9 @@ describe('SessionController', () => {
 
   it('does not issue a session for invalid credentials', async () => {
     const authenticate = new AuthenticateUserUseCase({
-      authenticate: vi.fn().mockRejectedValue(new Error('provider detail')),
+      authenticate: vi
+        .fn()
+        .mockRejectedValue(new InvalidIdentityCredentialsError()),
     });
     const issue = vi.fn();
     const sessions = { issue } as unknown as OpaqueSessionService;
@@ -47,6 +54,26 @@ describe('SessionController', () => {
         header: vi.fn(),
       } as unknown as FastifyReply),
     ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(issue).not.toHaveBeenCalled();
+  });
+
+  it('does not issue a session when the identity provider is unavailable', async () => {
+    const authenticate = new AuthenticateUserUseCase({
+      authenticate: vi
+        .fn()
+        .mockRejectedValue(new IdentityProviderUnavailableError()),
+    });
+    const issue = vi.fn();
+    const controller = new SessionController(authenticate, {
+      issue,
+    } as unknown as OpaqueSessionService);
+
+    await expect(
+      controller.login(
+        { email: 'synthetic@example.test', password: 'synthetic-password' },
+        { header: vi.fn() } as unknown as FastifyReply,
+      ),
+    ).rejects.toBeInstanceOf(ServiceUnavailableException);
     expect(issue).not.toHaveBeenCalled();
   });
 
