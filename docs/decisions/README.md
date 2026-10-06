@@ -5,3 +5,4 @@ Decisões arquiteturais significativas devem ser registradas aqui antes ou junto
 Use nomes no formato `NNNN-titulo-em-kebab-case.md`. Cada registro deve descrever contexto, decisão, consequências, alternativas consideradas e status.
 
 - [ADR-001 — Receptor externo de eventos para espera do agente](0001-agent-webhook-waiter.md)
+- [ADR-030 — Contexto transacional injetável](0030-contexto-transacional-injetavel.md)

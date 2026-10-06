@@ -1,4 +1,5 @@
 export type { Clock } from './ports/clock.js';
+export { readCivilDate } from './ports/civil-date.js';
 export type { IdentifierGenerator } from './ports/identifier-generator.js';
 export type { TransactionRunner } from './ports/transaction-runner.js';
 export {
