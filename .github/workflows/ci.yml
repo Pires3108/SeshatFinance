@@ -25,6 +25,7 @@ jobs:
       - run: pnpm --filter @seshat/database db:generate
       - run: pnpm format:check
       - run: pnpm build
+      - run: pnpm test:health
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
