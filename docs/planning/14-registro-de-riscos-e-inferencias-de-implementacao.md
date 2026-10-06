@@ -193,6 +193,15 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão necessária:** aprovar uma versão de Prisma que remova as dependências vulneráveis, ou uma exceção temporal de risco com escopo, compensações, responsável, prazo de revisão e critério de encerramento. A decisão deve considerar se o caminho vulnerável é alcançável na implantação e a compatibilidade dos adaptadores e do esquema.
 - **Limite atual:** não declarar RNF-033 atendido por um gate bloqueante enquanto a auditoria alta falha. Não usar `pnpm.overrides` para elevar dependências transitivas fora da compatibilidade publicada do Prisma. Manter a evidência da auditoria e reavaliar a cada atualização de Prisma ou liberação.
 
+### RII-025 — Proteção obrigatória de merge no repositório privado
+
+- **Estado:** aberto.
+- **Referências:** US-004; RNF-050/RNF-051/RNF-054; ET-001/ET-006.
+- **Evidência:** em 06/10/2026, as consultas GitHub de proteção de `main` e de rulesets retornaram HTTP 403 com a mensagem de que o plano exige GitHub Pro ou repositório público. A execução de CI e os gates locais continuam disponíveis.
+- **Risco:** um resultado vermelho é visível no pull request, mas o plano atual não permite exigir o check `quality` para impedir merge. Executar testes negativos demonstra a detecção da falha, não a proteção da branch.
+- **Decisão necessária:** disponibilizar proteção de branch mantendo o repositório privado, ou registrar uma alteração explícita do critério de aceitação de US-004 com responsável e mecanismo de controle aprovado. Nenhuma compra de plano ou mudança de visibilidade foi executada.
+- **Condição de retomada:** plano/proteção disponíveis e check obrigatório configurado, ou decisão de aceite registrada. Até então, não declarar completo o critério de impedimento de merge; publicar os gates verificáveis e manter a história Bloqueada por essa decisão.
+
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
