@@ -9,19 +9,25 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const marker = 'health-smoke-private-sentinel';
 
+/** @returns {Promise<number>} */
 async function availablePort() {
   const server = createServer();
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
-  const port = server.address().port;
-  await new Promise((resolve, reject) => {
-    server.close((error) => (error ? reject(error) : resolve()));
-  });
+  const address = server.address();
+  assert.ok(address && typeof address === 'object');
+  const port = address.port;
+  const closed = once(server, 'close');
+  server.close();
+  await closed;
   return port;
 }
 
+/** @type {NodeJS.Signals[]} */
+const terminationSignals = ['SIGTERM', 'SIGKILL'];
+
 for (const service of ['api', 'worker']) {
-  for (const signal of ['SIGTERM', 'SIGKILL']) {
+  for (const signal of terminationSignals) {
     test(
       `${service} liveness ends after ${signal}`,
       { timeout: 30_000 },
@@ -46,12 +52,13 @@ for (const service of ['api', 'worker']) {
             stdio: ['ignore', 'pipe', 'pipe'],
           },
         );
-        const exited = once(child, 'exit');
+        const exited = once(child, 'close');
         let output = '';
-        child.stdout.on('data', (chunk) => {
+        assert.ok(child.stdout && child.stderr);
+        child.stdout.on('data', (/** @type {Buffer} */ chunk) => {
           output += chunk.toString();
         });
-        child.stderr.on('data', (chunk) => {
+        child.stderr.on('data', (/** @type {Buffer} */ chunk) => {
           output += chunk.toString();
         });
         t.after(async () => {
@@ -68,6 +75,7 @@ for (const service of ['api', 'worker']) {
             null,
             `${service} exited before liveness was available`,
           );
+          assert.equal(child.signalCode, null);
           try {
             response = await fetch(url, { signal: AbortSignal.timeout(500) });
             break;
@@ -78,7 +86,7 @@ for (const service of ['api', 'worker']) {
         assert.ok(response, `${service} did not start within 20 seconds`);
         assert.equal(response.status, 200);
         assert.match(
-          response.headers.get('content-type'),
+          response.headers.get('content-type') ?? '',
           /application\/json/u,
         );
         assert.deepEqual(await response.json(), { service, status: 'ok' });
@@ -101,7 +109,7 @@ for (const service of ['api', 'worker']) {
           'startup logs exposed a secret',
         );
 
-        child.kill(signal);
+        assert.ok(child.kill(signal), `${service} could not be terminated`);
         await exited;
         await assert.rejects(
           fetch(url, { signal: AbortSignal.timeout(1_000) }),

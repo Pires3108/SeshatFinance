@@ -14,8 +14,10 @@ no CI Linux, SIGTERM também exercita os hooks de desligamento da aplicação.
 
 As dependências externas apontam para um endereço local indisponível durante
 o smoke, provando que liveness permanece independente de falhas transitórias.
-A readiness da API continua separada em `/api/v1/health/ready`; seus testes existentes
-verificam banco indisponível e timeout. A história não exige readiness do worker.
+A readiness da API continua separada em `/api/v1/health/ready`; o smoke exige
+HTTP 503 com banco indisponível e confirma novamente HTTP 200 na liveness.
+Os testes existentes também verificam indisponibilidade e timeout.
+A história não exige readiness do worker.
 
 Uma sentinela sintética na configuração permite detectar divulgação de segredo
 nos logs de início e encerramento. O contrato exato impede a inclusão de dados
@@ -23,3 +25,5 @@ financeiros no corpo. Nenhum dado financeiro real é utilizado e nenhuma
 transação externa é executada.
 
 O comando faz parte do job de qualidade do CI imediatamente após o build.
+O script participa do lint e da verificação de tipos com `checkJs` estrito,
+incluindo tipos explícitos dos sinais de encerramento.
