@@ -15,6 +15,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { PrismaAccountRepository } from '../accounts/prisma-account-repository.js';
 import type { PrismaClient } from '../generated/prisma/client.js';
 import { createPrismaClient } from '../prisma/create-prisma-client.js';
+import { PrismaTransactionRunner } from '../prisma/prisma-transaction-runner.js';
 import { PrismaTransferRepository } from './prisma-transfer-repository.js';
 
 describe('PrismaTransferRepository', () => {
@@ -22,6 +23,7 @@ describe('PrismaTransferRepository', () => {
   let disconnect: (() => Promise<void>) | undefined;
   let client: PrismaClient | undefined;
   let repository: PrismaTransferRepository | undefined;
+  let transactions: PrismaTransactionRunner | undefined;
 
   beforeAll(async (): Promise<void> => {
     const container = await new PostgreSqlContainer('postgres:17-alpine')
@@ -54,13 +56,48 @@ describe('PrismaTransferRepository', () => {
     const prisma = createPrismaClient(container.getConnectionUri());
     client = prisma;
     disconnect = async (): Promise<void> => prisma.$disconnect();
-    repository = new PrismaTransferRepository(prisma);
+    transactions = new PrismaTransactionRunner(prisma);
+    repository = new PrismaTransferRepository(prisma, transactions);
     const accounts = new PrismaAccountRepository(prisma);
     const source = account('11111111-1111-4111-8111-111111111111');
     const destination = account('22222222-2222-4222-8222-222222222222');
     await accounts.insert(source, accountAuditEvent(source));
     await accounts.insert(destination, accountAuditEvent(destination));
   }, 60_000);
+
+  it('returns committed results and clears its context after errors', async () => {
+    if (transactions === undefined)
+      throw new Error('Transaction runner unavailable.');
+    const runner = transactions;
+    const scopes = await Promise.all(
+      [0, 1].map(() =>
+        runner.run(async () => {
+          const scoped = runner.transactionClient;
+          await scoped.transfer.count();
+          expect(runner.transactionClient).toBe(scoped);
+          return scoped;
+        }),
+      ),
+    );
+    expect(scopes[0]).not.toBe(scopes[1]);
+    expect(() => runner.transactionClient).toThrow(
+      'A transaction scope is required.',
+    );
+    await expect(
+      runner.run(async () => runner.transactionClient.transfer.count()),
+    ).resolves.toBe(0);
+    await expect(
+      runner.run(async () => {
+        await runner.run(async () => Promise.resolve());
+      }),
+    ).rejects.toThrow('Nested transaction scopes are not supported.');
+    expect(() => runner.transactionClient).toThrow(
+      'A transaction scope is required.',
+    );
+    await expect(
+      runner.run(async () => runner.transactionClient.transfer.count()),
+    ).resolves.toBe(0);
+  });
 
   afterAll(async (): Promise<void> => {
     await disconnect?.();

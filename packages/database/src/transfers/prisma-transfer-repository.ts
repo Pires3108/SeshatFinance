@@ -12,6 +12,7 @@ import {
 
 import { insertFinancialAuditEvent } from '../audit/index.js';
 import type { Prisma, PrismaClient } from '../generated/prisma/client.js';
+import { PrismaTransactionRunner } from '../prisma/prisma-transaction-runner.js';
 
 export class PrismaTransferRepository
   implements
@@ -19,14 +20,22 @@ export class PrismaTransferRepository
     TransferLifecycleRepository,
     TransferReadRepository
 {
-  public constructor(private readonly client: PrismaClient) {}
+  private readonly transactions: PrismaTransactionRunner;
+
+  public constructor(
+    private readonly client: PrismaClient,
+    transactions?: PrismaTransactionRunner,
+  ) {
+    this.transactions = transactions ?? new PrismaTransactionRunner(client);
+  }
 
   public async insertAtomically(
     transfer: Transfer,
     auditEvent: FinancialAuditEvent,
   ): Promise<void> {
     const snapshot = transfer.toSnapshot();
-    await this.client.$transaction(async (client) => {
+    await this.transactions.run(async () => {
+      const client = this.transactions.transactionClient;
       await client.transaction.create({
         data: transactionCreateData(snapshot.source),
       });
@@ -100,7 +109,8 @@ export class PrismaTransferRepository
   ): Promise<boolean> {
     const snapshot = transfer.toSnapshot();
     try {
-      await this.client.$transaction(async (client) => {
+      await this.transactions.run(async () => {
+        const client = this.transactions.transactionClient;
         const source = await client.transaction.updateMany({
           data: transactionLifecycleData(snapshot.source),
           where: {
