@@ -15,9 +15,10 @@ US-012 / [SESHAT-28](https://nicolaspires.atlassian.net/browse/SESHAT-28), RNF-0
 
 - Docker Desktop: engine 28.3.3 disponível antes da integração.
 - `pnpm --filter @seshat/database db:generate`: passou com configuração Prisma explícita publicada em US-003.
-- Application: tipos passaram; 64 testes em 22 arquivos passaram.
+- Application: tipos e lint passaram; 64 testes em 22 arquivos passaram.
 - Database: tipos e lint passaram; quatro testes unitários passaram.
 - Test-support: dois testes passaram.
+- Prettier de todo o repositório passou após incorporar o reparo de três arquivos publicado em US-004 (0518727, aplicado como 13148bc); `git diff --check` passou.
 - `vitest run --config vitest.integration.config.ts src/transfers/prisma-transfer-repository.integration.spec.ts`: cinco testes passaram com PostgreSQL 17 real, incluindo rollback, auditoria, idempotência e concorrência.
 - Busca em fontes de produção Domain/Application não encontrou chamadas a `Date.now`, `randomUUID`, `Math.random` ou `new Date()` sem argumento.
 
