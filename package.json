@@ -19,7 +19,8 @@
     "test:integration": "turbo run test:integration",
     "typecheck": "turbo run typecheck && pnpm typecheck:bootstrap",
     "typecheck:bootstrap": "tsc --noEmit --allowJs --checkJs --strict --skipLibCheck --target es2022 --module nodenext --types node tools/bootstrap-local-database.mjs tools/bootstrap-local-database.test.mjs tools/bootstrap-local-database.integration.test.mjs",
-    "test:architecture": "node --test tools/architecture-rules.test.mjs"
+    "test:architecture": "node --test tools/architecture-rules.test.mjs",
+    "test:health": "node --test scripts/health-process-smoke.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "latest",
