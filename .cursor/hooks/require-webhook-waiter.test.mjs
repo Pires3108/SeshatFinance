@@ -8,7 +8,9 @@ const hookPath = fileURLToPath(
 );
 
 test('allows a one-off GitHub status lookup', () => {
-  const result = runHook({ command: 'gh run view 123 --json status,conclusion' });
+  const result = runHook({
+    command: 'gh run view 123 --json status,conclusion',
+  });
 
   assert.equal(result.permission, 'allow');
 });
