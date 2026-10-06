@@ -9,12 +9,16 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
+    "db:bootstrap": "node --env-file-if-exists=.env tools/bootstrap-local-database.mjs",
+    "test:bootstrap": "node --test tools/bootstrap-local-database.integration.test.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "turbo run lint",
-    "test": "turbo run test && node --test .cursor/hooks/guard-git-commit.test.mjs tools/verify-operational-boundary.test.mjs && node tools/verify-operational-boundary.mjs",
+    "lint": "turbo run lint && pnpm lint:bootstrap",
+    "lint:bootstrap": "eslint --config tools/bootstrap-eslint.config.mjs tools/bootstrap-local-database*.mjs",
+    "test": "turbo run test && node --test .cursor/hooks/guard-git-commit.test.mjs tools/verify-operational-boundary.test.mjs tools/bootstrap-local-database.test.mjs && node tools/verify-operational-boundary.mjs",
     "test:integration": "turbo run test:integration",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck && pnpm typecheck:bootstrap",
+    "typecheck:bootstrap": "tsc --noEmit --allowJs --checkJs --strict --skipLibCheck --target es2022 --module nodenext --types node tools/bootstrap-local-database.mjs tools/bootstrap-local-database.test.mjs tools/bootstrap-local-database.integration.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "latest",
