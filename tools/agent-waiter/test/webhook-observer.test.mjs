@@ -15,7 +15,10 @@ test('accepts a signed completed GitHub event without task storage', async () =>
       method: 'POST',
       headers: {
         'X-GitHub-Event': 'workflow_run',
-        'X-Hub-Signature-256': signature(body, process.env.GITHUB_WEBHOOK_SECRET),
+        'X-Hub-Signature-256': signature(
+          body,
+          process.env.GITHUB_WEBHOOK_SECRET,
+        ),
       },
       body,
     }),
