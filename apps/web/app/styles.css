@@ -214,3 +214,93 @@ button:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+.accounts-page {
+  width: min(100%, 70rem);
+  margin: 0 auto;
+  padding: clamp(1.5rem, 5vw, 4rem);
+}
+.accounts-heading h1,
+.account-detail h1 {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  margin-bottom: 0.75rem;
+}
+.account-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 2rem 0;
+}
+.account-filters button,
+.account-actions button,
+.accounts-page p > button {
+  min-height: 2.75rem;
+  border: 1px solid #176a61;
+  padding: 0.5rem 0.9rem;
+  background: #fff;
+  color: #10534d;
+  font-weight: 650;
+  cursor: pointer;
+}
+.account-filters button.selected {
+  background: #176a61;
+  color: #fff;
+}
+.account-filters button:disabled,
+.account-actions button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.account-note {
+  color: #38595a;
+  line-height: 1.55;
+}
+.account-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+.account-card,
+.account-detail {
+  border: 1px solid #b8ceca;
+  background: #fff;
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+.account-card h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.4rem;
+}
+.account-card p {
+  margin: 0.25rem 0;
+}
+.account-balance {
+  display: grid;
+  gap: 0.35rem;
+  margin: 1rem 0 !important;
+}
+.account-balance strong {
+  font-size: 1.4rem;
+}
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+.account-detail {
+  margin-top: 2rem;
+}
+.account-detail dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1.5rem;
+}
+.account-detail dt {
+  color: #38595a;
+}
+.account-detail dd {
+  margin: 0.4rem 0 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
