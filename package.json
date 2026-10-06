@@ -11,10 +11,11 @@
     "dev": "turbo run dev --parallel",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "turbo run lint",
-    "test": "turbo run test && node --test .cursor/hooks/guard-git-commit.test.mjs tools/verify-operational-boundary.test.mjs && node tools/verify-operational-boundary.mjs",
+    "lint": "turbo run lint && eslint --config tools/architecture-eslint.config.mjs tools/architecture-rules.mjs tools/architecture-rules.test.mjs",
+    "test": "turbo run test && node --test .cursor/hooks/guard-git-commit.test.mjs tools/verify-operational-boundary.test.mjs && node tools/verify-operational-boundary.mjs && pnpm test:architecture",
     "test:integration": "turbo run test:integration",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "test:architecture": "node --test tools/architecture-rules.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "latest",

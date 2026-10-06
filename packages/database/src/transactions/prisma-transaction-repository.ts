@@ -12,7 +12,7 @@ import {
 } from '@seshat/domain';
 
 import type { PrismaClient } from '../generated/prisma/client.js';
-import { insertFinancialAuditEvent } from '../audit/prisma-financial-audit-event-repository.js';
+import { insertFinancialAuditEvent } from '../audit/index.js';
 
 export class PrismaTransactionRepository
   implements

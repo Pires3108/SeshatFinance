@@ -1,6 +1,7 @@
 import eslint from '@eslint/js';
 import importX from 'eslint-plugin-import-x';
 import tseslint from 'typescript-eslint';
+import architecture from './tools/architecture-rules.mjs';
 
 export default tseslint.config(
   {
@@ -18,7 +19,7 @@ export default tseslint.config(
   ...tseslint.configs.stylisticTypeChecked,
   {
     files: ['**/*.ts', '**/*.tsx'],
-    plugins: { 'import-x': importX },
+    plugins: { 'import-x': importX, architecture },
     languageOptions: {
       parserOptions: {
         projectService: true,
@@ -32,7 +33,9 @@ export default tseslint.config(
         { allowExpressions: true },
       ],
       '@typescript-eslint/no-explicit-any': 'error',
-      'import-x/no-cycle': 'error',
+      'import-x/no-cycle': ['error', { ignoreExternal: true }],
+      'architecture/boundaries': 'error',
+      'architecture/precise-money': 'error',
     },
   },
   {
