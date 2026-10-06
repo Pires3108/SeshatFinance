@@ -14,6 +14,6 @@ O comando `pnpm db:bootstrap` aguarda o health check do PostgreSQL 17, gera o cl
 
 O teste de bootstrap usa um projeto Compose temporário e remove apenas seu volume sintético ao terminar. O comando de desenvolvimento mantém o volume. Nenhum cálculo financeiro, saldo ou transação externa foi alterado.
 
-## Pendência da base
+## Resolução da pendência da base
 
-A formatação geral da base publicada apontou três arquivos de webhook fora do padrão: `.cursor/hooks/require-webhook-waiter.test.mjs`, `tools/agent-waiter/src/infrastructure.ts` e `tools/agent-waiter/test/webhook-observer.test.mjs`. Esta evidência não declara esses arquivos verificados nem os gates gerais de todos os módulos concluídos; a auditoria da fundação deve resolver essa pendência separadamente.
+A formatação geral da base publicada apontou três arquivos de webhook fora do padrão: `.cursor/hooks/require-webhook-waiter.test.mjs`, `tools/agent-waiter/src/infrastructure.ts` e `tools/agent-waiter/test/webhook-observer.test.mjs`. O reparo publicado em US-004 (0518727) foi incorporado como ef90f33; a nova verificação Prettier de todo o repositório passou. Os gates gerais de módulos independentes continuam acompanhados em seus respectivos incrementos.
