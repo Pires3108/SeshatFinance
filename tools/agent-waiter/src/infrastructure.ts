@@ -96,8 +96,7 @@ export async function resumeTask(
 
 export function createStoreFromEnvironment(): RedisTaskStore {
   const connection = resolveRedisConnection(process.env);
-  if (connection === null)
-    throw new Error('Task storage is not configured.');
+  if (connection === null) throw new Error('Task storage is not configured.');
   return new RedisTaskStore(connection.endpoint, connection.token);
 }
 
