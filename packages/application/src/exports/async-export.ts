@@ -151,6 +151,31 @@ export class GetExportDownloadUseCase {
   }
 }
 
+export class GetExportJobStatusUseCase {
+  public constructor(private readonly repository: ExportJobRepository) {}
+
+  public async execute(actorId: string, jobId: string): Promise<ExportJob> {
+    assertActorId(actorId);
+    const job = await this.repository.getOwned(actorId, jobId);
+    if (job === null)
+      throw new ExportJobNotFoundError('Export job was not found.');
+    return job;
+  }
+}
+
+export type ExportWorkerJob = Readonly<{
+  id: string;
+  actorId: string;
+  format: ExportFormat;
+  selection: ExportSelection;
+  filters: ExportFilters;
+  expiresAt: Date;
+}>;
+
+export interface ExportJobProcessor {
+  process(job: ExportWorkerJob): Promise<void>;
+}
+
 export class ExpireExportJobsUseCase {
   public constructor(
     private readonly repository: ExportJobRepository,
