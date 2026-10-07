@@ -6,6 +6,10 @@ import {
   ListOwnedBalanceAdjustmentsUseCase,
   CreateCreditCardUseCase,
   CreateFamilyGroupUseCase,
+  CreateFamilyGroupInvitationUseCase,
+  AcceptFamilyGroupInvitationUseCase,
+  RevokeFamilyGroupInvitationUseCase,
+  type FamilyGroupInvitationRepository,
   ChangeFamilyGroupRoleUseCase,
   GetOwnedCreditCardUseCase,
   GetOwnedTransferUseCase,
@@ -74,6 +78,9 @@ import { LazyBalanceAdjustmentRepository } from './adjustments/lazy-balance-adju
 import { CreditCardController } from './cards/credit-card.controller.js';
 import { LazyCreditCardRepository } from './cards/lazy-credit-card-repository.js';
 import { FamilyGroupController } from './family/family-group.controller.js';
+import { FamilyGroupInvitationController } from './family/family-group-invitation.controller.js';
+import { SystemInvitationTokenGenerator } from './family/system-invitation-token-generator.js';
+import { LazyFamilyGroupInvitationRepository } from './family/lazy-family-group-invitation-repository.js';
 import { LazyFamilyGroupRepository } from './family/lazy-family-group-repository.js';
 import { AuthConfiguration } from './auth/auth-configuration.js';
 import { AuthController } from './auth/auth.controller.js';
@@ -116,6 +123,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     BalanceAdjustmentController,
     CreditCardController,
     FamilyGroupController,
+    FamilyGroupInvitationController,
     AuthController,
     CategoryController,
     CostCenterController,
@@ -151,6 +159,8 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyBalanceAdjustmentRepository,
     LazyCreditCardRepository,
     LazyFamilyGroupRepository,
+    LazyFamilyGroupInvitationRepository,
+    SystemInvitationTokenGenerator,
     LazyCategoryRepository,
     LazyCostCenterRepository,
     LazyTagRepository,
@@ -186,6 +196,29 @@ import { UserProfileController } from './users/user-profile.controller.js';
           new SystemClock(),
           new SystemIdentifierGenerator(),
         ),
+    },
+    {
+      inject: [LazyFamilyGroupInvitationRepository],
+      provide: CreateFamilyGroupInvitationUseCase,
+      useFactory: (invitations: FamilyGroupInvitationRepository) =>
+        new CreateFamilyGroupInvitationUseCase(
+          invitations,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+          new SystemInvitationTokenGenerator(),
+        ),
+    },
+    {
+      inject: [LazyFamilyGroupInvitationRepository],
+      provide: AcceptFamilyGroupInvitationUseCase,
+      useFactory: (invitations: FamilyGroupInvitationRepository) =>
+        new AcceptFamilyGroupInvitationUseCase(invitations, new SystemClock()),
+    },
+    {
+      inject: [LazyFamilyGroupInvitationRepository],
+      provide: RevokeFamilyGroupInvitationUseCase,
+      useFactory: (invitations: FamilyGroupInvitationRepository) =>
+        new RevokeFamilyGroupInvitationUseCase(invitations),
     },
     {
       inject: [LazyAccountRepository, LazyCreditCardRepository],

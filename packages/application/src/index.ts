@@ -166,6 +166,7 @@ export {
   AcceptFamilyGroupInvitationUseCase,
   CreateFamilyGroupInvitationUseCase,
   RevokeFamilyGroupInvitationUseCase,
+  FamilyGroupInvitationDeniedError,
   type FamilyGroupInvitationRepository,
   type InvitationTokenGenerator,
 } from './family/manage-family-group-invitation.js';

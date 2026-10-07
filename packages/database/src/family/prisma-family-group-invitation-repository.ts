@@ -1,6 +1,7 @@
 import type { FamilyGroupInvitationRepository } from '@seshat/application';
 import {
   InvalidFamilyGroupInvitationError,
+  canInviteToFamilyGroup,
   type FamilyGroupInvitation,
   type FamilyGroupRole,
 } from '@seshat/domain';
