@@ -2,6 +2,10 @@ import type { ExportFilters, ExportRow } from '@seshat/application';
 import { Currency, Money } from '@seshat/domain';
 
 import type { PrismaClient } from '../generated/prisma/client.js';
+import {
+  assertBoundedExportRows,
+  EXPORT_QUERY_LIMIT,
+} from '../exports/export-read-bounds.js';
 
 export class PrismaTransactionExportReader {
   public constructor(private readonly client: PrismaClient) {}
@@ -51,7 +55,9 @@ export class PrismaTransactionExportReader {
         createdAt: true,
       },
       orderBy: [{ occurredAt: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+      take: EXPORT_QUERY_LIMIT,
     });
+    assertBoundedExportRows('transactions', rows);
     const formatter = new Intl.DateTimeFormat('en-CA', {
       timeZone: zone,
       year: 'numeric',
