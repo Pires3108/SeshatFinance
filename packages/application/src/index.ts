@@ -178,3 +178,21 @@ export {
   ListOwnFamilyGroupsUseCase,
   type FamilyGroupRepository,
 } from './family/create-family-group.js';
+
+export {
+  CreateExportJobUseCase,
+  GetExportDownloadUseCase,
+  ExpireExportJobsUseCase,
+  EXPORT_JOB_TTL_MS,
+  EXPORT_SIGNED_URL_TTL_MS,
+  ExportJobValidationError,
+  ExportJobNotFoundError,
+  ExportJobExpiredError,
+  type ExportJob,
+  type ExportJobStatus,
+  type ExportFormat,
+  type ExportJobRepository,
+  type ExportAuthorizationPort,
+  type PrivateExportStorage,
+  type CreateExportJobCommand,
+} from './exports/async-export.js';
