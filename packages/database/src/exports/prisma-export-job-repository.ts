@@ -1,4 +1,10 @@
-import type { ExportJob, ExportJobRepository } from '@seshat/application';
+import { isDeepStrictEqual } from 'node:util';
+
+import {
+  ExportJobValidationError,
+  type ExportJob,
+  type ExportJobRepository,
+} from '@seshat/application';
 
 import type { Prisma } from '../generated/prisma/client.js';
 import type { PrismaClient } from '../generated/prisma/client.js';
@@ -73,7 +79,17 @@ export class PrismaExportJobRepository implements ExportJobRepository {
         job.actorId,
         job.idempotencyKey,
       );
-      if (existing !== null) return existing;
+      if (existing !== null) {
+        if (
+          existing.format !== job.format ||
+          existing.selection.zone !== job.selection.zone ||
+          !isDeepStrictEqual(existing.filters, job.filters)
+        )
+          throw new ExportJobValidationError(
+            'Idempotency key belongs to another export request.',
+          );
+        return existing;
+      }
       throw error;
     }
   }

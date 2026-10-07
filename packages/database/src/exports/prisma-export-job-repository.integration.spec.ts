@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 
-import type { ExportJob } from '@seshat/application';
+import { ExportJobValidationError, type ExportJob } from '@seshat/application';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -122,5 +122,27 @@ describe('PrismaExportJobRepository', () => {
     expect(changed.storageKey).toBe('private/export-id');
     expect(changed.selection).toEqual(original.selection);
     expect(changed.filters).toEqual(original.filters);
+  });
+
+  it('rejects a conflicting concurrent request for the same idempotency key', async () => {
+    if (prisma === undefined) throw new Error('Prisma unavailable.');
+    const repository = new PrismaExportJobRepository(prisma);
+    const original = job(
+      '66666666-6666-4666-8666-666666666666',
+      'conflicting-request',
+    );
+    await repository.create(original);
+    await expect(
+      repository.create({
+        ...original,
+        id: '77777777-7777-4777-8777-777777777777',
+        format: 'json',
+      }),
+    ).rejects.toBeInstanceOf(ExportJobValidationError);
+    expect(
+      await prisma.exportJob.count({
+        where: { idempotencyKey: 'conflicting-request' },
+      }),
+    ).toBe(1);
   });
 });
