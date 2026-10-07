@@ -99,6 +99,13 @@ export {
   type FamilyGroupSnapshot,
 } from './family/family-group.js';
 export {
+  FamilyGroupInvitation,
+  InvalidFamilyGroupInvitationError,
+  familyGroupInvitationStatuses,
+  type FamilyGroupInvitationSnapshot,
+  type FamilyGroupInvitationStatus,
+} from './family/family-group-invitation.js';
+export {
   hasFamilyGroupCapability,
   canInviteToFamilyGroup,
   canChangeFamilyGroupRole,

@@ -162,3 +162,10 @@ export {
   type ChangeFamilyGroupRoleCommand,
   type FamilyGroupRepository,
 } from './family/create-family-group.js';
+export {
+  AcceptFamilyGroupInvitationUseCase,
+  CreateFamilyGroupInvitationUseCase,
+  RevokeFamilyGroupInvitationUseCase,
+  type FamilyGroupInvitationRepository,
+  type InvitationTokenGenerator,
+} from './family/manage-family-group-invitation.js';
