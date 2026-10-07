@@ -1,6 +1,10 @@
 import type { ExportFilters, ExportRow } from '@seshat/application';
 
 import type { PrismaClient } from '../generated/prisma/client.js';
+import {
+  assertBoundedExportRows,
+  EXPORT_QUERY_LIMIT,
+} from '../exports/export-read-bounds.js';
 
 function civilDate(instant: Date, zone: string): string {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -44,7 +48,9 @@ export class PrismaTransferExportReader {
             }
           : {}),
       },
+      take: EXPORT_QUERY_LIMIT,
     });
+    assertBoundedExportRows('transfers', rows);
     return rows
       .filter((row) => {
         const date = civilDate(row.sourceTransaction.occurredAt, zone);

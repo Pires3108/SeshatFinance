@@ -1,6 +1,10 @@
 import type { ExportFilters, ExportRow } from '@seshat/application';
 
 import type { PrismaClient } from '../generated/prisma/client.js';
+import {
+  assertBoundedExportRows,
+  EXPORT_QUERY_LIMIT,
+} from '../exports/export-read-bounds.js';
 
 export class PrismaCategoryExportReader {
   public constructor(private readonly client: PrismaClient) {}
@@ -14,7 +18,9 @@ export class PrismaCategoryExportReader {
     const rows = await this.client.category.findMany({
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       where: { ownerId },
+      take: EXPORT_QUERY_LIMIT,
     });
+    assertBoundedExportRows('categories', rows);
     const selected = new Set(filters.categoryIds);
     if (selected.size > 0) {
       const byId = new Map(rows.map((row) => [row.id, row]));
@@ -54,7 +60,9 @@ export class PrismaTagExportReader {
     const rows = await this.client.tag.findMany({
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       where: { ownerId },
+      take: EXPORT_QUERY_LIMIT,
     });
+    assertBoundedExportRows('tags', rows);
     return rows.map((row) => ({
       id: row.id,
       ownerId: row.ownerId,
@@ -78,7 +86,9 @@ export class PrismaCostCenterExportReader {
     const rows = await this.client.costCenter.findMany({
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       where: { ownerId },
+      take: EXPORT_QUERY_LIMIT,
     });
+    assertBoundedExportRows('cost_centers', rows);
     return rows.map((row) => ({
       id: row.id,
       ownerId: row.ownerId,

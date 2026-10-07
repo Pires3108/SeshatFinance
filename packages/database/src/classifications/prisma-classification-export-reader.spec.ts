@@ -1,4 +1,4 @@
-import type { ExportFilters } from '@seshat/application';
+import { MAX_EXPORT_ROWS, type ExportFilters } from '@seshat/application';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { PrismaClient } from '../generated/prisma/client.js';
@@ -87,7 +87,29 @@ describe('PrismaClassificationExportReaders', () => {
         'UTC',
       ),
     ).toHaveLength(1);
-    expect(tagFindMany.mock.calls[0]?.[0]).not.toHaveProperty('take');
-    expect(centerFindMany.mock.calls[0]?.[0]).not.toHaveProperty('take');
+    expect(tagFindMany.mock.calls[0]?.[0]).toMatchObject({ take: 100_001 });
+    expect(centerFindMany.mock.calls[0]?.[0]).toMatchObject({ take: 100_001 });
+  });
+
+  it('rejects an oversized result after a bounded sentinel query', async () => {
+    const findMany = vi.fn().mockResolvedValue(
+      Array.from({ length: MAX_EXPORT_ROWS + 1 }, (_, index) => ({
+        id: `id-${String(index)}`,
+        ownerId,
+        name: 'Name',
+        parentCategoryId: null,
+        createdAt: new Date('2026-01-01Z'),
+      })),
+    );
+    const reader = new PrismaCategoryExportReader({
+      category: { findMany },
+    } as unknown as PrismaClient);
+
+    await expect(
+      reader.readAuthorized(ownerId, filters, 'UTC'),
+    ).rejects.toThrow('exceeds the row limit');
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ take: MAX_EXPORT_ROWS + 1 }),
+    );
   });
 });

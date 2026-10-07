@@ -1,6 +1,10 @@
 import type { ExportFilters, ExportRow } from '@seshat/application';
 
 import type { PrismaClient } from '../generated/prisma/client.js';
+import {
+  assertBoundedExportRows,
+  EXPORT_QUERY_LIMIT,
+} from '../exports/export-read-bounds.js';
 
 function decimalFromMinorUnits(raw: string, scale: number): string {
   const negative = raw.startsWith('-');
@@ -27,7 +31,9 @@ export class PrismaCardExportReader {
           ? { paymentAccountId: { in: [...filters.accountIds] } }
           : {}),
       },
+      take: EXPORT_QUERY_LIMIT,
     });
+    assertBoundedExportRows('credit_cards', rows);
     return rows.map((row) => ({
       id: row.id,
       ownerId: row.ownerId,
