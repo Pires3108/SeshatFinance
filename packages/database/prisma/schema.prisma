@@ -29,13 +29,41 @@ enum FamilyGroupRole {
   @@map("family_group_role")
 }
 
+enum FamilyGroupInvitationStatus {
+  pending
+  accepted
+  revoked
+
+  @@map("family_group_invitation_status")
+}
+
 model FamilyGroup {
   id          String                  @id @db.Uuid
   createdAt   DateTime                @map("created_at") @db.Timestamptz(6)
   members     FamilyGroupMembership[]
   roleChanges FamilyGroupRoleChange[]
+  invitations FamilyGroupInvitation[]
 
   @@map("family_groups")
+}
+
+model FamilyGroupInvitation {
+  id             String                       @id @db.Uuid
+  groupId        String                       @map("group_id") @db.Uuid
+  invitedBy      String                       @map("invited_by") @db.Uuid
+  email          String                       @db.VarChar(320)
+  role           FamilyGroupRole
+  tokenHash      String                       @unique @map("token_hash") @db.Char(64)
+  createdAt      DateTime                     @map("created_at") @db.Timestamptz(6)
+  expiresAt      DateTime                     @map("expires_at") @db.Timestamptz(6)
+  status         FamilyGroupInvitationStatus
+  acceptedAt     DateTime?                    @map("accepted_at") @db.Timestamptz(6)
+  acceptedUserId String?                      @map("accepted_user_id") @db.Uuid
+  group          FamilyGroup                   @relation(fields: [groupId], references: [id], onDelete: Restrict)
+
+  @@index([groupId, status, expiresAt])
+  @@index([email, status])
+  @@map("family_group_invitations")
 }
 
 model FamilyGroupRoleChange {
