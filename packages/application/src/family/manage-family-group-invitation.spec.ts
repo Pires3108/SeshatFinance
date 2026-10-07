@@ -14,11 +14,12 @@ describe('family group invitations', () => {
   it('creates a normalized single use invitation expiring in 72 hours', async () => {
     let created!: FamilyGroupInvitationSnapshot;
     const repository: FamilyGroupInvitationRepository = {
-      create: async (value) => {
+      create: (value) => {
         created = value.toSnapshot();
+        return Promise.resolve();
       },
-      revoke: async () => undefined,
-      accept: async () => created,
+      revoke: () => Promise.resolve(),
+      accept: () => Promise.resolve(created),
     };
     const result = await new CreateFamilyGroupInvitationUseCase(
       repository,
@@ -39,11 +40,11 @@ describe('family group invitations', () => {
   it('passes only confirmed identity email to the atomic acceptance port', async () => {
     let received!: { confirmedEmail: string };
     const repository: FamilyGroupInvitationRepository = {
-      create: async () => undefined,
-      revoke: async () => undefined,
-      accept: async (command) => {
+      create: () => Promise.resolve(),
+      revoke: () => Promise.resolve(),
+      accept: (command) => {
         received = command;
-        return {} as FamilyGroupInvitationSnapshot;
+        return Promise.resolve({} as FamilyGroupInvitationSnapshot);
       },
     };
     await new AcceptFamilyGroupInvitationUseCase(repository, clock).execute({
