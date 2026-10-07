@@ -5,6 +5,10 @@ import {
 } from '@seshat/domain';
 import type { Clock } from '../ports/clock.js';
 import type { IdentifierGenerator } from '../ports/identifier-generator.js';
+import type {
+  FamilyGroupInvitationDeliveryGateway,
+  FamilyGroupInvitationDeliveryMethod,
+} from './deliver-family-group-invitation.js';
 
 export class FamilyGroupInvitationDeniedError extends Error {
   public constructor() {
@@ -34,6 +38,7 @@ export class CreateFamilyGroupInvitationUseCase {
     private readonly clock: Clock,
     private readonly identifiers: IdentifierGenerator,
     private readonly tokens: InvitationTokenGenerator,
+    private readonly delivery?: FamilyGroupInvitationDeliveryGateway,
   ) {}
 
   public async execute(command: {
@@ -41,7 +46,12 @@ export class CreateFamilyGroupInvitationUseCase {
     groupId: string;
     email: string;
     role: Exclude<FamilyGroupRole, 'owner'>;
-  }): Promise<{ invitation: FamilyGroupInvitationSnapshot; token: string }> {
+    deliveryRedirectUrl?: (token: string) => string;
+  }): Promise<{
+    invitation: FamilyGroupInvitationSnapshot;
+    token: string;
+    deliveryMethod?: FamilyGroupInvitationDeliveryMethod;
+  }> {
     const createdAt = this.clock.now();
     const token = this.tokens.generate();
     const invitation = FamilyGroupInvitation.create({
@@ -56,7 +66,18 @@ export class CreateFamilyGroupInvitationUseCase {
       status: 'pending',
     });
     await this.invitations.create(invitation);
-    return { invitation: invitation.toSnapshot(), token: token.token };
+    const deliveryMethod =
+      this.delivery === undefined || command.deliveryRedirectUrl === undefined
+        ? undefined
+        : await this.delivery.deliver({
+            email: invitation.toSnapshot().email,
+            redirectUrl: command.deliveryRedirectUrl(token.token),
+          });
+    return {
+      invitation: invitation.toSnapshot(),
+      token: token.token,
+      deliveryMethod,
+    };
   }
 }
 

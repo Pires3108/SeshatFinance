@@ -170,3 +170,8 @@ export {
   type FamilyGroupInvitationRepository,
   type InvitationTokenGenerator,
 } from './family/manage-family-group-invitation.js';
+export type {
+  FamilyGroupInvitationDeliveryGateway,
+  FamilyGroupInvitationDeliveryMethod,
+  DeliverFamilyGroupInvitationCommand,
+} from './family/deliver-family-group-invitation.js';

@@ -28,6 +28,7 @@ import {
 import type { FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import { AuthenticatedActorContext } from '../auth/authenticated-actor-context.js';
+import { AuthConfiguration } from '../auth/auth-configuration.js';
 import { BearerAuthGuard } from '../auth/bearer-auth.guard.js';
 import { ZodValidationPipe } from '../platform/zod-validation.pipe.js';
 import { hashInvitationToken } from './system-invitation-token-generator.js';
@@ -57,6 +58,8 @@ export class FamilyGroupInvitationController {
     private readonly revokeInvitation: RevokeFamilyGroupInvitationUseCase,
     @Inject(AuthenticatedActorContext)
     private readonly actors: AuthenticatedActorContext,
+    @Inject(AuthConfiguration)
+    private readonly configuration: AuthConfiguration,
   ) {}
 
   @Post('family-groups/:groupId/invitations')
@@ -79,6 +82,11 @@ export class FamilyGroupInvitationController {
         groupId,
         email: body.email,
         role: body.role,
+        deliveryRedirectUrl: (token) =>
+          appendInvitationToken(
+            this.configuration.read().familyInvitationRedirectUrl,
+            token,
+          ),
       });
       return {
         invitationId: result.invitation.id,
@@ -143,4 +151,10 @@ export class FamilyGroupInvitationController {
     if (actor === undefined) throw new UnauthorizedException();
     return actor;
   }
+}
+
+function appendInvitationToken(redirectUrl: string, token: string): string {
+  const url = new URL(redirectUrl);
+  url.searchParams.set('token', token);
+  return url.toString();
 }
