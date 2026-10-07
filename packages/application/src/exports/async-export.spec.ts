@@ -65,7 +65,7 @@ describe('async export jobs', () => {
       actorId: actor,
       idempotencyKey: 'export-request-1',
       format: 'json' as const,
-      selection: { sets: ['accounts'] },
+      selection: { sets: ['accounts'], zone: 'UTC' },
     };
     const first = await useCase.execute(command);
     const second = await useCase.execute(command);
@@ -88,8 +88,9 @@ describe('async export jobs', () => {
       actorId: actor,
       idempotencyKey: 'k',
       format: 'csv',
-      selection: { sets: ['accounts'] },
-      filters: parseExportSelection({ sets: ['accounts'] }).filters,
+      selection: { sets: ['accounts'], zone: 'UTC' },
+      filters: parseExportSelection({ sets: ['accounts'], zone: 'UTC' })
+        .filters,
       status: 'completed',
       progress: 100,
       storageKey: 'private/key',
@@ -114,8 +115,9 @@ describe('async export jobs', () => {
       actorId: actor,
       idempotencyKey: 'k',
       format: 'xlsx',
-      selection: { sets: ['accounts'] },
-      filters: parseExportSelection({ sets: ['accounts'] }).filters,
+      selection: { sets: ['accounts'], zone: 'UTC' },
+      filters: parseExportSelection({ sets: ['accounts'], zone: 'UTC' })
+        .filters,
       status: 'completed',
       progress: 100,
       storageKey: 'private/key',
