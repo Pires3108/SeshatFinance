@@ -71,3 +71,13 @@ Manter web, API e worker portáveis e escolher provedor após verificar camadas 
 **Status:** aceita.
 
 Executar parsing, OCR e exportações no worker para proteger a API. Jobs exigem idempotência, retry e dead-letter.
+
+## ADR-013 — XLSX mínimo no Application
+
+**Status:** aceita para US-083.
+
+Gerar o workbook XLSX a partir do documento canônico de exportação no pacote Application,
+sem dependência de produção ou acesso a storage. O serializer escreve apenas Open XML
+necessário, com valores inline inertes, limites explícitos e dois layouts: abas por entidade
+com `Summary` e tabela única. O endpoint, download, persistência e execução assíncrona
+permanecem sob responsabilidade das histórias posteriores.

@@ -21,6 +21,14 @@ export {
   type ExportSet,
 } from './exports/export-contract.js';
 export {
+  serializeExportXlsx,
+  MAX_XLSX_BYTES,
+  MAX_XLSX_ROWS_PER_SHEET,
+  MAX_XLSX_SHEETS,
+  type XlsxExportOptions,
+  type XlsxLayout,
+} from './exports/xlsx-export.js';
+export {
   AccountVersionConflictError,
   ChangeOwnedAccountLifecycleUseCase,
   CreateAccountUseCase,
