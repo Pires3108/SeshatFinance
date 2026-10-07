@@ -3,6 +3,7 @@ import {
   InvalidFamilyGroupInvitationError,
   canInviteToFamilyGroup,
   type FamilyGroupInvitation,
+  type FamilyGroupInvitationSnapshot,
   type FamilyGroupRole,
 } from '@seshat/domain';
 import type { PrismaClient } from '../generated/prisma/client.js';
@@ -43,18 +44,19 @@ export class PrismaFamilyGroupInvitationRepository implements FamilyGroupInvitat
     userId: string;
     confirmedEmail: string;
     acceptedAt: Date;
-  }): Promise<import('@seshat/domain').FamilyGroupInvitationSnapshot> {
+  }): Promise<FamilyGroupInvitationSnapshot> {
     const email = command.confirmedEmail.trim().toLowerCase();
     return this.client.$transaction(async (client) => {
       const rows = await client.$queryRaw<readonly { id: string }[]>`
         SELECT "id" FROM "family_group_invitations" WHERE "token_hash" = ${command.tokenHash}
         AND "status" = 'pending'::"family_group_invitation_status" AND "expires_at" > ${command.acceptedAt} FOR UPDATE`;
-      if (rows.length === 0)
+      const lockedRow = rows[0];
+      if (!lockedRow)
         throw new InvalidFamilyGroupInvitationError(
           'Invitation is unavailable.',
         );
       const invitation = await client.familyGroupInvitation.findUniqueOrThrow({
-        where: { id: rows[0]!.id },
+        where: { id: lockedRow.id },
       });
       if (invitation.email !== email)
         throw new InvalidFamilyGroupInvitationError(
