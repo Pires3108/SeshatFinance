@@ -94,7 +94,7 @@ describe('PrismaClassificationExportReaders', () => {
   it('rejects an oversized result after a bounded sentinel query', async () => {
     const findMany = vi.fn().mockResolvedValue(
       Array.from({ length: MAX_EXPORT_ROWS + 1 }, (_, index) => ({
-        id: `id-${index}`,
+        id: `id-${String(index)}`,
         ownerId,
         name: 'Name',
         parentCategoryId: null,
