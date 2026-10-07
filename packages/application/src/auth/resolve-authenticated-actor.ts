@@ -1,5 +1,7 @@
 export type AuthenticatedActor = Readonly<{
   id: string;
+  /** Set only when the identity provider verified this email as confirmed. */
+  confirmedEmail?: string;
 }>;
 
 export interface IdentityTokenVerifier {

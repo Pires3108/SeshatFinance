@@ -171,11 +171,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-022 — Convites e saída de grupos familiares
 
-- **Estado:** aberto.
+- **Estado:** decisão de domínio e transporte registrada; implementação de US-102 pendente.
+- **Decisão de 2026-10-06:** convite para e-mail normalizado, usuário existente ou não, com aceite explícito apenas quando o e-mail coincide com o e-mail confirmado da identidade Supabase Auth autenticada. Convite de 72 horas, uso único, revogação, limite de três pendentes, cooldown progressivo de 30 segundos a 80 minutos e substituição foram definidos para US-102. A saída e remoção revogam autorização imediatamente, preservando histórico e autoria.
+- **Decisão de transporte de 2026-10-07:** usar `inviteUserByEmail` do Supabase Auth para identidade ainda não cadastrada e `signInWithOtp` com `shouldCreateUser: false` para identidade cadastrada. Ambos redirecionam à área de convites após a sessão; o link de Auth não concede associação ao grupo. O convite do grupo permanece independente, com token próprio, aceite explícito, validade de 72 horas e verificação transacional de uso único e e-mail confirmado. Os links de Auth têm expiração e limite de frequência próprios, que não alteram a validade do convite do grupo.
+- **Preparação segura:** a verificação remota do token agora pode fornecer ao backend o e-mail normalizado somente quando `getUser` comprova `email_confirmed_at`. O fluxo de convite ainda requer persistência atômica, entrega dos dois tipos de e-mail e testes antes de publicar endpoints.
 - **Referências:** RF-009, RF-014; RN-049 a RN-053; US-102 a US-105; CA-019.
-- **Risco:** convite, aceite e saída não definem destinatário elegível, expiração, reenvio, revogação, limite de convites simultâneos nem o comportamento de um convite quando a identidade ainda não existe. Também não definem a experiência de saída quando a pessoa possui papéis ou registros compartilhados, além da proibição já estabelecida para o último proprietário. Inferir esses fluxos pode conceder associação à pessoa errada ou deixar acesso ativo após uma remoção.
-- **Decisão necessária:** aprovar o identificador do convidado, validade e revogação do convite, regras de reenvio e aceite, transições de papéis na entrada e na saída, e a auditoria mínima permitida para esses eventos.
-- **Limite atual:** implementar apenas a criação de um grupo sem metadados adicionais e a associação atômica do ator autenticado como proprietário. Não publicar convite, aceite, remoção, saída, transferência de propriedade ou contas compartilhadas até a decisão.
+- **Risco remanescente:** o web ainda depende da sessão opaca de US-014/PR #113 e de um callback dos links de Auth para chegar à área de convites com sessão válida. Sem esse caminho, os e-mails enviados não levam a um aceite funcional. A persistência do convite e a revogação imediata da autorização também precisam de implementação e testes de concorrência.
+- **Próximo passo:** integrar o callback e a sessão web, implementar entrega, persistência transacional e testes de US-102 antes de expor os endpoints. Confirmar em configuração do Supabase os redirects permitidos e o template Magic Link.
+- **Limite atual:** apenas criação de grupo, associação do proprietário e contrato de e-mail confirmado no backend. Convite, aceite, remoção e saída ainda não são públicos.
 
 ### RII-023 — Semântica e ciclo de vida das notificações internas
 

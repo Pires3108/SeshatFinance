@@ -35,4 +35,70 @@ describe('SupabaseIdentityTokenVerifier', () => {
       InvalidIdentityTokenError,
     );
   });
+
+  it('exposes only a provider-confirmed normalized email', async () => {
+    const getUser = vi.fn().mockResolvedValue({
+      data: {
+        user: {
+          id: 'actor-id',
+          email: '  Person@Example.COM  ',
+          email_confirmed_at: '2026-10-06T10:00:00.000Z',
+        },
+      },
+      error: null,
+    });
+    const verifier = new SupabaseIdentityTokenVerifier(() => ({
+      auth: { getUser },
+    }));
+
+    await expect(verifier.verify('access-token')).resolves.toEqual({
+      id: 'actor-id',
+      confirmedEmail: 'person@example.com',
+    });
+  });
+
+  it.each([null, undefined, '', 'invalid'])(
+    'omits unconfirmed email (%s)',
+    async (confirmedAt) => {
+      const verifier = new SupabaseIdentityTokenVerifier(() => ({
+        auth: {
+          getUser: vi.fn().mockResolvedValue({
+            data: {
+              user: {
+                id: 'actor-id',
+                email: 'person@example.com',
+                email_confirmed_at: confirmedAt,
+              },
+            },
+            error: null,
+          }),
+        },
+      }));
+
+      await expect(verifier.verify('access-token')).resolves.toEqual({
+        id: 'actor-id',
+      });
+    },
+  );
+
+  it('omits malformed provider email even when confirmation exists', async () => {
+    const verifier = new SupabaseIdentityTokenVerifier(() => ({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({
+          data: {
+            user: {
+              id: 'actor-id',
+              email: 'not-an-email',
+              email_confirmed_at: '2026-10-06T10:00:00.000Z',
+            },
+          },
+          error: null,
+        }),
+      },
+    }));
+
+    await expect(verifier.verify('access-token')).resolves.toEqual({
+      id: 'actor-id',
+    });
+  });
 });
