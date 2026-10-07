@@ -3,6 +3,7 @@ import { parseExportSelection } from './export-contract.js';
 import {
   CreateExportJobUseCase,
   ExportJobExpiredError,
+  ExportJobValidationError,
   GetExportDownloadUseCase,
   type ExportJob,
   type ExportJobRepository,
@@ -73,6 +74,34 @@ describe('async export jobs', () => {
     expect(first.status).toBe('queued');
     expect(first.progress).toBe(0);
     expect(first.expiresAt.toISOString()).toBe('2026-10-08T12:00:00.000Z');
+  });
+  it('revalidates authorization and rejects a changed idempotent request', async () => {
+    const repo = new Repo();
+    let allowed = true;
+    const useCase = new CreateExportJobUseCase(
+      repo,
+      {
+        assertCanExport: async () => {
+          if (!allowed) throw new Error('revoked');
+        },
+      },
+      clock,
+      ids,
+      parseExportSelection,
+    );
+    const command = {
+      actorId: actor,
+      idempotencyKey: 'export-request-2',
+      format: 'json' as const,
+      selection: { sets: ['accounts'], zone: 'UTC' },
+    };
+    await useCase.execute(command);
+    await expect(
+      useCase.execute({ ...command, format: 'csv' }),
+    ).rejects.toBeInstanceOf(ExportJobValidationError);
+    allowed = false;
+    await expect(useCase.execute(command)).rejects.toThrow('revoked');
+    expect(repo.jobs).toHaveProperty('size', 1);
   });
   it('revalidates authorization before returning a signed private URL', async () => {
     const repo = new Repo();
