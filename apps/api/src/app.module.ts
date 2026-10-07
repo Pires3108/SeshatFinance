@@ -90,6 +90,7 @@ import { PasswordRecoveryController } from './auth/password-recovery.controller.
 import { SupabaseIdentityRegistrationGateway } from './auth/supabase-identity-registration.gateway.js';
 import { SupabaseIdentityTokenVerifier } from './auth/supabase-identity-token-verifier.js';
 import { SupabasePasswordRecoveryGateway } from './auth/supabase-password-recovery.gateway.js';
+import { SupabaseFamilyGroupInvitationDeliveryGateway } from './auth/supabase-family-group-invitation-delivery.gateway.js';
 import { CategoryController } from './classifications/category.controller.js';
 import { CostCenterController } from './classifications/cost-center.controller.js';
 import { LazyCategoryRepository } from './classifications/lazy-category-repository.js';
@@ -198,15 +199,32 @@ import { UserProfileController } from './users/user-profile.controller.js';
         ),
     },
     {
-      inject: [LazyFamilyGroupInvitationRepository],
       provide: CreateFamilyGroupInvitationUseCase,
-      useFactory: (invitations: FamilyGroupInvitationRepository) =>
+      useFactory: (
+        invitations: FamilyGroupInvitationRepository,
+        configuration: AuthConfiguration,
+      ) =>
         new CreateFamilyGroupInvitationUseCase(
           invitations,
           new SystemClock(),
           new SystemIdentifierGenerator(),
           new SystemInvitationTokenGenerator(),
+          new SupabaseFamilyGroupInvitationDeliveryGateway(() => {
+            const values = configuration.read();
+            return createClient(
+              values.supabaseUrl,
+              values.supabaseServiceRoleKey,
+              {
+                auth: {
+                  autoRefreshToken: false,
+                  detectSessionInUrl: false,
+                  persistSession: false,
+                },
+              },
+            );
+          }),
         ),
+      inject: [LazyFamilyGroupInvitationRepository, AuthConfiguration],
     },
     {
       inject: [LazyFamilyGroupInvitationRepository],
