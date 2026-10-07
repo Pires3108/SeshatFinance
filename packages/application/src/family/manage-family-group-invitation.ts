@@ -6,6 +6,13 @@ import {
 import type { Clock } from '../ports/clock.js';
 import type { IdentifierGenerator } from '../ports/identifier-generator.js';
 
+export class FamilyGroupInvitationDeniedError extends Error {
+  public constructor() {
+    super('Family group invitation is not allowed.');
+    this.name = 'FamilyGroupInvitationDeniedError';
+  }
+}
+
 export interface FamilyGroupInvitationRepository {
   create(invitation: FamilyGroupInvitation): Promise<void>;
   revoke(command: { invitationId: string; actorId: string }): Promise<void>;
