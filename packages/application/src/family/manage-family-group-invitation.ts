@@ -76,7 +76,7 @@ export class CreateFamilyGroupInvitationUseCase {
     return {
       invitation: invitation.toSnapshot(),
       token: token.token,
-      deliveryMethod,
+      ...(deliveryMethod === undefined ? {} : { deliveryMethod }),
     };
   }
 }
