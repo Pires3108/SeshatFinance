@@ -42,7 +42,11 @@ export interface ExportJobRepository {
 }
 
 export interface ExportAuthorizationPort {
-  assertCanExport(actorId: string, filters: ExportFilters): Promise<void>;
+  assertCanExport(
+    actorId: string,
+    filters: ExportFilters,
+    zone: string,
+  ): Promise<void>;
 }
 
 export interface PrivateExportStorage {
@@ -85,13 +89,27 @@ export class CreateExportJobUseCase {
     assertIdempotencyKey(command.idempotencyKey);
     if (!['json', 'csv', 'xlsx'].includes(command.format))
       throw new ExportJobValidationError('Export format is invalid.');
+    const { filters } = this.parseSelection(command.selection);
+    await this.authorization.assertCanExport(
+      command.actorId,
+      filters,
+      command.selection.zone as string,
+    );
     const existing = await this.repository.findByIdempotencyKey(
       command.actorId,
       command.idempotencyKey,
     );
-    if (existing !== null) return existing;
-    const { filters } = this.parseSelection(command.selection);
-    await this.authorization.assertCanExport(command.actorId, filters);
+    if (existing !== null) {
+      if (
+        existing.format !== command.format ||
+        existing.selection.zone !== command.selection.zone ||
+        JSON.stringify(existing.filters) !== JSON.stringify(filters)
+      )
+        throw new ExportJobValidationError(
+          'Idempotency key belongs to another export request.',
+        );
+      return existing;
+    }
     const now = this.clock.now();
     const job: ExportJob = {
       id: this.identifiers.generate(),
@@ -125,7 +143,11 @@ export class GetExportDownloadUseCase {
     const job = await this.repository.getOwned(actorId, jobId);
     if (job === null)
       throw new ExportJobNotFoundError('Export job was not found.');
-    await this.authorization.assertCanExport(actorId, job.filters);
+    await this.authorization.assertCanExport(
+      actorId,
+      job.filters,
+      job.selection.zone as string,
+    );
     const now = this.clock.now();
     if (job.expiresAt.getTime() <= now.getTime() || job.status === 'expired') {
       if (job.storageKey !== null) await this.storage.delete(job.storageKey);

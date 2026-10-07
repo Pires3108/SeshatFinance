@@ -1,4 +1,5 @@
 export { createPrismaClient } from './prisma/create-prisma-client.js';
+export { PrismaExportJobRepository } from './exports/prisma-export-job-repository.js';
 export { PrismaUserProfileRepository } from './users/prisma-user-profile-repository.js';
 export { PrismaAccountRepository } from './accounts/prisma-account-repository.js';
 export { PrismaAccountExportReader } from './accounts/prisma-account-export-reader.js';

@@ -20,6 +20,45 @@ model UserProfile {
   @@map("user_profiles")
 }
 
+enum ExportJobFormat {
+  json
+  csv
+  xlsx
+
+  @@map("export_job_format")
+}
+
+enum ExportJobStatus {
+  queued
+  processing
+  completed
+  failed
+  expired
+
+  @@map("export_job_status")
+}
+
+model ExportJob {
+  id             String          @id @db.Uuid
+  actorId        String          @map("actor_id") @db.Uuid
+  idempotencyKey String          @map("idempotency_key") @db.VarChar(128)
+  format         ExportJobFormat
+  selection      Json
+  filters        Json
+  status         ExportJobStatus @default(queued)
+  progress       Int             @default(0) @db.SmallInt
+  storageKey     String?         @map("storage_key")
+  errorCode      String?         @map("error_code")
+  createdAt      DateTime        @map("created_at") @db.Timestamptz(6)
+  expiresAt      DateTime        @map("expires_at") @db.Timestamptz(6)
+  updatedAt      DateTime        @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([actorId, idempotencyKey])
+  @@index([actorId, createdAt, id])
+  @@index([status, expiresAt])
+  @@map("export_jobs")
+}
+
 enum FamilyGroupRole {
   owner
   administrator
