@@ -6,7 +6,7 @@ import {
   type ExportJobRepository,
 } from '@seshat/application';
 
-import type { Prisma } from '../generated/prisma/client.js';
+import { Prisma } from '../generated/prisma/client.js';
 import type { PrismaClient } from '../generated/prisma/client.js';
 
 type ExportJobRecord = Awaited<
@@ -42,6 +42,85 @@ function isUniqueConflict(error: unknown): boolean {
 
 export class PrismaExportJobRepository implements ExportJobRepository {
   public constructor(private readonly client: PrismaClient) {}
+
+  public async claimNext(now: Date): Promise<ExportJob | null> {
+    const staleBefore = new Date(now.getTime() - 5 * 60 * 1000);
+    const claimed = await this.client.$queryRaw<
+      Array<{ id: string }>
+    >(Prisma.sql`
+      WITH candidate AS (
+        SELECT id FROM export_jobs
+        WHERE expires_at > ${now}
+          AND (status = 'queued' OR (status = 'processing' AND updated_at <= ${staleBefore}))
+        ORDER BY created_at, id
+        FOR UPDATE SKIP LOCKED
+        LIMIT 1
+      )
+      UPDATE export_jobs AS jobs
+      SET status = 'processing', progress = 0, storage_key = NULL, error_code = NULL,
+          updated_at = GREATEST(${now}::timestamptz, jobs.updated_at + INTERVAL '1 millisecond')
+      FROM candidate WHERE jobs.id = candidate.id
+      RETURNING jobs.id
+    `);
+    const id = claimed[0]?.id;
+    if (id === undefined) return null;
+    const record = await this.client.exportJob.findUnique({ where: { id } });
+    if (record === null) throw new Error('Claimed export job was not found.');
+    return toJob(record);
+  }
+
+  public async claimExpired(now: Date): Promise<ExportJob | null> {
+    const staleBefore = new Date(now.getTime() - 5 * 60 * 1000);
+    const claimed = await this.client.$queryRaw<
+      Array<{ id: string }>
+    >(Prisma.sql`
+      WITH candidate AS (
+        SELECT id FROM export_jobs
+        WHERE expires_at <= ${now}
+          AND (status IN ('queued', 'completed', 'failed')
+            OR (status = 'processing' AND updated_at <= ${staleBefore}))
+        ORDER BY expires_at, id
+        FOR UPDATE SKIP LOCKED
+        LIMIT 1
+      )
+      UPDATE export_jobs AS jobs
+      SET status = 'processing',
+          updated_at = GREATEST(${now}::timestamptz, jobs.updated_at + INTERVAL '1 millisecond')
+      FROM candidate WHERE jobs.id = candidate.id
+      RETURNING jobs.id
+    `);
+    const id = claimed[0]?.id;
+    if (id === undefined) return null;
+    const record = await this.client.exportJob.findUnique({ where: { id } });
+    if (record === null) throw new Error('Claimed export job was not found.');
+    return toJob(record);
+  }
+
+  public async transition(
+    job: ExportJob,
+    expectedUpdatedAt: Date,
+  ): Promise<boolean> {
+    if (job.updatedAt.getTime() <= expectedUpdatedAt.getTime())
+      throw new Error(
+        'Export job transition must advance its fencing timestamp.',
+      );
+    const result = await this.client.exportJob.updateMany({
+      where: {
+        id: job.id,
+        actorId: job.actorId,
+        status: 'processing',
+        updatedAt: expectedUpdatedAt,
+      },
+      data: {
+        status: job.status,
+        progress: job.progress,
+        storageKey: job.storageKey,
+        errorCode: job.errorCode,
+        updatedAt: job.updatedAt,
+      },
+    });
+    return result.count === 1;
+  }
 
   public async findByIdempotencyKey(
     actorId: string,

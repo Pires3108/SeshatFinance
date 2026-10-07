@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { ExportJobValidationError, type ExportJob } from '@seshat/application';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { Client } from 'pg';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import type { PrismaClient } from '../generated/prisma/client.js';
 import { createPrismaClient } from '../prisma/create-prisma-client.js';
@@ -69,6 +69,10 @@ describe('PrismaExportJobRepository', () => {
   afterAll(async (): Promise<void> => {
     await prisma?.$disconnect();
     await stop?.();
+  });
+
+  beforeEach(async (): Promise<void> => {
+    await prisma?.exportJob.deleteMany();
   });
 
   it('returns one persisted job for concurrent creates with the same actor and key', async () => {
@@ -144,5 +148,120 @@ describe('PrismaExportJobRepository', () => {
         where: { idempotencyKey: 'conflicting-request' },
       }),
     ).toBe(1);
+  });
+
+  it('claims each queued job once and rejects an older worker transition', async () => {
+    if (prisma === undefined) throw new Error('Prisma unavailable.');
+    const repository = new PrismaExportJobRepository(prisma);
+    const original = job(
+      '88888888-8888-4888-8888-888888888888',
+      'claim-request',
+    );
+    await repository.create(original);
+    const now = new Date(createdAt.getTime() + 1000);
+    const [first, second] = await Promise.all([
+      repository.claimNext(now),
+      repository.claimNext(now),
+    ]);
+    const claimed = first ?? second;
+    expect(claimed?.id).toBe(original.id);
+    expect([first, second].filter((value) => value !== null)).toHaveLength(1);
+    if (claimed === null) throw new Error('Expected a claim.');
+    const progress = {
+      ...claimed,
+      progress: 50,
+      updatedAt: new Date(claimed.updatedAt.getTime() + 1000),
+    };
+    expect(await repository.transition(progress, claimed.updatedAt)).toBe(true);
+    expect(
+      await repository.transition(
+        { ...progress, status: 'failed' },
+        claimed.updatedAt,
+      ),
+    ).toBe(false);
+    const completed = {
+      ...progress,
+      status: 'completed' as const,
+      progress: 100,
+      storageKey: 'private/claim-request',
+      updatedAt: new Date(progress.updatedAt.getTime() + 1000),
+    };
+    expect(await repository.transition(completed, progress.updatedAt)).toBe(
+      true,
+    );
+    expect(
+      await repository.transition(
+        { ...completed, status: 'failed' },
+        completed.updatedAt,
+      ),
+    ).toBe(false);
+    expect((await repository.getOwned(actorId, original.id))?.status).toBe(
+      'completed',
+    );
+  });
+
+  it('recovers a stale processing claim and fences the prior worker', async () => {
+    if (prisma === undefined) throw new Error('Prisma unavailable.');
+    const repository = new PrismaExportJobRepository(prisma);
+    const original = job(
+      '99999999-9999-4999-8999-999999999999',
+      'stale-request',
+    );
+    await repository.create(original);
+    const first = await repository.claimNext(
+      new Date(createdAt.getTime() + 1000),
+    );
+    if (first === null) throw new Error('Expected a claim.');
+    expect(
+      await repository.claimNext(
+        new Date(first.updatedAt.getTime() + 5 * 60 * 1000 - 1),
+      ),
+    ).toBeNull();
+    const second = await repository.claimNext(
+      new Date(first.updatedAt.getTime() + 5 * 60 * 1000),
+    );
+    expect(second?.id).toBe(first.id);
+    expect(second?.updatedAt.getTime()).toBeGreaterThan(
+      first.updatedAt.getTime(),
+    );
+    expect(
+      await repository.transition(
+        {
+          ...first,
+          status: 'failed',
+          updatedAt: new Date(first.updatedAt.getTime() + 1),
+        },
+        first.updatedAt,
+      ),
+    ).toBe(false);
+  });
+
+  it('claims expired artifacts once for cleanup and preserves their storage key', async () => {
+    if (prisma === undefined) throw new Error('Prisma unavailable.');
+    const repository = new PrismaExportJobRepository(prisma);
+    const original = {
+      ...job('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'expired-request'),
+      status: 'completed' as const,
+      progress: 100,
+      storageKey: 'private/expired-request',
+    };
+    await repository.create(original);
+    const claimed = await repository.claimExpired(original.expiresAt);
+    expect(claimed?.status).toBe('processing');
+    expect(claimed?.storageKey).toBe(original.storageKey);
+    expect(await repository.claimExpired(original.expiresAt)).toBeNull();
+    if (claimed === null) throw new Error('Expected expired claim.');
+    expect(
+      await repository.transition(
+        {
+          ...claimed,
+          status: 'expired',
+          storageKey: null,
+          updatedAt: new Date(claimed.updatedAt.getTime() + 1),
+        },
+        claimed.updatedAt,
+      ),
+    ).toBe(true);
+    expect(await repository.claimExpired(original.expiresAt)).toBeNull();
   });
 });
