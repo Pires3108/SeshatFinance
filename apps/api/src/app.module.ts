@@ -1,4 +1,10 @@
 import {
+  CreateExportJobUseCase,
+  GetExportDownloadUseCase,
+  GetExportJobStatusUseCase,
+  parseExportSelection,
+  type ExportAuthorizationPort,
+  type ExportJobRepository,
   ChangeOwnedTransactionLifecycleUseCase,
   ChangeOwnedTransferLifecycleUseCase,
   ChangeOwnedAccountLifecycleUseCase,
@@ -89,6 +95,10 @@ import { LazyCostCenterRepository } from './classifications/lazy-cost-center-rep
 import { LazyTagRepository } from './classifications/lazy-tag-repository.js';
 import { TagController } from './classifications/tag.controller.js';
 import { HealthController } from './health/health.controller.js';
+import { ExportController } from './exports/export.controller.js';
+import { LazyExportAuthorization } from './exports/lazy-export-authorization.js';
+import { LazyExportJobRepository } from './exports/lazy-export-job-repository.js';
+import { SupabasePrivateExportStorage } from './exports/supabase-private-export-storage.js';
 import { DatabaseReadiness } from './health/database-readiness.js';
 import { InvestmentTypeController } from './investments/investment-type.controller.js';
 import { CorrelationContext } from './platform/correlation-context.js';
@@ -109,6 +119,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
 
 @Module({
   controllers: [
+    ExportController,
     AccountBalanceController,
     AccountController,
     AccountTypeController,
@@ -129,6 +140,70 @@ import { UserProfileController } from './users/user-profile.controller.js';
     UserProfileController,
   ],
   providers: [
+    LazyExportJobRepository,
+    LazyExportAuthorization,
+    {
+      provide: SupabasePrivateExportStorage,
+      useFactory: (): SupabasePrivateExportStorage => {
+        const url = process.env.SUPABASE_URL;
+        const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        const bucket = process.env.EXPORT_STORAGE_BUCKET;
+        if (url === undefined || key === undefined || bucket === undefined)
+          throw new Error('Private export storage configuration is required.');
+        return new SupabasePrivateExportStorage(
+          () =>
+            createClient(url, key, {
+              auth: {
+                autoRefreshToken: false,
+                detectSessionInUrl: false,
+                persistSession: false,
+              },
+            }),
+          bucket,
+          new SystemClock(),
+        );
+      },
+    },
+    {
+      provide: CreateExportJobUseCase,
+      inject: [LazyExportJobRepository, LazyExportAuthorization],
+      useFactory: (
+        jobs: ExportJobRepository,
+        authorization: ExportAuthorizationPort,
+      ): CreateExportJobUseCase =>
+        new CreateExportJobUseCase(
+          jobs,
+          authorization,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+          parseExportSelection,
+        ),
+    },
+    {
+      provide: GetExportJobStatusUseCase,
+      inject: [LazyExportJobRepository],
+      useFactory: (jobs: ExportJobRepository): GetExportJobStatusUseCase =>
+        new GetExportJobStatusUseCase(jobs),
+    },
+    {
+      provide: GetExportDownloadUseCase,
+      inject: [
+        LazyExportJobRepository,
+        LazyExportAuthorization,
+        SupabasePrivateExportStorage,
+      ],
+      useFactory: (
+        jobs: ExportJobRepository,
+        authorization: ExportAuthorizationPort,
+        storage: SupabasePrivateExportStorage,
+      ): GetExportDownloadUseCase =>
+        new GetExportDownloadUseCase(
+          jobs,
+          authorization,
+          storage,
+          new SystemClock(),
+        ),
+    },
     {
       provide: ListDefaultAccountTypesUseCase,
       useFactory: (): ListDefaultAccountTypesUseCase =>
