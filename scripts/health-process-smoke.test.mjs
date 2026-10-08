@@ -77,7 +77,9 @@ for (const service of ['api', 'worker']) {
           );
           assert.equal(child.signalCode, null);
           try {
-            response = await fetch(url, { signal: AbortSignal.timeout(500) });
+            response = await globalThis.fetch(url, {
+              signal: globalThis.AbortSignal.timeout(500),
+            });
             break;
           } catch {
             await delay(100);
@@ -91,13 +93,13 @@ for (const service of ['api', 'worker']) {
         );
         assert.deepEqual(await response.json(), { service, status: 'ok' });
         if (service === 'api') {
-          const readiness = await fetch(`${url}/ready`, {
-            signal: AbortSignal.timeout(5_000),
+          const readiness = await globalThis.fetch(`${url}/ready`, {
+            signal: globalThis.AbortSignal.timeout(5_000),
           });
           assert.equal(readiness.status, 503);
           assert.equal((await readiness.text()).includes(marker), false);
-          const liveness = await fetch(url, {
-            signal: AbortSignal.timeout(1_000),
+          const liveness = await globalThis.fetch(url, {
+            signal: globalThis.AbortSignal.timeout(1_000),
           });
           assert.equal(liveness.status, 200);
           assert.deepEqual(await liveness.json(), { service, status: 'ok' });
@@ -112,7 +114,9 @@ for (const service of ['api', 'worker']) {
         assert.ok(child.kill(signal), `${service} could not be terminated`);
         await exited;
         await assert.rejects(
-          fetch(url, { signal: AbortSignal.timeout(1_000) }),
+          globalThis.fetch(url, {
+            signal: globalThis.AbortSignal.timeout(1_000),
+          }),
         );
         assert.equal(
           output.includes(marker),

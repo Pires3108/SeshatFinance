@@ -13,7 +13,7 @@
     "test:bootstrap": "node --test tools/bootstrap-local-database.integration.test.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "turbo run lint && pnpm lint:bootstrap && eslint --config tools/architecture-eslint.config.mjs tools/architecture-rules.mjs tools/architecture-rules.test.mjs && eslint --config tools/bootstrap-eslint.config.mjs --global fetch:readonly --global AbortSignal:readonly scripts/health-process-smoke.test.mjs",
+    "lint": "turbo run lint && pnpm lint:bootstrap && eslint --config tools/architecture-eslint.config.mjs tools/architecture-rules.mjs tools/architecture-rules.test.mjs && eslint --config tools/bootstrap-eslint.config.mjs scripts/health-process-smoke.test.mjs",
     "lint:bootstrap": "eslint --config tools/bootstrap-eslint.config.mjs tools/bootstrap-local-database*.mjs",
     "test": "turbo run test && node --test .cursor/hooks/guard-git-commit.test.mjs tools/verify-operational-boundary.test.mjs tools/bootstrap-local-database.test.mjs && node tools/verify-operational-boundary.mjs && pnpm test:architecture",
     "test:integration": "turbo run test:integration",
