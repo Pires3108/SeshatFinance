@@ -16,7 +16,7 @@ Executar a sequência do workflow em checkout instalado com o lockfile imutável
 
 ## Evidência publicada
 
-Em 06/10/2026, o run de CI `37500848665` passou no commit `1b186563`: instalação imutável dos 11 workspaces, geração Prisma, formatação, build, lint, tipos, testes unitários e os três cenários negativos, bootstrap real, integração PostgreSQL, OpenAPI e contrato de cliente. O PR #130 foi atualizado sobre a `main` em 08/10/2026; o resultado do novo commit deve ser verificado antes de integrar.
+Em 06/10/2026, o run de CI `37500848665` passou no commit `1b186563`: instalação imutável dos 11 workspaces, geração Prisma, formatação, build, lint, tipos, testes unitários e os três cenários negativos, bootstrap real, integração PostgreSQL, OpenAPI e contrato de cliente. Essa evidência é anterior à integração das demais histórias da Sprint 0. O PR #130 agora tem `main` como base direta; seu head atualizado precisa de um novo run completo de CI antes da revisão final.
 
 O cenário da asserção quebrada revelou que o teste filho herdava `NODE_TEST_CONTEXT` do runner Node e devolvia sucesso sem executar a fixture como teste independente. O processo filho agora limpa apenas essa variável; a mesma regressão reproduziu a falha antes da correção e passou depois dela.
 
