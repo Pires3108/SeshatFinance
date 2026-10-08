@@ -45,15 +45,7 @@
 - Test affected financial invariants for changes to balances, statements, installments, forecasts, imports, or net worth.
 - Use unit tests for Domain, PostgreSQL integration tests for persistence, and Playwright for critical journeys.
 - Run formatting, lint, type checking, and affected tests before completion.
-
-## Agent waiting policy
-
-- Do not use watch modes, retry loops, or periodic status checks to wait for CI
-  or Jira state changes.
-- Treat a signed webhook delivery as a progress signal only. Before declaring
-  CI or Jira work complete, make one current-state lookup at the decision point.
-- A single diagnostic status lookup is allowed when it informs the next action;
-  repeated lookups are not.
+- If Docker or Testcontainers reports that no container runtime is available, start Docker Desktop, wait for the engine to become ready, and rerun the affected integration tests before reporting an environment limitation or leaving the verification pending.
 
 ## Change discipline
 
@@ -63,3 +55,23 @@
 - Update requirements, rules, acceptance criteria, invariants, and traceability when behavior changes.
 - Keep commits small and use Conventional Commits.
 - Inspect the final diff and do not overwrite unrelated user changes.
+
+## Jira blockers
+
+- Move a Jira item to **Bloqueado** when implementation cannot proceed safely because a product, domain, security, privacy, architectural, or acceptance-criteria decision is missing.
+- Before moving it, add a concise comment identifying the unresolved decision, affected requirement or invariant, and the condition for resuming work. Do not use **Bloqueado** for ordinary implementation work, review feedback, transient environment failures, or work that can safely continue in another task.
+- When the decision is recorded and the implementation can resume, move the item from **Bloqueado** to the appropriate active workflow status and add a comment linking the decision to the next implementation step.
+
+## Jira completion per task
+
+- Treat Jira status as a required deliverable of every task, not optional administration. Before ending work, update the corresponding Jira item with a concise evidence comment and the accurate status.
+- Move an item to **Done** only when its scoped implementation is complete, the required formatting, linting, type checking and affected tests have passed, relevant financial invariants have been checked, and the work is committed and published in its reviewable branch or pull request. Include links or identifiers for the commit, pull request and verification in the Jira comment.
+- If any of those completion conditions is pending, do not move the item to **Done**. Keep it in the applicable active/review status and comment precisely what remains. If a missing decision prevents safe progress, use **Bloqueado** following the blocker rules above.
+- Do not finish an agent task without performing this Jira update, unless no Jira item is in scope; state that exception explicitly in the final report.
+
+## Sprint execution cadence
+
+- Work through all detailed BDD/Gherkin stories in the planned sprints. Triage the backlog in batches, then implement each story on its own reviewable branch without repeatedly redoing the same discovery.
+- Favor focused local verification and the required quality gates. Do not spend time repeatedly checking GitHub or Jira for a response after an action has been submitted.
+- Use the project's signed GitHub and Jira webhooks as the completion signal for asynchronous events. Wait for the corresponding event instead of polling either provider. If a webhook fails or is unavailable, record the failure once and continue with independent work; use a direct status check only when needed to resolve that specific failure.
+- Keep moving to the next safe story after publishing each backlog increment. Document any missing decision that makes a story unsafe to implement and move that story to **Bloqueado** using the Jira blocker process above, while continuing with other stories.
