@@ -11,6 +11,8 @@ Os quatro casos verificam cada serviço vivo e depois encerrado por SIGTERM
 ou SIGKILL. Depois de observar a saída do processo, a consulta deve falhar,
 sem receber resposta saudável. Em Windows, os sinais encerram o processo;
 no CI Linux, SIGTERM também exercita os hooks de desligamento da aplicação.
+O teste aguarda até 60 segundos pelo início de cada processo para acomodar
+runners lentos; a indisponibilidade após o encerramento é verificada separadamente.
 
 As dependências externas apontam para um endereço local indisponível durante
 o smoke, provando que liveness permanece independente de falhas transitórias.
