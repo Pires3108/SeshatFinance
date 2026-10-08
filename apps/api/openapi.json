@@ -2581,6 +2581,37 @@
           },
           "401": {
             "description": "Bearer token missing or invalid"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "correlationId": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "code": {
+                          "enum": ["INVALID_REQUEST"],
+                          "type": "string"
+                        }
+                      },
+                      "type": "object",
+                      "required": ["code", "correlationId", "message"]
+                    }
+                  },
+                  "type": "object",
+                  "required": ["error"]
+                }
+              }
+            },
+            "description": "Request validation failed before recording a transaction"
           }
         },
         "security": [

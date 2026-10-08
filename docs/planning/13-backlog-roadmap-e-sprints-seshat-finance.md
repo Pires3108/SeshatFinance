@@ -158,6 +158,8 @@ Uma história está concluída quando:
 - **US-007 [EP-00, L]** Configurar Prisma, schema inicial, migrations e seeds sintéticos.
 - **US-008 [EP-00, M]** Implementar envelope de erro, correlationId e logs estruturados sem dados financeiros.
 - **US-009 [EP-00, M]** Configurar REST v1, validação Zod e geração OpenAPI.
+  - Contrato verificável: requisições autenticadas válidas executam o caso de uso e retornam a forma documentada; entrada monetária inválida é rejeitada antes da escrita; divergência entre OpenAPI gerado e versão publicada falha no CI.
+  - O cabeçalho HTTP `Idempotency-Key` não integra o contrato da US-009. Sua semântica para transferências pertence à US-032 (SESHAT-48), incluindo repetição e concorrência; esta decisão não estende a US-032 a todos os comandos financeiros.
 - **US-010 [EP-00, M]** Gerar cliente TypeScript para o frontend e verificar mudanças de contrato no CI.
 - **US-011 [EP-00, M]** Configurar Vitest, Testcontainers e fixtures básicas.
 - **US-012 [EP-00, S]** Implementar clock, gerador de IDs e abstrações de transação injetáveis.
