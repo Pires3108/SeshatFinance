@@ -197,6 +197,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
 
+### RII-025 — Proteção obrigatória de merge
+
+- **Estado:** resolvido em 08/10/2026 por decisão do responsável de tornar o repositório público.
+- **Referências:** US-004; RNF-050/RNF-051/RNF-054; ET-001/ET-006.
+- **Histórico:** em 06/10/2026, a API de proteção de `main` retornou HTTP 403 para o repositório privado no plano então disponível.
+- **Decisão e controle:** `Pires3108/SeshatFinance` passou a público. A proteção de `main` exige pull request e check `quality` verde, atualizado com a base (`strict: true`), inclusive para administradores; force push e exclusão estão desativados.
+- **Evidência:** o CI do PR #130 passou no commit `694fe15` (run `37777398352`). O PR temporário #146 alterou a versão de TypeScript sem atualizar o lockfile; o check `quality` falhou no commit `1468141` e o GitHub retornou `mergeStateStatus=BLOCKED`. O PR de teste foi fechado sem merge. A configuração de proteção retornou `required_status_checks.contexts=["quality"]`, `strict=true` e `enforce_admins.enabled=true`.
+
 ### RII-002 — Exposição HTTP do perfil antes da identidade autenticada
 
 - **Estado:** resolvido.
