@@ -10,7 +10,7 @@ import {
   type TransactionLifecycle,
 } from '@seshat/domain';
 
-import { insertFinancialAuditEvent } from '../audit/prisma-financial-audit-event-repository.js';
+import { insertFinancialAuditEvent } from '../audit/index.js';
 import type { Prisma, PrismaClient } from '../generated/prisma/client.js';
 
 export class PrismaTransferRepository
