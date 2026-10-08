@@ -1,5 +1,9 @@
 # Seshat Finance
 
+## Project specialists
+
+Use the project-scoped Codex agents in `.codex/agents/` for substantive development work: `backend-dev`, `frontend-dev`, `qa-engineer`, `devops-engineer`, and `code-reviewer`. Keep the primary session responsible for scope, ordering, decisions, integration, and reporting. Delegate only the specialists needed for the current story, with a bounded brief naming the Jira issue, acceptance criteria, checkout, owned files, dependencies, and required evidence. Prefer a fresh agent context with that brief. Do not assign two agents to edit the same files; serialize dependent work. These agents follow this file and the user's instructions. Do not create separate user-facing chats for delegation.
+
 ## Product boundary
 
 - This application only records and organizes financial information.
