@@ -14,6 +14,7 @@ export function bootstrapLocalDatabase(environment, run) {
   const childEnvironment = {
     ...environment,
     POSTGRES_PORT: port,
+    SESHAT_ALLOW_SYNTHETIC_SEED: '1',
     DATABASE_URL:
       environment.DATABASE_URL ??
       `postgresql://seshat:seshat@localhost:${port}/seshat?schema=public`,
