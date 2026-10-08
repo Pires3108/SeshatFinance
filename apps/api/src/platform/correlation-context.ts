@@ -1,27 +1,24 @@
-import { AsyncLocalStorage } from 'node:async_hooks';
+import { OperationCorrelationContext } from '@seshat/observability';
 
 import { Injectable } from '@nestjs/common';
 
-type CorrelationStore = Readonly<{ correlationId: string }>;
-
 @Injectable()
-export class CorrelationContext {
-  private readonly storage = new AsyncLocalStorage<CorrelationStore>();
+export class CorrelationContext extends OperationCorrelationContext {
   private readonly requestIdentifiers = new WeakMap<object, string>();
-
-  public run<Result>(correlationId: string, operation: () => Result): Result {
-    return this.storage.run({ correlationId }, operation);
-  }
-
-  public getCorrelationId(): string | undefined {
-    return this.storage.getStore()?.correlationId;
-  }
+  private readonly requestStarts = new WeakMap<object, number>();
 
   public associateRequest(request: object, correlationId: string): void {
     this.requestIdentifiers.set(request, correlationId);
+    this.requestStarts.set(request, performance.now());
   }
 
   public getRequestCorrelationId(request: object): string | undefined {
     return this.requestIdentifiers.get(request);
+  }
+
+  public getRequestDuration(request: object): number {
+    return (
+      performance.now() - (this.requestStarts.get(request) ?? performance.now())
+    );
   }
 }

@@ -22,6 +22,7 @@
     "@seshat/application": "workspace:*",
     "@seshat/database": "workspace:*",
     "@seshat/domain": "workspace:*",
+    "@seshat/observability": "workspace:*",
     "@supabase/supabase-js": "2.116.0",
     "fastify": "5.12.5",
     "pino": "10.3.1",
