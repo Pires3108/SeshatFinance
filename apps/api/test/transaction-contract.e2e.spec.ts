@@ -115,18 +115,44 @@ describe('Transaction POST contract', () => {
     });
     const schema =
       operation?.responses['201']?.content['application/json']?.schema;
-    expect(schema).toBeDefined();
+    if (schema === undefined)
+      throw new Error('Missing documented 201 response');
+    const result = response.json<Record<string, unknown>>();
     expect(Object.keys(response.json())).toEqual(
-      expect.arrayContaining(schema!.required),
+      expect.arrayContaining(schema.required),
     );
     expect(Object.keys(response.json()).sort()).toEqual(
-      Object.keys(schema!.properties).sort(),
+      Object.keys(schema.properties).sort(),
     );
+    const amountSchema = schema.properties.amount as {
+      pattern: string;
+      type: string;
+    };
+    const currencySchema = schema.properties.currencyCode as {
+      pattern: string;
+      type: string;
+    };
+    const occurredAtSchema = schema.properties.occurredAt as {
+      format: string;
+      type: string;
+    };
+    expect(typeof result.amount).toBe(amountSchema.type);
+    expect(result.amount).toMatch(new RegExp(amountSchema.pattern, 'u'));
+    expect(typeof result.currencyCode).toBe(currencySchema.type);
+    expect(result.currencyCode).toMatch(
+      new RegExp(currencySchema.pattern, 'u'),
+    );
+    expect(typeof result.occurredAt).toBe(occurredAtSchema.type);
+    expect(occurredAtSchema.format).toBe('date-time');
+    if (typeof result.occurredAt !== 'string')
+      throw new Error('Invalid occurredAt');
+    expect(new Date(result.occurredAt).toISOString()).toBe(result.occurredAt);
   });
 
   it.each([
     ['missing currency', { ...body, currencyCode: undefined }],
     ['invalid scale', { ...body, currencyMinorUnitScale: 19 }],
+    ['malformed amount', { ...body, amount: '10,25' }],
   ])(
     'rejects %s before the use case with the documented error shape',
     async (_name, payload) => {
@@ -138,15 +164,16 @@ describe('Transaction POST contract', () => {
       });
       expect(response.statusCode).toBe(400);
       expect(execute).not.toHaveBeenCalled();
-      const error = response.json() as { error: Record<string, unknown> };
+      const error = response.json<{ error: Record<string, unknown> }>();
       expect(error.error.code).toBe('INVALID_REQUEST');
       const schema =
         operation?.responses['400']?.content['application/json']?.schema;
-      expect(schema).toBeDefined();
-      expect(Object.keys(error)).toEqual(schema!.required);
+      if (schema === undefined)
+        throw new Error('Missing documented 400 response');
+      expect(Object.keys(error)).toEqual(schema.required);
       expect(Object.keys(error.error).sort()).toEqual(
         Object.keys(
-          (schema!.properties.error as { properties: Record<string, unknown> })
+          (schema.properties.error as { properties: Record<string, unknown> })
             .properties,
         ).sort(),
       );
