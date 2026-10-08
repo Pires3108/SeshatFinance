@@ -38,11 +38,11 @@ class TestErrorController {
   @Post('validated')
   public validated(
     @Body(new ZodValidationPipe(z.object({ name: z.string().min(1) })))
-    _body: {
+    body: {
       name: string;
     },
-  ): { ok: true } {
-    return { ok: true };
+  ): { ok: boolean } {
+    return { ok: body.name.length > 0 };
   }
   @Get('async')
   public async failAsyncJob(): Promise<never> {
