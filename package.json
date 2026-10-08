@@ -32,7 +32,7 @@
     "eslint-plugin-import-x": "latest",
     "prettier": "latest",
     "turbo": "latest",
-    "typescript": "5.9.3",
+    "typescript": "5.9.2",
     "typescript-eslint": "latest",
     "vitest": "latest"
   }
