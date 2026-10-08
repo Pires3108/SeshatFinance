@@ -29,7 +29,12 @@ async function command(
 ): Promise<void> {
   await execute(process.execPath, [...args], {
     cwd: databaseRoot,
-    env: { ...process.env, DATABASE_URL: databaseUrl, NODE_ENV: 'test' },
+    env: {
+      ...process.env,
+      DATABASE_URL: databaseUrl,
+      NODE_ENV: 'test',
+      SESHAT_ALLOW_SYNTHETIC_SEED: '1',
+    },
     timeout: 120_000,
     maxBuffer: 512_000,
   });

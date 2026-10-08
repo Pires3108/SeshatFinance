@@ -6,6 +6,7 @@ import { assertSyntheticSeedTarget } from '../src/prisma/synthetic-seed-policy.j
 const connectionString = assertSyntheticSeedTarget(
   process.env.DATABASE_URL,
   process.env.NODE_ENV,
+  process.env.SESHAT_ALLOW_SYNTHETIC_SEED,
 );
 
 const client = new PrismaClient({
