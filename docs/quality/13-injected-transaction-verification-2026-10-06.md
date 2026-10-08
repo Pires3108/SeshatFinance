@@ -22,6 +22,8 @@ US-012 / [SESHAT-28](https://nicolaspires.atlassian.net/browse/SESHAT-28), RNF-0
 - `vitest run --config vitest.integration.config.ts src/transfers/prisma-transfer-repository.integration.spec.ts`: cinco testes passaram com PostgreSQL 17 real, incluindo rollback, auditoria, idempotência e concorrência.
 - Busca em fontes de produção Domain/Application não encontrou chamadas a `Date.now`, `randomUUID`, `Math.random` ou `new Date()` sem argumento.
 
+O PR #128 foi rebaseado diretamente sobre `main` após a conclusão da Sprint 0. Os resultados acima foram obtidos antes desse rebase; o novo head precisa passar no workflow completo de CI antes do merge. O teste de idempotência concorrente comprova uma única transferência persistida para IDs duplicados; os demais requisitos de janela de 24 horas e replay da resposta de INV-046 dependem da história própria de idempotência e não são reivindicados por esta evidência.
+
 Os comandos pnpm usaram `--config.verify-deps-before-run=false` para reutilizar dependências locais já instaladas por junctions ignoradas, preservando o lockfile e sem alterar os links compartilhados. As fontes alteradas foram verificadas neste worktree; a integração usa seu cliente Prisma gerado localmente. A instalação imutável de CI é verificada no incremento US-004.
 
 ## Limites operacionais
