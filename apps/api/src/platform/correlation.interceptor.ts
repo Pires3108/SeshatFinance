@@ -1,5 +1,3 @@
-import { randomUUID } from 'node:crypto';
-
 import {
   type CallHandler,
   type ExecutionContext,
@@ -8,16 +6,16 @@ import {
   type NestInterceptor,
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 
 import { CorrelationContext } from './correlation-context.js';
-
-const CORRELATION_ID_PATTERN = /^[A-Za-z0-9._:-]{1,128}$/u;
+import { PrivacySafeLogger } from './privacy-safe-logger.js';
 
 @Injectable()
 export class CorrelationInterceptor implements NestInterceptor {
   public constructor(
     @Inject(CorrelationContext) private readonly context: CorrelationContext,
+    @Inject(PrivacySafeLogger) private readonly logger: PrivacySafeLogger,
   ) {}
 
   public intercept(
@@ -30,17 +28,31 @@ export class CorrelationInterceptor implements NestInterceptor {
     const response = executionContext
       .switchToHttp()
       .getResponse<FastifyReply>();
-    const supplied = request.headers['x-correlation-id'];
     const correlationId =
-      typeof supplied === 'string' && CORRELATION_ID_PATTERN.test(supplied)
-        ? supplied
-        : randomUUID();
+      this.context.getRequestCorrelationId(request) ??
+      this.context.resolveIdentifier(request.headers['x-correlation-id']);
 
     response.header('x-correlation-id', correlationId);
-    this.context.associateRequest(request, correlationId);
+    if (!this.context.getRequestCorrelationId(request))
+      this.context.associateRequest(request, correlationId);
     return new Observable((subscriber) => {
       return this.context.run(correlationId, () => {
-        const subscription = next.handle().subscribe(subscriber);
+        const subscription = next
+          .handle()
+          .pipe(
+            tap({
+              next: (): void => {
+                this.logger.record({
+                  action: 'request_completed',
+                  resourceType: 'http',
+                  outcome: 'success',
+                  durationMs: this.context.getRequestDuration(request),
+                  correlationId,
+                });
+              },
+            }),
+          )
+          .subscribe(subscriber);
         return (): void => {
           subscription.unsubscribe();
         };
