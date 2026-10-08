@@ -15,4 +15,4 @@ As seis histórias estão em **Concluído** no Jira e seus PRs foram integrados 
 
 **Decisão RII-025:** o responsável autorizou tornar `Pires3108/SeshatFinance` público. A `main` exige pull request e o check `quality` verde no commit atualizado, também para administradores. O PR temporário #146 demonstrou falha de lockfile e merge bloqueado; o PR temporário #147 demonstrou que erros reais de tipo e de teste falham, respectivamente, em `pnpm typecheck` e `pnpm test`. Ambos foram fechados sem merge. A decisão e os controles estão detalhados em `14-registro-de-riscos-e-inferencias-de-implementacao.md` e `docs/quality/11-ci-quality-gates.md`.
 
-**Portão para Sprint 1:** nenhuma história da Sprint 0 permanece bloqueada ou em revisão. A integração da US-004 em `main` deve concluir seu próprio run de CI antes de iniciar trabalho da Sprint 1.
+**Portão para Sprint 1:** nenhuma história da Sprint 0 permanece bloqueada ou em revisão. O commit de integração da US-004 em `main` (`63db431`) passou no run de CI `37788994867`. O registro de encerramento será integrado após seu próprio CI verde.
