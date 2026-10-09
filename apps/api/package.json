@@ -9,7 +9,8 @@
     "lint": "eslint scripts src test",
     "openapi:generate": "tsx scripts/generate-openapi.ts && prettier --write openapi.json",
     "start": "node dist/main.js",
-    "test": "vitest run",
+    "test": "vitest run --exclude \"**/*.integration.spec.*\"",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -32,7 +33,10 @@
   },
   "devDependencies": {
     "@nestjs/testing": "latest",
+    "@seshat/test-support": "workspace:*",
     "@types/node": "latest",
+    "@types/pg": "8.15.5",
+    "pg": "8.16.3",
     "tsx": "latest"
   }
 }
