@@ -15,6 +15,7 @@ export const financialAuditResourceTypes = [
   'transfer',
   'balance-adjustment',
   'credit-card',
+  'manual-exchange-quote',
 ] as const;
 
 export type FinancialAuditResourceType =

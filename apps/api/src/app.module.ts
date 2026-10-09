@@ -5,6 +5,10 @@ import {
   CreateBalanceAdjustmentUseCase,
   ListOwnedBalanceAdjustmentsUseCase,
   CreateCreditCardUseCase,
+  CreateManualExchangeQuoteUseCase,
+  CorrectOwnedManualExchangeQuoteUseCase,
+  GetOwnedManualExchangeQuoteUseCase,
+  ListOwnedManualExchangeQuotesUseCase,
   CreateFamilyGroupUseCase,
   GetOwnedCreditCardUseCase,
   GetOwnedTransferUseCase,
@@ -19,6 +23,7 @@ import {
   CreateTransferUseCase,
   GetOwnedAccountUseCase,
   GetOwnedAccountBalanceUseCase,
+  GetOwnedBalanceSummaryUseCase,
   GetOwnedTransactionUseCase,
   GetOwnedTransactionClassificationUseCase,
   ListOwnedTransactionTagsUseCase,
@@ -44,10 +49,12 @@ import {
   UpdateOwnedTransactionUseCase,
   type UserProfileRepository,
   type AccountRepository,
+  type OwnedBalanceSummaryAccountRepository,
   type AccountTransactionBalanceRepository,
   type BalanceAdjustmentRepository,
   type BalanceAdjustmentHistoryRepository,
   type CreditCardRepository,
+  type ManualExchangeQuoteRepository,
   type FamilyGroupRepository,
   type CategoryRepository,
   type CostCenterRepository,
@@ -91,6 +98,8 @@ import { TagController } from './classifications/tag.controller.js';
 import { HealthController } from './health/health.controller.js';
 import { DatabaseReadiness } from './health/database-readiness.js';
 import { InvestmentTypeController } from './investments/investment-type.controller.js';
+import { LazyManualExchangeQuoteRepository } from './money/lazy-manual-exchange-quote-repository.js';
+import { ManualExchangeQuoteController } from './money/manual-exchange-quote.controller.js';
 import { CorrelationContext } from './platform/correlation-context.js';
 import { PrivacySafeLogger } from './platform/privacy-safe-logger.js';
 import { LazyPrismaClient } from './platform/lazy-prisma-client.js';
@@ -120,6 +129,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     CostCenterController,
     HealthController,
     InvestmentTypeController,
+    ManualExchangeQuoteController,
     PasswordRecoveryController,
     TagController,
     TransactionController,
@@ -149,6 +159,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyAccountRepository,
     LazyBalanceAdjustmentRepository,
     LazyCreditCardRepository,
+    LazyManualExchangeQuoteRepository,
     LazyFamilyGroupRepository,
     LazyCategoryRepository,
     LazyCostCenterRepository,
@@ -158,6 +169,46 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyTransactionTagRepository,
     LazyTransferRepository,
     LazyUserProfileRepository,
+    {
+      inject: [LazyManualExchangeQuoteRepository],
+      provide: CreateManualExchangeQuoteUseCase,
+      useFactory: (
+        quotes: ManualExchangeQuoteRepository,
+      ): CreateManualExchangeQuoteUseCase =>
+        new CreateManualExchangeQuoteUseCase(
+          quotes,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyManualExchangeQuoteRepository],
+      provide: CorrectOwnedManualExchangeQuoteUseCase,
+      useFactory: (
+        quotes: ManualExchangeQuoteRepository,
+      ): CorrectOwnedManualExchangeQuoteUseCase =>
+        new CorrectOwnedManualExchangeQuoteUseCase(
+          quotes,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyManualExchangeQuoteRepository],
+      provide: GetOwnedManualExchangeQuoteUseCase,
+      useFactory: (
+        quotes: ManualExchangeQuoteRepository,
+      ): GetOwnedManualExchangeQuoteUseCase =>
+        new GetOwnedManualExchangeQuoteUseCase(quotes),
+    },
+    {
+      inject: [LazyManualExchangeQuoteRepository],
+      provide: ListOwnedManualExchangeQuotesUseCase,
+      useFactory: (
+        quotes: ManualExchangeQuoteRepository,
+      ): ListOwnedManualExchangeQuotesUseCase =>
+        new ListOwnedManualExchangeQuotesUseCase(quotes),
+    },
     {
       inject: [LazyFamilyGroupRepository],
       provide: CreateFamilyGroupUseCase,
@@ -509,6 +560,15 @@ import { UserProfileController } from './users/user-profile.controller.js';
         transactions: AccountTransactionBalanceRepository,
       ): GetOwnedAccountBalanceUseCase =>
         new GetOwnedAccountBalanceUseCase(accounts, transactions),
+    },
+    {
+      inject: [LazyAccountRepository, GetOwnedAccountBalanceUseCase],
+      provide: GetOwnedBalanceSummaryUseCase,
+      useFactory: (
+        accounts: OwnedBalanceSummaryAccountRepository,
+        balances: GetOwnedAccountBalanceUseCase,
+      ): GetOwnedBalanceSummaryUseCase =>
+        new GetOwnedBalanceSummaryUseCase(accounts, balances),
     },
     {
       inject: [LazyAccountRepository],

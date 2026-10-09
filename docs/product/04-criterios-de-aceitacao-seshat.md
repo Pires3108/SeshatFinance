@@ -18,7 +18,13 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 
 ### CA-003 — Conta e saldo
 
-**Dado** usuário autenticado, **quando** cadastrar conta válida com saldo inicial, **então** ela aparecerá na lista e o consolidado será atualizado exatamente uma vez.  
+**Dado** usuário autenticado, **quando** cadastrar conta válida com saldo inicial, **então** ela aparecerá na lista e o consolidado na mesma moeda será atualizado exatamente uma vez. Moedas distintas não são somadas sem regra explícita de conversão.
+
+**Dado** uma cotação manual em BRL, USD ou EUR, **quando** ela for registrada ou corrigida com a mesma chave de idempotência, **então** a taxa decimal e sua origem serão preservadas, a correção criará nova versão apenas uma vez e nenhum saldo ou lançamento original será alterado.
+
+**Dado** contas com saldos em BRL e USD, **quando** consultar a consolidação em BRL, **então** a consulta apresentará cada saldo original e o total exato de cada moeda, indicará `conversion-policy-pending` e não apresentará um total convertido. Contas na lixeira não compõem a consulta; contas arquivadas permanecem no histórico financeiro.
+
+**Dado** um registro histórico em BRL com escala diferente da escala vigente, **quando** consultar a consolidação, **então** o sistema preservará seu valor e indicará `currency-scale-mismatch` sem descartar frações.
 **Dado** o catálogo padrão de tipos de conta, **quando** consultá-lo, **então** os tipos previstos em RF-016 serão apresentados em português sem impedir chaves personalizadas.
 **Referências:** RF-015 a RF-020; RN-002 a RN-005.
 

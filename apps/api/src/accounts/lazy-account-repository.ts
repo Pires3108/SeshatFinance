@@ -32,6 +32,12 @@ export class LazyAccountRepository implements AccountRepository {
     return this.getRepository().listForOwner(ownerId, lifecycle);
   }
 
+  public listForOwnedBalanceSummary(
+    ownerId: string,
+  ): Promise<readonly Account[]> {
+    return this.getRepository().listForOwnedBalanceSummary(ownerId);
+  }
+
   public save(
     account: Account,
     expectedVersion: number,

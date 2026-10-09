@@ -64,6 +64,16 @@ export class PrismaAccountRepository implements AccountRepository {
     return persisted.map(restoreAccount);
   }
 
+  public async listForOwnedBalanceSummary(
+    ownerId: string,
+  ): Promise<readonly Account[]> {
+    const persisted = await this.client.account.findMany({
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      where: { ownerId, lifecycle: { in: ['active', 'archived'] } },
+    });
+    return persisted.map(restoreAccount);
+  }
+
   public async save(
     account: Account,
     expectedVersion: number,

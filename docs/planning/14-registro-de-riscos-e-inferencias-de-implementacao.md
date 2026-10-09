@@ -51,11 +51,12 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-007 — Catálogo monetário e política de arredondamento
 
-- **Estado:** aberto.
+- **Estado:** parcialmente decidido.
 - **Referências:** RN-002; RNF-047; RF-071; US-021; US-022; US-069; INV-003 a INV-005.
 - **Risco:** os documentos exigem precisão compatível com a moeda e arredondamento explícito, mas não definem o catálogo de moedas suportadas, a fonte das casas decimais nem os modos de arredondamento por operação.
-- **Decisão necessária:** aprovar o catálogo versionado de moedas, a matriz de arredondamento para conversões, rateios, juros e apresentação, e a regra de comparação para ordenação por valor entre moedas diferentes.
-- **Limite atual:** `Currency` exige código e escala explícitos, e `Money` aceita apenas valores exatamente representáveis nessa escala; operações que exigem arredondamento e ordenação global por valor entre moedas não serão adicionadas antes da decisão. Filtros de movimentações por conta, tipo, estado e intervalo explícito, com ordenação por data, permanecem independentes.
+- **Decisão aplicada à US-022:** novos registros de contas, movimentações e transferências pela API aceitam BRL, USD e EUR, todos com duas casas, conforme os critérios detalhados no Jira. `Currency` e `Money` continuam representando explicitamente a moeda e a escala dos dados históricos. Cotação manual registra par, taxa decimal textual exata, vigência, origem, autor e versões imutáveis; não converte nem altera saldos.
+- **Decisão ainda necessária:** aprovar catálogo versionado além dessas três moedas, matriz de arredondamento para conversões, rateios, juros e apresentação, precedência entre cotações e comparação para ordenação por valor entre moedas diferentes.
+- **Limite atual:** a consulta de saldos por conta e totais por moeda informa `conversion-policy-pending` no consolidado em BRL quando houver moeda diferente de BRL. Sem moeda estrangeira, soma BRL exatamente; com moeda estrangeira, não apresenta total convertido. Não somar moedas distintas nem usar cotação externa informativa para modificar valor financeiro. Filtros por conta, tipo, estado e intervalo explícito, com ordenação por data, permanecem independentes.
 
 ### RII-008 — Semântica pública de restauração de conta
 

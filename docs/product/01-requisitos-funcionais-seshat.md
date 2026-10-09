@@ -52,7 +52,7 @@ A primeira versão será uma aplicação web responsiva e instalável como PWA, 
 - **RF-017 — CRUD de conta:** consultar, editar, arquivar, restaurar e enviar contas para a lixeira sem apagar seu histórico.
 - **RF-018 — Saldo:** calcular saldo contábil a partir do saldo inicial e das movimentações válidas.
 - **RF-019 — Conciliação:** permitir informar saldo real, calcular a diferença e criar ajuste positivo ou negativo com justificativa e saldo anterior registrado.
-- **RF-020 — Multimoeda:** registrar contas e movimentações em moedas distintas, mantendo BRL como consolidação principal por cotação manual na primeira versão.
+- **RF-020 — Multimoeda:** registrar contas e movimentações em moedas distintas, mantendo BRL como moeda principal de apresentação. O catálogo inicial para novos registros é BRL, USD e EUR, com duas casas decimais. Cotação manual mantém par, taxa decimal textual, vigência, origem, autor e histórico imutável de correções; registro e correção usam chave de idempotência. Nenhuma cotação altera saldo ou lançamento original. A consulta preserva saldos por conta e totaliza apenas valores da mesma moeda; quando houver moeda diferente de BRL ou escala histórica incompatível, indica motivo explícito de indisponibilidade do total em BRL. Consolidação convertida permanece indisponível até a aprovação das regras contábeis de conversão, precedência e arredondamento.
 
 ### 4.4 Classificação e entidades
 

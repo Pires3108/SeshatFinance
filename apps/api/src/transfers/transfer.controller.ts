@@ -52,14 +52,18 @@ import { z } from 'zod';
 import { AuthenticatedActorContext } from '../auth/authenticated-actor-context.js';
 import { BearerAuthGuard } from '../auth/bearer-auth.guard.js';
 import { ZodValidationPipe } from '../platform/zod-validation.pipe.js';
+import {
+  supportedCurrencyCodeSchema,
+  supportedCurrencyMinorUnitScaleSchema,
+} from '../platform/supported-currency-schema.js';
 
 const createSchema = z.object({
   amount: z
     .string()
     .max(1002)
     .regex(/^\d+(?:\.\d+)?$/u),
-  currencyCode: z.string().regex(/^[A-Z]{3}$/u),
-  currencyMinorUnitScale: z.number().int().min(0).max(18),
+  currencyCode: supportedCurrencyCodeSchema,
+  currencyMinorUnitScale: supportedCurrencyMinorUnitScaleSchema,
   description: z.string().trim().min(1).nullable(),
   destinationAccountId: z.uuid(),
   observations: z.string().trim().min(1).nullable(),
@@ -309,8 +313,8 @@ function createBodySchema(): SchemaObject {
         pattern: '^\\d+(?:\\.\\d+)?$',
         type: 'string',
       },
-      currencyCode: { pattern: '^[A-Z]{3}$', type: 'string' },
-      currencyMinorUnitScale: { maximum: 18, minimum: 0, type: 'integer' },
+      currencyCode: { enum: ['BRL', 'USD', 'EUR'], type: 'string' },
+      currencyMinorUnitScale: { maximum: 2, minimum: 2, type: 'integer' },
       description: { nullable: true, type: 'string' },
       destinationAccountId: { format: 'uuid', type: 'string' },
       observations: { nullable: true, type: 'string' },
