@@ -2,6 +2,7 @@ import {
   FamilyGroup,
   FamilyGroupMembership,
   type FamilyGroupMembershipSnapshot,
+  type FamilyGroupRole,
 } from '@seshat/domain';
 
 import type { Clock } from '../ports/clock.js';
@@ -15,6 +16,41 @@ export interface FamilyGroupRepository {
   listForMember(
     userId: string,
   ): Promise<readonly FamilyGroupMembershipSnapshot[]>;
+  changeRole(command: ChangeFamilyGroupRoleCommand): Promise<FamilyGroupRole>;
+}
+
+export type ChangeFamilyGroupRoleCommand = Readonly<{
+  actorId: string;
+  changedAt: Date;
+  eventId: string;
+  groupId: string;
+  nextRole: Exclude<FamilyGroupRole, 'owner'>;
+  targetUserId: string;
+}>;
+
+export class FamilyGroupRoleChangeDeniedError extends Error {
+  public constructor() {
+    super('Family group role change is not allowed.');
+    this.name = 'FamilyGroupRoleChangeDeniedError';
+  }
+}
+
+export class ChangeFamilyGroupRoleUseCase {
+  public constructor(
+    private readonly groups: FamilyGroupRepository,
+    private readonly clock: Clock,
+    private readonly identifiers: IdentifierGenerator,
+  ) {}
+
+  public execute(
+    command: Omit<ChangeFamilyGroupRoleCommand, 'changedAt' | 'eventId'>,
+  ): Promise<FamilyGroupRole> {
+    return this.groups.changeRole({
+      ...command,
+      changedAt: this.clock.now(),
+      eventId: this.identifiers.generate(),
+    });
+  }
 }
 
 export class CreateFamilyGroupUseCase {

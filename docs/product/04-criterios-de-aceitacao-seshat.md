@@ -104,6 +104,10 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 **Dado** grupo com os quatro papéis, **quando** cada participante operar dados, **então** a matriz será aplicada no servidor, contas individuais ficarão invisíveis e a autoria será preservada.  
 **Referências:** RF-009 a RF-014; RN-049 a RN-053; RNF-029.
 
+**Dado** um participante ativo, **quando** seu papel for alterado, **então** o servidor verificará o papel atual do autor e do participante na mesma transação da mudança, impedirá a alteração direta do proprietário e registrará autor, papéis anterior e novo e instante em auditoria imutável.
+
+**Referências:** RF-010; RN-050 a RN-052; INV-039; INV-041.
+
 ### CA-020 — Eliminação
 
 **Dado** usuário reautenticado, **quando** confirmar duas vezes, **então** o acesso será bloqueado imediatamente, dados ativos serão eliminados ou anonimizados em 24 horas e backups expirarão em 14 dias.  

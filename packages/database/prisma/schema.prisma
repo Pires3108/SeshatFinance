@@ -30,11 +30,26 @@ enum FamilyGroupRole {
 }
 
 model FamilyGroup {
-  id        String                  @id @db.Uuid
-  createdAt DateTime                @map("created_at") @db.Timestamptz(6)
-  members   FamilyGroupMembership[]
+  id          String                  @id @db.Uuid
+  createdAt   DateTime                @map("created_at") @db.Timestamptz(6)
+  members     FamilyGroupMembership[]
+  roleChanges FamilyGroupRoleChange[]
 
   @@map("family_groups")
+}
+
+model FamilyGroupRoleChange {
+  id           String          @id @db.Uuid
+  groupId      String          @map("group_id") @db.Uuid
+  actorId      String          @map("actor_id") @db.Uuid
+  targetUserId String          @map("target_user_id") @db.Uuid
+  previousRole FamilyGroupRole @map("previous_role")
+  nextRole     FamilyGroupRole @map("next_role")
+  changedAt    DateTime        @map("changed_at") @db.Timestamptz(6)
+  group        FamilyGroup     @relation(fields: [groupId], references: [id], onDelete: Restrict)
+
+  @@index([groupId, changedAt, id])
+  @@map("family_group_role_changes")
 }
 
 model FamilyGroupMembership {
