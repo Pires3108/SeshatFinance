@@ -1900,6 +1900,22 @@ export interface operations {
                     };
                 };
             };
+            /** @description Request validation failed before recording a transaction */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly error: {
+                            /** @enum {string} */
+                            readonly code: "INVALID_REQUEST";
+                            readonly correlationId: string;
+                            readonly message: string;
+                        };
+                    };
+                };
+            };
             /** @description Bearer token missing or invalid */
             readonly 401: {
                 headers: {
