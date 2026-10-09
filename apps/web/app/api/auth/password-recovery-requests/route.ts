@@ -1,5 +1,7 @@
-import { createApiClient, type paths } from '@seshat/contracts';
+import type { paths } from '@seshat/contracts';
 import { NextResponse } from 'next/server';
+
+import { createServerApiClient } from '../../../../lib/create-server-api-client';
 
 type PasswordRecoveryRequest =
   paths['/api/v1/auth/password-recovery-requests']['post']['requestBody']['content']['application/json'];
@@ -29,9 +31,8 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'invalid_input' }, { status: 400 });
   }
 
-  const apiUrl = process.env.SESHAT_API_URL ?? 'http://localhost:3001';
   try {
-    const { data, response } = await createApiClient(apiUrl).POST(
+    const { data, response } = await createServerApiClient().POST(
       '/api/v1/auth/password-recovery-requests',
       { body: input, cache: 'no-store' },
     );
