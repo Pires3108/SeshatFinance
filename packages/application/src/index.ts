@@ -160,3 +160,15 @@ export {
   ListOwnFamilyGroupsUseCase,
   type FamilyGroupRepository,
 } from './family/create-family-group.js';
+export {
+  CreateCounterpartyUseCase,
+  ListOwnedCounterpartiesUseCase,
+  GetOwnedCounterpartyUseCase,
+  UpdateOwnedCounterpartyUseCase,
+  ChangeOwnedCounterpartyStatusUseCase,
+  MergeOwnedCounterpartiesUseCase,
+  OwnedCounterpartyNotFoundError,
+  CounterpartyConflictError,
+  InvalidMergeTargetError,
+  type CounterpartyRepository,
+} from './counterparties/manage-counterparty.js';

@@ -7,6 +7,44 @@ datasource db {
   provider = "postgresql"
 }
 
+enum CounterpartyType {
+  person
+  company
+  institution
+
+  @@map("counterparty_type")
+}
+
+enum CounterpartyStatus {
+  active
+  inactive
+  merged
+
+  @@map("counterparty_status")
+}
+
+model Counterparty {
+  id            String             @id @db.Uuid
+  ownerId       String             @map("owner_id") @db.Uuid
+  name          String             @db.VarChar(200)
+  type          CounterpartyType
+  email         String?            @db.VarChar(254)
+  phone         String?            @db.VarChar(40)
+  document      String?            @db.VarChar(40)
+  notes         String?            @db.VarChar(2000)
+  status        CounterpartyStatus @default(active)
+  mergedIntoId  String?            @map("merged_into_id") @db.Uuid
+  mergedInto    Counterparty?      @relation("counterparty_merges", fields: [mergedIntoId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  mergedSources Counterparty[]     @relation("counterparty_merges")
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime           @map("updated_at") @db.Timestamptz(6)
+  version       Int                @default(1)
+
+  @@unique([id, ownerId])
+  @@index([ownerId, status, name])
+  @@map("counterparties")
+}
+
 model UserProfile {
   id                   String   @id @db.Uuid
   displayName          String?  @map("display_name") @db.VarChar(120)
