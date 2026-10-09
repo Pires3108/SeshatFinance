@@ -1908,10 +1908,10 @@ export interface operations {
                 content: {
                     readonly "application/json": {
                         readonly error: {
-                            readonly correlationId: string;
-                            readonly message: string;
                             /** @enum {string} */
                             readonly code: "INVALID_REQUEST";
+                            readonly correlationId: string;
+                            readonly message: string;
                         };
                     };
                 };
