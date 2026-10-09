@@ -99,6 +99,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@seshat/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       next:
         specifier: latest
         version: 16.3.5(@types/node@26.6.2)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
