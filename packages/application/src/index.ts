@@ -3,6 +3,25 @@ export { readCivilDate } from './ports/civil-date.js';
 export type { IdentifierGenerator } from './ports/identifier-generator.js';
 export type { TransactionRunner } from './ports/transaction-runner.js';
 export {
+  BuildExportUseCase,
+  EXPORT_SCHEMA,
+  EXPORT_SETS,
+  EXPORT_VERSION,
+  MAX_EXPORT_ROWS,
+  InvalidExportError,
+  canonicalizeExportRows,
+  parseExportSelection,
+  serializeExportCsv,
+  serializeExportCsvBundle,
+  serializeExportJson,
+  type AuthorizedExportReader,
+  type ExportFilters,
+  type ExportMoney,
+  type ExportRow,
+  type ExportSelection,
+  type ExportSet,
+} from './exports/export-contract.js';
+export {
   AccountVersionConflictError,
   ChangeOwnedAccountLifecycleUseCase,
   CreateAccountUseCase,
