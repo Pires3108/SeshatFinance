@@ -1,6 +1,10 @@
+import type { paths } from '@seshat/contracts';
 import { NextResponse } from 'next/server';
 
-type PasswordRecoveryRequest = Readonly<{ email: string }>;
+import { createServerApiClient } from '../../../../lib/create-server-api-client';
+
+type PasswordRecoveryRequest =
+  paths['/api/v1/auth/password-recovery-requests']['post']['requestBody']['content']['application/json'];
 
 function isPasswordRecoveryRequest(
   value: unknown,
@@ -27,18 +31,14 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: 'invalid_input' }, { status: 400 });
   }
 
-  const apiUrl = process.env.SESHAT_API_URL ?? 'http://localhost:3001';
   try {
-    const response = await fetch(
-      new URL('/api/v1/auth/password-recovery-requests', apiUrl),
-      {
-        body: JSON.stringify({ email: input.email }),
-        cache: 'no-store',
-        headers: { 'Content-Type': 'application/json' },
-        method: 'POST',
-      },
+    const { data, response } = await createServerApiClient().POST(
+      '/api/v1/auth/password-recovery-requests',
+      { body: input, cache: 'no-store' },
     );
-    if (response.status !== 202) throw new Error('Recovery API unavailable.');
+    if (response.status !== 202 || data?.status !== 'accepted') {
+      throw new Error('Recovery API unavailable.');
+    }
     return NextResponse.json({ status: 'accepted' }, { status: 202 });
   } catch {
     return NextResponse.json(

@@ -32,7 +32,9 @@ describe('web registration proxy', () => {
     process.env.SESHAT_API_URL = 'http://api.internal:3001';
     const fetchMock = vi
       .fn()
-      .mockResolvedValue(new Response(null, { status: 202 }));
+      .mockResolvedValue(
+        Response.json({ status: 'confirmation_required' }, { status: 202 }),
+      );
     globalThis.fetch = fetchMock;
     const response = await POST(
       request({
@@ -43,10 +45,17 @@ describe('web registration proxy', () => {
     );
     expect(response.status).toBe(202);
     expect(await response.json()).toEqual({ status: 'confirmation_required' });
-    expect(fetchMock).toHaveBeenCalledWith(
-      new URL('http://api.internal:3001/api/v1/auth/registrations'),
-      expect.objectContaining({ method: 'POST', cache: 'no-store' }),
+    const upstreamRequest = fetchMock.mock.calls[0]?.[0] as Request;
+    expect(upstreamRequest.url).toBe(
+      'http://api.internal:3001/api/v1/auth/registrations',
     );
+    expect(upstreamRequest.method).toBe('POST');
+    expect(upstreamRequest.cache).toBe('no-store');
+    expect(await upstreamRequest.json()).toEqual({
+      displayName: 'Pessoa',
+      email: 'pessoa@example.com',
+      password: 'secret',
+    });
   });
 
   it('does not expose upstream errors', async () => {
@@ -69,7 +78,25 @@ describe('web registration proxy', () => {
   it('does not treat an unexpected upstream response as registration', async () => {
     globalThis.fetch = vi
       .fn()
-      .mockResolvedValue(new Response(null, { status: 200 }));
+      .mockResolvedValue(
+        Response.json({ status: 'unexpected' }, { status: 200 }),
+      );
+    const response = await POST(
+      request({
+        displayName: 'Pessoa',
+        email: 'pessoa@example.com',
+        password: 'secret',
+      }),
+    );
+    expect(response.status).toBe(502);
+  });
+
+  it('rejects a successful status with an unexpected response body', async () => {
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValue(
+        Response.json({ status: 'unexpected' }, { status: 202 }),
+      );
     const response = await POST(
       request({
         displayName: 'Pessoa',
