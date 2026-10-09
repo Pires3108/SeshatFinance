@@ -80,3 +80,8 @@
 - **RN-055:** a central interna não envia alertas do sistema operacional na primeira versão.
 - **RN-056:** dados sensíveis permanecem mascarados por padrão.
 - **RN-057:** ações destrutivas exigem confirmação proporcional; eliminação de conta exige reautenticação.
+
+## 9. Reembolso vinculado
+
+- **RN-058:** uma despesa aceita zero ou mais reembolsos parciais, integrais ou antecipados à sua data de efetivação. Cada reembolso é uma receita própria vinculada à despesa, na mesma moeda, recebida em conta ativa escolhida pelo usuário. A soma líquida dos reembolsos fora da lixeira nunca supera o valor bruto da despesa.
+- **RN-059:** o valor líquido da despesa é o valor bruto menos reembolsos ativos ou arquivados, deduzidas compensações ativas ou arquivadas. A escolha entre exibir a receita separadamente ou compensar visualmente a despesa não altera lançamentos nem saldos. Correções e cancelamentos financeiros criam lançamento compensatório vinculado com motivo e auditoria; arquivamento, lixeira e restauração preservam os vínculos e recalculam o valor líquido. A purga exige resolver vínculos ativos.

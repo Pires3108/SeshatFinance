@@ -32,6 +32,15 @@ describe('PrismaUserProfileRepository', () => {
     });
     await migrationClient.connect();
     await migrationClient.query(migration);
+    await migrationClient.query(
+      await readFile(
+        new URL(
+          '../../prisma/migrations/20260929180000_add_refund_presentation/migration.sql',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    );
     await migrationClient.end();
 
     const prisma = createPrismaClient(container.getConnectionUri());
@@ -55,6 +64,7 @@ describe('PrismaUserProfileRepository', () => {
       id: '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
       locale: 'pt-BR',
       presentationCurrency: 'BRL',
+      refundPresentation: 'separate-income',
       timeZone: 'America/Sao_Paulo',
       updatedAt: createdAt,
       version: 1,

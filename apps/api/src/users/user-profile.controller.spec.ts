@@ -16,6 +16,7 @@ const profile: UserProfile = {
   id: 'actor-id',
   locale: 'pt-BR',
   presentationCurrency: 'BRL',
+  refundPresentation: 'separate-income',
   timeZone: 'America/Sao_Paulo',
   updatedAt: new Date('2026-09-20T12:00:00.000Z'),
   version: 1,

@@ -62,6 +62,7 @@ describe('financial ledger across accounts, transfers, and adjustments', () => {
       '../../prisma/migrations/20260921150000_create_transfers/migration.sql',
       '../../prisma/migrations/20260921170000_create_balance_adjustments/migration.sql',
       '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
+      '../../prisma/migrations/20260929170000_create_refund_links/migration.sql',
     ]) {
       await migrationClient.query(
         await readFile(new URL(path, import.meta.url), 'utf8'),

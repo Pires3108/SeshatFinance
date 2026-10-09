@@ -128,3 +128,9 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 
 **Dado** valores, moedas e operações pareadas, **quando** cálculos forem repetidos, **então** resultados serão determinísticos, reconciliáveis e sem erro de ponto flutuante.  
 **Referências:** RNF-047 a RNF-052.
+
+### CA-025 — Reembolso vinculado
+
+**Dada** despesa própria, **quando** registrar um ou mais reembolsos na mesma moeda e em conta ativa, **então** cada receita e vínculo surgirão atomicamente e a soma líquida não superará a despesa, mesmo com pedidos simultâneos ou repetidos. **Quando** corrigir um reembolso, **então** será criado lançamento compensatório com motivo e auditoria, sem apagar o lançamento anterior. **Quando** arquivar, enviar à lixeira ou restaurar lançamento vinculado, **então** o valor líquido e os efeitos de saldo serão recalculados sem perder o vínculo. A apresentação como receita separada ou compensação visual produzirá o mesmo valor líquido.
+
+**Referências:** RF-026, RF-032, RF-034; RN-005, RN-011, RN-058, RN-059; INV-046.

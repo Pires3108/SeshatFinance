@@ -2100,6 +2100,346 @@
         "tags": ["health"]
       }
     },
+    "/api/v1/transactions/{expenseTransactionId}/refunds": {
+      "post": {
+        "operationId": "LinkedRefundController_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID da operação",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expenseTransactionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "accountId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "amount": {
+                    "type": "string"
+                  },
+                  "currencyCode": {
+                    "type": "string"
+                  },
+                  "currencyMinorUnitScale": {
+                    "type": "integer"
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "occurredAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "compensatesRefundId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "amount",
+                  "currencyCode",
+                  "currencyMinorUnitScale",
+                  "description",
+                  "occurredAt"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": ["refund", "compensation"]
+                    },
+                    "expenseTransactionId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "entryTransactionId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "accountId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "amount": {
+                      "type": "string"
+                    },
+                    "currencyCode": {
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "type": "integer"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "occurredAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "lifecycle": {
+                      "type": "string",
+                      "enum": ["active", "archived", "trashed"]
+                    },
+                    "compensatesRefundId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "nullable": true
+                    },
+                    "reason": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kind",
+                    "expenseTransactionId",
+                    "entryTransactionId",
+                    "accountId",
+                    "amount",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "description",
+                    "occurredAt",
+                    "lifecycle",
+                    "compensatesRefundId",
+                    "reason",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autenticação obrigatória"
+          },
+          "409": {
+            "description": "Limite, compensação ou chave de idempotência conflitante"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Registrar reembolso ou compensação vinculada",
+        "tags": ["refunds"]
+      },
+      "get": {
+        "operationId": "LinkedRefundController_list",
+        "parameters": [
+          {
+            "name": "presentation",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": ["separate-income", "expense-offset"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "expenseTransactionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "expenseTransactionId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "gross": {
+                      "type": "string"
+                    },
+                    "refunded": {
+                      "type": "string"
+                    },
+                    "net": {
+                      "type": "string"
+                    },
+                    "currencyCode": {
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "type": "integer"
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": ["refund", "compensation"]
+                          },
+                          "expenseTransactionId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "entryTransactionId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "accountId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "amount": {
+                            "type": "string"
+                          },
+                          "currencyCode": {
+                            "type": "string"
+                          },
+                          "currencyMinorUnitScale": {
+                            "type": "integer"
+                          },
+                          "description": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "occurredAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "lifecycle": {
+                            "type": "string",
+                            "enum": ["active", "archived", "trashed"]
+                          },
+                          "compensatesRefundId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "nullable": true
+                          },
+                          "reason": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kind",
+                          "expenseTransactionId",
+                          "entryTransactionId",
+                          "accountId",
+                          "amount",
+                          "currencyCode",
+                          "currencyMinorUnitScale",
+                          "description",
+                          "occurredAt",
+                          "lifecycle",
+                          "compensatesRefundId",
+                          "reason",
+                          "createdAt"
+                        ]
+                      }
+                    },
+                    "presentation": {
+                      "type": "string",
+                      "enum": ["separate-income", "expense-offset"]
+                    },
+                    "displayedExpense": {
+                      "type": "string"
+                    },
+                    "displayedRefundIncome": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "expenseTransactionId",
+                    "gross",
+                    "refunded",
+                    "net",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "entries",
+                    "presentation",
+                    "displayedExpense",
+                    "displayedRefundIncome"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autenticação obrigatória"
+          },
+          "404": {
+            "description": "Despesa não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Consultar reembolsos e valor líquido da despesa",
+        "tags": ["refunds"]
+      }
+    },
     "/api/v1/investment-types": {
       "get": {
         "operationId": "InvestmentTypeController_list",
@@ -4206,6 +4546,10 @@
                       "minLength": 3,
                       "type": "string"
                     },
+                    "refundPresentation": {
+                      "enum": ["separate-income", "expense-offset"],
+                      "type": "string"
+                    },
                     "timeZone": {
                       "type": "string"
                     },
@@ -4224,6 +4568,7 @@
                     "id",
                     "locale",
                     "presentationCurrency",
+                    "refundPresentation",
                     "timeZone",
                     "updatedAt",
                     "version"
@@ -4275,6 +4620,10 @@
                     "pattern": "^[A-Z]{3}$",
                     "type": "string"
                   },
+                  "refundPresentation": {
+                    "enum": ["separate-income", "expense-offset"],
+                    "type": "string"
+                  },
                   "timeZone": {
                     "maxLength": 64,
                     "minLength": 1,
@@ -4318,6 +4667,10 @@
                       "minLength": 3,
                       "type": "string"
                     },
+                    "refundPresentation": {
+                      "enum": ["separate-income", "expense-offset"],
+                      "type": "string"
+                    },
                     "timeZone": {
                       "type": "string"
                     },
@@ -4336,6 +4689,7 @@
                     "id",
                     "locale",
                     "presentationCurrency",
+                    "refundPresentation",
                     "timeZone",
                     "updatedAt",
                     "version"

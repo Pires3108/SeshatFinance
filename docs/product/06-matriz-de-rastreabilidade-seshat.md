@@ -4,23 +4,23 @@
 
 Esta matriz relaciona áreas funcionais, requisitos, regras e critérios de aceitação. Intervalos indicam cobertura conjunta.
 
-| Área           | Requisitos funcionais | Regras                           | Aceitação                              | Não funcionais                       |
-| -------------- | --------------------- | -------------------------------- | -------------------------------------- | ------------------------------------ |
-| Identidade     | RF-001 a RF-008       | RN-054 a RN-057                  | CA-001, CA-002, CA-020                 | RNF-021 a RNF-040                    |
-| Família        | RF-009 a RF-014       | RN-049 a RN-053                  | CA-019                                 | RNF-029, RNF-032, RNF-038            |
-| Contas         | RF-015 a RF-020       | RN-001 a RN-010                  | CA-003, CA-005, CA-006, CA-018, CA-024 | RNF-047 a RNF-052                    |
-| Classificação  | RF-021 a RF-025       | RN-013, RN-014                   | CA-004, CA-018                         | RNF-006 a RNF-012                    |
-| Movimentações  | RF-026 a RF-037       | RN-006 a RN-014, RN-025 a RN-027 | CA-004 a CA-007, CA-010                | RNF-047 a RNF-052                    |
-| Cartões        | RF-038 a RF-046       | RN-015 a RN-024                  | CA-008, CA-009, CA-011                 | RNF-046 a RNF-052                    |
-| Metas          | RF-047 a RF-050       | RN-031 a RN-033                  | CA-013, CA-018                         | RNF-047 a RNF-052                    |
-| Investimentos  | RF-051 a RF-056       | RN-034 a RN-037                  | CA-014                                 | RNF-047 a RNF-054                    |
-| Projeções      | RF-057 a RF-063       | RN-025 a RN-030                  | CA-010 a CA-012                        | RNF-006 a RNF-012, RNF-057           |
-| Painéis        | RF-064 a RF-073       | RN-003 a RN-005                  | CA-018, CA-021, CA-022                 | RNF-006 a RNF-012, RNF-041 a RNF-046 |
-| Importação     | RF-074 a RF-080       | RN-038 a RN-044                  | CA-015, CA-016                         | RNF-010, RNF-030, RNF-049            |
-| Exportação     | RF-081 a RF-084       | RN-045                           | CA-017                                 | RNF-011, RNF-035, RNF-039            |
-| Notificações   | RF-085 a RF-090       | RN-046 a RN-057                  | CA-007, CA-011, CA-020                 | RNF-019, RNF-032, RNF-055 a RNF-058  |
-| Acessibilidade | RF-001 a RF-090       | RN-024, RN-054                   | CA-021                                 | RNF-041 a RNF-046                    |
-| Continuidade   | Todos                 | RN-001 a RN-057                  | CA-023                                 | RNF-013 a RNF-020                    |
+| Área           | Requisitos funcionais | Regras                                           | Aceitação                              | Não funcionais                       |
+| -------------- | --------------------- | ------------------------------------------------ | -------------------------------------- | ------------------------------------ |
+| Identidade     | RF-001 a RF-008       | RN-054 a RN-057                                  | CA-001, CA-002, CA-020                 | RNF-021 a RNF-040                    |
+| Família        | RF-009 a RF-014       | RN-049 a RN-053                                  | CA-019                                 | RNF-029, RNF-032, RNF-038            |
+| Contas         | RF-015 a RF-020       | RN-001 a RN-010                                  | CA-003, CA-005, CA-006, CA-018, CA-024 | RNF-047 a RNF-052                    |
+| Classificação  | RF-021 a RF-025       | RN-013, RN-014                                   | CA-004, CA-018                         | RNF-006 a RNF-012                    |
+| Movimentações  | RF-026 a RF-037       | RN-006 a RN-014, RN-025 a RN-027, RN-058, RN-059 | CA-004 a CA-007, CA-010, CA-025        | RNF-047 a RNF-052                    |
+| Cartões        | RF-038 a RF-046       | RN-015 a RN-024                                  | CA-008, CA-009, CA-011                 | RNF-046 a RNF-052                    |
+| Metas          | RF-047 a RF-050       | RN-031 a RN-033                                  | CA-013, CA-018                         | RNF-047 a RNF-052                    |
+| Investimentos  | RF-051 a RF-056       | RN-034 a RN-037                                  | CA-014                                 | RNF-047 a RNF-054                    |
+| Projeções      | RF-057 a RF-063       | RN-025 a RN-030                                  | CA-010 a CA-012                        | RNF-006 a RNF-012, RNF-057           |
+| Painéis        | RF-064 a RF-073       | RN-003 a RN-005                                  | CA-018, CA-021, CA-022                 | RNF-006 a RNF-012, RNF-041 a RNF-046 |
+| Importação     | RF-074 a RF-080       | RN-038 a RN-044                                  | CA-015, CA-016                         | RNF-010, RNF-030, RNF-049            |
+| Exportação     | RF-081 a RF-084       | RN-045                                           | CA-017                                 | RNF-011, RNF-035, RNF-039            |
+| Notificações   | RF-085 a RF-090       | RN-046 a RN-057                                  | CA-007, CA-011, CA-020                 | RNF-019, RNF-032, RNF-055 a RNF-058  |
+| Acessibilidade | RF-001 a RF-090       | RN-024, RN-054                                   | CA-021                                 | RNF-041 a RNF-046                    |
+| Continuidade   | Todos                 | RN-001 a RN-059                                  | CA-023                                 | RNF-013 a RNF-020                    |
 
 ## 2. Decisões inferidas
 

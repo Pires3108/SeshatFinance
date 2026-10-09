@@ -99,6 +99,12 @@ export {
   type FamilyGroupSnapshot,
 } from './family/family-group.js';
 export {
+  calculateRefundSummary,
+  InvalidRefundLedgerError,
+  type RefundLedgerEntry,
+  type RefundSummary,
+} from './refunds/refund-ledger.js';
+export {
   hasFamilyGroupCapability,
   type FamilyGroupCapability,
 } from './family/family-group-policy.js';

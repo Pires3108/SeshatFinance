@@ -110,8 +110,9 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Estado:** aberto.
 - **Referências:** RF-026; RF-034; RN-011; RN-042; US-036.
 - **Risco:** os requisitos determinam que o reembolso ou estorno seja vinculado à despesa original e reduza seu valor líquido, mas não definem se uma despesa admite um ou vários vínculos, se os valores podem ser parciais, se o total acumulado pode superar a despesa nem quais compatibilidades de moeda e conta são obrigatórias. Também não especificam o efeito de editar, arquivar, mover para a lixeira ou restaurar qualquer um dos lançamentos. Inferir essas regras alteraria saldos e indicadores financeiros e poderia produzir vínculos inconsistentes.
-- **Decisão necessária:** definir cardinalidade, limite acumulado, compatibilidade de moeda e conta, estados de ciclo de vida elegíveis e propagação de alterações, arquivamento, lixeira e restauração, além da apresentação canônica do valor líquido.
-- **Limite atual:** não implementar persistência, contrato público nem cálculo de saldo ou despesa líquida para reembolsos vinculados até a decisão. Receitas comuns permanecem suportadas, mas não devem ser classificadas ou vinculadas como reembolso por inferência.
+- **Decisão aplicada:** uma despesa aceita zero ou mais reembolsos parciais ou integrais, inclusive antecipados à sua efetivação. O reembolso é receita separada vinculada por padrão; o usuário configura apenas a apresentação entre receita separada e compensação da despesa, sem alterar o lançamento original. A soma de reembolsos ativos não supera a despesa, ambos usam a mesma moeda e a conta de entrada é escolhida pelo usuário entre contas ativas.
+- **Ciclo de vida:** o valor líquido é bruto menos reembolsos ativos. Correção ou cancelamento de reembolso ocorre por lançamento compensatório vinculado, parcial ou integral, com motivo e auditoria; não há edição destrutiva nem exclusão. Arquivar, enviar à lixeira ou restaurar preserva os vínculos e ajusta o cálculo conforme os itens ativos. Purga definitiva exige resolver os vínculos por compensação ou desvinculação auditada.
+- **Limite atual:** implementar modelo de vínculo, limites transacionais, contratos, cálculo de apresentação configurável, comportamento de ciclo de vida e testes de invariantes antes de publicar o fluxo.
 
 ### RII-015 — Materialização do ciclo do cartão
 

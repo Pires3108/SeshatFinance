@@ -3,6 +3,7 @@ export { PrismaTransactionRunner } from './prisma/prisma-transaction-runner.js';
 export { PrismaUserProfileRepository } from './users/prisma-user-profile-repository.js';
 export { PrismaAccountRepository } from './accounts/prisma-account-repository.js';
 export { PrismaTransactionRepository } from './transactions/prisma-transaction-repository.js';
+export { PrismaLinkedRefundRepository } from './refunds/prisma-linked-refund-repository.js';
 export { PrismaTransactionTagRepository } from './transactions/prisma-transaction-tag-repository.js';
 export { PrismaTransactionClassificationRepository } from './transactions/prisma-transaction-classification-repository.js';
 export { PrismaTransferRepository } from './transfers/prisma-transfer-repository.js';

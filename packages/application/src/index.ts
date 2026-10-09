@@ -3,6 +3,18 @@ export { readCivilDate } from './ports/civil-date.js';
 export type { IdentifierGenerator } from './ports/identifier-generator.js';
 export type { TransactionRunner } from './ports/transaction-runner.js';
 export {
+  GetOwnedLinkedRefundsUseCase,
+  InvalidLinkedRefundCommandError,
+  LinkedRefundConflictError,
+  LinkedRefundUnavailableError,
+  RecordLinkedRefundUseCase,
+  type LinkedRefundDetails,
+  type LinkedRefundKind,
+  type LinkedRefundRecord,
+  type LinkedRefundRepository,
+  type RecordLinkedRefundCommand,
+} from './refunds/record-linked-refund.js';
+export {
   AccountVersionConflictError,
   ChangeOwnedAccountLifecycleUseCase,
   CreateAccountUseCase,
