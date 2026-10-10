@@ -10,13 +10,14 @@ import {
 
 export function RegistrationForm(): ReactNode {
   const [state, setState] = useState<
-    'idle' | 'submitting' | 'success' | 'error'
+    'idle' | 'submitting' | 'success' | 'error' | 'password-rejected'
   >('idle');
   const errorRef = useRef<HTMLParagraphElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
 
   useEffect((): void => {
-    if (state === 'error') errorRef.current?.focus();
+    if (state === 'error' || state === 'password-rejected')
+      errorRef.current?.focus();
     if (state === 'success') successRef.current?.focus();
   }, [state]);
 
@@ -38,7 +39,7 @@ export function RegistrationForm(): ReactNode {
         }),
       });
       if (!response.ok) {
-        setState('error');
+        setState(response.status === 422 ? 'password-rejected' : 'error');
         return;
       }
       form.reset();
@@ -111,10 +112,15 @@ export function RegistrationForm(): ReactNode {
                 name="password"
                 type="password"
                 autoComplete="new-password"
+                minLength={12}
                 maxLength={1024}
                 required
-                aria-describedby="registration-instructions"
+                aria-describedby="registration-instructions password-instructions"
               />
+              <span className="field-note" id="password-instructions">
+                Use pelo menos 12 caracteres. Evite senhas expostas em
+                vazamentos de dados.
+              </span>
             </div>
             <button
               className="primary-action"
@@ -132,6 +138,17 @@ export function RegistrationForm(): ReactNode {
               >
                 Não foi possível enviar o cadastro. Confira os dados e tente
                 novamente.
+              </p>
+            )}
+            {state === 'password-rejected' && (
+              <p
+                className="form-message error"
+                ref={errorRef}
+                role="alert"
+                tabIndex={-1}
+              >
+                Esta senha não pode ser usada. Escolha outra senha com pelo
+                menos 12 caracteres.
               </p>
             )}
           </form>

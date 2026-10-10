@@ -4,16 +4,14 @@ const API_PATH = '/api/v1/auth/password-recovery-completions';
 
 type RecoveryCompletion = Readonly<{ tokenHash: string; password: string }>;
 
-function isRecoveryCompletion(value: unknown): value is RecoveryCompletion {
+function hasRecoveryFields(value: unknown): value is RecoveryCompletion {
   if (typeof value !== 'object' || value === null || Array.isArray(value))
     return false;
   const input = value as Record<string, unknown>;
   return (
     typeof input.tokenHash === 'string' &&
     /^[A-Za-z0-9_-]{1,2048}$/u.test(input.tokenHash) &&
-    typeof input.password === 'string' &&
-    input.password.length > 0 &&
-    input.password.length <= 1024
+    typeof input.password === 'string'
   );
 }
 
@@ -24,8 +22,11 @@ export async function POST(request: Request): Promise<NextResponse> {
   } catch {
     return NextResponse.json({ error: 'invalid_input' }, { status: 400 });
   }
-  if (!isRecoveryCompletion(input)) {
+  if (!hasRecoveryFields(input)) {
     return NextResponse.json({ error: 'invalid_input' }, { status: 400 });
+  }
+  if (input.password.length < 12 || input.password.length > 1024) {
+    return NextResponse.json({ error: 'password_invalid' }, { status: 422 });
   }
   try {
     const upstream = await fetch(
@@ -40,6 +41,8 @@ export async function POST(request: Request): Promise<NextResponse> {
     if (upstream.status === 204) return new NextResponse(null, { status: 204 });
     if (upstream.status === 400)
       return NextResponse.json({ error: 'invalid_token' }, { status: 400 });
+    if (upstream.status === 422)
+      return NextResponse.json({ error: 'password_rejected' }, { status: 422 });
     return NextResponse.json(
       { error: 'recovery_unavailable' },
       { status: 503 },

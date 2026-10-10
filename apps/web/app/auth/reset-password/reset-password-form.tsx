@@ -12,6 +12,7 @@ import {
 import { consumeRecoveryToken } from './consume-recovery-token';
 import {
   completionResult,
+  RECOVERY_PASSWORD_REJECTED,
   RECOVERY_UNAVAILABLE,
 } from './recovery-completion-result';
 
@@ -21,6 +22,8 @@ type State =
   | 'submitting'
   | 'success'
   | 'invalid'
+  | 'password-invalid'
+  | 'password-rejected'
   | 'unavailable'
   | 'mismatch';
 
@@ -70,7 +73,18 @@ export function ResetPasswordForm(): ReactNode {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tokenHash, password }),
       });
-      const result = completionResult(response.status);
+      const errorBody: unknown =
+        response.status === 422
+          ? await response.json().catch((): null => null)
+          : null;
+      const errorCode =
+        typeof errorBody === 'object' &&
+        errorBody !== null &&
+        'error' in errorBody &&
+        typeof errorBody.error === 'string'
+          ? errorBody.error
+          : undefined;
+      const result = completionResult(response.status, errorCode);
       if (result === 'success') {
         tokenRef.current = null;
         form.reset();
@@ -79,6 +93,12 @@ export function ResetPasswordForm(): ReactNode {
         tokenRef.current = null;
         form.reset();
         setState('invalid');
+      } else if (result === 'password-invalid') {
+        setState('password-invalid');
+      } else if (result === 'password-rejected') {
+        tokenRef.current = null;
+        form.reset();
+        setState('password-rejected');
       } else {
         tokenRef.current = null;
         form.reset();
@@ -122,8 +142,17 @@ export function ResetPasswordForm(): ReactNode {
           <RecoveryUnavailable />
         </div>
       )}
+      {state === 'password-rejected' && (
+        <div ref={statusRef} role="alert" tabIndex={-1}>
+          <p>{RECOVERY_PASSWORD_REJECTED.message}</p>
+          <Link href={RECOVERY_PASSWORD_REJECTED.actionHref}>
+            {RECOVERY_PASSWORD_REJECTED.action}
+          </Link>
+        </div>
+      )}
       {(state === 'ready' ||
         state === 'submitting' ||
+        state === 'password-invalid' ||
         state === 'mismatch') && (
         <form
           onSubmit={(event) => {
@@ -138,9 +167,15 @@ export function ResetPasswordForm(): ReactNode {
               name="password"
               type="password"
               autoComplete="new-password"
+              minLength={12}
               maxLength={1024}
               required
+              aria-describedby="reset-password-instructions"
             />
+            <span className="field-note" id="reset-password-instructions">
+              Use pelo menos 12 caracteres. Evite senhas expostas em vazamentos
+              de dados.
+            </span>
           </div>
           <div className="field">
             <label htmlFor="confirm-password">Confirme a nova senha</label>
@@ -149,6 +184,7 @@ export function ResetPasswordForm(): ReactNode {
               name="confirmation"
               type="password"
               autoComplete="new-password"
+              minLength={12}
               maxLength={1024}
               required
             />
@@ -168,6 +204,16 @@ export function ResetPasswordForm(): ReactNode {
               tabIndex={-1}
             >
               As senhas não coincidem.
+            </div>
+          )}
+          {state === 'password-invalid' && (
+            <div
+              className="form-message error"
+              ref={statusRef}
+              role="alert"
+              tabIndex={-1}
+            >
+              Use uma senha de 12 a 1024 caracteres.
             </div>
           )}
         </form>
