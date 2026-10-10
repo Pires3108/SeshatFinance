@@ -25,12 +25,10 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-004 — Política de senha do cadastro
 
-- **Estado:** aberto.
+- **Estado:** decisão registrada em 10/10/2026; implementação de cadastro e recuperação em US-015.
 - **Referências:** RF-001; RF-003; RNF-024; CA-001; US-013; US-015; ADR-032.
-- **Risco:** os requisitos delegam o armazenamento seguro ao provedor de identidade, mas não definem comprimento mínimo, composição, verificação contra senhas comprometidas ou mensagens de orientação.
-- **Decisão necessária:** definir a política no Supabase Auth e refletir a mesma orientação na interface, sem manter uma segunda política divergente na API.
-- **Limite atual:** a API valida somente presença e limites estruturais; o provedor aplica a política efetiva até a decisão ser registrada.
-- **Interface atual:** o formulário web de cadastro replica somente esses limites estruturais; não promete nem impõe uma política de força de senha ainda não decidida.
+- **Decisão:** exigir pelo menos 12 caracteres para senhas novas de cadastro e recuperação. A API consulta a versão gratuita do Pwned Passwords com o prefixo de cinco caracteres do SHA-1 via k-anonymity e rejeita senhas comprometidas. Falha da consulta impede a gravação. Não depender do recurso de proteção contra senhas vazadas do Supabase, disponível apenas em planos pagos.
+- **Limite:** o provedor continua responsável pelo armazenamento e pode aplicar regras adicionais; a API traduz `weak_password` para rejeição genérica. O login mantém compatibilidade com credenciais antigas sem impor mínimo estrutural antes da autenticação.
 
 ### RII-005 — Persistência e expiração da sessão web
 
@@ -41,11 +39,10 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-006 — Política progressiva de limitação de autenticação
 
-- **Estado:** aberto.
+- **Estado:** decisão parcial registrada em 10/10/2026; origem adiada para US-018.
 - **Referências:** RNF-025; US-014; US-015; US-018; ADR-032.
-- **Risco:** embora o bloqueio após cinco falhas esteja definido, não há duração inicial, progressão, janela de recuperação nem divisão de responsabilidade entre API e Supabase; inferir esses parâmetros pode bloquear usuários legítimos ou oferecer proteção apenas aparente.
-- **Decisão necessária:** definir as janelas e durações progressivas, as chaves de origem consideradas e qual camada manterá o estado compartilhado entre instâncias.
-- **Limite atual:** o login tem bloqueio progressivo por identidade persistido no PostgreSQL; os parâmetros e a limitação por origem ainda exigem decisão. O pedido de recuperação não impõe limite próprio por identidade e origem, portanto a US-015 não pode ser considerada concluída.
+- **Decisão:** login aplica bloqueio progressivo de 5 a 60 minutos após cinco falhas; pedidos de recuperação usam contagem própria e a mesma progressão após cinco pedidos por identidade normalizada. O estado compartilhado fica no PostgreSQL, com chave HMAC que não persiste e-mail em claro. A resposta pública de recuperação continua genérica inclusive quando limitada.
+- **Pendente em US-018:** definir origem confiável atrás do proxy e adicionar limitação por origem para login e recuperação, preservando RNF-025. A conclusão de US-015 não afirma que esse controle está implementado.
 
 ### RII-007 — Catálogo monetário e política de arredondamento
 

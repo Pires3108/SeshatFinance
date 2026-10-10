@@ -1529,7 +1529,7 @@
                   },
                   "password": {
                     "maxLength": 1024,
-                    "minLength": 1,
+                    "minLength": 12,
                     "type": "string"
                   }
                 },
@@ -1556,6 +1556,9 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Password rejected by provider policy"
           }
         },
         "summary": "Register a user and request email confirmation",
@@ -2304,7 +2307,7 @@
                   },
                   "password": {
                     "type": "string",
-                    "minLength": 1,
+                    "minLength": 12,
                     "maxLength": 1024
                   }
                 },
@@ -2320,6 +2323,9 @@
           },
           "400": {
             "description": "Invalid or expired recovery link"
+          },
+          "422": {
+            "description": "Password rejected by provider policy"
           },
           "503": {
             "description": "Recovery is temporarily unavailable"

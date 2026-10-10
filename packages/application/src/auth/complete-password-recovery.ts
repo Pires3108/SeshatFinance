@@ -1,5 +1,9 @@
 import type { OpaqueSessionService } from './opaque-session.js';
 import type { LoginAttemptRepository } from './authenticate-user.js';
+import {
+  PasswordRejectedError,
+  type PasswordSafetyChecker,
+} from './password-rejected.js';
 
 export class InvalidRecoveryTokenError extends Error {
   public constructor() {
@@ -22,6 +26,7 @@ export class CompletePasswordRecoveryUseCase {
     private readonly recovery: PasswordRecoveryCompletionGateway,
     private readonly sessions: OpaqueSessionService,
     private readonly attempts: LoginAttemptRepository,
+    private readonly passwords: PasswordSafetyChecker,
   ) {}
 
   public execute(tokenHash: string, password: string): Promise<void> {
@@ -33,6 +38,8 @@ export class CompletePasswordRecoveryUseCase {
     password: string,
   ): Promise<void> {
     await this.sessions.ready();
+    if (await this.passwords.isCompromised(password))
+      throw new PasswordRejectedError();
     await this.recovery.complete(
       tokenHash,
       password,

@@ -1,6 +1,7 @@
 import {
   CompletePasswordRecoveryUseCase,
   InvalidRecoveryTokenError,
+  PasswordRejectedError,
   RequestPasswordRecoveryUseCase,
 } from '@seshat/application';
 import { Test } from '@nestjs/testing';
@@ -186,5 +187,35 @@ describe('API password recovery', () => {
     expect(response.body).not.toContain('private database detail');
     expect(response.body).not.toContain('proof');
     expect(response.body).not.toContain('new-password');
+  });
+
+  it('uses a generic password category when the provider rejects strength or breach', async () => {
+    const execute = vi
+      .fn<CompletePasswordRecoveryUseCase['execute']>()
+      .mockRejectedValue(new PasswordRejectedError());
+    const testingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(CompletePasswordRecoveryUseCase)
+      .useValue({ execute })
+      .compile();
+    application = testingModule.createNestApplication<NestFastifyApplication>(
+      new FastifyAdapter(),
+    );
+    configureApplication(application);
+    await application.init();
+    await application.getHttpAdapter().getInstance().ready();
+    const response = await application.inject({
+      method: 'POST',
+      payload: {
+        tokenHash: 'proof',
+        password: 'synthetic-password-only-for-tests',
+      },
+      url: '/api/v1/auth/password-recovery-completions',
+    });
+    expect(response.statusCode).toBe(422);
+    expect(response.body).toContain('"code":"PASSWORD_REJECTED"');
+    expect(response.body).not.toContain('synthetic-password');
+    expect(response.body).not.toContain('proof');
   });
 });

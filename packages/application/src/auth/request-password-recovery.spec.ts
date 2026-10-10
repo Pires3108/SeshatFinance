@@ -13,8 +13,35 @@ describe('RequestPasswordRecoveryUseCase', () => {
       redirectUrl: 'https://app.example.test/auth/reset-password',
     };
 
-    await new RequestPasswordRecoveryUseCase({ request }).execute(command);
+    const allowAndRecord = vi.fn().mockResolvedValue(true);
+    await new RequestPasswordRecoveryUseCase(
+      { request },
+      { allowAndRecord },
+      { now: () => new Date('2026-10-10T12:00:00Z') },
+    ).execute(command);
 
     expect(request).toHaveBeenCalledWith(command);
+    expect(allowAndRecord).toHaveBeenCalledWith(
+      command.email,
+      new Date('2026-10-10T12:00:00Z'),
+    );
+  });
+
+  it('normalizes identity and preserves the generic result when throttled', async () => {
+    const request = vi.fn<PasswordRecoveryGateway['request']>();
+    const allowAndRecord = vi.fn().mockResolvedValue(false);
+    await new RequestPasswordRecoveryUseCase(
+      { request },
+      { allowAndRecord },
+      { now: () => new Date('2026-10-10T12:00:00Z') },
+    ).execute({
+      email: '  SYNTHETIC.USER@example.test  ',
+      redirectUrl: 'https://app.example.test/auth/reset-password',
+    });
+    expect(allowAndRecord).toHaveBeenCalledWith(
+      'synthetic.user@example.test',
+      expect.any(Date),
+    );
+    expect(request).not.toHaveBeenCalled();
   });
 });

@@ -1,6 +1,7 @@
 import {
   IdentityProviderUnavailableError,
   InvalidRecoveryTokenError,
+  PasswordRejectedError,
   type PasswordRecoveryCompletionGateway,
 } from '@seshat/application';
 import { z } from 'zod';
@@ -71,7 +72,15 @@ export class SupabasePasswordRecoveryCompletionGateway implements PasswordRecove
       } catch {
         throw new IdentityProviderUnavailableError();
       }
-      if (result.error !== null) throw new IdentityProviderUnavailableError();
+      if (result.error !== null) {
+        if (
+          typeof result.error === 'object' &&
+          'code' in result.error &&
+          result.error.code === 'weak_password'
+        )
+          throw new PasswordRejectedError();
+        throw new IdentityProviderUnavailableError();
+      }
       await revokeSessions(user.data.id);
     });
   }

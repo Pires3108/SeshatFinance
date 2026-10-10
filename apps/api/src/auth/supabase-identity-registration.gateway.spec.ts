@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { PasswordRejectedError } from '@seshat/application';
 
 import {
   IdentityRegistrationError,
@@ -74,5 +75,24 @@ describe('SupabaseIdentityRegistrationGateway', () => {
         confirmationRedirectUrl: 'https://app.example.test/auth/confirm',
       }),
     ).resolves.toBeNull();
+  });
+
+  it('maps provider weak or breached password rejection without exposing details', async () => {
+    const gateway = new SupabaseIdentityRegistrationGateway(() => ({
+      auth: {
+        signUp: vi.fn().mockResolvedValue({
+          data: { user: null },
+          error: { code: 'weak_password', detail: 'private' },
+        }),
+      },
+    }));
+    await expect(
+      gateway.register({
+        displayName: 'Pessoa Teste',
+        email: 'synthetic.user@example.test',
+        password: 'synthetic-password-only-for-tests',
+        confirmationRedirectUrl: 'https://app.example.test/auth/confirm',
+      }),
+    ).rejects.toBeInstanceOf(PasswordRejectedError);
   });
 });

@@ -72,6 +72,7 @@ import { createClient } from '@supabase/supabase-js';
 import {
   PrismaConfirmedIdentityProfileRepository,
   PrismaLoginAttemptRepository,
+  PrismaRecoveryRequestAttemptRepository,
 } from '@seshat/database';
 
 import { AccountController } from './accounts/account.controller.js';
@@ -85,6 +86,7 @@ import { LazyCreditCardRepository } from './cards/lazy-credit-card-repository.js
 import { FamilyGroupController } from './family/family-group.controller.js';
 import { LazyFamilyGroupRepository } from './family/lazy-family-group-repository.js';
 import { AuthConfiguration } from './auth/auth-configuration.js';
+import { HibpPasswordSafetyChecker } from './auth/hibp-password-safety.checker.js';
 import { CryptoOpaqueSessionTokens } from './auth/crypto-opaque-session-tokens.js';
 import { LazyOpaqueSessionRepository } from './auth/lazy-opaque-session-repository.js';
 import { AuthController } from './auth/auth.controller.js';
@@ -160,6 +162,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
         new ListInvestmentTypesUseCase(),
     },
     AuthConfiguration,
+    HibpPasswordSafetyChecker,
     AuthenticatedActorContext,
     BearerAuthGuard,
     CorrelationContext,
@@ -618,11 +621,12 @@ import { UserProfileController } from './users/user-profile.controller.js';
         ),
     },
     {
-      inject: [AuthConfiguration, LazyPrismaClient],
+      inject: [AuthConfiguration, LazyPrismaClient, HibpPasswordSafetyChecker],
       provide: RegisterUserUseCase,
       useFactory: (
         configuration: AuthConfiguration,
         prisma: LazyPrismaClient,
+        passwords: HibpPasswordSafetyChecker,
       ): RegisterUserUseCase =>
         new RegisterUserUseCase(
           new SupabaseIdentityRegistrationGateway(() => {
@@ -643,6 +647,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
             () => prisma.get(),
             () => configuration.readIntentHmacKey(),
           ),
+          passwords,
         ),
     },
     {
@@ -735,10 +740,11 @@ import { UserProfileController } from './users/user-profile.controller.js';
         ),
     },
     {
-      inject: [AuthConfiguration],
+      inject: [AuthConfiguration, LazyPrismaClient],
       provide: RequestPasswordRecoveryUseCase,
       useFactory: (
         configuration: AuthConfiguration,
+        prisma: LazyPrismaClient,
       ): RequestPasswordRecoveryUseCase =>
         new RequestPasswordRecoveryUseCase(
           new SupabasePasswordRecoveryGateway(() => {
@@ -755,15 +761,26 @@ import { UserProfileController } from './users/user-profile.controller.js';
               },
             );
           }),
+          new PrismaRecoveryRequestAttemptRepository(
+            () => prisma.get(),
+            () => configuration.readIntentHmacKey(),
+          ),
+          new SystemClock(),
         ),
     },
     {
-      inject: [AuthConfiguration, OpaqueSessionService, LazyPrismaClient],
+      inject: [
+        AuthConfiguration,
+        OpaqueSessionService,
+        LazyPrismaClient,
+        HibpPasswordSafetyChecker,
+      ],
       provide: CompletePasswordRecoveryUseCase,
       useFactory: (
         configuration: AuthConfiguration,
         sessions: OpaqueSessionService,
         prisma: LazyPrismaClient,
+        passwords: HibpPasswordSafetyChecker,
       ): CompletePasswordRecoveryUseCase =>
         new CompletePasswordRecoveryUseCase(
           new SupabasePasswordRecoveryCompletionGateway(() => {
@@ -785,6 +802,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
             () => prisma.get(),
             () => configuration.readIntentHmacKey(),
           ),
+          passwords,
         ),
     },
   ],

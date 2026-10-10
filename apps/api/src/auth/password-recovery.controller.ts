@@ -1,6 +1,7 @@
 import {
   CompletePasswordRecoveryUseCase,
   InvalidRecoveryTokenError,
+  PasswordRejectedError,
   RequestPasswordRecoveryUseCase,
 } from '@seshat/application';
 import {
@@ -21,10 +22,12 @@ import {
   ApiOperation,
   ApiTags,
   ApiServiceUnavailableResponse,
+  ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import { z } from 'zod';
 
 import { ZodValidationPipe } from '../platform/zod-validation.pipe.js';
+import { PasswordRejectedException } from '../platform/password-rejected.exception.js';
 import { AuthConfiguration } from './auth-configuration.js';
 
 const requestPasswordRecoverySchema = z
@@ -35,7 +38,7 @@ const requestPasswordRecoverySchema = z
 const completePasswordRecoverySchema = z
   .object({
     tokenHash: z.string().min(1).max(2048),
-    password: z.string().min(1).max(1024),
+    password: z.string().min(12).max(1024),
   })
   .strict();
 
@@ -102,7 +105,7 @@ export class PasswordRecoveryController {
       additionalProperties: false,
       properties: {
         tokenHash: { type: 'string', minLength: 1, maxLength: 2048 },
-        password: { type: 'string', minLength: 1, maxLength: 1024 },
+        password: { type: 'string', minLength: 12, maxLength: 1024 },
       },
       required: ['tokenHash', 'password'],
       type: 'object',
@@ -112,6 +115,9 @@ export class PasswordRecoveryController {
   @ApiBadRequestResponse({ description: 'Invalid or expired recovery link' })
   @ApiServiceUnavailableResponse({
     description: 'Recovery is temporarily unavailable',
+  })
+  @ApiUnprocessableEntityResponse({
+    description: 'Password rejected by provider policy',
   })
   public async complete(
     @Body(new ZodValidationPipe(completePasswordRecoverySchema))
@@ -124,6 +130,8 @@ export class PasswordRecoveryController {
         throw new BadRequestException(
           'Link de recuperação inválido ou expirado.',
         );
+      if (error instanceof PasswordRejectedError)
+        throw new PasswordRejectedException();
       throw new ServiceUnavailableException(
         'Recuperação temporariamente indisponível.',
       );

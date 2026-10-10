@@ -1371,6 +1371,13 @@ export interface operations {
                     };
                 };
             };
+            /** @description Password rejected by provider policy */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     readonly AuthController_confirm: {
@@ -1845,6 +1852,13 @@ export interface operations {
             };
             /** @description Invalid or expired recovery link */
             readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Password rejected by provider policy */
+            readonly 422: {
                 headers: {
                     readonly [name: string]: unknown;
                 };

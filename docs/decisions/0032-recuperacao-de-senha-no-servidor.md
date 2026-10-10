@@ -1,6 +1,6 @@
 # ADR-032 — Conclusão da recuperação de senha no servidor
 
-**Status:** proposta para US-015.
+**Status:** aceita para US-015 em 10/10/2026; limite por origem permanece em US-018.
 
 ## Contexto
 
@@ -12,14 +12,17 @@ O template de e-mail de recuperação deve usar `<a href="{{ .RedirectTo }}#toke
 
 A API verifica a disponibilidade do banco antes de trocar o `token_hash` com `verifyOtp` do tipo `recovery` e usa a sessão resultante somente no cliente Supabase criado para essa requisição. A API atualiza a senha com `updateUser`, sem devolver tokens do provedor. O token de recuperação é de uso único e sua validade é imposta pelo Supabase. Após identificar o e-mail confirmado pelo provedor, a recuperação adquire o mesmo bloqueio transacional por identidade usado pelo login. O login mantém esse bloqueio até a sessão opaca ser emitida. Sob o bloqueio, a API revoga todas as sessões opacas antes da alteração, para falhar sem alterar a senha se o banco estiver indisponível, e novamente após a alteração. Assim, uma autenticação com a senha antiga concluída antes da atualização ou emite a sessão antes da revogação, ou aguarda a nova senha.
 
-O contrato público de conclusão é `POST /api/v1/auth/password-recovery-completions` com `{ tokenHash, password }`: `204` em sucesso, `400` genérico para token inválido, expirado ou reutilizado, e `503` genérico quando o provedor estiver indisponível. O pedido de e-mail mantém resposta genérica para endereços existentes e inexistentes.
+Antes de cadastro ou troca de senha, a API exige pelo menos 12 caracteres e consulta a API gratuita Pwned Passwords por k-anonymity, enviando apenas os cinco primeiros caracteres do SHA-1 e requisitando resposta com padding. Uma senha comprometida recebe rejeição genérica; indisponibilidade da consulta impede a gravação. Nenhuma senha nem hash completo é enviado ou registrado. O serviço de identidade continua responsável pelo hash armazenado; a proteção paga contra senhas vazadas do Supabase não é pressuposta.
+
+O contrato público de conclusão é `POST /api/v1/auth/password-recovery-completions` com `{ tokenHash, password }`: `204` em sucesso, `400` genérico para token inválido, expirado ou reutilizado, `422` para senha rejeitada e `503` quando a verificação ou o provedor estiver indisponível. O pedido de e-mail mantém resposta genérica `202` para endereços existentes, inexistentes e identidades temporariamente limitadas. Uma tabela PostgreSQL própria limita pedidos por identidade normalizada após cinco solicitações, com bloqueio progressivo de 5 a 60 minutos. A chave persistida é HMAC do e-mail, sem e-mail em claro. Limitação por origem confiável é escopo de US-018.
 
 ## Limites
 
-Uma atualização de senha no provedor e a revogação no banco não compartilham transação distribuída. Uma falha na segunda revogação deve ser tratada como indisponibilidade, investigada e reconciliada operacionalmente; a primeira revogação reduz a exposição. Uma falha após `verifyOtp` pode consumir o link sem alterar a senha: a interface oferece solicitar outro link. A política de força de senha e os parâmetros de limitação por identidade e origem permanecem sujeitos às decisões RII-004 e RII-006. Este ADR não conclui US-015 nem essas decisões.
+Uma atualização de senha no provedor e a revogação no banco não compartilham transação distribuída. Uma falha na segunda revogação deve ser tratada como indisponibilidade, investigada e reconciliada operacionalmente; a primeira revogação reduz a exposição. Uma falha após `verifyOtp` pode consumir o link sem alterar a senha: a interface oferece solicitar outro link. A consulta à API gratuita Pwned Passwords introduz dependência de disponibilidade; a falha retorna resposta genérica `503` sem gravar senha. US-018 deve completar a proteção por origem exigida em RNF-025.
 
 ## Referências
 
 - [Supabase Password-based Auth](https://supabase.com/docs/guides/auth/passwords)
 - [Supabase Email Templates](https://supabase.com/docs/guides/auth/auth-email-templates)
 - [Supabase verifyOtp](https://supabase.com/docs/reference/javascript/auth-verifyotp)
+- [Pwned Passwords API](https://haveibeenpwned.com/API/v3#PwnedPasswords)

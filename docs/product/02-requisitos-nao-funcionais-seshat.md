@@ -44,7 +44,7 @@ Este documento estabelece as qualidades operacionais, de segurança, privacidade
 - **RNF-021 — Referência:** adotar controles proporcionais ao OWASP ASVS 5.0 nível 2.
 - **RNF-022 — Transporte:** usar HTTPS em todas as conexões públicas, TLS 1.2 ou superior e redirecionamento de HTTP.
 - **RNF-023 — Repouso:** criptografar banco, backups e anexos; proteger adicionalmente segredos, tokens TOTP e identificadores financeiros.
-- **RNF-024 — Senhas:** armazenar somente hashes Argon2id ou usar serviço de identidade com proteção equivalente.
+- **RNF-024 — Senhas:** armazenar somente hashes Argon2id ou usar serviço de identidade com proteção equivalente. Senhas novas de cadastro e recuperação devem ter pelo menos 12 caracteres e ser verificadas no servidor contra senhas comprometidas via Pwned Passwords, sem enviar a senha ou o hash completo ao serviço; indisponibilidade da verificação impede a gravação.
 - **RNF-025 — Tentativas:** após cinco falhas consecutivas, aplicar bloqueio temporário progressivo e limitação por conta e origem.
 - **RNF-026 — Sessão:** expirar após 30 minutos de inatividade e, no máximo, 12 horas após autenticação; invalidar no servidor ao sair, trocar senha ou encerrar remotamente.
 - **RNF-027 — Cookies:** a sessão do navegador usa token opaco aleatório exclusivamente em cookie `__Host-`, `Secure`, `HttpOnly`, `SameSite=Lax` e `Path=/`; somente o hash do token é persistido. Tokens do provedor de identidade não são expostos ao navegador. Ver ADR-013.

@@ -2,6 +2,7 @@ import type {
   IdentityRegistrationGateway,
   RegisterUserCommand,
 } from '@seshat/application';
+import { PasswordRejectedError } from '@seshat/application';
 import { z } from 'zod';
 
 export type SupabaseRegistrationClient = Readonly<{
@@ -59,6 +60,13 @@ export class SupabaseIdentityRegistrationGateway implements IdentityRegistration
         error.code === 'user_already_exists'
       )
         return null;
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'weak_password'
+      )
+        throw new PasswordRejectedError();
       if (error) {
         throw new IdentityRegistrationError();
       }
@@ -66,7 +74,8 @@ export class SupabaseIdentityRegistrationGateway implements IdentityRegistration
       const id = z.uuid().safeParse(data.user.id);
       if (!id.success) throw new IdentityRegistrationError();
       return id.data;
-    } catch {
+    } catch (error) {
+      if (error instanceof PasswordRejectedError) throw error;
       throw new IdentityRegistrationError();
     }
   }

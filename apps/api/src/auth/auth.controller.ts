@@ -3,6 +3,8 @@ import {
   IdentityProviderUnavailableError,
   RegisterUserUseCase,
   ResendRegistrationConfirmationUseCase,
+  PasswordRejectedError,
+  PasswordCheckUnavailableError,
 } from '@seshat/application';
 import {
   Body,
@@ -20,18 +22,20 @@ import {
   ApiBody,
   ApiNoContentResponse,
   ApiOperation,
+  ApiUnprocessableEntityResponse,
   ApiServiceUnavailableResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { z } from 'zod';
 
 import { ZodValidationPipe } from '../platform/zod-validation.pipe.js';
+import { PasswordRejectedException } from '../platform/password-rejected.exception.js';
 import { AuthConfiguration } from './auth-configuration.js';
 
 const registerUserRequestSchema = z.object({
   displayName: z.string().trim().min(1).max(120),
   email: z.email().max(320),
-  password: z.string().min(1).max(1024),
+  password: z.string().min(12).max(1024),
 });
 const confirmationRequestSchema = z.object({
   tokenHash: z.string().min(1).max(2048),
@@ -67,7 +71,7 @@ export class AuthController {
       properties: {
         displayName: { maxLength: 120, minLength: 1, type: 'string' },
         email: { format: 'email', maxLength: 320, type: 'string' },
-        password: { maxLength: 1024, minLength: 1, type: 'string' },
+        password: { maxLength: 1024, minLength: 12, type: 'string' },
       },
       required: ['displayName', 'email', 'password'],
       type: 'object',
@@ -82,15 +86,26 @@ export class AuthController {
       type: 'object',
     },
   })
+  @ApiUnprocessableEntityResponse({
+    description: 'Password rejected by provider policy',
+  })
   public async register(
     @Body(new ZodValidationPipe(registerUserRequestSchema))
     request: RegisterUserRequest,
   ): Promise<RegisterUserResponse> {
     const configuration = this.configuration.read();
-    await this.registerUser.execute({
-      ...request,
-      confirmationRedirectUrl: configuration.confirmationRedirectUrl,
-    });
+    try {
+      await this.registerUser.execute({
+        ...request,
+        confirmationRedirectUrl: configuration.confirmationRedirectUrl,
+      });
+    } catch (error) {
+      if (error instanceof PasswordRejectedError)
+        throw new PasswordRejectedException();
+      if (error instanceof PasswordCheckUnavailableError)
+        throw new ServiceUnavailableException();
+      throw error;
+    }
     return { status: 'confirmation_required' };
   }
 

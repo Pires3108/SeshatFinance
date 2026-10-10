@@ -23,6 +23,7 @@ describe('RegisterUserUseCase', () => {
     await new RegisterUserUseCase(
       { register },
       { recordIntent, createPending },
+      { isCompromised: () => Promise.resolve(false) },
     ).execute(command);
 
     expect(register).toHaveBeenCalledOnce();
@@ -41,6 +42,7 @@ describe('RegisterUserUseCase', () => {
         register: vi.fn().mockRejectedValue(new Error('provider unavailable')),
       },
       { recordIntent: vi.fn(), createPending },
+      { isCompromised: () => Promise.resolve(false) },
     );
     await expect(
       useCase.execute({
@@ -51,5 +53,25 @@ describe('RegisterUserUseCase', () => {
       }),
     ).rejects.toThrow();
     expect(createPending).not.toHaveBeenCalled();
+  });
+
+  it('rejects compromised passwords before recording an intent or calling identity', async () => {
+    const recordIntent = vi.fn();
+    const register = vi.fn();
+    const useCase = new RegisterUserUseCase(
+      { register },
+      { recordIntent, createPending: vi.fn() },
+      { isCompromised: () => Promise.resolve(true) },
+    );
+    await expect(
+      useCase.execute({
+        displayName: 'Pessoa',
+        email: 'synthetic@example.test',
+        password: 'known-compromised-password',
+        confirmationRedirectUrl: 'https://example.test/confirm',
+      }),
+    ).rejects.toThrow('Password does not meet');
+    expect(recordIntent).not.toHaveBeenCalled();
+    expect(register).not.toHaveBeenCalled();
   });
 });

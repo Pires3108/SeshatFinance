@@ -1,5 +1,10 @@
 export type { Clock } from './ports/clock.js';
 export {
+  PasswordRejectedError,
+  PasswordCheckUnavailableError,
+  type PasswordSafetyChecker,
+} from './auth/password-rejected.js';
+export {
   ConfirmRegistrationUseCase,
   IdentityProviderUnavailableError,
   type ConfirmedRegistrationIdentity,
@@ -92,6 +97,7 @@ export {
 } from './auth/register-user.js';
 export {
   RequestPasswordRecoveryUseCase,
+  type RecoveryRequestAttemptRepository,
   type PasswordRecoveryGateway,
   type RequestPasswordRecoveryCommand,
 } from './auth/request-password-recovery.js';

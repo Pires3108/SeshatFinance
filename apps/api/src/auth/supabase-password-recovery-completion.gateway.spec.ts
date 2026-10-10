@@ -2,6 +2,7 @@ import {
   AuthenticateUserUseCase,
   IdentityProviderUnavailableError,
   InvalidRecoveryTokenError,
+  PasswordRejectedError,
   type LoginAttemptRepository,
 } from '@seshat/application';
 import { describe, expect, it, vi } from 'vitest';
@@ -319,5 +320,29 @@ describe('Supabase password recovery completion', () => {
         exclusive,
       ),
     ).rejects.toBeInstanceOf(IdentityProviderUnavailableError);
+  });
+
+  it('maps provider weak or breached password rejection after token consumption', async () => {
+    const gateway = new SupabasePasswordRecoveryCompletionGateway(() => ({
+      auth: {
+        verifyOtp: () =>
+          Promise.resolve({
+            data: { user: { id: userId, email } },
+            error: null,
+          }),
+        updateUser: () =>
+          Promise.resolve({
+            error: { code: 'weak_password', detail: 'private' },
+          }),
+      },
+    }));
+    await expect(
+      gateway.complete(
+        'hash',
+        'compromised-password',
+        () => Promise.resolve(),
+        exclusive,
+      ),
+    ).rejects.toBeInstanceOf(PasswordRejectedError);
   });
 });
