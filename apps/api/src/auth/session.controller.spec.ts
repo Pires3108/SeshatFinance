@@ -16,9 +16,12 @@ describe('SessionController', () => {
     new AuthenticateUserUseCase(
       gateway,
       {
-        isLocked: vi.fn().mockResolvedValue(false),
-        recordFailure: vi.fn().mockResolvedValue(undefined),
-        clear: vi.fn().mockResolvedValue(undefined),
+        runExclusive: async (_email, action) =>
+          action({
+            isLocked: vi.fn().mockResolvedValue(false),
+            recordFailure: vi.fn().mockResolvedValue(undefined),
+            clear: vi.fn().mockResolvedValue(undefined),
+          }),
       },
       { now: () => new Date('2026-10-09T12:00:00Z') },
     );

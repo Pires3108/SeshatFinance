@@ -17,9 +17,12 @@ describe('AuthenticateUserUseCase', () => {
       .mockResolvedValue(session);
 
     const attempts: LoginAttemptRepository = {
-      isLocked: vi.fn().mockResolvedValue(false),
-      recordFailure: vi.fn().mockResolvedValue(undefined),
-      clear: vi.fn().mockResolvedValue(undefined),
+      runExclusive: async (_email, action) =>
+        action({
+          isLocked: vi.fn().mockResolvedValue(false),
+          recordFailure: vi.fn().mockResolvedValue(undefined),
+          clear: vi.fn().mockResolvedValue(undefined),
+        }),
     };
     const result = await new AuthenticateUserUseCase(
       { authenticate },
@@ -37,9 +40,12 @@ describe('AuthenticateUserUseCase', () => {
   it('rejects a locked identity before calling the provider', async () => {
     const authenticate = vi.fn<IdentityAuthenticationGateway['authenticate']>();
     const attempts: LoginAttemptRepository = {
-      isLocked: vi.fn().mockResolvedValue(true),
-      recordFailure: vi.fn().mockResolvedValue(undefined),
-      clear: vi.fn().mockResolvedValue(undefined),
+      runExclusive: async (_email, action) =>
+        action({
+          isLocked: vi.fn().mockResolvedValue(true),
+          recordFailure: vi.fn().mockResolvedValue(undefined),
+          clear: vi.fn().mockResolvedValue(undefined),
+        }),
     };
     await expect(
       new AuthenticateUserUseCase({ authenticate }, attempts, {

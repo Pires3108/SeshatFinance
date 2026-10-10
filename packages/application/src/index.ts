@@ -66,6 +66,7 @@ export {
   AuthenticateUserUseCase,
   type AuthenticateUserCommand,
   type LoginAttemptRepository,
+  type LoginAttemptState,
   type IdentityAuthenticationGateway,
   type IdentitySession,
 } from './auth/authenticate-user.js';

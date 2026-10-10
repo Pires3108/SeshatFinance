@@ -11,10 +11,17 @@ export interface IdentityAuthenticationGateway {
   authenticate(command: AuthenticateUserCommand): Promise<IdentitySession>;
 }
 
+export interface LoginAttemptState {
+  isLocked(now: Date): Promise<boolean>;
+  recordFailure(now: Date): Promise<void>;
+  clear(): Promise<void>;
+}
+
 export interface LoginAttemptRepository {
-  isLocked(email: string, now: Date): Promise<boolean>;
-  recordFailure(email: string, now: Date): Promise<void>;
-  clear(email: string): Promise<void>;
+  runExclusive<T>(
+    email: string,
+    action: (state: LoginAttemptState) => Promise<T>,
+  ): Promise<T>;
 }
 
 export class AuthenticateUserUseCase {
@@ -28,16 +35,21 @@ export class AuthenticateUserUseCase {
     command: AuthenticateUserCommand,
   ): Promise<IdentitySession> {
     const email = command.email.trim().toLowerCase();
-    if (await this.attempts.isLocked(email, this.clock.now())) {
-      throw new Error('Authentication was not accepted.');
-    }
-    try {
-      const session = await this.identities.authenticate({ ...command, email });
-      await this.attempts.clear(email);
-      return session;
-    } catch {
-      await this.attempts.recordFailure(email, this.clock.now());
-      throw new Error('Authentication was not accepted.');
-    }
+    const session = await this.attempts.runExclusive(email, async (state) => {
+      if (await state.isLocked(this.clock.now())) return null;
+      try {
+        const authenticated = await this.identities.authenticate({
+          ...command,
+          email,
+        });
+        await state.clear();
+        return authenticated;
+      } catch {
+        await state.recordFailure(this.clock.now());
+        return null;
+      }
+    });
+    if (session === null) throw new Error('Authentication was not accepted.');
+    return session;
   }
 }
