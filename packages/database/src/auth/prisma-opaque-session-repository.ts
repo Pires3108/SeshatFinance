@@ -8,6 +8,10 @@ import type { PrismaClient } from '../generated/prisma/client.js';
 export class PrismaOpaqueSessionRepository implements OpaqueSessionRepository {
   public constructor(private readonly client: PrismaClient) {}
 
+  public async ready(): Promise<void> {
+    await this.client.$queryRaw`SELECT 1`;
+  }
+
   public async create(session: OpaqueSession): Promise<void> {
     await this.client.userSession.create({ data: session });
   }

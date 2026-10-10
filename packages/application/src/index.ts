@@ -68,6 +68,7 @@ export {
   type CreateCostCenterCommand,
 } from './classifications/manage-cost-center.js';
 export {
+  AuthenticationRejectedError,
   AuthenticateUserUseCase,
   type AuthenticateUserCommand,
   type LoginAttemptRepository,

@@ -12,6 +12,10 @@ export class LazyOpaqueSessionRepository implements OpaqueSessionRepository {
     return new PrismaOpaqueSessionRepository(this.prisma.get());
   }
 
+  public ready(): Promise<void> {
+    return this.repository.ready();
+  }
+
   public create(
     session: Parameters<OpaqueSessionRepository['create']>[0],
   ): Promise<void> {

@@ -23,7 +23,7 @@ describe('API browser sessions', () => {
 
   it('creates, checks, and revokes an opaque cookie without returning provider credentials', async () => {
     const authenticate = vi
-      .fn()
+      .fn<AuthenticateUserUseCase['execute']>()
       .mockResolvedValue({ userId: '00000000-0000-4000-8000-000000000001' });
     const issue = vi
       .fn()
@@ -43,7 +43,14 @@ describe('API browser sessions', () => {
     const revokeOtherSessions = vi.fn().mockResolvedValue(undefined);
     const module = await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(AuthenticateUserUseCase)
-      .useValue({ execute: authenticate })
+      .useValue({
+        executeWith: async (
+          credentials: Readonly<{ email: string; password: string }>,
+          onAuthenticated: (
+            identity: Readonly<{ userId: string }>,
+          ) => Promise<unknown>,
+        ) => onAuthenticated(await authenticate(credentials)),
+      })
       .overrideProvider(OpaqueSessionService)
       .useValue({ issue, resolve, revoke, revokeOtherSessions })
       .overrideProvider(ListOwnedAccountsUseCase)

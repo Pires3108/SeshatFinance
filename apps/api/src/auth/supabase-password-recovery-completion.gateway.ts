@@ -21,7 +21,7 @@ export type SupabaseRecoveryCompletionClient = Readonly<{
   }>;
 }>;
 
-const recoveryUserSchema = z.object({ id: z.uuid() });
+const recoveryUserSchema = z.object({ id: z.uuid(), email: z.email() });
 
 function isInvalidProof(error: unknown): boolean {
   return (
@@ -41,6 +41,7 @@ export class SupabasePasswordRecoveryCompletionGateway implements PasswordRecove
     tokenHash: string,
     password: string,
     revokeSessions: (userId: string) => Promise<void>,
+    runExclusive: (email: string, action: () => Promise<void>) => Promise<void>,
   ): Promise<void> {
     const client = this.clientFactory();
     let verification: Awaited<ReturnType<typeof client.auth.verifyOtp>>;
@@ -60,16 +61,18 @@ export class SupabasePasswordRecoveryCompletionGateway implements PasswordRecove
     const user = recoveryUserSchema.safeParse(verification.data.user);
     if (!user.success) throw new IdentityProviderUnavailableError();
 
-    // Revoke before changing the credential so a database outage fails closed.
-    await revokeSessions(user.data.id);
-    let result: Awaited<ReturnType<typeof client.auth.updateUser>>;
-    try {
-      result = await client.auth.updateUser({ password });
-    } catch {
-      throw new IdentityProviderUnavailableError();
-    }
-    if (result.error !== null) throw new IdentityProviderUnavailableError();
-    // Close sessions created while the provider was processing the update.
-    await revokeSessions(user.data.id);
+    await runExclusive(user.data.email, async () => {
+      // The same per-email lock covers login authentication and session issuance.
+      // Revoke before changing the credential so a database outage fails closed.
+      await revokeSessions(user.data.id);
+      let result: Awaited<ReturnType<typeof client.auth.updateUser>>;
+      try {
+        result = await client.auth.updateUser({ password });
+      } catch {
+        throw new IdentityProviderUnavailableError();
+      }
+      if (result.error !== null) throw new IdentityProviderUnavailableError();
+      await revokeSessions(user.data.id);
+    });
   }
 }

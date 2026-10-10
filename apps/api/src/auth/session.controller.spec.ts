@@ -3,7 +3,10 @@ import {
   type OpaqueSessionService,
   type IdentityAuthenticationGateway,
 } from '@seshat/application';
-import { UnauthorizedException } from '@nestjs/common';
+import {
+  ServiceUnavailableException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -65,6 +68,22 @@ describe('SessionController', () => {
       } as unknown as FastifyReply),
     ).rejects.toBeInstanceOf(UnauthorizedException);
     expect(issue).not.toHaveBeenCalled();
+  });
+
+  it('reports session storage failure without calling it invalid credentials', async () => {
+    const authenticate = authentication({
+      authenticate: vi.fn().mockResolvedValue({ userId: 'user-id' }),
+    });
+    const sessions = {
+      issue: vi.fn().mockRejectedValue(new Error('private database detail')),
+    } as unknown as OpaqueSessionService;
+    const controller = new SessionController(authenticate, sessions);
+    await expect(
+      controller.login(
+        { email: 'synthetic@example.test', password: 'synthetic-password' },
+        { header: vi.fn() } as unknown as FastifyReply,
+      ),
+    ).rejects.toBeInstanceOf(ServiceUnavailableException);
   });
 
   it('revokes the session and clears the cookie', async () => {

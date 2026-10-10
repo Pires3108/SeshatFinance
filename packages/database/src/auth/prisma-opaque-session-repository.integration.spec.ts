@@ -46,6 +46,7 @@ describe('PrismaOpaqueSessionRepository', () => {
   it('stores a hash, validates expiration atomically, and rejects use after revocation', async () => {
     if (repository === undefined || prisma === undefined)
       throw new Error('Persistence unavailable.');
+    await repository.ready();
     const at = new Date('2026-09-29T12:00:00.000Z');
     await repository.create({
       id: '11111111-1111-4111-8111-111111111111',

@@ -758,11 +758,12 @@ import { UserProfileController } from './users/user-profile.controller.js';
         ),
     },
     {
-      inject: [AuthConfiguration, OpaqueSessionService],
+      inject: [AuthConfiguration, OpaqueSessionService, LazyPrismaClient],
       provide: CompletePasswordRecoveryUseCase,
       useFactory: (
         configuration: AuthConfiguration,
         sessions: OpaqueSessionService,
+        prisma: LazyPrismaClient,
       ): CompletePasswordRecoveryUseCase =>
         new CompletePasswordRecoveryUseCase(
           new SupabasePasswordRecoveryCompletionGateway(() => {
@@ -780,6 +781,10 @@ import { UserProfileController } from './users/user-profile.controller.js';
             );
           }),
           sessions,
+          new PrismaLoginAttemptRepository(
+            () => prisma.get(),
+            () => configuration.readIntentHmacKey(),
+          ),
         ),
     },
   ],
