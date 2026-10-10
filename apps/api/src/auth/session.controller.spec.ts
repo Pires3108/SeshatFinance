@@ -1,6 +1,7 @@
 import {
   AuthenticateUserUseCase,
   type OpaqueSessionService,
+  type IdentityAuthenticationGateway,
 } from '@seshat/application';
 import { UnauthorizedException } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
@@ -9,8 +10,21 @@ import { describe, expect, it, vi } from 'vitest';
 import { SessionController, readSessionCookie } from './session.controller.js';
 
 describe('SessionController', () => {
+  const authentication = (
+    gateway: IdentityAuthenticationGateway,
+  ): AuthenticateUserUseCase =>
+    new AuthenticateUserUseCase(
+      gateway,
+      {
+        isLocked: vi.fn().mockResolvedValue(false),
+        recordFailure: vi.fn().mockResolvedValue(undefined),
+        clear: vi.fn().mockResolvedValue(undefined),
+      },
+      { now: () => new Date('2026-10-09T12:00:00Z') },
+    );
+
   it('issues only a secure HttpOnly cookie after valid credentials', async () => {
-    const authenticate = new AuthenticateUserUseCase({
+    const authenticate = authentication({
       authenticate: vi.fn().mockResolvedValue({ userId: 'user-id' }),
     });
     const issue = vi
@@ -35,7 +49,7 @@ describe('SessionController', () => {
   });
 
   it('does not issue a session for invalid credentials', async () => {
-    const authenticate = new AuthenticateUserUseCase({
+    const authenticate = authentication({
       authenticate: vi.fn().mockRejectedValue(new Error('provider detail')),
     });
     const issue = vi.fn();
@@ -55,7 +69,7 @@ describe('SessionController', () => {
     const sessions = { revoke } as unknown as OpaqueSessionService;
     const header = vi.fn();
     const controller = new SessionController(
-      new AuthenticateUserUseCase({ authenticate: vi.fn() }),
+      authentication({ authenticate: vi.fn() }),
       sessions,
     );
     await controller.logout(
@@ -74,7 +88,7 @@ describe('SessionController', () => {
   it('checks the active server session for browser refresh', async () => {
     const resolve = vi.fn().mockResolvedValue('user-id');
     const controller = new SessionController(
-      new AuthenticateUserUseCase({ authenticate: vi.fn() }),
+      authentication({ authenticate: vi.fn() }),
       { resolve } as unknown as OpaqueSessionService,
     );
     await controller.check({
@@ -87,7 +101,7 @@ describe('SessionController', () => {
     const revoke = vi.fn();
     const header = vi.fn();
     const controller = new SessionController(
-      new AuthenticateUserUseCase({ authenticate: vi.fn() }),
+      authentication({ authenticate: vi.fn() }),
       { revoke } as unknown as OpaqueSessionService,
     );
     await controller.logout(

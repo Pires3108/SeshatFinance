@@ -20,18 +20,23 @@ describe('PrismaUserProfileRepository', () => {
       .start();
     stop = async (): Promise<void> => container.stop().then(() => undefined);
 
-    const migration = await readFile(
-      new URL(
-        '../../prisma/migrations/20260919210000_create_user_profiles/migration.sql',
-        import.meta.url,
-      ),
-      'utf8',
-    );
     const migrationClient = new Client({
       connectionString: container.getConnectionUri(),
     });
     await migrationClient.connect();
-    await migrationClient.query(migration);
+    for (const name of [
+      '20260919210000_create_user_profiles',
+      '20261009120000_registration_pending',
+    ]) {
+      const migration = await readFile(
+        new URL(
+          `../../prisma/migrations/${name}/migration.sql`,
+          import.meta.url,
+        ),
+        'utf8',
+      );
+      await migrationClient.query(migration);
+    }
     await migrationClient.end();
 
     const prisma = createPrismaClient(container.getConnectionUri());

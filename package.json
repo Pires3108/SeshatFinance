@@ -9,12 +9,24 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
+    "db:bootstrap": "node --env-file-if-exists=.env tools/bootstrap-local-database.mjs",
+    "test:bootstrap": "node --test tools/bootstrap-local-database.integration.test.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "turbo run lint",
-    "test": "turbo run test && node --test .cursor/hooks/guard-git-commit.test.mjs tools/verify-operational-boundary.test.mjs && node tools/verify-operational-boundary.mjs",
+    "lint": "turbo run lint && pnpm lint:bootstrap && eslint --config tools/architecture-eslint.config.mjs tools/architecture-rules.mjs tools/architecture-rules.test.mjs && eslint --config tools/bootstrap-eslint.config.mjs scripts/health-process-smoke.test.mjs scripts/web-process-smoke.test.mjs && pnpm lint:ci",
+    "lint:bootstrap": "eslint --config tools/bootstrap-eslint.config.mjs tools/bootstrap-local-database*.mjs",
+    "test": "turbo run test && node --test .cursor/hooks/guard-git-commit.test.mjs tools/verify-operational-boundary.test.mjs tools/bootstrap-local-database.test.mjs && node tools/verify-operational-boundary.mjs && pnpm test:architecture",
     "test:integration": "turbo run test:integration",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck && pnpm typecheck:bootstrap && pnpm typecheck:health && pnpm typecheck:web-process && pnpm typecheck:ci",
+    "typecheck:bootstrap": "tsc --noEmit --allowJs --checkJs --strict --skipLibCheck --target es2022 --module nodenext --types node tools/bootstrap-local-database.mjs tools/bootstrap-local-database.test.mjs tools/bootstrap-local-database.integration.test.mjs",
+    "test:architecture": "node --test tools/architecture-rules.test.mjs",
+    "test:health": "node --test scripts/health-process-smoke.test.mjs",
+    "typecheck:health": "tsc --noEmit --allowJs --checkJs --strict --skipLibCheck --target es2022 --module nodenext --types node scripts/health-process-smoke.test.mjs",
+    "test:web-process": "node --test scripts/web-process-smoke.test.mjs",
+    "typecheck:web-process": "tsc --noEmit --allowJs --checkJs --strict --skipLibCheck --target es2022 --module nodenext --types node scripts/web-process-smoke.test.mjs",
+    "test:ci": "node --test tools/verify-ci-gates.test.mjs",
+    "lint:ci": "eslint --config tools/bootstrap-eslint.config.mjs tools/verify-ci-gates.test.mjs",
+    "typecheck:ci": "tsc --noEmit --allowJs --checkJs --strict --skipLibCheck --esModuleInterop --target es2022 --module nodenext --types node tools/verify-ci-gates.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "latest",

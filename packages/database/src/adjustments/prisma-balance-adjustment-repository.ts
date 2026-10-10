@@ -11,7 +11,7 @@ import {
   type TransactionSnapshot,
 } from '@seshat/domain';
 
-import { insertFinancialAuditEvent } from '../audit/prisma-financial-audit-event-repository.js';
+import { insertFinancialAuditEvent } from '../audit/index.js';
 import { Prisma, type PrismaClient } from '../generated/prisma/client.js';
 
 type CurrentBalanceRow = Readonly<{

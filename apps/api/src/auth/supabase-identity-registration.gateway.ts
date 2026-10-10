@@ -2,6 +2,7 @@ import type {
   IdentityRegistrationGateway,
   RegisterUserCommand,
 } from '@seshat/application';
+import { z } from 'zod';
 
 export type SupabaseRegistrationClient = Readonly<{
   auth: Readonly<{
@@ -14,7 +15,17 @@ export type SupabaseRegistrationClient = Readonly<{
           emailRedirectTo: string;
         }>;
       }>,
-    ): PromiseLike<Readonly<{ error: unknown }>>;
+    ): PromiseLike<
+      Readonly<{
+        data: Readonly<{
+          user: Readonly<{
+            id: string;
+            identities?: readonly unknown[];
+          }> | null;
+        }>;
+        error: unknown;
+      }>
+    >;
   }>;
 }>;
 
@@ -30,17 +41,32 @@ export class SupabaseIdentityRegistrationGateway implements IdentityRegistration
     private readonly clientFactory: () => SupabaseRegistrationClient,
   ) {}
 
-  public async register(command: RegisterUserCommand): Promise<void> {
-    const { error } = await this.clientFactory().auth.signUp({
-      email: command.email,
-      password: command.password,
-      options: {
-        data: { display_name: command.displayName },
-        emailRedirectTo: command.confirmationRedirectUrl,
-      },
-    });
+  public async register(command: RegisterUserCommand): Promise<string | null> {
+    try {
+      const { data, error } = await this.clientFactory().auth.signUp({
+        email: command.email,
+        password: command.password,
+        options: {
+          data: { display_name: command.displayName },
+          emailRedirectTo: command.confirmationRedirectUrl,
+        },
+      });
 
-    if (error) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code === 'user_already_exists'
+      )
+        return null;
+      if (error) {
+        throw new IdentityRegistrationError();
+      }
+      if (data.user === null || data.user.identities?.length === 0) return null;
+      const id = z.uuid().safeParse(data.user.id);
+      if (!id.success) throw new IdentityRegistrationError();
+      return id.data;
+    } catch {
       throw new IdentityRegistrationError();
     }
   }

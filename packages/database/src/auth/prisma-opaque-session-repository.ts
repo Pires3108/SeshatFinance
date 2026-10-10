@@ -37,4 +37,22 @@ export class PrismaOpaqueSessionRepository implements OpaqueSessionRepository {
       data: { revokedAt },
     });
   }
+
+  public async revokeOthers(
+    userId: string,
+    exceptId: string,
+    revokedAt: Date,
+  ): Promise<void> {
+    await this.client.userSession.updateMany({
+      where: { userId, id: { not: exceptId }, revokedAt: null },
+      data: { revokedAt },
+    });
+  }
+
+  public async revokeAll(userId: string, revokedAt: Date): Promise<void> {
+    await this.client.userSession.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt },
+    });
+  }
 }

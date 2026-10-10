@@ -39,6 +39,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBadRequestResponse,
   ApiBody,
   ApiCreatedResponse,
   ApiConflictResponse,
@@ -182,6 +183,26 @@ export class TransactionController {
   @ApiParam({ format: 'uuid', name: 'accountId', type: 'string' })
   @ApiBody({ schema: createBodySchema() })
   @ApiCreatedResponse({ schema: responseSchema })
+  @ApiBadRequestResponse({
+    description: 'Request validation failed before recording a transaction',
+    schema: {
+      additionalProperties: false,
+      properties: {
+        error: {
+          additionalProperties: false,
+          properties: {
+            code: { enum: ['INVALID_REQUEST'], type: 'string' },
+            correlationId: { type: 'string' },
+            message: { type: 'string' },
+          },
+          required: ['code', 'correlationId', 'message'],
+          type: 'object',
+        },
+      },
+      required: ['error'],
+      type: 'object',
+    },
+  })
   public async create(
     @Req() request: FastifyRequest,
     @Param('accountId', new ZodValidationPipe(idSchema)) accountId: string,

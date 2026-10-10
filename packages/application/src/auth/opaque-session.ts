@@ -18,6 +18,12 @@ export interface OpaqueSessionRepository {
   findByTokenHash(tokenHash: string): Promise<OpaqueSession | null>;
   touchIfActive(id: string, seenAt: Date): Promise<boolean>;
   revoke(id: string, revokedAt: Date): Promise<void>;
+  revokeOthers(
+    userId: string,
+    exceptId: string,
+    revokedAt: Date,
+  ): Promise<void>;
+  revokeAll(userId: string, revokedAt: Date): Promise<void>;
 }
 
 export interface OpaqueSessionTokenService {
@@ -81,6 +87,23 @@ export class OpaqueSessionService {
     if (session !== null) {
       await this.sessions.revoke(session.id, this.clock.now());
     }
+  }
+
+  public async revokeOtherSessions(token: string): Promise<void> {
+    const tokenHash = this.tokens.hash(token);
+    const session = await this.sessions.findByTokenHash(tokenHash);
+    if (session === null || !isSessionActive(session, this.clock.now())) {
+      throw new InvalidOpaqueSessionError();
+    }
+    const now = this.clock.now();
+    if (!(await this.sessions.touchIfActive(session.id, now))) {
+      throw new InvalidOpaqueSessionError();
+    }
+    await this.sessions.revokeOthers(session.userId, session.id, now);
+  }
+
+  public revokeAllForUser(userId: string): Promise<void> {
+    return this.sessions.revokeAll(userId, this.clock.now());
   }
 }
 

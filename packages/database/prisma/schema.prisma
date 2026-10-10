@@ -7,8 +7,18 @@ datasource db {
   provider = "postgresql"
 }
 
+model RegistrationIntent {
+  emailHash Bytes @id @map("email_hash") @db.ByteA
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+
+  @@index([expiresAt])
+  @@map("registration_intents")
+}
+
 model UserProfile {
   id                   String   @id @db.Uuid
+  registrationConfirmed Boolean @default(true) @map("registration_confirmed")
   displayName          String?  @map("display_name") @db.VarChar(120)
   locale               String   @default("pt-BR") @db.VarChar(16)
   timeZone             String   @default("America/Sao_Paulo") @map("time_zone") @db.VarChar(64)

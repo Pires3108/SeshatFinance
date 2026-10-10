@@ -1,11 +1,13 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 
 import { PrismaClient } from '../src/generated/prisma/client.js';
+import { assertSyntheticSeedTarget } from '../src/prisma/synthetic-seed-policy.js';
 
-const connectionString = process.env.DATABASE_URL;
-if (connectionString === undefined) {
-  throw new Error('DATABASE_URL is required to run the synthetic seed.');
-}
+const connectionString = assertSyntheticSeedTarget(
+  process.env.DATABASE_URL,
+  process.env.NODE_ENV,
+  process.env.SESHAT_ALLOW_SYNTHETIC_SEED,
+);
 
 const client = new PrismaClient({
   adapter: new PrismaPg({ connectionString }),

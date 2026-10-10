@@ -53,7 +53,14 @@ describe('opaque session policy', () => {
       .fn<OpaqueSessionRepository['touchIfActive']>()
       .mockResolvedValue(false);
     const service = new OpaqueSessionService(
-      { create, findByTokenHash, touchIfActive, revoke: vi.fn() },
+      {
+        create,
+        findByTokenHash,
+        touchIfActive,
+        revoke: vi.fn(),
+        revokeOthers: vi.fn(),
+        revokeAll: vi.fn(),
+      },
       { generate: () => 'raw-token', hash: () => 'hash' },
       { now: () => createdAt },
       { generate: () => session.id },
@@ -70,5 +77,51 @@ describe('opaque session policy', () => {
     await expect(service.resolve('raw-token')).rejects.toBeInstanceOf(
       InvalidOpaqueSessionError,
     );
+  });
+
+  it('closes other sessions only after validating the requesting session', async () => {
+    const revokeOthers = vi
+      .fn<OpaqueSessionRepository['revokeOthers']>()
+      .mockResolvedValue();
+    const service = new OpaqueSessionService(
+      {
+        create: vi.fn(),
+        findByTokenHash: vi.fn().mockResolvedValue(session),
+        touchIfActive: vi.fn().mockResolvedValue(true),
+        revoke: vi.fn(),
+        revokeOthers,
+        revokeAll: vi.fn(),
+      },
+      { generate: () => 'raw-token', hash: () => 'hash' },
+      { now: () => createdAt },
+      { generate: () => session.id },
+    );
+    await service.revokeOtherSessions('raw-token');
+    expect(revokeOthers).toHaveBeenCalledWith(
+      session.userId,
+      session.id,
+      createdAt,
+    );
+  });
+
+  it('does not close remote sessions when the requesting session expired', async () => {
+    const revokeOthers = vi.fn<OpaqueSessionRepository['revokeOthers']>();
+    const service = new OpaqueSessionService(
+      {
+        create: vi.fn(),
+        findByTokenHash: vi.fn().mockResolvedValue(session),
+        touchIfActive: vi.fn(),
+        revoke: vi.fn(),
+        revokeOthers,
+        revokeAll: vi.fn(),
+      },
+      { generate: () => 'raw-token', hash: () => 'hash' },
+      { now: () => new Date(createdAt.getTime() + 30 * 60_000) },
+      { generate: () => session.id },
+    );
+    await expect(
+      service.revokeOtherSessions('raw-token'),
+    ).rejects.toBeInstanceOf(InvalidOpaqueSessionError);
+    expect(revokeOthers).not.toHaveBeenCalled();
   });
 });

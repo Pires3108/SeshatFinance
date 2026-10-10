@@ -18,9 +18,10 @@ describe('SupabaseIdentityAuthenticationGateway', () => {
       },
       error: null,
     });
-    const gateway = new SupabaseIdentityAuthenticationGateway(() => ({
-      auth: { signInWithPassword },
-    }));
+    const gateway = new SupabaseIdentityAuthenticationGateway(
+      () => ({ auth: { signInWithPassword } }),
+      () => Promise.resolve({ id: '00000000-0000-4000-8000-000000000001' }),
+    );
 
     const result = await gateway.authenticate({
       email: 'synthetic.user@example.test',
@@ -33,19 +34,42 @@ describe('SupabaseIdentityAuthenticationGateway', () => {
   });
 
   it('uses one generic error for invalid credentials or missing sessions', async () => {
-    const gateway = new SupabaseIdentityAuthenticationGateway(() => ({
-      auth: {
-        signInWithPassword: vi.fn().mockResolvedValue({
-          data: { session: null },
-          error: new Error('provider detail'),
-        }),
-      },
-    }));
+    const gateway = new SupabaseIdentityAuthenticationGateway(
+      () => ({
+        auth: {
+          signInWithPassword: vi.fn().mockResolvedValue({
+            data: { session: null },
+            error: new Error('provider detail'),
+          }),
+        },
+      }),
+      () => Promise.resolve({ id: '00000000-0000-4000-8000-000000000001' }),
+    );
 
     await expect(
       gateway.authenticate({
         email: 'synthetic.user@example.test',
         password: 'synthetic-password-only-for-tests',
+      }),
+    ).rejects.toBeInstanceOf(IdentityAuthenticationError);
+  });
+
+  it('rejects a provider session when confirmation or local profile verification fails', async () => {
+    const gateway = new SupabaseIdentityAuthenticationGateway(
+      () => ({
+        auth: {
+          signInWithPassword: vi.fn().mockResolvedValue({
+            data: { session: { access_token: 'synthetic-provider-token' } },
+            error: null,
+          }),
+        },
+      }),
+      () => Promise.reject(new Error('Unconfirmed or pending identity.')),
+    );
+    await expect(
+      gateway.authenticate({
+        email: 'synthetic@example.test',
+        password: 'synthetic-password',
       }),
     ).rejects.toBeInstanceOf(IdentityAuthenticationError);
   });

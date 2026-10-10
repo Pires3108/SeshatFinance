@@ -8,12 +8,12 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-001 — Provedor de implantação
 
-- **Estado:** aberto.
+- **Estado:** parcialmente resolvido para a web; aberto para API, worker e operação de produção.
 - **Referências:** ADR-011; US-099.
 - **Risco:** escolher um provedor antes de verificar limites, portabilidade e requisitos operacionais criaria dependência prematura.
-- **Limite atual:** manter web, API e worker portáveis; não configurar produção nem credenciais de provedor.
-- **Evidência atual:** os previews conectados ao projeto externo `agent-waiter` executam o build do repositório com sucesso, mas falham depois por uma configuração de diretório de saída que exige `public`. Essa configuração não deve ser alterada pela aplicação sem confirmar qual artefato esse projeto deve publicar.
-- **Decisão necessária:** selecionar o provedor antes do primeiro deploy, com custos e limites vigentes documentados.
+- **Decisão confirmada:** o projeto Vercel `agent-waiter` publica a interface web do Seshat Finance. Em 2026-09-25, seu Framework Preset foi alterado de `Other` para `Next.js` e o Root Directory para `apps/web`, mantendo habilitada a inclusão dos arquivos externos à raiz para as dependências do monorepositório. O preview da branch `codex/s11-transaction-list-filters` e o deploy de produção do commit `d521af8` ficaram `Ready`; a página inicial respondeu em ambos.
+- **Limite atual:** essa configuração publica somente a web; não hospeda a API nem o worker, não define autenticação web e não comprova a operação completa do produto. Manter os três componentes portáveis e não incluir credenciais de provedor no repositório.
+- **Decisão ainda necessária:** definir a implantação e os requisitos operacionais de API, worker e serviços associados, incluindo custos, limites e estratégia de produção.
 
 ### RII-003 — Validação local da migration PostgreSQL
 
@@ -136,6 +136,7 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Risco:** transferências e ajustes são persistidos atomicamente, mas os casos de uso geram novos identificadores em cada requisição. Se a gravação tiver sucesso e a resposta se perder, repetir o mesmo `POST` pode criar outro par ou outro ajuste. A restrição de unicidade dos identificadores internos e o teste de duas inserções com o mesmo identificador não comprovam idempotência de tentativas HTTP distintas.
 - **Decisão necessária:** definir chave de idempotência fornecida pelo cliente, escopo por proprietário e operação, prazo de retenção, comparação do conteúdo da requisição, resposta para a mesma chave com conteúdo diferente, comportamento durante execução concorrente e resposta a uma repetição depois de alterações no ciclo de vida do registro. A reserva da chave, os registros financeiros e a auditoria devem ser gravados na mesma transação.
 - **Limite atual:** não afirmar que `POST /api/v1/transfers` ou `POST /api/v1/accounts/:accountId/balance-adjustments` é idempotente por requisição. Preservar a atomicidade existente e não adicionar política de repetição implícita, baseada apenas em valores ou intervalo de tempo, pois dois eventos legítimos podem ter dados iguais.
+- **Delimitação de contrato:** a US-009 verifica REST v1, validação e OpenAPI sem anunciar `Idempotency-Key` como implementado. O contrato HTTP de chave e repetição para transferências será definido e implementado na US-032 (SESHAT-48). A idempotência de outros comandos permanece sob seus próprios requisitos e decisões.
 
 ### RII-018 — Semântica de metas e reservas
 
@@ -196,6 +197,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
+
+### RII-025 — Proteção obrigatória de merge
+
+- **Estado:** resolvido em 08/10/2026 por decisão do responsável de tornar o repositório público.
+- **Referências:** US-004; RNF-050/RNF-051/RNF-054; ET-001/ET-006.
+- **Histórico:** em 06/10/2026, a API de proteção de `main` retornou HTTP 403 para o repositório privado no plano então disponível.
+- **Decisão e controle:** `Pires3108/SeshatFinance` passou a público. A proteção de `main` exige pull request e check `quality` verde, atualizado com a base (`strict: true`), inclusive para administradores; force push e exclusão estão desativados.
+- **Evidência:** o CI do PR #130 passou no commit `694fe15` (run `37777398352`). O PR temporário #146 alterou a versão de TypeScript sem atualizar o lockfile; o check `quality` falhou no commit `1468141` e o GitHub retornou `mergeStateStatus=BLOCKED`. O PR de teste foi fechado sem merge. A configuração de proteção retornou `required_status_checks.contexts=["quality"]`, `strict=true` e `enforce_admins.enabled=true`.
 
 ### RII-002 — Exposição HTTP do perfil antes da identidade autenticada
 

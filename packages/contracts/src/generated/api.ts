@@ -179,6 +179,40 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/auth/registrations/confirm": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Confirm a registration with a single-use email token */
+        readonly post: operations["AuthController_confirm"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/auth/registrations/resend": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Request another registration confirmation email */
+        readonly post: operations["AuthController_resend"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/categories": {
         readonly parameters: {
             readonly query?: never;
@@ -331,6 +365,23 @@ export type paths = {
         readonly post: operations["SessionController_login"];
         /** Revoke the current browser session */
         readonly delete: operations["SessionController_logout"];
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/auth/sessions/others": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post?: never;
+        /** Close all other browser sessions */
+        readonly delete: operations["SessionController_closeOtherSessions"];
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
@@ -1305,6 +1356,79 @@ export interface operations {
             };
         };
     };
+    readonly AuthController_confirm: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly tokenHash: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid, expired, or reused confirmation token */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Confirmation is temporarily unavailable */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly AuthController_resend: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Format: email */
+                    readonly email: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 202: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** @enum {string} */
+                        readonly status: "confirmation_required";
+                    };
+                };
+            };
+            /** @description Resend is temporarily unavailable */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly CategoryController_list: {
         readonly parameters: {
             readonly query?: never;
@@ -1739,6 +1863,23 @@ export interface operations {
             };
         };
     };
+    readonly SessionController_closeOtherSessions: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly TagController_list: {
         readonly parameters: {
             readonly query?: never;
@@ -1975,6 +2116,22 @@ export interface operations {
                         /** Format: date-time */
                         readonly updatedAt: string;
                         readonly version: number;
+                    };
+                };
+            };
+            /** @description Request validation failed before recording a transaction */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly error: {
+                            /** @enum {string} */
+                            readonly code: "INVALID_REQUEST";
+                            readonly correlationId: string;
+                            readonly message: string;
+                        };
                     };
                 };
             };

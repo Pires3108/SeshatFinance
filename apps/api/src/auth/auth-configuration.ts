@@ -9,6 +9,9 @@ const authEnvironmentSchema = z.object({
 const passwordRecoveryEnvironmentSchema = z.object({
   AUTH_PASSWORD_RECOVERY_REDIRECT_URL: z.url(),
 });
+const intentHashEnvironmentSchema = z.object({
+  AUTH_REGISTRATION_INTENT_HMAC_KEY: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
+});
 
 export type AuthConfigurationValues = Readonly<{
   confirmationRedirectUrl: string;
@@ -29,5 +32,10 @@ export class AuthConfiguration {
   public readPasswordRecoveryRedirectUrl(): string {
     return passwordRecoveryEnvironmentSchema.parse(process.env)
       .AUTH_PASSWORD_RECOVERY_REDIRECT_URL;
+  }
+
+  public readIntentHmacKey(): string {
+    return intentHashEnvironmentSchema.parse(process.env)
+      .AUTH_REGISTRATION_INTENT_HMAC_KEY;
   }
 }

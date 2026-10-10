@@ -76,4 +76,69 @@ describe('PrismaOpaqueSessionRepository', () => {
     ).toBe(false);
     expect(await prisma.userSession.count()).toBe(1);
   });
+
+  it('denies a touch at exact inactivity and absolute expiration boundaries', async () => {
+    if (repository === undefined) throw new Error('Persistence unavailable.');
+    const at = new Date('2026-09-29T12:00:00.000Z');
+    await repository.create({
+      id: '11111111-1111-4111-8111-111111111112',
+      userId: '22222222-2222-4222-8222-222222222222',
+      tokenHash: 'b'.repeat(64),
+      createdAt: at,
+      lastSeenAt: at,
+      revokedAt: null,
+    });
+    expect(
+      await repository.touchIfActive(
+        '11111111-1111-4111-8111-111111111112',
+        new Date(at.getTime() + 30 * 60_000),
+      ),
+    ).toBe(false);
+    await repository.create({
+      id: '11111111-1111-4111-8111-111111111113',
+      userId: '22222222-2222-4222-8222-222222222222',
+      tokenHash: 'c'.repeat(64),
+      createdAt: at,
+      lastSeenAt: new Date(at.getTime() + 11 * 60 * 60_000 + 59 * 60_000),
+      revokedAt: null,
+    });
+    expect(
+      await repository.touchIfActive(
+        '11111111-1111-4111-8111-111111111113',
+        new Date(at.getTime() + 12 * 60 * 60_000),
+      ),
+    ).toBe(false);
+  });
+
+  it('closes other sessions without revoking the current session and supports password-change revocation', async () => {
+    if (repository === undefined) throw new Error('Persistence unavailable.');
+    const at = new Date('2026-09-29T12:00:00.000Z');
+    const userId = '33333333-3333-4333-8333-333333333333';
+    for (const suffix of ['1', '2']) {
+      await repository.create({
+        id: `33333333-3333-4333-8333-33333333333${suffix}`,
+        userId,
+        tokenHash: suffix.repeat(64),
+        createdAt: at,
+        lastSeenAt: at,
+        revokedAt: null,
+      });
+    }
+    const currentId = '33333333-3333-4333-8333-333333333331';
+    const remoteId = '33333333-3333-4333-8333-333333333332';
+    await repository.revokeOthers(userId, currentId, at);
+    expect(
+      (await repository.findByTokenHash('1'.repeat(64)))?.revokedAt,
+    ).toBeNull();
+    expect(
+      (await repository.findByTokenHash('2'.repeat(64)))?.revokedAt,
+    ).toEqual(at);
+    expect(
+      await repository.touchIfActive(remoteId, new Date(at.getTime() + 1)),
+    ).toBe(false);
+    await repository.revokeAll(userId, at);
+    expect(
+      (await repository.findByTokenHash('1'.repeat(64)))?.revokedAt,
+    ).toEqual(at);
+  });
 });

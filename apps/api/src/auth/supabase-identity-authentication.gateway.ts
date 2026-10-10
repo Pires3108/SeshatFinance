@@ -10,7 +10,7 @@ export type SupabaseAuthenticationClient = Readonly<{
       Readonly<{
         data: Readonly<{
           session: Readonly<{
-            user: Readonly<{ id: string }>;
+            access_token: string;
           }> | null;
         }>;
         error: unknown;
@@ -29,6 +29,9 @@ export class IdentityAuthenticationError extends Error {
 export class SupabaseIdentityAuthenticationGateway implements IdentityAuthenticationGateway {
   public constructor(
     private readonly clientFactory: () => SupabaseAuthenticationClient,
+    private readonly verifyIdentity: (
+      accessToken: string,
+    ) => Promise<Readonly<{ id: string }>>,
   ) {}
 
   public async authenticate(
@@ -40,8 +43,11 @@ export class SupabaseIdentityAuthenticationGateway implements IdentityAuthentica
       throw new IdentityAuthenticationError();
     }
 
-    return {
-      userId: data.session.user.id,
-    };
+    try {
+      const actor = await this.verifyIdentity(data.session.access_token);
+      return { userId: actor.id };
+    } catch {
+      throw new IdentityAuthenticationError();
+    }
   }
 }

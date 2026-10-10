@@ -1,5 +1,6 @@
 import { Inject, Injectable, type LoggerService } from '@nestjs/common';
 import pino, { type Logger } from 'pino';
+import { safeLogMetadata, type SafeLogEntry } from '@seshat/observability';
 
 import { CorrelationContext } from './correlation-context.js';
 
@@ -22,7 +23,10 @@ export class PrivacySafeLogger implements LoggerService {
   }
 
   public error(message: unknown, ...optionalParameters: unknown[]): void {
-    this.logger.error(this.fields(optionalParameters), safeEvent(message));
+    this.logger.error(
+      this.fields(optionalParameters, 'failure'),
+      safeEvent(message),
+    );
   }
 
   public warn(message: unknown, ...optionalParameters: unknown[]): void {
@@ -37,12 +41,24 @@ export class PrivacySafeLogger implements LoggerService {
     this.logger.trace(this.fields(optionalParameters), safeEvent(message));
   }
 
-  private fields(_optionalParameters: unknown[]): Record<string, string> {
-    return {
+  public record(entry: SafeLogEntry): void {
+    const metadata = safeLogMetadata(entry);
+    if (metadata.outcome === 'failure')
+      this.logger.error(metadata, metadata.action);
+    else this.logger.info(metadata, metadata.action);
+  }
+
+  private fields(
+    _optionalParameters: unknown[],
+    outcome: 'success' | 'failure' = 'success',
+  ): SafeLogEntry {
+    return safeLogMetadata({
       correlationId: this.context.getCorrelationId() ?? 'unavailable',
-      context: 'Application',
-      hasOptionalParameters: String(_optionalParameters.length > 0),
-    };
+      action: 'application_event',
+      resourceType: 'application',
+      outcome,
+      durationMs: 0,
+    });
   }
 }
 

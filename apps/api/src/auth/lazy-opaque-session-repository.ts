@@ -31,4 +31,16 @@ export class LazyOpaqueSessionRepository implements OpaqueSessionRepository {
   public revoke(id: string, revokedAt: Date): Promise<void> {
     return this.repository.revoke(id, revokedAt);
   }
+
+  public revokeOthers(
+    userId: string,
+    exceptId: string,
+    revokedAt: Date,
+  ): Promise<void> {
+    return this.repository.revokeOthers(userId, exceptId, revokedAt);
+  }
+
+  public revokeAll(userId: string, revokedAt: Date): Promise<void> {
+    return this.repository.revokeAll(userId, revokedAt);
+  }
 }

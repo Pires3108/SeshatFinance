@@ -98,6 +98,21 @@ export class SessionController {
       `${COOKIE_NAME}=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`,
     );
   }
+
+  @Delete('others')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Close all other browser sessions' })
+  public async closeOtherSessions(
+    @Req() request: FastifyRequest,
+  ): Promise<void> {
+    const token = readSessionCookie(request.headers.cookie);
+    if (token === undefined) throw new UnauthorizedException();
+    try {
+      await this.sessions.revokeOtherSessions(token);
+    } catch {
+      throw new UnauthorizedException();
+    }
+  }
 }
 
 export function readSessionCookie(
