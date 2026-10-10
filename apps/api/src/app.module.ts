@@ -31,6 +31,8 @@ import {
   ListInvestmentTypesUseCase,
   ListDefaultAccountTypesUseCase,
   RegisterUserUseCase,
+  ConfirmRegistrationUseCase,
+  ResendRegistrationConfirmationUseCase,
   ResolveAuthenticatedActorUseCase,
   RequestPasswordRecoveryUseCase,
   RenameOwnedCategoryUseCase,
@@ -63,6 +65,7 @@ import {
 } from '@seshat/application';
 import { Module } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
+import { PrismaConfirmedIdentityProfileRepository } from '@seshat/database';
 
 import { AccountController } from './accounts/account.controller.js';
 import { AccountBalanceController } from './accounts/account-balance.controller.js';
@@ -80,6 +83,9 @@ import { AuthenticatedActorContext } from './auth/authenticated-actor-context.js
 import { BearerAuthGuard } from './auth/bearer-auth.guard.js';
 import { PasswordRecoveryController } from './auth/password-recovery.controller.js';
 import { SupabaseIdentityRegistrationGateway } from './auth/supabase-identity-registration.gateway.js';
+import { SupabaseRegistrationConfirmationGateway } from './auth/supabase-registration-confirmation.gateway.js';
+import { SupabaseRegistrationConfirmationResendGateway } from './auth/supabase-registration-confirmation-resend.gateway.js';
+import { RegistrationIntentPruner } from './auth/registration-intent-pruner.js';
 import { SupabaseIdentityTokenVerifier } from './auth/supabase-identity-token-verifier.js';
 import { SupabasePasswordRecoveryGateway } from './auth/supabase-password-recovery.gateway.js';
 import { CategoryController } from './classifications/category.controller.js';
@@ -129,6 +135,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     UserProfileController,
   ],
   providers: [
+    RegistrationIntentPruner,
     {
       provide: ListDefaultAccountTypesUseCase,
       useFactory: (): ListDefaultAccountTypesUseCase =>
@@ -555,13 +562,45 @@ import { UserProfileController } from './users/user-profile.controller.js';
         new UpdateOwnUserProfileUseCase(profiles, new SystemClock()),
     },
     {
-      inject: [AuthConfiguration],
+      inject: [AuthConfiguration, LazyPrismaClient],
       provide: ResolveAuthenticatedActorUseCase,
       useFactory: (
         configuration: AuthConfiguration,
+        prisma: LazyPrismaClient,
       ): ResolveAuthenticatedActorUseCase =>
         new ResolveAuthenticatedActorUseCase(
-          new SupabaseIdentityTokenVerifier(() => {
+          new SupabaseIdentityTokenVerifier(
+            () => {
+              const values = configuration.read();
+              return createClient(
+                values.supabaseUrl,
+                values.supabasePublishableKey,
+                {
+                  auth: {
+                    autoRefreshToken: false,
+                    detectSessionInUrl: false,
+                    persistSession: false,
+                  },
+                },
+              );
+            },
+            new PrismaConfirmedIdentityProfileRepository(
+              () => prisma.get(),
+              () => configuration.readIntentHmacKey(),
+            ),
+            new SystemClock(),
+          ),
+        ),
+    },
+    {
+      inject: [AuthConfiguration, LazyPrismaClient],
+      provide: RegisterUserUseCase,
+      useFactory: (
+        configuration: AuthConfiguration,
+        prisma: LazyPrismaClient,
+      ): RegisterUserUseCase =>
+        new RegisterUserUseCase(
+          new SupabaseIdentityRegistrationGateway(() => {
             const values = configuration.read();
             return createClient(
               values.supabaseUrl,
@@ -575,14 +614,49 @@ import { UserProfileController } from './users/user-profile.controller.js';
               },
             );
           }),
+          new PrismaConfirmedIdentityProfileRepository(
+            () => prisma.get(),
+            () => configuration.readIntentHmacKey(),
+          ),
+        ),
+    },
+    {
+      inject: [AuthConfiguration, LazyPrismaClient],
+      provide: ConfirmRegistrationUseCase,
+      useFactory: (
+        configuration: AuthConfiguration,
+        prisma: LazyPrismaClient,
+      ): ConfirmRegistrationUseCase =>
+        new ConfirmRegistrationUseCase(
+          new SupabaseRegistrationConfirmationGateway(() => {
+            const values = configuration.read();
+            return createClient(
+              values.supabaseUrl,
+              values.supabasePublishableKey,
+              {
+                auth: {
+                  autoRefreshToken: false,
+                  detectSessionInUrl: false,
+                  persistSession: false,
+                },
+              },
+            );
+          }),
+          new PrismaConfirmedIdentityProfileRepository(
+            () => prisma.get(),
+            () => configuration.readIntentHmacKey(),
+          ),
+          new SystemClock(),
         ),
     },
     {
       inject: [AuthConfiguration],
-      provide: RegisterUserUseCase,
-      useFactory: (configuration: AuthConfiguration): RegisterUserUseCase =>
-        new RegisterUserUseCase(
-          new SupabaseIdentityRegistrationGateway(() => {
+      provide: ResendRegistrationConfirmationUseCase,
+      useFactory: (
+        configuration: AuthConfiguration,
+      ): ResendRegistrationConfirmationUseCase =>
+        new ResendRegistrationConfirmationUseCase(
+          new SupabaseRegistrationConfirmationResendGateway(() => {
             const values = configuration.read();
             return createClient(
               values.supabaseUrl,

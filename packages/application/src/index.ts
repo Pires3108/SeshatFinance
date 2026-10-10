@@ -1,4 +1,17 @@
 export type { Clock } from './ports/clock.js';
+export {
+  ConfirmRegistrationUseCase,
+  IdentityProviderUnavailableError,
+  type ConfirmedRegistrationIdentity,
+  type RegistrationConfirmationGateway,
+  type ConfirmedIdentityProfileRepository,
+} from './auth/confirm-registration.js';
+export {
+  ResendRegistrationConfirmationUseCase,
+  type RegistrationConfirmationResendGateway,
+  type ResendRegistrationConfirmationCommand,
+} from './auth/resend-registration-confirmation.js';
+export type { PendingRegistrationProfileRepository } from './auth/register-user.js';
 export { readCivilDate } from './ports/civil-date.js';
 export type { IdentifierGenerator } from './ports/identifier-generator.js';
 export type { TransactionRunner } from './ports/transaction-runner.js';

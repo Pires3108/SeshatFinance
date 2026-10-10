@@ -1,4 +1,5 @@
 export { createPrismaClient } from './prisma/create-prisma-client.js';
+export { PrismaConfirmedIdentityProfileRepository } from './users/prisma-confirmed-identity-profile-repository.js';
 export { PrismaTransactionRunner } from './prisma/prisma-transaction-runner.js';
 export { PrismaUserProfileRepository } from './users/prisma-user-profile-repository.js';
 export { PrismaAccountRepository } from './accounts/prisma-account-repository.js';

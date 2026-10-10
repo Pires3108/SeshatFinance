@@ -179,6 +179,40 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/auth/registrations/confirm": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Confirm a registration with a single-use email token */
+        readonly post: operations["AuthController_confirm"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/auth/registrations/resend": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Request another registration confirmation email */
+        readonly post: operations["AuthController_resend"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/categories": {
         readonly parameters: {
             readonly query?: never;
@@ -1283,6 +1317,79 @@ export interface operations {
                         readonly status: "confirmation_required";
                     };
                 };
+            };
+        };
+    };
+    readonly AuthController_confirm: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly tokenHash: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid, expired, or reused confirmation token */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Confirmation is temporarily unavailable */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly AuthController_resend: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Format: email */
+                    readonly email: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 202: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** @enum {string} */
+                        readonly status: "confirmation_required";
+                    };
+                };
+            };
+            /** @description Resend is temporarily unavailable */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -1,4 +1,8 @@
-import { RegisterUserUseCase } from '@seshat/application';
+import {
+  ConfirmRegistrationUseCase,
+  RegisterUserUseCase,
+  ResendRegistrationConfirmationUseCase,
+} from '@seshat/application';
 import { Test } from '@nestjs/testing';
 import {
   FastifyAdapter,
@@ -81,5 +85,72 @@ describe('API auth registration', () => {
 
     expect(response.statusCode).toBe(400);
     expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('accepts a valid single-use confirmation without returning provider credentials', async () => {
+    const execute = vi
+      .fn<ConfirmRegistrationUseCase['execute']>()
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false);
+    const testingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(ConfirmRegistrationUseCase)
+      .useValue({ execute })
+      .compile();
+    application = testingModule.createNestApplication<NestFastifyApplication>(
+      new FastifyAdapter(),
+    );
+    configureApplication(application);
+    await application.init();
+    await application.getHttpAdapter().getInstance().ready();
+
+    const first = await application.inject({
+      method: 'POST',
+      payload: { tokenHash: 'synthetic-token' },
+      url: '/api/v1/auth/registrations/confirm',
+    });
+    const reused = await application.inject({
+      method: 'POST',
+      payload: { tokenHash: 'synthetic-token' },
+      url: '/api/v1/auth/registrations/confirm',
+    });
+
+    expect(first.statusCode).toBe(204);
+    expect(first.body).toBe('');
+    expect(reused.statusCode).toBe(400);
+    expect(reused.body).not.toContain('synthetic-token');
+  });
+
+  it('returns a generic response for a resend request', async () => {
+    process.env.AUTH_CONFIRMATION_REDIRECT_URL =
+      'https://app.example.test/auth/confirm';
+    process.env.SUPABASE_PUBLISHABLE_KEY = 'synthetic-publishable-key';
+    process.env.SUPABASE_URL = 'https://synthetic-project.supabase.co';
+    const execute = vi.fn<ResendRegistrationConfirmationUseCase['execute']>();
+    const testingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(ResendRegistrationConfirmationUseCase)
+      .useValue({ execute })
+      .compile();
+    application = testingModule.createNestApplication<NestFastifyApplication>(
+      new FastifyAdapter(),
+    );
+    configureApplication(application);
+    await application.init();
+    await application.getHttpAdapter().getInstance().ready();
+
+    const response = await application.inject({
+      method: 'POST',
+      payload: { email: 'synthetic@example.test' },
+      url: '/api/v1/auth/registrations/resend',
+    });
+    expect(response.statusCode).toBe(202);
+    expect(response.json()).toEqual({ status: 'confirmation_required' });
+    expect(execute).toHaveBeenCalledWith({
+      email: 'synthetic@example.test',
+      confirmationRedirectUrl: 'https://app.example.test/auth/confirm',
+    });
   });
 });

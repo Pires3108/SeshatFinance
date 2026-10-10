@@ -1562,6 +1562,93 @@
         "tags": ["auth"]
       }
     },
+    "/api/v1/auth/registrations/confirm": {
+      "post": {
+        "operationId": "AuthController_confirm",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "tokenHash": {
+                    "maxLength": 2048,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": ["tokenHash"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid, expired, or reused confirmation token"
+          },
+          "503": {
+            "description": "Confirmation is temporarily unavailable"
+          }
+        },
+        "summary": "Confirm a registration with a single-use email token",
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/registrations/resend": {
+      "post": {
+        "operationId": "AuthController_resend",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "email": {
+                    "format": "email",
+                    "maxLength": 320,
+                    "type": "string"
+                  }
+                },
+                "required": ["email"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "status": {
+                      "enum": ["confirmation_required"],
+                      "type": "string"
+                    }
+                  },
+                  "required": ["status"],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Resend is temporarily unavailable"
+          }
+        },
+        "summary": "Request another registration confirmation email",
+        "tags": ["auth"]
+      }
+    },
     "/api/v1/categories": {
       "post": {
         "operationId": "CategoryController_create",

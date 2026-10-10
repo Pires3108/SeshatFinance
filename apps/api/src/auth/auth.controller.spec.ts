@@ -1,4 +1,8 @@
-import { RegisterUserUseCase } from '@seshat/application';
+import {
+  ConfirmRegistrationUseCase,
+  RegisterUserUseCase,
+  ResendRegistrationConfirmationUseCase,
+} from '@seshat/application';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AuthConfiguration } from './auth-configuration.js';
@@ -6,9 +10,12 @@ import { AuthController } from './auth.controller.js';
 
 describe('AuthController', () => {
   it('returns the generic confirmation response after accepting registration', async () => {
-    const execute = vi.fn<RegisterUserUseCase['execute']>();
+    const register = vi.fn((): Promise<string | null> => Promise.resolve(null));
     const controller = new AuthController(
-      new RegisterUserUseCase({ register: execute }),
+      new RegisterUserUseCase(
+        { register },
+        { recordIntent: vi.fn(), createPending: vi.fn() },
+      ),
       {
         read: () => ({
           confirmationRedirectUrl: 'https://app.example.test/auth/confirm',
@@ -17,7 +24,14 @@ describe('AuthController', () => {
         }),
         readPasswordRecoveryRedirectUrl: () =>
           'https://app.example.test/auth/reset-password',
+        readIntentHmacKey: () => Buffer.alloc(32, 7).toString('base64url'),
       } satisfies AuthConfiguration,
+      new ConfirmRegistrationUseCase(
+        { confirm: vi.fn().mockResolvedValue(null) },
+        { ready: vi.fn(), ensure: vi.fn() },
+        { now: (): Date => new Date() },
+      ),
+      new ResendRegistrationConfirmationUseCase({ resend: vi.fn() }),
     );
 
     const result = await controller.register({
@@ -27,7 +41,7 @@ describe('AuthController', () => {
     });
 
     expect(result).toEqual({ status: 'confirmation_required' });
-    expect(execute).toHaveBeenCalledWith({
+    expect(register).toHaveBeenCalledWith({
       confirmationRedirectUrl: 'https://app.example.test/auth/confirm',
       displayName: 'Pessoa Teste',
       email: 'synthetic.user@example.test',
