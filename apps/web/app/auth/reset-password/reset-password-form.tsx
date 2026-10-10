@@ -10,6 +10,10 @@ import {
 } from 'react';
 
 import { consumeRecoveryToken } from './consume-recovery-token';
+import {
+  completionResult,
+  RECOVERY_UNAVAILABLE,
+} from './recovery-completion-result';
 
 type State =
   | 'loading'
@@ -66,18 +70,23 @@ export function ResetPasswordForm(): ReactNode {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tokenHash, password }),
       });
-      if (response.status === 204) {
+      const result = completionResult(response.status);
+      if (result === 'success') {
         tokenRef.current = null;
         form.reset();
         setState('success');
-      } else if (response.status === 400) {
+      } else if (result === 'invalid') {
         tokenRef.current = null;
         form.reset();
         setState('invalid');
       } else {
+        tokenRef.current = null;
+        form.reset();
         setState('unavailable');
       }
     } catch {
+      tokenRef.current = null;
+      form.reset();
       setState('unavailable');
     }
   }
@@ -108,9 +117,13 @@ export function ResetPasswordForm(): ReactNode {
           <Link href="/recuperar-senha">Solicitar um novo link</Link>
         </div>
       )}
+      {state === 'unavailable' && (
+        <div ref={statusRef} role="alert" tabIndex={-1}>
+          <RecoveryUnavailable />
+        </div>
+      )}
       {(state === 'ready' ||
         state === 'submitting' ||
-        state === 'unavailable' ||
         state === 'mismatch') && (
         <form
           onSubmit={(event) => {
@@ -157,18 +170,19 @@ export function ResetPasswordForm(): ReactNode {
               As senhas não coincidem.
             </div>
           )}
-          {state === 'unavailable' && (
-            <div
-              className="form-message error"
-              ref={statusRef}
-              role="alert"
-              tabIndex={-1}
-            >
-              Não foi possível redefinir a senha agora. Tente novamente.
-            </div>
-          )}
         </form>
       )}
     </section>
+  );
+}
+
+function RecoveryUnavailable(): ReactNode {
+  return (
+    <>
+      <p>{RECOVERY_UNAVAILABLE.message}</p>
+      <Link href={RECOVERY_UNAVAILABLE.actionHref}>
+        {RECOVERY_UNAVAILABLE.action}
+      </Link>
+    </>
   );
 }
