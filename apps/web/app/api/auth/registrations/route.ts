@@ -1,4 +1,4 @@
-import type { paths } from '@seshat/contracts';
+import { ApiClientError, type paths } from '@seshat/contracts';
 import { NextResponse } from 'next/server';
 
 import { createServerApiClient } from '../../../../lib/create-server-api-client';
@@ -18,7 +18,7 @@ function isRegistration(value: unknown): value is Registration {
     candidate.email.length <= 320 &&
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidate.email) &&
     typeof candidate.password === 'string' &&
-    candidate.password.length > 0 &&
+    candidate.password.length >= 12 &&
     candidate.password.length <= 1024
   );
 }
@@ -49,7 +49,10 @@ export async function POST(request: Request): Promise<NextResponse> {
       { status: 'confirmation_required' },
       { status: 202 },
     );
-  } catch {
+  } catch (error) {
+    if (error instanceof ApiClientError && error.status === 422) {
+      return NextResponse.json({ error: 'password_rejected' }, { status: 422 });
+    }
     return NextResponse.json(
       { error: 'registration_unavailable' },
       { status: 502 },

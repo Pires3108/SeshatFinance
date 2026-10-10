@@ -1,3 +1,8 @@
+import {
+  PasswordRejectedError,
+  type PasswordSafetyChecker,
+} from './password-rejected.js';
+
 export type RegisterUserCommand = Readonly<{
   displayName: string;
   email: string;
@@ -18,9 +23,12 @@ export class RegisterUserUseCase {
   public constructor(
     private readonly identities: IdentityRegistrationGateway,
     private readonly profiles: PendingRegistrationProfileRepository,
+    private readonly passwords: PasswordSafetyChecker,
   ) {}
 
   public async execute(command: RegisterUserCommand): Promise<void> {
+    if (await this.passwords.isCompromised(command.password))
+      throw new PasswordRejectedError();
     await this.profiles.recordIntent(command.email);
     const id = await this.identities.register(command);
     if (id !== null) await this.profiles.createPending(id, command.displayName);

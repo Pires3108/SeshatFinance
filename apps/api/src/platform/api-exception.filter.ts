@@ -10,6 +10,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import { CorrelationContext } from './correlation-context.js';
 import { PrivacySafeLogger } from './privacy-safe-logger.js';
+import { PasswordRejectedException } from './password-rejected.exception.js';
 
 type ErrorEnvelope = Readonly<{
   error: Readonly<{
@@ -39,8 +40,14 @@ export class ApiExceptionFilter implements ExceptionFilter {
       'unavailable';
     const envelope: ErrorEnvelope = {
       error: {
-        code: publicErrorCode(status),
-        message: publicErrorMessage(status),
+        code:
+          exception instanceof PasswordRejectedException
+            ? 'PASSWORD_REJECTED'
+            : publicErrorCode(status),
+        message:
+          exception instanceof PasswordRejectedException
+            ? 'A senha não atende à política de segurança.'
+            : publicErrorMessage(status),
         correlationId,
       },
     };

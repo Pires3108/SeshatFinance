@@ -25,29 +25,24 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-004 — Política de senha do cadastro
 
-- **Estado:** aberto.
-- **Referências:** RF-001; RNF-024; CA-001; US-013.
-- **Risco:** os requisitos delegam o armazenamento seguro ao provedor de identidade, mas não definem comprimento mínimo, composição, verificação contra senhas comprometidas ou mensagens de orientação.
-- **Decisão necessária:** definir a política no Supabase Auth e refletir a mesma orientação na interface, sem manter uma segunda política divergente na API.
-- **Limite atual:** a API valida somente presença e limites estruturais; o provedor aplica a política efetiva até a decisão ser registrada.
-- **Interface atual:** o formulário web de cadastro replica somente esses limites estruturais; não promete nem impõe uma política de força de senha ainda não decidida.
+- **Estado:** decisão registrada em 10/10/2026; implementação de cadastro e recuperação em US-015.
+- **Referências:** RF-001; RF-003; RNF-024; CA-001; US-013; US-015; ADR-032.
+- **Decisão:** exigir pelo menos 12 caracteres para senhas novas de cadastro e recuperação. A API consulta a versão gratuita do Pwned Passwords com o prefixo de cinco caracteres do SHA-1 via k-anonymity e rejeita senhas comprometidas. Falha da consulta impede a gravação. Não depender do recurso de proteção contra senhas vazadas do Supabase, disponível apenas em planos pagos.
+- **Limite:** o provedor continua responsável pelo armazenamento e pode aplicar regras adicionais; a API traduz `weak_password` para rejeição genérica. O login mantém compatibilidade com credenciais antigas sem impor mínimo estrutural antes da autenticação.
 
 ### RII-005 — Persistência e expiração da sessão web
 
-- **Estado:** aberto.
+- **Estado:** resolvido pela ADR-013 e implementado na US-014.
 - **Referências:** RF-002; RF-005; RNF-026; RNF-027; US-014; US-016.
-- **Risco:** retornar tokens ao JavaScript ou aceitar apenas a expiração padrão do Supabase não comprova cookies HttpOnly, 30 minutos de inatividade nem o máximo absoluto de 12 horas.
-- **Decisão necessária:** definir se a API manterá uma sessão opaca própria ou um envelope de refresh token no servidor, incluindo revogação, rotação, inatividade e múltiplos dispositivos.
-- **Limite atual:** autenticação e tradução da sessão ficam isoladas no adaptador; nenhum endpoint de login ou cookie é publicado até essa estratégia preservar todos os requisitos.
-- **Interface atual:** o cadastro web permite solicitar a confirmação de e-mail, mas não apresenta entrada na conta nem afirma que CA-001 esteja completo.
+- **Decisão:** a API mantém sessões opacas próprias com cookie `__Host-`, duração absoluta de 12 horas, inatividade de 30 minutos e revogação no servidor. Tokens do Supabase não são enviados ao navegador. Ver ADR-013.
+- **Verificação:** testes unitários de expiração e revogação e testes PostgreSQL de persistência de sessões. A recuperação de senha revoga todas as sessões locais do usuário conforme ADR-032.
 
 ### RII-006 — Política progressiva de limitação de autenticação
 
-- **Estado:** aberto.
-- **Referências:** RNF-025; US-014; US-018.
-- **Risco:** embora o bloqueio após cinco falhas esteja definido, não há duração inicial, progressão, janela de recuperação nem divisão de responsabilidade entre API e Supabase; inferir esses parâmetros pode bloquear usuários legítimos ou oferecer proteção apenas aparente.
-- **Decisão necessária:** definir as janelas e durações progressivas, as chaves de origem consideradas e qual camada manterá o estado compartilhado entre instâncias.
-- **Limite atual:** não publicar login nem afirmar a conclusão do rate limit; testes de cadastro, recuperação e resolução de ator continuam independentes.
+- **Estado:** decisão parcial registrada em 10/10/2026; origem adiada para US-018.
+- **Referências:** RNF-025; US-014; US-015; US-018; ADR-032.
+- **Decisão:** login aplica bloqueio progressivo de 5 a 60 minutos após cinco falhas; pedidos de recuperação usam contagem própria e a mesma progressão após cinco pedidos por identidade normalizada. O estado compartilhado fica no PostgreSQL, com chave HMAC que não persiste e-mail em claro. A resposta pública de recuperação continua genérica inclusive quando limitada.
+- **Pendente em US-018:** definir origem confiável atrás do proxy e adicionar limitação por origem para login e recuperação, preservando RNF-025. A conclusão de US-015 não afirma que esse controle está implementado.
 
 ### RII-007 — Catálogo monetário e política de arredondamento
 

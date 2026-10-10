@@ -1529,7 +1529,7 @@
                   },
                   "password": {
                     "maxLength": 1024,
-                    "minLength": 1,
+                    "minLength": 12,
                     "type": "string"
                   }
                 },
@@ -1556,6 +1556,9 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Password rejected by provider policy"
           }
         },
         "summary": "Register a user and request email confirmation",
@@ -2283,6 +2286,52 @@
           }
         },
         "summary": "Request a password recovery email",
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/password-recovery-completions": {
+      "post": {
+        "operationId": "PasswordRecoveryController_complete",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "tokenHash": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2048
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 12,
+                    "maxLength": 1024
+                  }
+                },
+                "required": ["tokenHash", "password"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid or expired recovery link"
+          },
+          "422": {
+            "description": "Password rejected by provider policy"
+          },
+          "503": {
+            "description": "Recovery is temporarily unavailable"
+          }
+        },
+        "summary": "Complete password recovery with a single-use token",
         "tags": ["auth"]
       }
     },

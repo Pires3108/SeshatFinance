@@ -1,6 +1,7 @@
 import {
   ConfirmRegistrationUseCase,
   RegisterUserUseCase,
+  PasswordRejectedError,
   ResendRegistrationConfirmationUseCase,
 } from '@seshat/application';
 import { Test } from '@nestjs/testing';
@@ -85,6 +86,41 @@ describe('API auth registration', () => {
 
     expect(response.statusCode).toBe(400);
     expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('does not leak provider details when a password fails the provider policy', async () => {
+    process.env.AUTH_CONFIRMATION_REDIRECT_URL =
+      'https://app.example.test/auth/confirm';
+    process.env.SUPABASE_PUBLISHABLE_KEY = 'synthetic-publishable-key';
+    process.env.SUPABASE_URL = 'https://synthetic-project.supabase.co';
+    const execute = vi
+      .fn<RegisterUserUseCase['execute']>()
+      .mockRejectedValue(new PasswordRejectedError());
+    const testingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(RegisterUserUseCase)
+      .useValue({ execute })
+      .compile();
+    application = testingModule.createNestApplication<NestFastifyApplication>(
+      new FastifyAdapter(),
+    );
+    configureApplication(application);
+    await application.init();
+    await application.getHttpAdapter().getInstance().ready();
+    const response = await application.inject({
+      method: 'POST',
+      payload: {
+        displayName: 'Pessoa Teste',
+        email: 'synthetic.user@example.test',
+        password: 'synthetic-password-only-for-tests',
+      },
+      url: '/api/v1/auth/registrations',
+    });
+    expect(response.statusCode).toBe(422);
+    expect(response.body).toContain('"code":"PASSWORD_REJECTED"');
+    expect(response.body).not.toContain('synthetic-password');
+    expect(response.body).not.toContain('synthetic.user');
   });
 
   it('accepts a valid single-use confirmation without returning provider credentials', async () => {

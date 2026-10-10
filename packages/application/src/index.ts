@@ -1,5 +1,10 @@
 export type { Clock } from './ports/clock.js';
 export {
+  PasswordRejectedError,
+  PasswordCheckUnavailableError,
+  type PasswordSafetyChecker,
+} from './auth/password-rejected.js';
+export {
   ConfirmRegistrationUseCase,
   IdentityProviderUnavailableError,
   type ConfirmedRegistrationIdentity,
@@ -12,6 +17,11 @@ export {
   type ResendRegistrationConfirmationCommand,
 } from './auth/resend-registration-confirmation.js';
 export type { PendingRegistrationProfileRepository } from './auth/register-user.js';
+export {
+  CompletePasswordRecoveryUseCase,
+  InvalidRecoveryTokenError,
+  type PasswordRecoveryCompletionGateway,
+} from './auth/complete-password-recovery.js';
 export { readCivilDate } from './ports/civil-date.js';
 export type { IdentifierGenerator } from './ports/identifier-generator.js';
 export type { TransactionRunner } from './ports/transaction-runner.js';
@@ -63,6 +73,7 @@ export {
   type CreateCostCenterCommand,
 } from './classifications/manage-cost-center.js';
 export {
+  AuthenticationRejectedError,
   AuthenticateUserUseCase,
   type AuthenticateUserCommand,
   type LoginAttemptRepository,
@@ -86,6 +97,7 @@ export {
 } from './auth/register-user.js';
 export {
   RequestPasswordRecoveryUseCase,
+  type RecoveryRequestAttemptRepository,
   type PasswordRecoveryGateway,
   type RequestPasswordRecoveryCommand,
 } from './auth/request-password-recovery.js';

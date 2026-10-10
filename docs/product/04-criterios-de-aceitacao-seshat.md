@@ -10,6 +10,7 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 
 **Dado** um e-mail ainda não cadastrado, **quando** o usuário concluir cadastro e confirmação, **então** poderá entrar com e-mail e senha. Cinco falhas consecutivas devem aplicar bloqueio temporário sem revelar se a conta existe.  
 **Dado** um usuário autenticado, **quando** ele sair ou a sessão atingir 30 minutos de inatividade ou 12 horas desde o login, **então** o token deixará de autorizar consultas e gravações; o logout também revoga a sessão no servidor.
+**Dado** um pedido de recuperação para e-mail existente ou inexistente, **quando** o usuário solicitar o link, **então** a resposta pública será indistinguível e pedidos repetidos para a mesma identidade serão limitados. **Dado** um link válido e senha de ao menos 12 caracteres que não conste da base de senhas comprometidas, **quando** concluir a recuperação, **então** a senha será atualizada uma vez e todas as sessões locais serão revogadas; link expirado ou reutilizado será rejeitado.
 **Referências:** RF-001 a RF-005; RNF-024 a RNF-028.
 
 ### CA-002 — Segundo fator

@@ -54,4 +54,35 @@ describe('AuthenticateUserUseCase', () => {
     ).rejects.toThrow('Authentication was not accepted.');
     expect(authenticate).not.toHaveBeenCalled();
   });
+
+  it('keeps session issuance inside the identity lock', async () => {
+    let lockHeld = false;
+    const attempts: LoginAttemptRepository = {
+      runExclusive: async (_email, action) => {
+        lockHeld = true;
+        try {
+          return await action({
+            isLocked: () => Promise.resolve(false),
+            recordFailure: () => Promise.resolve(),
+            clear: () => Promise.resolve(),
+          });
+        } finally {
+          lockHeld = false;
+        }
+      },
+    };
+    const useCase = new AuthenticateUserUseCase(
+      { authenticate: () => Promise.resolve({ userId: 'user-id' }) },
+      attempts,
+      { now: () => new Date() },
+    );
+    await useCase.executeWith(
+      { email: 'synthetic@example.test', password: 'old-password' },
+      () => {
+        expect(lockHeld).toBe(true);
+        return Promise.resolve('session-token');
+      },
+    );
+    expect(lockHeld).toBe(false);
+  });
 });

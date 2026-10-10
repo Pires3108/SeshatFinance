@@ -28,6 +28,20 @@ describe('web registration proxy', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('rejects passwords shorter than 12 characters before calling the API', async () => {
+    const fetchMock = vi.fn();
+    globalThis.fetch = fetchMock;
+    const response = await POST(
+      request({
+        displayName: 'Pessoa',
+        email: 'pessoa@example.com',
+        password: 'short',
+      }),
+    );
+    expect(response.status).toBe(400);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('forwards valid input without returning the password', async () => {
     process.env.SESHAT_API_URL = 'http://api.internal:3001';
     const fetchMock = vi
@@ -40,7 +54,7 @@ describe('web registration proxy', () => {
       request({
         displayName: 'Pessoa',
         email: 'pessoa@example.com',
-        password: 'secret',
+        password: 'long-secret-password',
       }),
     );
     expect(response.status).toBe(202);
@@ -54,7 +68,7 @@ describe('web registration proxy', () => {
     expect(await upstreamRequest.json()).toEqual({
       displayName: 'Pessoa',
       email: 'pessoa@example.com',
-      password: 'secret',
+      password: 'long-secret-password',
     });
   });
 
@@ -68,11 +82,28 @@ describe('web registration proxy', () => {
       request({
         displayName: 'Pessoa',
         email: 'pessoa@example.com',
-        password: 'secret',
+        password: 'long-secret-password',
       }),
     );
     expect(response.status).toBe(502);
     expect(await response.text()).not.toContain('private provider detail');
+  });
+
+  it('maps provider password rejection to safe feedback', async () => {
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValue(
+        Response.json({ error: 'private provider detail' }, { status: 422 }),
+      );
+    const response = await POST(
+      request({
+        displayName: 'Pessoa',
+        email: 'pessoa@example.com',
+        password: 'long-secret-password',
+      }),
+    );
+    expect(response.status).toBe(422);
+    expect(await response.json()).toEqual({ error: 'password_rejected' });
   });
 
   it('does not treat an unexpected upstream response as registration', async () => {
@@ -85,7 +116,7 @@ describe('web registration proxy', () => {
       request({
         displayName: 'Pessoa',
         email: 'pessoa@example.com',
-        password: 'secret',
+        password: 'long-secret-password',
       }),
     );
     expect(response.status).toBe(502);
@@ -101,7 +132,7 @@ describe('web registration proxy', () => {
       request({
         displayName: 'Pessoa',
         email: 'pessoa@example.com',
-        password: 'secret',
+        password: 'long-secret-password',
       }),
     );
     expect(response.status).toBe(502);

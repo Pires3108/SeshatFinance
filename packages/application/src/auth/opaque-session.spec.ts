@@ -60,6 +60,7 @@ describe('opaque session policy', () => {
         revoke: vi.fn(),
         revokeOthers: vi.fn(),
         revokeAll: vi.fn(),
+        ready: vi.fn().mockResolvedValue(undefined),
       },
       { generate: () => 'raw-token', hash: () => 'hash' },
       { now: () => createdAt },
@@ -91,6 +92,7 @@ describe('opaque session policy', () => {
         revoke: vi.fn(),
         revokeOthers,
         revokeAll: vi.fn(),
+        ready: vi.fn().mockResolvedValue(undefined),
       },
       { generate: () => 'raw-token', hash: () => 'hash' },
       { now: () => createdAt },
@@ -114,6 +116,7 @@ describe('opaque session policy', () => {
         revoke: vi.fn(),
         revokeOthers,
         revokeAll: vi.fn(),
+        ready: vi.fn().mockResolvedValue(undefined),
       },
       { generate: () => 'raw-token', hash: () => 'hash' },
       { now: () => new Date(createdAt.getTime() + 30 * 60_000) },
@@ -123,5 +126,27 @@ describe('opaque session policy', () => {
       service.revokeOtherSessions('raw-token'),
     ).rejects.toBeInstanceOf(InvalidOpaqueSessionError);
     expect(revokeOthers).not.toHaveBeenCalled();
+  });
+
+  it('revokes every browser session for a recovered identity', async () => {
+    const revokeAll = vi
+      .fn<OpaqueSessionRepository['revokeAll']>()
+      .mockResolvedValue();
+    const service = new OpaqueSessionService(
+      {
+        create: vi.fn(),
+        findByTokenHash: vi.fn(),
+        touchIfActive: vi.fn(),
+        revoke: vi.fn(),
+        revokeOthers: vi.fn(),
+        revokeAll,
+        ready: vi.fn().mockResolvedValue(undefined),
+      },
+      { generate: () => 'raw-token', hash: () => 'hash' },
+      { now: () => createdAt },
+      { generate: () => session.id },
+    );
+    await service.revokeAllForUser(session.userId);
+    expect(revokeAll).toHaveBeenCalledWith(session.userId, createdAt);
   });
 });

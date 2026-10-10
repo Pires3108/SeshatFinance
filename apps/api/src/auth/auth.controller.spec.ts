@@ -15,6 +15,7 @@ describe('AuthController', () => {
       new RegisterUserUseCase(
         { register },
         { recordIntent: vi.fn(), createPending: vi.fn() },
+        { isCompromised: () => Promise.resolve(false) },
       ),
       {
         read: () => ({

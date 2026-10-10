@@ -14,6 +14,7 @@ export type OpaqueSession = Readonly<{
 }>;
 
 export interface OpaqueSessionRepository {
+  ready(): Promise<void>;
   create(session: OpaqueSession): Promise<void>;
   findByTokenHash(tokenHash: string): Promise<OpaqueSession | null>;
   touchIfActive(id: string, seenAt: Date): Promise<boolean>;
@@ -50,6 +51,10 @@ export class OpaqueSessionService {
     private readonly clock: Clock,
     private readonly identifiers: IdentifierGenerator,
   ) {}
+
+  public ready(): Promise<void> {
+    return this.sessions.ready();
+  }
 
   public async issue(userId: string): Promise<IssuedOpaqueSession> {
     const now = this.clock.now();

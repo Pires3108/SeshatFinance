@@ -24,6 +24,13 @@ export interface LoginAttemptRepository {
   ): Promise<T>;
 }
 
+export class AuthenticationRejectedError extends Error {
+  public constructor() {
+    super('Authentication was not accepted.');
+    this.name = 'AuthenticationRejectedError';
+  }
+}
+
 export class AuthenticateUserUseCase {
   public constructor(
     private readonly identities: IdentityAuthenticationGateway,
@@ -34,22 +41,30 @@ export class AuthenticateUserUseCase {
   public async execute(
     command: AuthenticateUserCommand,
   ): Promise<IdentitySession> {
+    return this.executeWith(command, (identity) => Promise.resolve(identity));
+  }
+
+  public async executeWith<T>(
+    command: AuthenticateUserCommand,
+    onAuthenticated: (identity: IdentitySession) => Promise<T>,
+  ): Promise<T> {
     const email = command.email.trim().toLowerCase();
     const session = await this.attempts.runExclusive(email, async (state) => {
       if (await state.isLocked(this.clock.now())) return null;
+      let authenticated: IdentitySession;
       try {
-        const authenticated = await this.identities.authenticate({
+        authenticated = await this.identities.authenticate({
           ...command,
           email,
         });
-        await state.clear();
-        return authenticated;
       } catch {
         await state.recordFailure(this.clock.now());
         return null;
       }
+      await state.clear();
+      return { value: await onAuthenticated(authenticated) };
     });
-    if (session === null) throw new Error('Authentication was not accepted.');
-    return session;
+    if (session === null) throw new AuthenticationRejectedError();
+    return session.value;
   }
 }
