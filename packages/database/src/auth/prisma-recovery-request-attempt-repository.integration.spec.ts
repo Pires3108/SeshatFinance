@@ -100,4 +100,27 @@ describe('PrismaRecoveryRequestAttemptRepository', () => {
     );
     expect(results.filter(Boolean)).toHaveLength(5);
   });
+
+  it('prunes expired counters and retains recent identities', async () => {
+    if (!repository || !prisma) throw new Error('Persistence unavailable.');
+    await prisma.$executeRaw`TRUNCATE TABLE auth_recovery_request_attempts`;
+    const now = new Date('2026-10-10T12:00:00Z');
+    const stale = new Date(now.getTime() - 8 * 24 * 60 * 60_000);
+    const recent = new Date(now.getTime() - 6 * 24 * 60 * 60_000);
+    await repository.allowAndRecord('stale@example.test', stale);
+    await repository.allowAndRecord('recent@example.test', recent);
+    expect(
+      await repository.pruneOlderThan(
+        new Date(now.getTime() - 7 * 24 * 60 * 60_000),
+      ),
+    ).toBe(1);
+    expect(
+      await prisma.$queryRaw<readonly { count: bigint }[]>`
+        SELECT COUNT(*) AS count FROM auth_recovery_request_attempts
+      `,
+    ).toEqual([{ count: 1n }]);
+    expect(await repository.allowAndRecord('stale@example.test', now)).toBe(
+      true,
+    );
+  });
 });

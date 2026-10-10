@@ -18,6 +18,7 @@ export interface PasswordRecoveryCompletionGateway {
     password: string,
     revokeSessions: (userId: string) => Promise<void>,
     runExclusive: (email: string, action: () => Promise<void>) => Promise<void>,
+    checkPassword: () => Promise<void>,
   ): Promise<void>;
 }
 
@@ -38,14 +39,16 @@ export class CompletePasswordRecoveryUseCase {
     password: string,
   ): Promise<void> {
     await this.sessions.ready();
-    if (await this.passwords.isCompromised(password))
-      throw new PasswordRejectedError();
     await this.recovery.complete(
       tokenHash,
       password,
       (userId) => this.sessions.revokeAllForUser(userId),
       (email, action) =>
         this.attempts.runExclusive(email.trim().toLowerCase(), () => action()),
+      async () => {
+        if (await this.passwords.isCompromised(password))
+          throw new PasswordRejectedError();
+      },
     );
   }
 }

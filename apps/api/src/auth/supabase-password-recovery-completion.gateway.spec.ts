@@ -15,6 +15,7 @@ const exclusive = (
   _email: string,
   action: () => Promise<void>,
 ): Promise<void> => action();
+const safePassword = (): Promise<void> => Promise.resolve();
 
 describe('Supabase password recovery completion', () => {
   it('cannot leave an old-password login session active across recovery', async () => {
@@ -96,6 +97,7 @@ describe('Supabase password recovery completion', () => {
         expect(identityEmail).toBe(email);
         return attempts.runExclusive(identityEmail, () => action());
       },
+      safePassword,
     );
     releaseAuthentication();
     await Promise.all([loginResult, recoveryResult]);
@@ -166,6 +168,7 @@ describe('Supabase password recovery completion', () => {
         expect(identityEmail).toBe(email);
         return attempts.runExclusive(identityEmail, () => action());
       },
+      safePassword,
     );
     await updateEntered;
     const authenticate = vi.fn(({ password }: { password: string }) =>
@@ -210,7 +213,13 @@ describe('Supabase password recovery completion', () => {
       auth: { verifyOtp, updateUser },
     }));
 
-    await gateway.complete('hash', 'new password', revoke, exclusive);
+    await gateway.complete(
+      'hash',
+      'new password',
+      revoke,
+      exclusive,
+      safePassword,
+    );
 
     expect(verifyOtp).toHaveBeenCalledWith({
       token_hash: 'hash',
@@ -224,6 +233,7 @@ describe('Supabase password recovery completion', () => {
   it('does not change a password for an expired proof', async () => {
     const updateUser = vi.fn();
     const revoke = vi.fn();
+    const checkPassword = vi.fn(() => Promise.resolve());
     const gateway = new SupabasePasswordRecoveryCompletionGateway(() => ({
       auth: {
         verifyOtp: () =>
@@ -235,10 +245,52 @@ describe('Supabase password recovery completion', () => {
       },
     }));
     await expect(
-      gateway.complete('expired', 'new password', revoke, exclusive),
+      gateway.complete(
+        'expired',
+        'new password',
+        revoke,
+        exclusive,
+        checkPassword,
+      ),
     ).rejects.toBeInstanceOf(InvalidRecoveryTokenError);
     expect(updateUser).not.toHaveBeenCalled();
     expect(revoke).not.toHaveBeenCalled();
+    expect(checkPassword).not.toHaveBeenCalled();
+  });
+
+  it('checks password after valid proof and before revoking sessions or updating it', async () => {
+    const calls: string[] = [];
+    const gateway = new SupabasePasswordRecoveryCompletionGateway(() => ({
+      auth: {
+        verifyOtp: () => {
+          calls.push('verify');
+          return Promise.resolve({
+            data: { user: { id: userId, email } },
+            error: null,
+          });
+        },
+        updateUser: () => {
+          calls.push('update');
+          return Promise.resolve({ error: null });
+        },
+      },
+    }));
+    await expect(
+      gateway.complete(
+        'proof',
+        'compromised-password',
+        () => {
+          calls.push('revoke');
+          return Promise.resolve();
+        },
+        exclusive,
+        () => {
+          calls.push('check');
+          return Promise.reject(new PasswordRejectedError());
+        },
+      ),
+    ).rejects.toBeInstanceOf(PasswordRejectedError);
+    expect(calls).toEqual(['verify', 'check']);
   });
 
   it('accepts only the first use of a recovery proof', async () => {
@@ -266,6 +318,7 @@ describe('Supabase password recovery completion', () => {
       'new password',
       () => Promise.resolve(),
       exclusive,
+      safePassword,
     );
     await expect(
       gateway.complete(
@@ -273,6 +326,7 @@ describe('Supabase password recovery completion', () => {
         'another password',
         () => Promise.resolve(),
         exclusive,
+        safePassword,
       ),
     ).rejects.toBeInstanceOf(InvalidRecoveryTokenError);
     expect(updateUser).toHaveBeenCalledTimes(1);
@@ -296,6 +350,7 @@ describe('Supabase password recovery completion', () => {
         'new password',
         () => Promise.reject(new Error('database unavailable')),
         exclusive,
+        safePassword,
       ),
     ).rejects.toThrow('database unavailable');
     expect(updateUser).not.toHaveBeenCalled();
@@ -318,6 +373,7 @@ describe('Supabase password recovery completion', () => {
         'new password',
         () => Promise.resolve(),
         exclusive,
+        safePassword,
       ),
     ).rejects.toBeInstanceOf(IdentityProviderUnavailableError);
   });
@@ -342,6 +398,7 @@ describe('Supabase password recovery completion', () => {
         'compromised-password',
         () => Promise.resolve(),
         exclusive,
+        safePassword,
       ),
     ).rejects.toBeInstanceOf(PasswordRejectedError);
   });

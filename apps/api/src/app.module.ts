@@ -99,6 +99,7 @@ import { SessionController } from './auth/session.controller.js';
 import { SupabaseRegistrationConfirmationGateway } from './auth/supabase-registration-confirmation.gateway.js';
 import { SupabaseRegistrationConfirmationResendGateway } from './auth/supabase-registration-confirmation-resend.gateway.js';
 import { RegistrationIntentPruner } from './auth/registration-intent-pruner.js';
+import { RecoveryRequestAttemptPruner } from './auth/recovery-request-attempt-pruner.js';
 import { SupabaseIdentityTokenVerifier } from './auth/supabase-identity-token-verifier.js';
 import { SupabasePasswordRecoveryGateway } from './auth/supabase-password-recovery.gateway.js';
 import { SupabasePasswordRecoveryCompletionGateway } from './auth/supabase-password-recovery-completion.gateway.js';
@@ -151,6 +152,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
   ],
   providers: [
     RegistrationIntentPruner,
+    RecoveryRequestAttemptPruner,
     {
       provide: ListDefaultAccountTypesUseCase,
       useFactory: (): ListDefaultAccountTypesUseCase =>

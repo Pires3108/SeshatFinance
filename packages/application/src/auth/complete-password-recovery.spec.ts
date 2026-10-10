@@ -26,8 +26,19 @@ describe('CompletePasswordRecoveryUseCase', () => {
     expect(complete).not.toHaveBeenCalled();
   });
 
-  it('rejects compromised passwords before consuming a recovery token', async () => {
-    const complete = vi.fn();
+  it('checks the password only through the gateway after proof validation', async () => {
+    const complete = vi.fn(
+      async (
+        _tokenHash: string,
+        _password: string,
+        _revokeSessions: (userId: string) => Promise<void>,
+        _runExclusive: (
+          email: string,
+          action: () => Promise<void>,
+        ) => Promise<void>,
+        checkPassword: () => Promise<void>,
+      ): Promise<void> => checkPassword(),
+    );
     const sessions = {
       ready: () => Promise.resolve(),
     } as unknown as OpaqueSessionService;
@@ -43,6 +54,6 @@ describe('CompletePasswordRecoveryUseCase', () => {
     await expect(
       useCase.execute('proof', 'known-compromised-password'),
     ).rejects.toThrow('Password does not meet');
-    expect(complete).not.toHaveBeenCalled();
+    expect(complete).toHaveBeenCalledOnce();
   });
 });

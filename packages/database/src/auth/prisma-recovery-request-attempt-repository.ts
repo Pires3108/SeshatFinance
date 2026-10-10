@@ -48,6 +48,14 @@ export class PrismaRecoveryRequestAttemptRepository implements RecoveryRequestAt
     );
   }
 
+  public async pruneOlderThan(cutoff: Date): Promise<number> {
+    const deleted = await this.clientFactory().$executeRaw`
+      DELETE FROM auth_recovery_request_attempts
+      WHERE updated_at < ${cutoff} AND (locked_until IS NULL OR locked_until < ${cutoff})
+    `;
+    return deleted;
+  }
+
   private hashEmail(email: string): Buffer {
     const key = Buffer.from(this.keyFactory(), 'base64url');
     if (key.length < 32)

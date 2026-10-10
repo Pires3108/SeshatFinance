@@ -43,6 +43,7 @@ export class SupabasePasswordRecoveryCompletionGateway implements PasswordRecove
     password: string,
     revokeSessions: (userId: string) => Promise<void>,
     runExclusive: (email: string, action: () => Promise<void>) => Promise<void>,
+    checkPassword: () => Promise<void>,
   ): Promise<void> {
     const client = this.clientFactory();
     let verification: Awaited<ReturnType<typeof client.auth.verifyOtp>>;
@@ -65,6 +66,7 @@ export class SupabasePasswordRecoveryCompletionGateway implements PasswordRecove
     await runExclusive(user.data.email, async () => {
       // The same per-email lock covers login authentication and session issuance.
       // Revoke before changing the credential so a database outage fails closed.
+      await checkPassword();
       await revokeSessions(user.data.id);
       let result: Awaited<ReturnType<typeof client.auth.updateUser>>;
       try {
