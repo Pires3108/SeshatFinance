@@ -47,7 +47,7 @@ Este documento estabelece as qualidades operacionais, de segurança, privacidade
 - **RNF-024 — Senhas:** armazenar somente hashes Argon2id ou usar serviço de identidade com proteção equivalente.
 - **RNF-025 — Tentativas:** após cinco falhas consecutivas, aplicar bloqueio temporário progressivo e limitação por conta e origem.
 - **RNF-026 — Sessão:** expirar após 30 minutos de inatividade e, no máximo, 12 horas após autenticação; invalidar no servidor ao sair, trocar senha ou encerrar remotamente.
-- **RNF-027 — Cookies:** quando usados, cookies de sessão devem ser Secure, HttpOnly e SameSite.
+- **RNF-027 — Cookies:** a sessão do navegador usa token opaco aleatório exclusivamente em cookie `__Host-`, `Secure`, `HttpOnly`, `SameSite=Lax` e `Path=/`; somente o hash do token é persistido. Tokens do provedor de identidade não são expostos ao navegador. Ver ADR-013.
 - **RNF-028 — Reautenticação:** exigir senha e, quando ativo, 2FA para eliminar conta, desativar 2FA, alterar e-mail, revelar dados mascarados ou purgar registros.
 - **RNF-029 — Autorização:** validar autorização no servidor em toda operação.
 - **RNF-030 — Arquivos:** validar tipo real, extensão, tamanho e conteúdo de anexos e importações; armazená-los fora do caminho executável.

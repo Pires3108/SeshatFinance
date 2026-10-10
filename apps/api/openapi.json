@@ -2286,6 +2286,75 @@
         "tags": ["auth"]
       }
     },
+    "/api/v1/auth/sessions": {
+      "post": {
+        "operationId": "SessionController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Create an opaque browser session",
+        "tags": ["auth"]
+      },
+      "get": {
+        "operationId": "SessionController_check",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Check the current browser session",
+        "tags": ["auth"]
+      },
+      "delete": {
+        "operationId": "SessionController_logout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Revoke the current browser session",
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/sessions/others": {
+      "delete": {
+        "operationId": "SessionController_closeOtherSessions",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Close all other browser sessions",
+        "tags": ["auth"]
+      }
+    },
     "/api/v1/tags": {
       "post": {
         "operationId": "TagController_create",
