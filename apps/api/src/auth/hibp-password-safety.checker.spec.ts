@@ -59,4 +59,47 @@ describe('HibpPasswordSafetyChecker', () => {
       );
     }
   });
+
+  it('caps concurrent lookups and releases capacity after they settle', async () => {
+    let release!: (response: Response) => void;
+    const pendingResponse = new Promise<Response>((resolve) => {
+      release = resolve;
+    });
+    const request = vi
+      .fn<typeof fetch>()
+      .mockImplementation(() => pendingResponse);
+    const checker = new HibpPasswordSafetyChecker(request);
+    const inFlight = Array.from({ length: 8 }, () =>
+      checker.isCompromised(password),
+    );
+    expect(request).toHaveBeenCalledTimes(8);
+    await expect(checker.isCompromised(password)).rejects.toBeInstanceOf(
+      PasswordCheckUnavailableError,
+    );
+    expect(request).toHaveBeenCalledTimes(8);
+    release({
+      status: 200,
+      text: () => Promise.resolve(`${hash.slice(5)}:0`),
+    } as Response);
+    await expect(Promise.all(inFlight)).resolves.toEqual(
+      Array.from({ length: 8 }, () => false),
+    );
+    await expect(checker.isCompromised(password)).resolves.toBe(false);
+    expect(request).toHaveBeenCalledTimes(9);
+  });
+
+  it('releases capacity after a failed lookup', async () => {
+    const request = vi
+      .fn<typeof fetch>()
+      .mockRejectedValueOnce(new Error('unavailable'))
+      .mockResolvedValue({
+        status: 200,
+        text: () => Promise.resolve(`${hash.slice(5)}:0`),
+      } as Response);
+    const checker = new HibpPasswordSafetyChecker(request);
+    await expect(checker.isCompromised(password)).rejects.toBeInstanceOf(
+      PasswordCheckUnavailableError,
+    );
+    await expect(checker.isCompromised(password)).resolves.toBe(false);
+  });
 });
