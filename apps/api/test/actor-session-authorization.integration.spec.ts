@@ -83,9 +83,9 @@ describe('US-016 actor resolution and ownership across HTTP and PostgreSQL', () 
   }, 60_000);
 
   afterAll(async (): Promise<void> => {
-    await application?.close();
-    await sql?.end();
-    await database?.stop();
+    await application.close();
+    await sql.end();
+    await database.stop();
     if (originalDatabaseUrl === undefined) delete process.env.DATABASE_URL;
     else process.env.DATABASE_URL = originalDatabaseUrl;
   });
@@ -145,9 +145,9 @@ describe('US-016 actor resolution and ownership across HTTP and PostgreSQL', () 
       url: '/api/v1/accounts',
     });
     expect(list.statusCode).toBe(200);
-    expect(
-      (list.json() as Array<{ id: string }>).map((account) => account.id),
-    ).toEqual([ownedAccountId]);
+    expect(list.json()).toEqual([
+      expect.objectContaining({ id: ownedAccountId }),
+    ]);
     const persisted = await sql.query<{ owner_id: string }>(
       'SELECT owner_id FROM accounts WHERE id = $1',
       [ownedAccountId],
