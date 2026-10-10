@@ -4,6 +4,30 @@ const API_PATH = '/api/v1/auth/sessions';
 
 type Credentials = Readonly<{ email: string; password: string }>;
 
+function isSafeSessionCookie(
+  cookie: string | null,
+  operation: 'login' | 'logout',
+): cookie is string {
+  if (cookie === null || /[\r\n,]/u.test(cookie)) return false;
+  const parts = cookie.split(';').map((part) => part.trim());
+  const expectedValue = operation === 'login' ? '[A-Za-z0-9_-]{43}' : '';
+  if (
+    !new RegExp(`^__Host-seshat_session=${expectedValue}$`, 'u').test(
+      parts[0] ?? '',
+    )
+  )
+    return false;
+  const attributes = parts.slice(1).map((part) => part.toLowerCase());
+  const expectedAge = operation === 'login' ? 'max-age=43200' : 'max-age=0';
+  return (
+    attributes.length === 5 &&
+    new Set(attributes).size === 5 &&
+    ['httponly', 'secure', 'samesite=lax', 'path=/', expectedAge].every(
+      (attribute) => attributes.includes(attribute),
+    )
+  );
+}
+
 function isCredentials(value: unknown): value is Credentials {
   if (typeof value !== 'object' || value === null || Array.isArray(value))
     return false;
@@ -49,7 +73,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
     const cookie = upstream.headers.get('set-cookie');
-    if (upstream.status !== 204 || cookie === null) {
+    if (upstream.status !== 204 || !isSafeSessionCookie(cookie, 'login')) {
       return NextResponse.json({ error: 'login_unavailable' }, { status: 502 });
     }
     return new NextResponse(null, {
@@ -91,7 +115,7 @@ export async function DELETE(request: Request): Promise<NextResponse> {
       );
     }
     const cookie = upstream.headers.get('set-cookie');
-    if (cookie === null) {
+    if (!isSafeSessionCookie(cookie, 'logout')) {
       return NextResponse.json(
         { error: 'logout_unavailable' },
         { status: 502 },
