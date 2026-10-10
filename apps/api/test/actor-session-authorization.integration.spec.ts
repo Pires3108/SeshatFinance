@@ -31,6 +31,7 @@ describe('US-016 actor resolution and ownership across HTTP and PostgreSQL', () 
   let ownedAccountId: string;
   let otherAccountId: string;
   const logEntries: unknown[] = [];
+  const issuedTokens: string[] = [];
   const originalDatabaseUrl = process.env.DATABASE_URL;
 
   beforeAll(async (): Promise<void> => {
@@ -91,7 +92,7 @@ describe('US-016 actor resolution and ownership across HTTP and PostgreSQL', () 
   });
 
   async function createAccount(actorId: string, name: string): Promise<string> {
-    const session = await sessions.issue(actorId);
+    const session = await issueSession(actorId);
     const response = await application.inject({
       headers: { cookie: cookie(session.token) },
       method: 'POST',
@@ -125,8 +126,14 @@ describe('US-016 actor resolution and ownership across HTTP and PostgreSQL', () 
     return `__Host-seshat_session=${token}`;
   }
 
+  async function issueSession(actorId: string): Promise<{ token: string }> {
+    const session = await sessions.issue(actorId);
+    issuedTokens.push(session.token);
+    return session;
+  }
+
   it('resolves the cookie actor and returns only that actor’s account', async (): Promise<void> => {
-    const session = await sessions.issue(ownerId);
+    const session = await issueSession(ownerId);
     const headers = { cookie: cookie(session.token) };
     const own = await application.inject({
       headers,
@@ -153,12 +160,17 @@ describe('US-016 actor resolution and ownership across HTTP and PostgreSQL', () 
       [ownedAccountId],
     );
     expect(persisted.rows).toEqual([{ owner_id: ownerId }]);
+    const audit = await sql.query<{ actor_id: string; owner_id: string }>(
+      'SELECT actor_id, owner_id FROM financial_audit_events WHERE resource_id = $1',
+      [ownedAccountId],
+    );
+    expect(audit.rows).toEqual([{ actor_id: ownerId, owner_id: ownerId }]);
   });
 
   it.each(['missing', 'expired', 'revoked'] as const)(
     'rejects a %s session before reading protected data',
     async (state): Promise<void> => {
-      const session = await sessions.issue(ownerId);
+      const session = await issueSession(ownerId);
       if (state === 'expired') {
         const tokenHash = createHash('sha256')
           .update(session.token)
@@ -187,7 +199,7 @@ describe('US-016 actor resolution and ownership across HTTP and PostgreSQL', () 
   );
 
   it('denies cross-owner reads and writes without changing the account or audit history', async (): Promise<void> => {
-    const session = await sessions.issue(ownerId);
+    const session = await issueSession(ownerId);
     const headers = { cookie: cookie(session.token) };
     const before = await sql.query<{ name: string; version: number }>(
       'SELECT name, version FROM accounts WHERE id = $1',
@@ -230,5 +242,18 @@ describe('US-016 actor resolution and ownership across HTTP and PostgreSQL', () 
     );
     expect(after.rows).toEqual(before.rows);
     expect(auditAfter.rows).toEqual(auditBefore.rows);
+  });
+
+  it('keeps session tokens and financial details out of logs', (): void => {
+    const logs = JSON.stringify(logEntries);
+    for (const token of issuedTokens) expect(logs).not.toContain(token);
+    for (const detail of [
+      '100.00',
+      'Owned account',
+      'Other account',
+      'Unauthorized change',
+    ]) {
+      expect(logs).not.toContain(detail);
+    }
   });
 });
