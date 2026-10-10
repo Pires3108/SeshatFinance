@@ -37,6 +37,7 @@ import {
   ResendRegistrationConfirmationUseCase,
   ResolveAuthenticatedActorUseCase,
   RequestPasswordRecoveryUseCase,
+  CompletePasswordRecoveryUseCase,
   RenameOwnedCategoryUseCase,
   RenameOwnedCostCenterUseCase,
   RenameOwnedTagUseCase,
@@ -98,6 +99,7 @@ import { SupabaseRegistrationConfirmationResendGateway } from './auth/supabase-r
 import { RegistrationIntentPruner } from './auth/registration-intent-pruner.js';
 import { SupabaseIdentityTokenVerifier } from './auth/supabase-identity-token-verifier.js';
 import { SupabasePasswordRecoveryGateway } from './auth/supabase-password-recovery.gateway.js';
+import { SupabasePasswordRecoveryCompletionGateway } from './auth/supabase-password-recovery-completion.gateway.js';
 import { CategoryController } from './classifications/category.controller.js';
 import { CostCenterController } from './classifications/cost-center.controller.js';
 import { LazyCategoryRepository } from './classifications/lazy-category-repository.js';
@@ -753,6 +755,31 @@ import { UserProfileController } from './users/user-profile.controller.js';
               },
             );
           }),
+        ),
+    },
+    {
+      inject: [AuthConfiguration, OpaqueSessionService],
+      provide: CompletePasswordRecoveryUseCase,
+      useFactory: (
+        configuration: AuthConfiguration,
+        sessions: OpaqueSessionService,
+      ): CompletePasswordRecoveryUseCase =>
+        new CompletePasswordRecoveryUseCase(
+          new SupabasePasswordRecoveryCompletionGateway(() => {
+            const values = configuration.read();
+            return createClient(
+              values.supabaseUrl,
+              values.supabasePublishableKey,
+              {
+                auth: {
+                  autoRefreshToken: false,
+                  detectSessionInUrl: false,
+                  persistSession: false,
+                },
+              },
+            );
+          }),
+          sessions,
         ),
     },
   ],

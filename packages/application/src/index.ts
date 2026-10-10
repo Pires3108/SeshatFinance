@@ -12,6 +12,11 @@ export {
   type ResendRegistrationConfirmationCommand,
 } from './auth/resend-registration-confirmation.js';
 export type { PendingRegistrationProfileRepository } from './auth/register-user.js';
+export {
+  CompletePasswordRecoveryUseCase,
+  InvalidRecoveryTokenError,
+  type PasswordRecoveryCompletionGateway,
+} from './auth/complete-password-recovery.js';
 export { readCivilDate } from './ports/civil-date.js';
 export type { IdentifierGenerator } from './ports/identifier-generator.js';
 export type { TransactionRunner } from './ports/transaction-runner.js';

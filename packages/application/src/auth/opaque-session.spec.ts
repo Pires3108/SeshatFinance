@@ -124,4 +124,25 @@ describe('opaque session policy', () => {
     ).rejects.toBeInstanceOf(InvalidOpaqueSessionError);
     expect(revokeOthers).not.toHaveBeenCalled();
   });
+
+  it('revokes every browser session for a recovered identity', async () => {
+    const revokeAll = vi
+      .fn<OpaqueSessionRepository['revokeAll']>()
+      .mockResolvedValue();
+    const service = new OpaqueSessionService(
+      {
+        create: vi.fn(),
+        findByTokenHash: vi.fn(),
+        touchIfActive: vi.fn(),
+        revoke: vi.fn(),
+        revokeOthers: vi.fn(),
+        revokeAll,
+      },
+      { generate: () => 'raw-token', hash: () => 'hash' },
+      { now: () => createdAt },
+      { generate: () => session.id },
+    );
+    await service.revokeAllForUser(session.userId);
+    expect(revokeAll).toHaveBeenCalledWith(session.userId, createdAt);
+  });
 });
