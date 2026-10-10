@@ -174,7 +174,7 @@ Uma história está concluída quando:
 
 - **US-013 [EP-01, L]** Integrar Supabase Auth por adaptador para cadastro com confirmação de e-mail.
 - **US-014 [EP-01, M]** Implementar login, logout e tratamento seguro de sessão.
-- **US-015 [EP-01, M]** Implementar recuperação de senha sem enumeração de usuários.
+- **US-015 [EP-01, M]** Implementar recuperação de senha sem enumeração de usuários; conclusão técnica descrita na ADR-032, sujeita às decisões RII-004 e RII-006.
 - **US-016 [EP-01, M]** Resolver ator autenticado na API e proteger endpoints.
 - **US-017 [EP-01, S]** Criar perfil e preferências iniciais.
 - **US-018 [EP-13, M]** Cobrir autenticação com testes de integração, rate limit e E2E.
