@@ -41,3 +41,5 @@
 4. Mudanças de papel, convites, remoções e exportações são auditados.
 5. Remoção de participante revoga acesso imediatamente.
 6. Registros do participante removido conservam autoria histórica de modo compatível com a privacidade.
+7. Proprietário ou administrador pode definir o papel Administrador no convite. Promover um participante existente a Administrador exige Proprietário; a transferência de propriedade é uma operação separada.
+8. A alteração de papel revalida autor e participante na gravação e produz auditoria imutável; repetir a alteração para o papel já vigente não cria outro evento.
