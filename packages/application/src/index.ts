@@ -108,6 +108,7 @@ export {
 } from './auth/resolve-authenticated-actor.js';
 export {
   GetOwnUserProfileUseCase,
+  InvalidUserProfilePreferencesError,
   UpdateOwnUserProfileUseCase,
   type UpdateOwnUserProfileCommand,
   type UserProfile,

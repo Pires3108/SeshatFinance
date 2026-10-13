@@ -11,6 +11,7 @@ describe('confirmed registration profile persistence', () => {
   let stop: (() => Promise<void>) | undefined;
   let disconnect: (() => Promise<void>) | undefined;
   let repository: PrismaConfirmedIdentityProfileRepository;
+  let queryClient: ReturnType<typeof createPrismaClient>;
 
   beforeAll(async (): Promise<void> => {
     const container = await new PostgreSqlContainer('postgres:17-alpine')
@@ -38,6 +39,7 @@ describe('confirmed registration profile persistence', () => {
     }
     await migrationClient.end();
     const prisma = createPrismaClient(container.getConnectionUri());
+    queryClient = prisma;
     disconnect = async (): Promise<void> => prisma.$disconnect();
     repository = new PrismaConfirmedIdentityProfileRepository(
       () => prisma,
@@ -60,10 +62,17 @@ describe('confirmed registration profile persistence', () => {
       { id, email, displayName: 'Pessoa fictícia' },
       confirmedAt,
     );
+    const beforeReplay = await queryClient.userProfile.findUniqueOrThrow({
+      where: { id },
+    });
     await repository.ensure(
       { id, email, displayName: 'Pessoa fictícia' },
-      confirmedAt,
+      new Date(confirmedAt.getTime() + 60_000),
     );
+    const afterReplay = await queryClient.userProfile.findUniqueOrThrow({
+      where: { id },
+    });
+    expect(afterReplay).toEqual(beforeReplay);
     await expect(repository.exists(id)).resolves.toBe(true);
     await expect(
       repository.ensure(
