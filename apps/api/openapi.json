@@ -4501,14 +4501,11 @@
                     "type": "string"
                   },
                   "locale": {
-                    "maxLength": 16,
-                    "minLength": 2,
+                    "enum": ["pt-BR"],
                     "type": "string"
                   },
                   "presentationCurrency": {
-                    "maxLength": 3,
-                    "minLength": 3,
-                    "pattern": "^[A-Z]{3}$",
+                    "enum": ["BRL"],
                     "type": "string"
                   },
                   "timeZone": {

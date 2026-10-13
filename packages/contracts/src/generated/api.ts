@@ -3007,8 +3007,10 @@ export interface operations {
             readonly content: {
                 readonly "application/json": {
                     readonly displayName: string | null;
-                    readonly locale: string;
-                    readonly presentationCurrency: string;
+                    /** @enum {string} */
+                    readonly locale: "pt-BR";
+                    /** @enum {string} */
+                    readonly presentationCurrency: "BRL";
                     readonly timeZone: string;
                 };
             };
