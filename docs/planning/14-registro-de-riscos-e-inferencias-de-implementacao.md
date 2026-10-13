@@ -51,6 +51,7 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Risco:** os documentos exigem precisão compatível com a moeda e arredondamento explícito, mas não definem o catálogo de moedas suportadas, a fonte das casas decimais nem os modos de arredondamento por operação.
 - **Decisão necessária:** aprovar o catálogo versionado de moedas, a matriz de arredondamento para conversões, rateios, juros e apresentação, e a regra de comparação para ordenação por valor entre moedas diferentes.
 - **Limite atual:** `Currency` exige código e escala explícitos, e `Money` aceita apenas valores exatamente representáveis nessa escala; operações que exigem arredondamento e ordenação global por valor entre moedas não serão adicionadas antes da decisão. Filtros de movimentações por conta, tipo, estado e intervalo explícito, com ordenação por data, permanecem independentes.
+- **Decisão provisória de US-017:** a preferência de moeda de apresentação aceita somente BRL até US-021. A troca de moeda de apresentação e qualquer conversão ficam adiadas para US-021; a preferência não altera a moeda nem o valor dos registros de origem. O catálogo monetário e a política de arredondamento continuam pendentes neste RII.
 
 ### RII-008 — Semântica pública de restauração de conta
 

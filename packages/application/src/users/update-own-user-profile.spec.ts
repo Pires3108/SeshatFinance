@@ -41,6 +41,36 @@ describe('UpdateOwnUserProfileUseCase', () => {
     expect(result.id).toBe('7c2c7a54-73fe-49a3-b0ea-19034bf22baf');
     expect(repository.savedProfile?.updatedAt).toEqual(instant);
   });
+
+  it.each([
+    {
+      locale: 'en-US',
+      presentationCurrency: 'BRL',
+      timeZone: 'America/Sao_Paulo',
+    },
+    {
+      locale: 'pt-BR',
+      presentationCurrency: 'USD',
+      timeZone: 'America/Sao_Paulo',
+    },
+    { locale: 'pt-BR', presentationCurrency: 'BRL', timeZone: 'Invalid/Zone' },
+  ])(
+    'rejects unsupported preferences before persistence',
+    async (preferences): Promise<void> => {
+      const repository = new RecordingUserProfileRepository();
+      const useCase = new UpdateOwnUserProfileUseCase(repository, {
+        now: (): Date => new Date(),
+      });
+      await expect(
+        useCase.execute({
+          actorId: 'actor-id',
+          displayName: null,
+          ...preferences,
+        }),
+      ).rejects.toThrow();
+      expect(repository.savedProfile).toBeUndefined();
+    },
+  );
 });
 
 describe('GetOwnUserProfileUseCase', () => {

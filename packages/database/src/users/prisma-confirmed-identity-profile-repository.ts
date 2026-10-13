@@ -30,6 +30,7 @@ export class PrismaConfirmedIdentityProfileRepository
         SELECT ${identity.id}::uuid, ${identity.displayName}, true, ${confirmedAt}, ${confirmedAt}
         FROM registration_intents WHERE email_hash = ${emailHash} AND expires_at > ${confirmedAt}
         ON CONFLICT (id) DO UPDATE SET registration_confirmed = true, updated_at = ${confirmedAt}
+        WHERE user_profiles.registration_confirmed = false
       `;
         const rows = await transaction.$queryRaw<
           readonly { exists: boolean }[]
