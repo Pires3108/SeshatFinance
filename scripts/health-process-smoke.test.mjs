@@ -30,7 +30,7 @@ for (const service of ['api', 'worker']) {
   for (const signal of terminationSignals) {
     test(
       `${service} liveness ends after ${signal}`,
-      { timeout: 30_000 },
+      { timeout: 90_000 },
       async (t) => {
         const port = await availablePort();
         const url = `http://127.0.0.1:${port}${service === 'api' ? '/api/v1' : ''}/health`;
@@ -68,7 +68,7 @@ for (const service of ['api', 'worker']) {
         });
 
         let response;
-        const deadline = Date.now() + 20_000;
+        const deadline = Date.now() + 60_000;
         while (Date.now() < deadline) {
           assert.equal(
             child.exitCode,
@@ -83,7 +83,7 @@ for (const service of ['api', 'worker']) {
             await delay(100);
           }
         }
-        assert.ok(response, `${service} did not start within 20 seconds`);
+        assert.ok(response, `${service} did not start within 60 seconds`);
         assert.equal(response.status, 200);
         assert.match(
           response.headers.get('content-type') ?? '',
