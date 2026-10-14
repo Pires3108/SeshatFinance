@@ -3,7 +3,11 @@ import {
   type OnModuleDestroy,
   type OnModuleInit,
 } from '@nestjs/common';
-import { PrismaRecoveryRequestAttemptRepository } from '@seshat/database';
+import {
+  PrismaOriginAttemptRepository,
+  PrismaLoginAttemptRepository,
+  PrismaRecoveryRequestAttemptRepository,
+} from '@seshat/database';
 
 import { LazyPrismaClient } from '../platform/lazy-prisma-client.js';
 import { AuthConfiguration } from './auth-configuration.js';
@@ -42,6 +46,14 @@ export class RecoveryRequestAttemptPruner
         () => this.prisma.get(),
         () => this.configuration.readIntentHmacKey(),
       ).pruneOlderThan(new Date(Date.now() - RETENTION_MS));
+      await new PrismaOriginAttemptRepository(
+        () => this.prisma.get(),
+        () => this.configuration.readIntentHmacKey(),
+      ).pruneOlderThan(new Date(Date.now() - RETENTION_MS));
+      await new PrismaLoginAttemptRepository(
+        () => this.prisma.get(),
+        () => this.configuration.readIntentHmacKey(),
+      ).pruneExpired();
     } catch {
       // Database readiness is checked on requests; retry on the next interval.
     }

@@ -12,8 +12,10 @@ import {
   HttpStatus,
   Inject,
   Post,
+  Req,
   ServiceUnavailableException,
 } from '@nestjs/common';
+import { isIP } from 'node:net';
 import {
   ApiAcceptedResponse,
   ApiBadRequestResponse,
@@ -25,6 +27,7 @@ import {
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import { z } from 'zod';
+import type { FastifyRequest } from 'fastify';
 
 import { ZodValidationPipe } from '../platform/zod-validation.pipe.js';
 import { PasswordRejectedException } from '../platform/password-rejected.exception.js';
@@ -86,10 +89,14 @@ export class PasswordRecoveryController {
   })
   public async request(
     @Body(new ZodValidationPipe(requestPasswordRecoverySchema))
-    request: RequestPasswordRecoveryRequest,
+    body: RequestPasswordRecoveryRequest,
+    @Req() request: FastifyRequest,
   ): Promise<RequestPasswordRecoveryResponse> {
+    if (typeof request.ip !== 'string' || isIP(request.ip) === 0)
+      throw new ServiceUnavailableException();
     await this.requestRecovery.execute({
-      email: request.email,
+      email: body.email,
+      origin: request.ip,
       redirectUrl: this.configuration.readPasswordRecoveryRedirectUrl(),
     });
     return { status: 'accepted' };

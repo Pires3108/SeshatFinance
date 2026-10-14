@@ -6,6 +6,24 @@ import {
 } from './request-password-recovery.js';
 
 describe('RequestPasswordRecoveryUseCase', () => {
+  it('keeps a generic result when a shared origin is limited', async () => {
+    const request = vi.fn();
+    const allowIdentity = vi.fn();
+    const allowOrigin = vi.fn().mockResolvedValue(false);
+    await new RequestPasswordRecoveryUseCase(
+      { request },
+      { allowAndRecord: allowIdentity },
+      { now: () => new Date('2026-10-13T12:00:00Z') },
+      { allowAndRecord: allowOrigin },
+    ).execute({
+      email: 'unknown@example.test',
+      redirectUrl: 'https://app.example.test/reset',
+      origin: '192.0.2.1',
+    });
+    expect(allowOrigin).toHaveBeenCalledOnce();
+    expect(allowIdentity).not.toHaveBeenCalled();
+    expect(request).not.toHaveBeenCalled();
+  });
   it('delegates the recovery request without inspecting identity state', async () => {
     const request = vi.fn<PasswordRecoveryGateway['request']>();
     const command = {

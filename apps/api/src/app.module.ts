@@ -72,6 +72,7 @@ import { createClient } from '@supabase/supabase-js';
 import {
   PrismaConfirmedIdentityProfileRepository,
   PrismaLoginAttemptRepository,
+  PrismaOriginAttemptRepository,
   PrismaRecoveryRequestAttemptRepository,
 } from '@seshat/database';
 
@@ -716,6 +717,10 @@ import { UserProfileController } from './users/user-profile.controller.js';
             () => configuration.readIntentHmacKey(),
           ),
           new SystemClock(),
+          new PrismaOriginAttemptRepository(
+            () => prisma.get(),
+            () => configuration.readIntentHmacKey(),
+          ),
         ),
     },
     {
@@ -768,6 +773,10 @@ import { UserProfileController } from './users/user-profile.controller.js';
             () => configuration.readIntentHmacKey(),
           ),
           new SystemClock(),
+          new PrismaOriginAttemptRepository(
+            () => prisma.get(),
+            () => configuration.readIntentHmacKey(),
+          ),
         ),
     },
     {

@@ -56,6 +56,7 @@ describe('API password recovery', () => {
     expect(response.body).not.toContain('synthetic.user');
     expect(execute).toHaveBeenCalledWith({
       email: 'synthetic.user@example.test',
+      origin: expect.any(String),
       redirectUrl: 'https://app.example.test/auth/reset-password',
     });
   });

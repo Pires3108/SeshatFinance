@@ -39,7 +39,7 @@ describe('SupabaseIdentityAuthenticationGateway', () => {
         auth: {
           signInWithPassword: vi.fn().mockResolvedValue({
             data: { session: null },
-            error: new Error('provider detail'),
+            error: { code: 'invalid_credentials' },
           }),
         },
       }),
@@ -54,7 +54,27 @@ describe('SupabaseIdentityAuthenticationGateway', () => {
     ).rejects.toBeInstanceOf(IdentityAuthenticationError);
   });
 
-  it('rejects a provider session when confirmation or local profile verification fails', async () => {
+  it('surfaces provider failures without counting them as invalid credentials', async () => {
+    const gateway = new SupabaseIdentityAuthenticationGateway(
+      () => ({
+        auth: {
+          signInWithPassword: vi.fn().mockResolvedValue({
+            data: { session: null },
+            error: { code: 'service_unavailable' },
+          }),
+        },
+      }),
+      () => Promise.resolve({ id: 'synthetic-id' }),
+    );
+    await expect(
+      gateway.authenticate({
+        email: 'synthetic@example.test',
+        password: 'synthetic',
+      }),
+    ).rejects.not.toBeInstanceOf(IdentityAuthenticationError);
+  });
+
+  it('surfaces identity verification failure as unavailable without counting credentials', async () => {
     const gateway = new SupabaseIdentityAuthenticationGateway(
       () => ({
         auth: {
@@ -71,6 +91,6 @@ describe('SupabaseIdentityAuthenticationGateway', () => {
         email: 'synthetic@example.test',
         password: 'synthetic-password',
       }),
-    ).rejects.toBeInstanceOf(IdentityAuthenticationError);
+    ).rejects.not.toBeInstanceOf(IdentityAuthenticationError);
   });
 });

@@ -75,8 +75,10 @@ export {
 export {
   AuthenticationRejectedError,
   AuthenticateUserUseCase,
+  IdentityCredentialsRejectedError,
   type AuthenticateUserCommand,
   type LoginAttemptRepository,
+  type LoginOriginAttemptRepository,
   type LoginAttemptState,
   type IdentityAuthenticationGateway,
   type IdentitySession,
@@ -98,6 +100,7 @@ export {
 export {
   RequestPasswordRecoveryUseCase,
   type RecoveryRequestAttemptRepository,
+  type RecoveryOriginAttemptRepository,
   type PasswordRecoveryGateway,
   type RequestPasswordRecoveryCommand,
 } from './auth/request-password-recovery.js';

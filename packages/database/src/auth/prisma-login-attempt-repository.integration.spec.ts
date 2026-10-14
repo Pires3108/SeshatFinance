@@ -33,6 +33,15 @@ describe('PrismaLoginAttemptRepository', () => {
         'utf8',
       ),
     );
+    await client.query(
+      await readFile(
+        new URL(
+          '../../prisma/migrations/20261013130000_login_leases/migration.sql',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    );
     await client.end();
     const clientPrisma = createPrismaClient(container.getConnectionUri());
     prisma = clientPrisma;
@@ -133,5 +142,38 @@ describe('PrismaLoginAttemptRepository', () => {
     releaseFailure?.();
     await fifth;
     await expect(concurrentDecision).resolves.toBe(true);
+  });
+
+  it('does not hold a PostgreSQL transaction while the protected action waits', async () => {
+    const current = repository;
+    const database = prisma;
+    if (!current || !database) throw new Error('Persistence unavailable.');
+    await current.runExclusive('held@example.test', async () => {
+      const rows = await database.$queryRaw<readonly { active: bigint }[]>`
+        SELECT COUNT(*) AS active FROM pg_stat_activity
+        WHERE datname = current_database() AND state = 'idle in transaction'`;
+      expect(rows[0]?.active).toBe(0n);
+    });
+  });
+
+  it('uses database time for lease expiry and prunes abandoned expired leases', async () => {
+    const current = repository;
+    const database = prisma;
+    if (!current || !database) throw new Error('Persistence unavailable.');
+    await database.$executeRaw`
+      INSERT INTO auth_login_leases (email_hash, holder, expires_at)
+      VALUES (${Buffer.alloc(32, 1)}, ${'00000000-0000-4000-8000-000000000001'}::uuid,
+        NOW() - INTERVAL '1 minute')`;
+    await current.runExclusive('live@example.test', async () => {
+      const rows = await database.$queryRaw<readonly { valid: boolean }[]>`
+        SELECT expires_at BETWEEN NOW() + INTERVAL '9 minutes'
+          AND NOW() + INTERVAL '11 minutes' AS valid
+        FROM auth_login_leases WHERE expires_at > NOW()`;
+      expect(rows[0]?.valid).toBe(true);
+      expect(await current.pruneExpired()).toBe(1);
+      const remaining = await database.$queryRaw<readonly { count: bigint }[]>`
+        SELECT COUNT(*) AS count FROM auth_login_leases`;
+      expect(remaining[0]?.count).toBe(1n);
+    });
   });
 });

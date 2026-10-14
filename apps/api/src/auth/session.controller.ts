@@ -17,6 +17,7 @@ import {
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { isIP } from 'node:net';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
@@ -58,12 +59,16 @@ export class SessionController {
   })
   public async login(
     @Body(new ZodValidationPipe(credentialsSchema)) credentials: Credentials,
+    @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<void> {
+    if (typeof request.ip !== 'string' || isIP(request.ip) === 0)
+      throw new ServiceUnavailableException();
     let session: Awaited<ReturnType<OpaqueSessionService['issue']>>;
     try {
-      session = await this.authenticate.executeWith(credentials, (identity) =>
-        this.sessions.issue(identity.userId),
+      session = await this.authenticate.executeWith(
+        { ...credentials, origin: request.ip },
+        (identity) => this.sessions.issue(identity.userId),
       );
     } catch (error) {
       if (error instanceof AuthenticationRejectedError)

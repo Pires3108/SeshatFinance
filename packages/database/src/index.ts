@@ -16,4 +16,5 @@ export { PrismaCreditCardRepository } from './cards/prisma-credit-card-repositor
 export { PrismaFamilyGroupRepository } from './family/prisma-family-group-repository.js';
 export { PrismaOpaqueSessionRepository } from './auth/prisma-opaque-session-repository.js';
 export { PrismaLoginAttemptRepository } from './auth/prisma-login-attempt-repository.js';
+export { PrismaOriginAttemptRepository } from './auth/prisma-origin-attempt-repository.js';
 export { PrismaRecoveryRequestAttemptRepository } from './auth/prisma-recovery-request-attempt-repository.js';
