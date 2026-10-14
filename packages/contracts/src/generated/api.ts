@@ -1251,7 +1251,10 @@ export interface operations {
                     readonly displayName: string;
                     /** Format: email */
                     readonly email: string;
+                    /** @description At least 8 characters, including an uppercase letter and a number. */
                     readonly password: string;
+                    /** @description Must match password. */
+                    readonly passwordConfirmation: string;
                 };
             };
         };

@@ -4,6 +4,7 @@ type Registration = Readonly<{
   displayName: string;
   email: string;
   password: string;
+  passwordConfirmation: string;
 }>;
 
 function isRegistration(value: unknown): value is Registration {
@@ -18,8 +19,13 @@ function isRegistration(value: unknown): value is Registration {
     candidate.email.length <= 320 &&
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidate.email) &&
     typeof candidate.password === 'string' &&
-    candidate.password.length > 0 &&
-    candidate.password.length <= 1024
+    candidate.password.length >= 8 &&
+    candidate.password.length <= 1024 &&
+    /[A-Z]/.test(candidate.password) &&
+    /[0-9]/.test(candidate.password) &&
+    typeof candidate.passwordConfirmation === 'string' &&
+    candidate.passwordConfirmation.length <= 1024 &&
+    candidate.password === candidate.passwordConfirmation
   );
 }
 

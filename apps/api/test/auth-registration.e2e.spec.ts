@@ -47,14 +47,15 @@ describe('API auth registration', () => {
       payload: {
         displayName: 'Pessoa Teste',
         email: 'synthetic.user@example.test',
-        password: 'synthetic-password-only-for-tests',
+        password: 'SyntheticPassword1',
+        passwordConfirmation: 'SyntheticPassword1',
       },
       url: '/api/v1/auth/registrations',
     });
 
     expect(response.statusCode).toBe(202);
     expect(response.json()).toEqual({ status: 'confirmation_required' });
-    expect(response.body).not.toContain('synthetic-password');
+    expect(response.body).not.toContain('SyntheticPassword1');
     expect(execute).toHaveBeenCalledOnce();
   });
 
@@ -75,7 +76,42 @@ describe('API auth registration', () => {
 
     const response = await application.inject({
       method: 'POST',
-      payload: { displayName: '', email: 'invalid', password: '' },
+      payload: {
+        displayName: '',
+        email: 'invalid',
+        password: '',
+        passwordConfirmation: '',
+      },
+      url: '/api/v1/auth/registrations',
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects a weak or mismatched password before the use case', async () => {
+    const execute = vi.fn<RegisterUserUseCase['execute']>();
+    const testingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(RegisterUserUseCase)
+      .useValue({ execute })
+      .compile();
+    application = testingModule.createNestApplication<NestFastifyApplication>(
+      new FastifyAdapter(),
+    );
+    configureApplication(application);
+    await application.init();
+    await application.getHttpAdapter().getInstance().ready();
+
+    const response = await application.inject({
+      method: 'POST',
+      payload: {
+        displayName: 'Pessoa Teste',
+        email: 'synthetic.user@example.test',
+        password: 'NoNumber',
+        passwordConfirmation: 'OtherPassword1',
+      },
       url: '/api/v1/auth/registrations',
     });
 

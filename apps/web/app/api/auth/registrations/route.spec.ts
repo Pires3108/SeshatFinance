@@ -22,7 +22,12 @@ describe('web registration proxy', () => {
     const fetchMock = vi.fn();
     globalThis.fetch = fetchMock;
     const response = await POST(
-      request({ displayName: '', email: 'invalid', password: '' }),
+      request({
+        displayName: '',
+        email: 'invalid',
+        password: '',
+        passwordConfirmation: '',
+      }),
     );
     expect(response.status).toBe(400);
     expect(fetchMock).not.toHaveBeenCalled();
@@ -38,7 +43,8 @@ describe('web registration proxy', () => {
       request({
         displayName: 'Pessoa',
         email: 'pessoa@example.com',
-        password: 'secret',
+        password: 'SecretPassword1',
+        passwordConfirmation: 'SecretPassword1',
       }),
     );
     expect(response.status).toBe(202);
@@ -59,7 +65,8 @@ describe('web registration proxy', () => {
       request({
         displayName: 'Pessoa',
         email: 'pessoa@example.com',
-        password: 'secret',
+        password: 'SecretPassword1',
+        passwordConfirmation: 'SecretPassword1',
       }),
     );
     expect(response.status).toBe(502);
@@ -74,9 +81,25 @@ describe('web registration proxy', () => {
       request({
         displayName: 'Pessoa',
         email: 'pessoa@example.com',
-        password: 'secret',
+        password: 'SecretPassword1',
+        passwordConfirmation: 'SecretPassword1',
       }),
     );
     expect(response.status).toBe(502);
+  });
+
+  it('rejects a weak or mismatched password before calling the API', async () => {
+    const fetchMock = vi.fn();
+    globalThis.fetch = fetchMock;
+    const response = await POST(
+      request({
+        displayName: 'Pessoa',
+        email: 'pessoa@example.com',
+        password: 'NoNumber',
+        passwordConfirmation: 'DifferentPassword1',
+      }),
+    );
+    expect(response.status).toBe(400);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

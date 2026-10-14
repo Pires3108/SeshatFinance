@@ -23,7 +23,8 @@ describe('AuthController', () => {
     const result = await controller.register({
       displayName: 'Pessoa Teste',
       email: 'synthetic.user@example.test',
-      password: 'synthetic-password-only-for-tests',
+      password: 'SyntheticPassword1',
+      passwordConfirmation: 'SyntheticPassword1',
     });
 
     expect(result).toEqual({ status: 'confirmation_required' });
@@ -31,7 +32,7 @@ describe('AuthController', () => {
       confirmationRedirectUrl: 'https://app.example.test/auth/confirm',
       displayName: 'Pessoa Teste',
       email: 'synthetic.user@example.test',
-      password: 'synthetic-password-only-for-tests',
+      password: 'SyntheticPassword1',
     });
   });
 });

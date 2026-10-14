@@ -1528,12 +1528,24 @@
                     "type": "string"
                   },
                   "password": {
+                    "description": "At least 8 characters, including an uppercase letter and a number.",
                     "maxLength": 1024,
-                    "minLength": 1,
+                    "minLength": 8,
+                    "pattern": "^(?=.*[A-Z])(?=.*[0-9]).+$",
+                    "type": "string"
+                  },
+                  "passwordConfirmation": {
+                    "description": "Must match password.",
+                    "maxLength": 1024,
                     "type": "string"
                   }
                 },
-                "required": ["displayName", "email", "password"],
+                "required": [
+                  "displayName",
+                  "email",
+                  "password",
+                  "passwordConfirmation"
+                ],
                 "type": "object"
               }
             }

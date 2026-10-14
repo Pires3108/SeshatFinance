@@ -18,11 +18,17 @@ import { z } from 'zod';
 import { ZodValidationPipe } from '../platform/zod-validation.pipe.js';
 import { AuthConfiguration } from './auth-configuration.js';
 
-const registerUserRequestSchema = z.object({
-  displayName: z.string().trim().min(1).max(120),
-  email: z.email().max(320),
-  password: z.string().min(1).max(1024),
-});
+const registerUserRequestSchema = z
+  .object({
+    displayName: z.string().trim().min(1).max(120),
+    email: z.email().max(320),
+    password: z.string().min(8).max(1024).regex(/[A-Z]/).regex(/[0-9]/),
+    passwordConfirmation: z.string().max(1024),
+  })
+  .refine(
+    ({ password, passwordConfirmation }) => password === passwordConfirmation,
+    { path: ['passwordConfirmation'] },
+  );
 
 type RegisterUserRequest = z.infer<typeof registerUserRequestSchema>;
 
@@ -49,9 +55,21 @@ export class AuthController {
       properties: {
         displayName: { maxLength: 120, minLength: 1, type: 'string' },
         email: { format: 'email', maxLength: 320, type: 'string' },
-        password: { maxLength: 1024, minLength: 1, type: 'string' },
+        password: {
+          description:
+            'At least 8 characters, including an uppercase letter and a number.',
+          maxLength: 1024,
+          minLength: 8,
+          pattern: '^(?=.*[A-Z])(?=.*[0-9]).+$',
+          type: 'string',
+        },
+        passwordConfirmation: {
+          description: 'Must match password.',
+          maxLength: 1024,
+          type: 'string',
+        },
       },
-      required: ['displayName', 'email', 'password'],
+      required: ['displayName', 'email', 'password', 'passwordConfirmation'],
       type: 'object',
     },
   })
@@ -69,8 +87,13 @@ export class AuthController {
     request: RegisterUserRequest,
   ): Promise<RegisterUserResponse> {
     const configuration = this.configuration.read();
+    const command = {
+      displayName: request.displayName,
+      email: request.email,
+      password: request.password,
+    };
     await this.registerUser.execute({
-      ...request,
+      ...command,
       confirmationRedirectUrl: configuration.confirmationRedirectUrl,
     });
     return { status: 'confirmation_required' };

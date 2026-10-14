@@ -24,9 +24,19 @@ export function RegistrationForm(): ReactNode {
     event: SyntheticEvent<HTMLFormElement>,
   ): Promise<void> {
     event.preventDefault();
-    setState('submitting');
     const form = event.currentTarget;
     const data = new FormData(form);
+    const password = data.get('password');
+    const passwordConfirmation = data.get('passwordConfirmation');
+    if (password !== passwordConfirmation) {
+      const confirmationField = form.elements.namedItem('passwordConfirmation');
+      if (confirmationField instanceof HTMLInputElement) {
+        confirmationField.setCustomValidity('As senhas precisam ser iguais.');
+        confirmationField.reportValidity();
+      }
+      return;
+    }
+    setState('submitting');
     try {
       const response = await fetch('/api/auth/registrations', {
         method: 'POST',
@@ -35,6 +45,7 @@ export function RegistrationForm(): ReactNode {
           displayName: data.get('displayName'),
           email: data.get('email'),
           password: data.get('password'),
+          passwordConfirmation,
         }),
       });
       if (!response.ok) {
@@ -67,7 +78,8 @@ export function RegistrationForm(): ReactNode {
       ) : (
         <>
           <p id="registration-instructions">
-            Todos os campos são obrigatórios.
+            Todos os campos são obrigatórios. A senha precisa ter pelo menos 8
+            caracteres, uma letra maiúscula e um número.
           </p>
           <form
             aria-busy={state === 'submitting'}
@@ -111,9 +123,26 @@ export function RegistrationForm(): ReactNode {
                 name="password"
                 type="password"
                 autoComplete="new-password"
+                minLength={8}
+                maxLength={1024}
+                pattern="(?=.*[A-Z])(?=.*[0-9]).{8,}"
+                required
+                aria-describedby="registration-instructions"
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="password-confirmation">Confirmar senha</label>
+              <input
+                id="password-confirmation"
+                name="passwordConfirmation"
+                type="password"
+                autoComplete="new-password"
                 maxLength={1024}
                 required
                 aria-describedby="registration-instructions"
+                onInput={(event) => {
+                  event.currentTarget.setCustomValidity('');
+                }}
               />
             </div>
             <button
