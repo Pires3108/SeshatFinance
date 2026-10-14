@@ -65,6 +65,9 @@ importers:
       '@seshat/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@seshat/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@supabase/supabase-js':
         specifier: 2.116.0
         version: 2.116.0
@@ -117,6 +120,10 @@ importers:
         version: 19.3.0(@types/react@19.3.0)
 
   apps/worker:
+    dependencies:
+      '@seshat/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
     devDependencies:
       '@types/node':
         specifier: latest
