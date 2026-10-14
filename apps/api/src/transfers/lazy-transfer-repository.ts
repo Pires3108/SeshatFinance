@@ -2,6 +2,8 @@ import type {
   TransferLifecycleRepository,
   TransferReadRepository,
   TransferRepository,
+  TransferCreation,
+  TransferIdempotencyRequest,
 } from '@seshat/application';
 import type {
   FinancialAuditEvent,
@@ -23,6 +25,13 @@ export class LazyTransferRepository
   private repository: PrismaTransferRepository | undefined;
 
   public constructor(private readonly prisma: LazyPrismaClient) {}
+
+  public executeIdempotently(
+    request: TransferIdempotencyRequest,
+    create: () => Promise<TransferCreation>,
+  ): Promise<Transfer> {
+    return this.getRepository().executeIdempotently(request, create);
+  }
 
   public insertAtomically(
     transfer: Transfer,

@@ -55,6 +55,7 @@ function accounts(values: readonly Account[]): AccountRepository {
 function command(): CreateTransferCommand {
   return {
     actorId: ownerId,
+    idempotencyKey: 'f2222222-2222-4222-8222-222222222222',
     amount: '50.25',
     currencyCode: 'BRL',
     currencyMinorUnitScale: 2,
@@ -71,10 +72,11 @@ describe('CreateTransferUseCase', () => {
     let inserted: Transfer | undefined;
     let auditEvent: FinancialAuditEvent | undefined;
     const repository: TransferRepository = {
-      insertAtomically: (transfer, event) => {
-        inserted = transfer;
-        auditEvent = event;
-        return Promise.resolve();
+      executeIdempotently: async (_request, create) => {
+        const value = await create();
+        inserted = value.transfer;
+        auditEvent = value.auditEvent;
+        return value.transfer;
       },
     };
     const identifiers = [
@@ -111,7 +113,10 @@ describe('CreateTransferUseCase', () => {
   it('rejects a missing or foreign account', async () => {
     const useCase = new CreateTransferUseCase(
       accounts([account('source-id')]),
-      { insertAtomically: () => Promise.resolve() },
+      {
+        executeIdempotently: async (_request, create) =>
+          (await create()).transfer,
+      },
       { now: () => new Date('2026-09-21T12:00:00.000Z') },
       { generate: () => 'id' },
     );
@@ -127,7 +132,10 @@ describe('CreateTransferUseCase', () => {
         account('source-id'),
         account('destination-id', Currency.create('USD', 2)),
       ]),
-      { insertAtomically: () => Promise.resolve() },
+      {
+        executeIdempotently: async (_request, create) =>
+          (await create()).transfer,
+      },
       { now: () => new Date('2026-09-21T12:00:00.000Z') },
       { generate: () => 'id' },
     );
@@ -232,7 +240,10 @@ async function createTransfer(): Promise<Transfer> {
   ];
   return new CreateTransferUseCase(
     accounts([account('source-id'), account('destination-id')]),
-    { insertAtomically: () => Promise.resolve() },
+    {
+      executeIdempotently: async (_request, create) =>
+        (await create()).transfer,
+    },
     { now: () => new Date('2026-09-21T12:00:00.000Z') },
     { generate: () => identifiers.shift() ?? 'unexpected-id' },
   ).execute(command());

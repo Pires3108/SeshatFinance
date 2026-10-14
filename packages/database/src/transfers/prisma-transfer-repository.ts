@@ -1,7 +1,12 @@
-import type {
-  TransferLifecycleRepository,
-  TransferReadRepository,
-  TransferRepository,
+import { createHash } from 'node:crypto';
+
+import {
+  TransferIdempotencyConflictError,
+  type TransferCreation,
+  type TransferIdempotencyRequest,
+  type TransferLifecycleRepository,
+  type TransferReadRepository,
+  type TransferRepository,
 } from '@seshat/application';
 import {
   Transaction,
@@ -21,28 +26,55 @@ export class PrismaTransferRepository
 {
   public constructor(private readonly client: PrismaClient) {}
 
+  public async executeIdempotently(
+    request: TransferIdempotencyRequest,
+    create: () => Promise<TransferCreation>,
+  ): Promise<Transfer> {
+    const payloadHash = createHash('sha256')
+      .update(JSON.stringify(request.payload))
+      .digest('hex');
+    return this.client.$transaction(async (client) => {
+      const lock = await client.$queryRaw<{ acquired: boolean }[]>`
+        SELECT pg_try_advisory_xact_lock(hashtextextended(${`transfer:${request.ownerId}:${request.key}`}, 0)) AS acquired
+      `;
+      if (lock[0]?.acquired !== true)
+        throw new TransferIdempotencyConflictError();
+      const record = await client.transferIdempotencyRecord.findUnique({
+        where: { ownerId_key: { ownerId: request.ownerId, key: request.key } },
+      });
+      if (record !== null && record.expiresAt > request.requestedAt) {
+        if (record.payloadHash !== payloadHash)
+          throw new TransferIdempotencyConflictError();
+        return restoreResponse(record.response);
+      }
+      // Expired responses are removed when commands are processed; the index also
+      // permits operational retention cleanup without touching the ledger.
+      await client.transferIdempotencyRecord.deleteMany({
+        where: { expiresAt: { lte: request.requestedAt } },
+      });
+      const result = await create();
+      await insertTransfer(client, result.transfer, result.auditEvent);
+      await client.transferIdempotencyRecord.create({
+        data: {
+          ownerId: request.ownerId,
+          key: request.key,
+          payloadHash,
+          response: JSON.stringify(result.transfer.toSnapshot()),
+          expiresAt: new Date(
+            request.requestedAt.getTime() + 24 * 60 * 60 * 1000,
+          ),
+        },
+      });
+      return result.transfer;
+    });
+  }
+
   public async insertAtomically(
     transfer: Transfer,
     auditEvent: FinancialAuditEvent,
   ): Promise<void> {
-    const snapshot = transfer.toSnapshot();
     await this.client.$transaction(async (client) => {
-      await client.transaction.create({
-        data: transactionCreateData(snapshot.source),
-      });
-      await client.transaction.create({
-        data: transactionCreateData(snapshot.destination),
-      });
-      await client.transfer.create({
-        data: {
-          createdAt: snapshot.source.createdAt,
-          destinationTransactionId: snapshot.destination.id,
-          id: snapshot.id,
-          ownerId: snapshot.ownerId,
-          sourceTransactionId: snapshot.source.id,
-        },
-      });
-      await insertFinancialAuditEvent(client, auditEvent);
+      await insertTransfer(client, transfer, auditEvent);
     });
   }
 
@@ -130,6 +162,47 @@ export class PrismaTransferRepository
 }
 
 class TransferPersistenceConflict extends Error {}
+
+async function insertTransfer(
+  client: Prisma.TransactionClient,
+  transfer: Transfer,
+  auditEvent: FinancialAuditEvent,
+): Promise<void> {
+  const snapshot = transfer.toSnapshot();
+  await client.transaction.create({
+    data: transactionCreateData(snapshot.source),
+  });
+  await client.transaction.create({
+    data: transactionCreateData(snapshot.destination),
+  });
+  await client.transfer.create({
+    data: {
+      createdAt: snapshot.source.createdAt,
+      destinationTransactionId: snapshot.destination.id,
+      id: snapshot.id,
+      ownerId: snapshot.ownerId,
+      sourceTransactionId: snapshot.source.id,
+    },
+  });
+  await insertFinancialAuditEvent(client, auditEvent);
+}
+
+function restoreResponse(response: string): Transfer {
+  const snapshot = JSON.parse(
+    response,
+    (key: string, value: unknown): unknown =>
+      [
+        'createdAt',
+        'updatedAt',
+        'occurredAt',
+        'archivedAt',
+        'trashedAt',
+      ].includes(key) && typeof value === 'string'
+        ? new Date(value)
+        : value,
+  ) as ReturnType<Transfer['toSnapshot']>;
+  return Transfer.restore(snapshot);
+}
 
 function transactionCreateData(
   snapshot: ReturnType<Transaction['toSnapshot']>,

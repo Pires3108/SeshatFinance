@@ -7,6 +7,8 @@ import {
   TransferAccountUnavailableError,
   TransferCurrencyMismatchError,
   TransferVersionConflictError,
+  TransferIdempotencyConflictError,
+  InvalidTransferIdempotencyKeyError,
 } from '@seshat/application';
 import {
   InvalidCurrencyError,
@@ -21,6 +23,7 @@ import {
   Controller,
   ConflictException,
   Get,
+  Headers,
   Inject,
   NotFoundException,
   Param,
@@ -35,6 +38,7 @@ import {
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiHeader,
   ApiCreatedResponse,
   ApiConflictResponse,
   ApiNotFoundResponse,
@@ -194,15 +198,31 @@ export class TransferController {
   })
   @ApiBody({ schema: createBodySchema() })
   @ApiCreatedResponse({ schema: responseSchema })
+  @ApiHeader({
+    name: 'Idempotency-Key',
+    required: true,
+    schema: {
+      type: 'string',
+      format: 'uuid',
+      description:
+        'UUID v4 scoped to the authenticated user and transfer creation; retained for 24 hours.',
+    },
+  })
+  @ApiConflictResponse({
+    description:
+      'Idempotency key has different content or is executing concurrently',
+  })
   @ApiNotFoundResponse({ description: 'An owned active account was not found' })
   public async create(
     @Req() request: FastifyRequest,
     @Body(new ZodValidationPipe(createSchema)) body: CreateRequest,
+    @Headers('idempotency-key') idempotencyKey: string,
   ): Promise<Response> {
     try {
       return mapTransfer(
         await this.createTransfer.execute({
           actorId: this.actorId(request),
+          idempotencyKey,
           ...body,
           occurredAt: new Date(body.occurredAt),
         }),
@@ -279,6 +299,10 @@ function mapTransfer(transfer: Transfer): Response {
 }
 
 function mapError(error: unknown): Error {
+  if (error instanceof TransferIdempotencyConflictError)
+    return new ConflictException('Transfer idempotency conflict.');
+  if (error instanceof InvalidTransferIdempotencyKeyError)
+    return new BadRequestException('A UUID v4 Idempotency-Key is required.');
   if (error instanceof OwnedTransferNotFoundError) {
     return new NotFoundException('Transfer not found.');
   }

@@ -45,16 +45,20 @@ describe('TransferController', () => {
       actors,
     );
 
-    const response = await controller.create(request(actors), {
-      amount: '15.50',
-      currencyCode: 'BRL',
-      currencyMinorUnitScale: 2,
-      description: 'Reserva',
-      destinationAccountId: 'cb9c8549-404a-4fce-a434-09b65538eb86',
-      observations: null,
-      occurredAt: '2026-09-21T11:00:00.000Z',
-      sourceAccountId: '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
-    });
+    const response = await controller.create(
+      request(actors),
+      {
+        amount: '15.50',
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        description: 'Reserva',
+        destinationAccountId: 'cb9c8549-404a-4fce-a434-09b65538eb86',
+        observations: null,
+        occurredAt: '2026-09-21T11:00:00.000Z',
+        sourceAccountId: '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
+      },
+      'f2222222-2222-4222-8222-222222222222',
+    );
 
     expect(execute).toHaveBeenCalledWith(
       expect.objectContaining({ actorId: 'actor-id' }),

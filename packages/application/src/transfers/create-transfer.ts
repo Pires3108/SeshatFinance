@@ -6,6 +6,7 @@ import type { IdentifierGenerator } from '../ports/identifier-generator.js';
 
 export type CreateTransferCommand = Readonly<{
   actorId: string;
+  idempotencyKey: string;
   amount: string;
   currencyCode: string;
   currencyMinorUnitScale: number;
@@ -17,10 +18,45 @@ export type CreateTransferCommand = Readonly<{
 }>;
 
 export interface TransferRepository {
-  insertAtomically(
-    transfer: Transfer,
-    auditEvent: FinancialAuditEvent,
-  ): Promise<void>;
+  executeIdempotently(
+    request: TransferIdempotencyRequest,
+    create: () => Promise<TransferCreation>,
+  ): Promise<Transfer>;
+}
+
+export type TransferCreation = Readonly<{
+  transfer: Transfer;
+  auditEvent: FinancialAuditEvent;
+}>;
+
+export type TransferIdempotencyRequest = Readonly<{
+  ownerId: string;
+  key: string;
+  requestedAt: Date;
+  payload: Readonly<{
+    amount: string;
+    currencyCode: string;
+    currencyMinorUnitScale: number;
+    description: string | null;
+    destinationAccountId: string;
+    observations: string | null;
+    occurredAt: string;
+    sourceAccountId: string;
+  }>;
+}>;
+
+export class TransferIdempotencyConflictError extends Error {
+  public constructor() {
+    super('Transfer idempotency key conflicts with another request.');
+    this.name = 'TransferIdempotencyConflictError';
+  }
+}
+
+export class InvalidTransferIdempotencyKeyError extends Error {
+  public constructor() {
+    super('A UUID v4 transfer idempotency key is required.');
+    this.name = 'InvalidTransferIdempotencyKeyError';
+  }
 }
 
 export interface TransferLifecycleRepository {
@@ -70,6 +106,43 @@ export class CreateTransferUseCase {
   ) {}
 
   public async execute(command: CreateTransferCommand): Promise<Transfer> {
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(
+        command.idempotencyKey,
+      )
+    ) {
+      throw new InvalidTransferIdempotencyKeyError();
+    }
+    const currency = Currency.create(
+      command.currencyCode,
+      command.currencyMinorUnitScale,
+    );
+    const amount = Money.fromDecimal(command.amount, currency).toDecimal();
+    const at = this.clock.now();
+    return this.transfers.executeIdempotently(
+      {
+        ownerId: command.actorId,
+        key: command.idempotencyKey.toLowerCase(),
+        requestedAt: at,
+        payload: {
+          amount,
+          currencyCode: currency.code,
+          currencyMinorUnitScale: currency.minorUnitScale,
+          description: command.description?.trim() ?? null,
+          destinationAccountId: command.destinationAccountId.toLowerCase(),
+          observations: command.observations?.trim() ?? null,
+          occurredAt: command.occurredAt.toISOString(),
+          sourceAccountId: command.sourceAccountId.toLowerCase(),
+        },
+      },
+      () => this.create(command, at),
+    );
+  }
+
+  private async create(
+    command: CreateTransferCommand,
+    at: Date,
+  ): Promise<TransferCreation> {
     if (command.sourceAccountId === command.destinationAccountId) {
       throw new TransferAccountUnavailableError();
     }
@@ -100,7 +173,6 @@ export class CreateTransferUseCase {
     const transferId = this.identifiers.generate();
     const sourceTransactionId = this.identifiers.generate();
     const destinationTransactionId = this.identifiers.generate();
-    const at = this.clock.now();
     const transfer = Transfer.create({
       amount: Money.fromDecimal(command.amount, currency),
       createdAt: at,
@@ -114,9 +186,9 @@ export class CreateTransferUseCase {
       sourceAccountId: source.id,
       sourceTransactionId,
     });
-    await this.transfers.insertAtomically(
+    return {
       transfer,
-      FinancialAuditEvent.create({
+      auditEvent: FinancialAuditEvent.create({
         action: 'created',
         actorId: command.actorId,
         id: this.identifiers.generate(),
@@ -125,8 +197,7 @@ export class CreateTransferUseCase {
         resourceId: transfer.id,
         resourceType: 'transfer',
       }),
-    );
-    return transfer;
+    };
   }
 }
 
