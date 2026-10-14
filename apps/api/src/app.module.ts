@@ -5,6 +5,7 @@ import {
   CreateBalanceAdjustmentUseCase,
   ListOwnedBalanceAdjustmentsUseCase,
   CreateCreditCardUseCase,
+  RegisterCardPurchaseUseCase,
   CreateFamilyGroupUseCase,
   GetOwnedCreditCardUseCase,
   GetOwnedTransferUseCase,
@@ -48,6 +49,7 @@ import {
   type BalanceAdjustmentRepository,
   type BalanceAdjustmentHistoryRepository,
   type CreditCardRepository,
+  type CardPurchaseRepository,
   type FamilyGroupRepository,
   type CategoryRepository,
   type CostCenterRepository,
@@ -71,7 +73,9 @@ import { LazyAccountRepository } from './accounts/lazy-account-repository.js';
 import { BalanceAdjustmentController } from './adjustments/balance-adjustment.controller.js';
 import { LazyBalanceAdjustmentRepository } from './adjustments/lazy-balance-adjustment-repository.js';
 import { CreditCardController } from './cards/credit-card.controller.js';
+import { CardPurchaseController } from './cards/card-purchase.controller.js';
 import { LazyCreditCardRepository } from './cards/lazy-credit-card-repository.js';
+import { LazyCardPurchaseRepository } from './cards/lazy-card-purchase-repository.js';
 import { FamilyGroupController } from './family/family-group.controller.js';
 import { LazyFamilyGroupRepository } from './family/lazy-family-group-repository.js';
 import { AuthConfiguration } from './auth/auth-configuration.js';
@@ -114,6 +118,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     AccountTypeController,
     BalanceAdjustmentController,
     CreditCardController,
+    CardPurchaseController,
     FamilyGroupController,
     AuthController,
     CategoryController,
@@ -149,6 +154,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyAccountRepository,
     LazyBalanceAdjustmentRepository,
     LazyCreditCardRepository,
+    LazyCardPurchaseRepository,
     LazyFamilyGroupRepository,
     LazyCategoryRepository,
     LazyCostCenterRepository,
@@ -199,6 +205,20 @@ import { UserProfileController } from './users/user-profile.controller.js';
       provide: ListOwnedCreditCardsUseCase,
       useFactory: (cards: CreditCardRepository): ListOwnedCreditCardsUseCase =>
         new ListOwnedCreditCardsUseCase(cards),
+    },
+    {
+      inject: [LazyCreditCardRepository, LazyCardPurchaseRepository],
+      provide: RegisterCardPurchaseUseCase,
+      useFactory: (
+        cards: CreditCardRepository,
+        purchases: CardPurchaseRepository,
+      ): RegisterCardPurchaseUseCase =>
+        new RegisterCardPurchaseUseCase(
+          cards,
+          purchases,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
     },
     {
       inject: [

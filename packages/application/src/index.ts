@@ -155,6 +155,16 @@ export {
   type CreditCardRepository,
 } from './cards/create-credit-card.js';
 export {
+  RegisterCardPurchaseUseCase,
+  CardPurchaseCurrencyMismatchError,
+  CardPurchaseIdempotencyConflictError,
+  InvalidCardPurchaseIdempotencyKeyError,
+  OwnedCreditCardNotFoundError,
+  type CardPurchaseRepository,
+  type RegisterCardPurchaseCommand,
+  type RegisterCardPurchaseResult,
+} from './cards/register-card-purchase.js';
+export {
   CreateFamilyGroupUseCase,
   ListOwnFamilyGroupsUseCase,
   type FamilyGroupRepository,

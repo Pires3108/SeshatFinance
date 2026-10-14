@@ -115,11 +115,11 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-015 — Materialização do ciclo do cartão
 
-- **Estado:** aberto.
-- **Referências:** RF-038; RF-043; RN-022; RN-024; US-038; US-040; US-042.
+- **Estado:** decidido; implementação da fonte de feriados e dos ciclos pendente em US-040.
+- **Referências:** RF-038; RF-043; RN-022; RN-024; US-038; US-039; US-040; US-042.
 - **Risco:** os requisitos pedem dias de fechamento e vencimento, mas não definem como materializá-los em meses que não possuem o dia configurado, se fins de semana ou feriados deslocam datas, nem como determinar o mês de vencimento quando o fechamento é posterior ao vencimento no calendário civil. Inferir essas regras pode associar compras à fatura errada, antecipar obrigações ou classificar uma fatura como vencida indevidamente.
-- **Decisão necessária:** definir a regra canônica para meses curtos, a existência ou não de ajuste por dia útil, a relação mensal entre fechamento e vencimento, o fuso autoritativo e os limites inclusivos ou exclusivos usados para associar compras ao ciclo.
-- **Limite atual:** o cadastro pode persistir dias civis válidos de 1 a 31 como configuração declarada pelo usuário, sem prometer uma data efetiva. Não materializar ciclos, atribuir compras a faturas, emitir alertas ou calcular atraso antes da decisão.
+- **Decisão aplicada:** sem fechamento ou vencimento configurado, usar o último dia do mês e avisar que a configuração está pendente. Fechamento segue o dia configurado no cartão. Se o vencimento for igual ou anterior ao fechamento, pertence ao mês seguinte. Vencimento em fim de semana ou feriado nacional, estadual ou municipal aplicável ao local configurado pelo usuário é postergado ao primeiro dia útil. O ciclo é semiaberto; por padrão, compra no instante de fechamento entra na próxima fatura, mas o usuário pode configurar o cartão para incluí-la na fatura que fecha.
+- **Limite atual:** a implementação parcial de US-039 registra o fato da compra e ainda não satisfaz seus critérios de conclusão. Implementar fonte versionada de feriados, meses curtos, fusos IANA e limites do ciclo compartilhados com US-040; atribuir a compra à fatura e demonstrar despesa e obrigação antes de concluir US-039.
 
 ### RII-016 — Semântica dos dados de posição de investimento
 

@@ -83,6 +83,12 @@ export {
   type CreditCardSnapshot,
 } from './cards/credit-card.js';
 export {
+  CardPurchase,
+  InvalidCardPurchaseError,
+  type CardPurchaseSnapshot,
+  type CreateCardPurchaseProperties,
+} from './cards/card-purchase.js';
+export {
   InvestmentType,
   InvalidInvestmentTypeError,
   investmentTypeKeys,
@@ -102,3 +108,4 @@ export {
   hasFamilyGroupCapability,
   type FamilyGroupCapability,
 } from './family/family-group-policy.js';
+export * from './cards/card-billing-cycle.js';

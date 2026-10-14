@@ -97,11 +97,32 @@ model CreditCard {
   closingDay             Int      @map("closing_day") @db.SmallInt
   dueDay                 Int      @map("due_day") @db.SmallInt
   createdAt              DateTime @map("created_at") @db.Timestamptz(6)
+  purchases              CardPurchase[]
 
   @@unique([id, ownerId])
   @@index([ownerId, createdAt, id])
   @@index([ownerId, paymentAccountId])
   @@map("credit_cards")
+}
+
+model CardPurchase {
+  id                     String     @id @db.Uuid
+  ownerId                String     @map("owner_id") @db.Uuid
+  cardId                 String     @map("card_id") @db.Uuid
+  card                   CreditCard @relation(fields: [cardId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  amountMinorUnits       Decimal    @map("amount_minor_units") @db.Decimal(1000, 0)
+  currencyCode           String     @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale Int        @map("currency_minor_unit_scale") @db.SmallInt
+  description            String     @db.VarChar(500)
+  externalId             String?    @map("external_id") @db.VarChar(255)
+  occurredAt             DateTime   @map("occurred_at") @db.Timestamptz(6)
+  createdAt              DateTime   @map("created_at") @db.Timestamptz(6)
+  idempotencyKey         String     @map("idempotency_key") @db.VarChar(255)
+  requestFingerprint     String     @map("request_fingerprint") @db.Char(64)
+
+  @@unique([ownerId, idempotencyKey])
+  @@index([ownerId, cardId, occurredAt])
+  @@map("card_purchases")
 }
 
 enum TransactionKind {
@@ -207,6 +228,7 @@ enum FinancialAuditResourceType {
   transfer
   balance_adjustment @map("balance-adjustment")
   credit_card        @map("credit-card")
+  card_purchase      @map("card-purchase")
 
   @@map("financial_audit_resource_type")
 }
