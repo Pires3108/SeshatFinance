@@ -335,6 +335,14 @@ describe('financial ledger across accounts, transfers, and adjustments', () => {
     expect((await balances.execute(accountId, ownerId)).toDecimal()).toBe(
       '0.25',
     );
+    expect(
+      (await accounts.findByIdForOwner(accountId, ownerId))?.lifecycle,
+    ).toBe('archived');
+    expect(
+      (await transactions.listForAccountOwner(accountId, ownerId)).map(
+        (entry) => entry.id,
+      ),
+    ).toEqual(entries.map((entry) => entry.id));
 
     const trashedEntry = created[1];
     if (trashedEntry === undefined) throw new Error('Missing synthetic entry.');
