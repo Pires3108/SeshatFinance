@@ -73,29 +73,24 @@ describe('PrismaAccountRepository', () => {
       type: AccountType.create('checking-account'),
     });
 
-    const auditId = '33ae528a-35cf-46c5-ac66-1ce8fc5afc8f';
-    try {
-      await repository.insert(account, auditEvent(account, 'created', auditId));
+    await repository.insert(
+      account,
+      auditEvent(account, 'created', '33ae528a-35cf-46c5-ac66-1ce8fc5afc8f'),
+    );
 
-      const restored = await repository.findByIdForOwner(
-        account.id,
-        account.ownerId,
-      );
-      expect(restored?.initialBalance.toDecimal()).toBe('0.30');
-      expect(restored?.initialBalance.currency.toSnapshot()).toEqual({
-        code: 'BRL',
-        minorUnitScale: 2,
-      });
-      const persisted = await client.account.findUniqueOrThrow({
-        where: { id: account.id },
-      });
-      expect(persisted.initialBalanceMinorUnits.toFixed(0)).toBe('30');
-    } finally {
-      await client.$transaction([
-        client.financialAuditEvent.deleteMany({ where: { id: auditId } }),
-        client.account.deleteMany({ where: { id: account.id } }),
-      ]);
-    }
+    const restored = await repository.findByIdForOwner(
+      account.id,
+      account.ownerId,
+    );
+    expect(restored?.initialBalance.toDecimal()).toBe('0.30');
+    expect(restored?.initialBalance.currency.toSnapshot()).toEqual({
+      code: 'BRL',
+      minorUnitScale: 2,
+    });
+    const persisted = await client.account.findUniqueOrThrow({
+      where: { id: account.id },
+    });
+    expect(persisted.initialBalanceMinorUnits.toFixed(0)).toBe('30');
   });
 
   it('round-trips exact money and enforces ownership in the query', async () => {
@@ -171,7 +166,11 @@ describe('PrismaAccountRepository', () => {
         ),
       ),
     ).resolves.toBe(false);
-    await expect(client.financialAuditEvent.count()).resolves.toBe(2);
+    await expect(
+      client.financialAuditEvent.count({
+        where: { ownerId: account.ownerId, resourceId: account.id },
+      }),
+    ).resolves.toBe(2);
     const archived = await repository.findByIdForOwner(
       account.id,
       account.ownerId,
