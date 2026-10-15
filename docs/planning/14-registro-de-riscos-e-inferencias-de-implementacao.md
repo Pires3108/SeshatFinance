@@ -39,10 +39,10 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-006 — Política progressiva de limitação de autenticação
 
-- **Estado:** decisão parcial registrada em 10/10/2026; origem adiada para US-018.
+- **Estado:** decisão de origem registrada em 13/10/2026 para US-018; implementação e verificação em andamento.
 - **Referências:** RNF-025; US-014; US-015; US-018; ADR-032.
 - **Decisão:** login aplica bloqueio progressivo de 5 a 60 minutos após cinco falhas; pedidos de recuperação usam contagem própria e a mesma progressão após cinco pedidos por identidade normalizada. O estado compartilhado fica no PostgreSQL, com chave HMAC que não persiste e-mail em claro. A resposta pública de recuperação continua genérica inclusive quando limitada.
-- **Pendente em US-018:** definir origem confiável atrás do proxy e adicionar limitação por origem para login e recuperação, preservando RNF-025. A conclusão de US-015 não afirma que esse controle está implementado.
+- **Decisão US-018:** a origem é o IP do socket recebido pela API Fastify com `trustProxy: false`; `X-Forwarded-For` do cliente não é confiável. O controle compartilhado no PostgreSQL usa HMAC do IP e contadores separados para falhas de login e pedidos de recuperação, com bloqueio após cinco eventos e progressão de 5 a 60 minutos. Antes de implantar atrás de proxy, é obrigatória configuração e verificação explícita de uma lista de IPs/CIDRs de proxies confiáveis. A descrição antiga de SESHAT-35 menciona progressão até 80 minutos; prevalece a política já aceita e implementada de 5 a 60 minutos.
 
 ### RII-007 — Catálogo monetário e política de arredondamento
 

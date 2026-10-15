@@ -54,10 +54,13 @@ describe('API password recovery', () => {
     expect(response.statusCode).toBe(202);
     expect(response.json()).toEqual({ status: 'accepted' });
     expect(response.body).not.toContain('synthetic.user');
-    expect(execute).toHaveBeenCalledWith({
-      email: 'synthetic.user@example.test',
-      redirectUrl: 'https://app.example.test/auth/reset-password',
-    });
+    expect(execute).toHaveBeenCalledTimes(1);
+    const command = execute.mock.calls[0]?.[0];
+    expect(command?.email).toBe('synthetic.user@example.test');
+    expect(command?.origin).toBe('127.0.0.1');
+    expect(command?.redirectUrl).toBe(
+      'https://app.example.test/auth/reset-password',
+    );
   });
 
   it('rejects malformed email input before the use case', async () => {

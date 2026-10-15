@@ -1,5 +1,6 @@
 import {
   AuthenticateUserUseCase,
+  IdentityCredentialsRejectedError,
   IdentityProviderUnavailableError,
   InvalidRecoveryTokenError,
   PasswordRejectedError,
@@ -174,7 +175,7 @@ describe('Supabase password recovery completion', () => {
     const authenticate = vi.fn(({ password }: { password: string }) =>
       password === currentPassword
         ? Promise.resolve({ userId })
-        : Promise.reject(new Error('invalid credentials')),
+        : Promise.reject(new IdentityCredentialsRejectedError()),
     );
     const login = new AuthenticateUserUseCase({ authenticate }, attempts, {
       now: () => new Date(),

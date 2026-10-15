@@ -11,8 +11,49 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
 import { SessionController, readSessionCookie } from './session.controller.js';
+import { IdentityAuthenticationError } from './supabase-identity-authentication.gateway.js';
 
 describe('SessionController', () => {
+  it('uses the socket address and ignores a spoofed forwarding header', async () => {
+    const reserve = vi.fn().mockResolvedValue(null);
+    const authenticate = new AuthenticateUserUseCase(
+      { authenticate: vi.fn() },
+      { runExclusive: vi.fn() },
+      { now: () => new Date('2026-10-13T12:00:00Z') },
+      { reserve, finish: vi.fn() },
+    );
+    const controller = new SessionController(authenticate, {
+      issue: vi.fn(),
+    } as unknown as OpaqueSessionService);
+    await expect(
+      controller.login(
+        { email: 'synthetic@example.test', password: 'wrong' },
+        {
+          ip: '192.0.2.1',
+          headers: { 'x-forwarded-for': '198.51.100.1' },
+        } as unknown as FastifyRequest,
+        { header: vi.fn() } as unknown as FastifyReply,
+      ),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(reserve).toHaveBeenCalledWith('192.0.2.1', expect.any(Date));
+  });
+
+  it('fails closed when the socket address is unavailable', async () => {
+    const authenticate = authentication({ authenticate: vi.fn() });
+    const controller = new SessionController(authenticate, {
+      issue: vi.fn(),
+    } as unknown as OpaqueSessionService);
+    await expect(
+      controller.login(
+        { email: 'synthetic@example.test', password: 'wrong' },
+        {
+          ip: '',
+          headers: { 'x-forwarded-for': '198.51.100.1' },
+        } as unknown as FastifyRequest,
+        { header: vi.fn() } as unknown as FastifyReply,
+      ),
+    ).rejects.toBeInstanceOf(ServiceUnavailableException);
+  });
   const authentication = (
     gateway: IdentityAuthenticationGateway,
   ): AuthenticateUserUseCase =>
@@ -42,6 +83,10 @@ describe('SessionController', () => {
 
     await controller.login(
       { email: 'synthetic@example.test', password: 'synthetic-password' },
+      {
+        ip: '192.0.2.1',
+        headers: { 'x-forwarded-for': '198.51.100.8' },
+      } as unknown as FastifyRequest,
       { header } as unknown as FastifyReply,
     );
 
@@ -56,16 +101,22 @@ describe('SessionController', () => {
 
   it('does not issue a session for invalid credentials', async () => {
     const authenticate = authentication({
-      authenticate: vi.fn().mockRejectedValue(new Error('provider detail')),
+      authenticate: vi
+        .fn()
+        .mockRejectedValue(new IdentityAuthenticationError()),
     });
     const issue = vi.fn();
     const sessions = { issue } as unknown as OpaqueSessionService;
     const controller = new SessionController(authenticate, sessions);
 
     await expect(
-      controller.login({ email: 'synthetic@example.test', password: 'wrong' }, {
-        header: vi.fn(),
-      } as unknown as FastifyReply),
+      controller.login(
+        { email: 'synthetic@example.test', password: 'wrong' },
+        { ip: '192.0.2.1' } as FastifyRequest,
+        {
+          header: vi.fn(),
+        } as unknown as FastifyReply,
+      ),
     ).rejects.toBeInstanceOf(UnauthorizedException);
     expect(issue).not.toHaveBeenCalled();
   });
@@ -81,6 +132,7 @@ describe('SessionController', () => {
     await expect(
       controller.login(
         { email: 'synthetic@example.test', password: 'synthetic-password' },
+        { ip: '192.0.2.1' } as FastifyRequest,
         { header: vi.fn() } as unknown as FastifyReply,
       ),
     ).rejects.toBeInstanceOf(ServiceUnavailableException);
