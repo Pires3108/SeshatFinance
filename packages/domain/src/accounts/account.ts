@@ -4,6 +4,7 @@ import { Money, type MoneySnapshot } from '../money/money.js';
 export type AccountLifecycle = 'active' | 'archived' | 'trashed';
 
 export type AccountSnapshot = Readonly<{
+  agency: string | null;
   archivedAt: Date | null;
   color: string | null;
   createdAt: Date;
@@ -22,6 +23,7 @@ export type AccountSnapshot = Readonly<{
 }>;
 
 export type CreateAccountProperties = Readonly<{
+  agency?: string | null;
   color: string | null;
   createdAt: Date;
   description: string | null;
@@ -35,6 +37,7 @@ export type CreateAccountProperties = Readonly<{
 }>;
 
 export type UpdateAccountDetails = Readonly<{
+  agency?: string | null;
   color: string | null;
   description: string | null;
   icon: string | null;
@@ -67,6 +70,7 @@ export class Account {
     assertValidInstant(properties.createdAt, 'Account creation instant');
 
     return new Account({
+      agency: normalizeOptionalText(properties.agency ?? null),
       archivedAt: null,
       color: normalizeOptionalText(properties.color),
       createdAt: new Date(properties.createdAt),
@@ -155,6 +159,10 @@ export class Account {
     this.requireNotTrashed();
     this.state = {
       ...this.state,
+      agency:
+        details.agency === undefined
+          ? this.state.agency
+          : normalizeOptionalText(details.agency),
       color: normalizeOptionalText(details.color),
       description: normalizeOptionalText(details.description),
       icon: normalizeOptionalText(details.icon),

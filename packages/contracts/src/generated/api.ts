@@ -683,6 +683,7 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": readonly {
+                        readonly agency: string | null;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
                         readonly color: string | null;
@@ -727,6 +728,7 @@ export interface operations {
         readonly requestBody: {
             readonly content: {
                 readonly "application/json": {
+                    readonly agency?: string | null;
                     readonly color: string | null;
                     readonly currencyCode: string;
                     readonly currencyMinorUnitScale: number;
@@ -746,6 +748,7 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly agency: string | null;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
                         readonly color: string | null;
@@ -797,6 +800,7 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly agency: string | null;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
                         readonly color: string | null;
@@ -850,6 +854,7 @@ export interface operations {
         readonly requestBody: {
             readonly content: {
                 readonly "application/json": {
+                    readonly agency?: string | null;
                     readonly color: string | null;
                     readonly description: string | null;
                     readonly icon: string | null;
@@ -866,6 +871,7 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly agency: string | null;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
                         readonly color: string | null;
@@ -931,6 +937,7 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly agency: string | null;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
                         readonly color: string | null;
