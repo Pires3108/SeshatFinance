@@ -6,6 +6,7 @@ import type { IdentifierGenerator } from '../ports/identifier-generator.js';
 import {
   AccountVersionConflictError,
   ChangeOwnedAccountLifecycleUseCase,
+  OwnedAccountNotFoundError,
   type AccountRepository,
   CreateAccountUseCase,
   GetOwnedAccountUseCase,
@@ -198,6 +199,44 @@ describe('UpdateOwnedAccountDetailsUseCase', () => {
 });
 
 describe('ChangeOwnedAccountLifecycleUseCase', () => {
+  it('refuses a foreign owner without changing state or recording an audit event', async () => {
+    const repository = new RecordingAccountRepository();
+    await new CreateAccountUseCase(
+      repository,
+      { now: (): Date => new Date('2026-09-20T12:00:00.000Z') },
+      { generate: (): string => 'account-id' },
+    ).execute({
+      actorId: 'owner-id',
+      color: null,
+      currencyCode: 'BRL',
+      currencyMinorUnitScale: 2,
+      description: null,
+      icon: null,
+      initialBalance: '0',
+      institution: null,
+      name: 'Conta',
+      typeKey: 'checking-account',
+    });
+    const useCase = new ChangeOwnedAccountLifecycleUseCase(
+      repository,
+      { now: (): Date => new Date('2026-09-20T13:00:00.000Z') },
+      { generate: (): string => 'audit-id' },
+    );
+
+    await expect(
+      useCase.execute({
+        accountId: 'account-id',
+        action: 'archive',
+        actorId: 'foreign-owner',
+      }),
+    ).rejects.toBeInstanceOf(OwnedAccountNotFoundError);
+    expect(repository.inserted?.toSnapshot()).toMatchObject({
+      lifecycle: 'active',
+      version: 1,
+    });
+    expect(repository.auditEvents).toHaveLength(1);
+  });
+
   it('persists an owned lifecycle transition with the expected version', async () => {
     const repository = new RecordingAccountRepository();
     const create = new CreateAccountUseCase(
