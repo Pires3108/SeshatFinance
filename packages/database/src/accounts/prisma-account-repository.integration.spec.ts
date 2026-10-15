@@ -52,6 +52,47 @@ describe('PrismaAccountRepository', () => {
     await stop?.();
   });
 
+  it('persists and restores BRL 0.10 plus 0.20 as exactly 0.30', async () => {
+    if (client === undefined || repository === undefined) {
+      throw new Error('Repository was not initialized.');
+    }
+    const brl = Currency.create('BRL', 2);
+    const balance = Money.fromDecimal('0.10', brl).add(
+      Money.fromDecimal('0.20', brl),
+    );
+    const account = Account.create({
+      color: null,
+      createdAt: new Date('2026-09-20T12:00:00.000Z'),
+      description: null,
+      icon: null,
+      id: '09ee511c-0768-4546-b832-a2d19e233fa1',
+      initialBalance: balance,
+      institution: null,
+      name: 'Exact BRL account',
+      ownerId: '34c25d03-61d5-434d-b583-cb0ef1b296e5',
+      type: AccountType.create('checking-account'),
+    });
+
+    await repository.insert(
+      account,
+      auditEvent(account, 'created', '33ae528a-35cf-46c5-ac66-1ce8fc5afc8f'),
+    );
+
+    const restored = await repository.findByIdForOwner(
+      account.id,
+      account.ownerId,
+    );
+    expect(restored?.initialBalance.toDecimal()).toBe('0.30');
+    expect(restored?.initialBalance.currency.toSnapshot()).toEqual({
+      code: 'BRL',
+      minorUnitScale: 2,
+    });
+    const persisted = await client.account.findUniqueOrThrow({
+      where: { id: account.id },
+    });
+    expect(persisted.initialBalanceMinorUnits.toFixed(0)).toBe('30');
+  });
+
   it('round-trips exact money and enforces ownership in the query', async () => {
     if (client === undefined || repository === undefined) {
       throw new Error('Repository was not initialized.');
@@ -125,7 +166,11 @@ describe('PrismaAccountRepository', () => {
         ),
       ),
     ).resolves.toBe(false);
-    await expect(client.financialAuditEvent.count()).resolves.toBe(2);
+    await expect(
+      client.financialAuditEvent.count({
+        where: { ownerId: account.ownerId, resourceId: account.id },
+      }),
+    ).resolves.toBe(2);
     const archived = await repository.findByIdForOwner(
       account.id,
       account.ownerId,
