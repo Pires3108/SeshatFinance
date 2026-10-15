@@ -34,6 +34,7 @@ describe('PrismaAccountRepository', () => {
     await migrationClient.connect();
     for (const path of [
       '../../prisma/migrations/20260920040000_create_accounts/migration.sql',
+      '../../prisma/migrations/20261015120000_add_account_agency/migration.sql',
       '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
     ]) {
       await migrationClient.query(
@@ -98,6 +99,7 @@ describe('PrismaAccountRepository', () => {
       throw new Error('Repository was not initialized.');
     }
     const account = Account.create({
+      agency: '0123',
       color: '#112233',
       createdAt: new Date('2026-09-20T12:00:00.000Z'),
       description: 'Synthetic account',
@@ -123,6 +125,7 @@ describe('PrismaAccountRepository', () => {
       account.ownerId,
     );
     expect(restored?.toSnapshot()).toEqual(account.toSnapshot());
+    expect(restored?.toSnapshot().agency).toBe('0123');
     expect(restored?.initialBalance.toDecimal()).toBe(
       '12345678901234567890.125',
     );
@@ -214,6 +217,7 @@ describe('PrismaAccountRepository', () => {
       account.ownerId,
     );
     expect(restoredAfterTrash?.toSnapshot()).toMatchObject({
+      agency: '0123',
       archivedAt,
       lifecycle: 'archived',
       trashedAt: null,
@@ -225,6 +229,45 @@ describe('PrismaAccountRepository', () => {
     await expect(
       repository.listForOwner(account.ownerId, 'trashed'),
     ).resolves.toEqual([]);
+    await expect(
+      client.financialAuditEvent.count({
+        where: {
+          action: 'restored-from-trash',
+          ownerId: account.ownerId,
+          resourceId: account.id,
+        },
+      }),
+    ).resolves.toBe(1);
+    if (restoredAfterTrash === null)
+      throw new Error('Account was not restored.');
+    restoredAfterTrash.updateDetails(
+      {
+        agency: null,
+        color: restoredAfterTrash.toSnapshot().color,
+        description: restoredAfterTrash.toSnapshot().description,
+        icon: restoredAfterTrash.toSnapshot().icon,
+        institution: restoredAfterTrash.toSnapshot().institution,
+        name: restoredAfterTrash.toSnapshot().name,
+        type: AccountType.create('checking-account'),
+      },
+      new Date('2026-09-20T16:00:00.000Z'),
+    );
+    await expect(
+      repository.save(
+        restoredAfterTrash,
+        4,
+        auditEvent(
+          restoredAfterTrash,
+          'updated',
+          'ffffffff-ffff-4fff-8fff-ffffffffffff',
+        ),
+      ),
+    ).resolves.toBe(true);
+    expect(
+      (
+        await repository.findByIdForOwner(account.id, account.ownerId)
+      )?.toSnapshot().agency,
+    ).toBeNull();
 
     const rolledBack = Account.create({
       color: null,
@@ -256,7 +299,12 @@ describe('PrismaAccountRepository', () => {
 
 function auditEvent(
   account: Account,
-  action: 'archived' | 'created' | 'moved-to-trash' | 'restored-from-trash',
+  action:
+    | 'archived'
+    | 'created'
+    | 'moved-to-trash'
+    | 'restored-from-trash'
+    | 'updated',
   id: string,
 ): FinancialAuditEvent {
   return FinancialAuditEvent.create({

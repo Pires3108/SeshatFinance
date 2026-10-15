@@ -15,6 +15,7 @@ export class PrismaAccountRepository implements AccountRepository {
     await this.client.$transaction(async (client) => {
       await client.account.create({
         data: {
+          agency: snapshot.agency,
           archivedAt: snapshot.archivedAt,
           color: snapshot.color,
           createdAt: snapshot.createdAt,
@@ -73,6 +74,7 @@ export class PrismaAccountRepository implements AccountRepository {
     return this.client.$transaction(async (client) => {
       const result = await client.account.updateMany({
         data: {
+          agency: snapshot.agency,
           archivedAt: snapshot.archivedAt,
           color: snapshot.color,
           description: snapshot.description,
@@ -105,6 +107,7 @@ type PersistedAccount =
 
 function restoreAccount(persisted: PersistedAccount): Account {
   return Account.restore({
+    agency: persisted.agency,
     archivedAt: persisted.archivedAt,
     color: persisted.color,
     createdAt: persisted.createdAt,

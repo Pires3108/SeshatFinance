@@ -81,6 +81,7 @@ enum AccountLifecycle {
 
 model Account {
   id                       String              @id @db.Uuid
+  agency                   String?
   ownerId                  String              @map("owner_id") @db.Uuid
   name                     String
   description              String?

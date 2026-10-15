@@ -52,6 +52,7 @@ describe('financial ledger across accounts, transfers, and adjustments', () => {
     await migrationClient.connect();
     for (const path of [
       '../../prisma/migrations/20260920040000_create_accounts/migration.sql',
+      '../../prisma/migrations/20261015120000_add_account_agency/migration.sql',
       '../../prisma/migrations/20260920133000_create_transactions/migration.sql',
       '../../prisma/migrations/20260920180000_create_categories/migration.sql',
       '../../prisma/migrations/20260920190000_create_tags/migration.sql',

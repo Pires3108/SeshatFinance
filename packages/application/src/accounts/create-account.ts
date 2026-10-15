@@ -10,6 +10,7 @@ import type { Clock } from '../ports/clock.js';
 import type { IdentifierGenerator } from '../ports/identifier-generator.js';
 
 export type CreateAccountCommand = Readonly<{
+  agency?: string | null;
   actorId: string;
   color: string | null;
   currencyCode: string;
@@ -67,6 +68,7 @@ export class CreateAccountUseCase {
     );
     const at = this.clock.now();
     const account = Account.create({
+      agency: command.agency,
       color: command.color,
       createdAt: at,
       description: command.description,
@@ -114,6 +116,7 @@ export class ListOwnedAccountsUseCase {
 }
 
 export type UpdateOwnedAccountDetailsCommand = Readonly<{
+  agency?: string | null;
   accountId: string;
   actorId: string;
   color: string | null;
@@ -143,6 +146,7 @@ export class UpdateOwnedAccountDetailsUseCase {
     const at = this.clock.now();
     account.updateDetails(
       {
+        agency: command.agency,
         color: command.color,
         description: command.description,
         icon: command.icon,

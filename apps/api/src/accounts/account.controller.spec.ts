@@ -14,6 +14,7 @@ import { AccountController } from './account.controller.js';
 
 function account(): Account {
   return Account.create({
+    agency: '0123',
     color: null,
     createdAt: new Date('2026-09-20T12:00:00.000Z'),
     description: null,
@@ -46,7 +47,8 @@ describe('AccountController', () => {
       actors,
     );
 
-    await controller.create(request(actors), {
+    const response = await controller.create(request(actors), {
+      agency: '0123',
       color: null,
       currencyCode: 'BRL',
       currencyMinorUnitScale: 2,
@@ -59,6 +61,7 @@ describe('AccountController', () => {
     });
 
     expect(execute).toHaveBeenCalledWith({
+      agency: '0123',
       actorId: 'actor-id',
       color: null,
       currencyCode: 'BRL',
@@ -70,6 +73,7 @@ describe('AccountController', () => {
       name: 'Conta',
       typeKey: 'checking-account',
     });
+    expect(response.agency).toBe('0123');
   });
 
   it('queries by both account and verified actor identifiers', async () => {
@@ -131,6 +135,7 @@ describe('AccountController', () => {
       request(actors),
       '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
       {
+        agency: null,
         color: null,
         description: null,
         icon: null,
@@ -141,6 +146,7 @@ describe('AccountController', () => {
     );
 
     expect(execute).toHaveBeenCalledWith({
+      agency: null,
       accountId: '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
       actorId: 'actor-id',
       color: null,
