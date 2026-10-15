@@ -42,6 +42,7 @@ Esta matriz relaciona áreas funcionais, requisitos, regras e critérios de acei
 - Identificadores não devem ser reutilizados.
 - Mudança funcional deve atualizar requisito, regra, aceitação e matriz.
 - Itens de fase posterior não bloqueiam a aceitação da primeira versão.
+- O recorte da US-021 comprova RN-002 e INV-003 por aritmética exata e persistência Decimal; conversão e arredondamento dependem da RII-007 e são rastreados nas histórias das operações correspondentes, começando pela US-022 para cotação manual.
 - Mudanças em saldo, patrimônio, fatura, juros ou retenção exigem revisão dos testes críticos.
 
 ## 4. Documentos de teste
