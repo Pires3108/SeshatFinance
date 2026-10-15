@@ -73,24 +73,29 @@ describe('PrismaAccountRepository', () => {
       type: AccountType.create('checking-account'),
     });
 
-    await repository.insert(
-      account,
-      auditEvent(account, 'created', '33ae528a-35cf-46c5-ac66-1ce8fc5afc8f'),
-    );
+    const auditId = '33ae528a-35cf-46c5-ac66-1ce8fc5afc8f';
+    try {
+      await repository.insert(account, auditEvent(account, 'created', auditId));
 
-    const restored = await repository.findByIdForOwner(
-      account.id,
-      account.ownerId,
-    );
-    expect(restored?.initialBalance.toDecimal()).toBe('0.30');
-    expect(restored?.initialBalance.currency.toSnapshot()).toEqual({
-      code: 'BRL',
-      minorUnitScale: 2,
-    });
-    const persisted = await client.account.findUniqueOrThrow({
-      where: { id: account.id },
-    });
-    expect(persisted.initialBalanceMinorUnits.toFixed(0)).toBe('30');
+      const restored = await repository.findByIdForOwner(
+        account.id,
+        account.ownerId,
+      );
+      expect(restored?.initialBalance.toDecimal()).toBe('0.30');
+      expect(restored?.initialBalance.currency.toSnapshot()).toEqual({
+        code: 'BRL',
+        minorUnitScale: 2,
+      });
+      const persisted = await client.account.findUniqueOrThrow({
+        where: { id: account.id },
+      });
+      expect(persisted.initialBalanceMinorUnits.toFixed(0)).toBe('30');
+    } finally {
+      await client.$transaction([
+        client.financialAuditEvent.deleteMany({ where: { id: auditId } }),
+        client.account.deleteMany({ where: { id: account.id } }),
+      ]);
+    }
   });
 
   it('round-trips exact money and enforces ownership in the query', async () => {
