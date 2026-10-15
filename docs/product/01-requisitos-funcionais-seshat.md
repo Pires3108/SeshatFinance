@@ -33,7 +33,7 @@ A primeira versão será uma aplicação web responsiva e instalável como PWA, 
 - **RF-004 — Segundo fator:** permitir ativar, confirmar, desativar e recuperar 2FA por aplicativo autenticador TOTP ou código por e-mail.
 - **RF-005 — Sessões:** mostrar sessões ativas e permitir encerrá-las individualmente ou em conjunto.
 - **RF-006 — Perfil:** permitir consultar e atualizar nome, preferências, moeda de apresentação e configurações de notificação.
-- **Recorte US-017 de RF-006:** o perfil inicial aceita `pt-BR`, fuso horário IANA válido e somente `BRL` como moeda de apresentação até US-021; alterar preferências não reescreve registros financeiros de origem. Configurações de notificação seguem fora deste recorte.
+- **Recorte US-017 de RF-006:** o perfil inicial aceita `pt-BR`, fuso horário IANA válido e somente `BRL` como moeda de apresentação até a definição do catálogo de apresentação e da conversão na RII-007; alterar preferências não reescreve registros financeiros de origem. Configurações de notificação seguem fora deste recorte.
 - **RF-007 — Eliminação da conta:** permitir solicitar eliminação da conta mediante confirmação dupla e novo desafio de autenticação; exigir 2FA quando estiver ativo.
 - **RF-008 — Portabilidade:** permitir exportar os dados pessoais e financeiros do usuário antes da eliminação.
 

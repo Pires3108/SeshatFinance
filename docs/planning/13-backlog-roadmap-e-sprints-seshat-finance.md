@@ -187,8 +187,8 @@ Uma história está concluída quando:
 
 - **US-019 [EP-02, L]** Implementar CRUD de contas, tipos, estado ativo e arquivamento.
 - **US-020 [EP-02, M]** Implementar saldo inicial e cálculo de saldo contábil.
-- **US-021 [EP-02, M]** Implementar Money, Currency e persistência Decimal.
-- **US-022 [EP-02, M]** Implementar multimoeda e cotação manual com origem preservada.
+- **US-021 [EP-02, M]** Implementar Money, Currency e persistência Decimal com moeda explícita e aritmética exata; operações que exigem arredondamento pertencem às histórias que as utilizam, após decisão RII-007.
+- **US-022 [EP-02, M]** Implementar multimoeda e cotação manual com origem preservada; conversão contábil depende de regra específica aprovada na RII-007.
 - **US-023 [EP-02, S]** Criar lista e detalhes de contas com estados vazios e erros.
 - **US-024 [EP-13, M]** Automatizar INV-003 a INV-006, INV-010 e INV-029.
 
