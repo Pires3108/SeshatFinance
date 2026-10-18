@@ -1,4 +1,8 @@
-import { Currency, type CurrencySnapshot } from './currency.js';
+import {
+  Currency,
+  InvalidCurrencyError,
+  type CurrencySnapshot,
+} from './currency.js';
 
 const decimalAmountPattern = /^(-?)(\d+)(?:\.(\d+))?$/u;
 
@@ -32,6 +36,7 @@ export class Money {
   ) {}
 
   public static fromDecimal(amount: string, currency: Currency): Money {
+    assertCurrency(currency);
     return new Money(
       parseMinorUnits(amount, currency.minorUnitScale),
       currency,
@@ -39,6 +44,10 @@ export class Money {
   }
 
   public static fromMinorUnits(minorUnits: bigint, currency: Currency): Money {
+    assertCurrency(currency);
+    if (typeof minorUnits !== 'bigint') {
+      throw new InvalidMoneyAmountError('Money minor units must be a bigint.');
+    }
     return new Money(minorUnits, currency);
   }
 
@@ -101,6 +110,11 @@ export class Money {
 }
 
 function parseMinorUnits(amount: string, scale: number): bigint {
+  if (typeof amount !== 'string') {
+    throw new InvalidMoneyAmountError(
+      'Money amount must be a plain decimal string.',
+    );
+  }
   const match = decimalAmountPattern.exec(amount);
   if (match === null) {
     throw new InvalidMoneyAmountError(
@@ -118,6 +132,12 @@ function parseMinorUnits(amount: string, scale: number): bigint {
   const paddedFraction = fractionalPart.padEnd(scale, '0');
   const digits = `${integerPart}${paddedFraction}`.replace(/^0+(?=\d)/u, '');
   return sign * BigInt(digits);
+}
+
+function assertCurrency(currency: Currency): void {
+  if (!(currency instanceof Currency)) {
+    throw new InvalidCurrencyError('Money requires an explicit currency.');
+  }
 }
 
 function formatMinorUnits(minorUnits: bigint, scale: number): string {

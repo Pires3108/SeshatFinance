@@ -65,6 +65,9 @@ importers:
       '@seshat/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@seshat/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@supabase/supabase-js':
         specifier: 2.116.0
         version: 2.116.0
@@ -87,9 +90,18 @@ importers:
       '@nestjs/testing':
         specifier: latest
         version: 12.0.3(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2))(@nestjs/core@12.0.3(@nestjs/common@12.0.3(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))
+      '@seshat/test-support':
+        specifier: workspace:*
+        version: link:../../packages/test-support
       '@types/node':
         specifier: latest
         version: 26.6.2
+      '@types/pg':
+        specifier: 8.15.5
+        version: 8.15.5
+      pg:
+        specifier: 8.16.3
+        version: 8.16.3
       tsx:
         specifier: latest
         version: 4.23.13
@@ -132,6 +144,10 @@ importers:
         version: 8.16.3
 
   apps/worker:
+    dependencies:
+      '@seshat/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
     devDependencies:
       '@types/node':
         specifier: latest
@@ -237,6 +253,21 @@ importers:
         version: 26.6.2
 
 packages:
+
+  '@playwright/test@1.63.0':
+    resolution: {integrity: sha512-oxMK4vllB9RK5NQ2l1pq1IfOf2AvnEuj/vYGDj0H2nMtmtZpKtCwt/l00GEO6xjGfpBNAvjovvYdCm50dRQkpQ==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  playwright-core@1.63.0:
+    resolution: {integrity: sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  playwright@1.63.0:
+    resolution: {integrity: sha512-+7ziBLidS4NaNCdt57SUDT+wYmmd5fmiQejUic/kb+YsYSCPyOOE9sebzMjNmQrsnNpDJqd4WHvV/8lfKfUDUg==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   '@babel/code-frame@7.29.7':
     resolution: {integrity: sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw==}
@@ -3314,6 +3345,16 @@ packages:
     resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
 
 snapshots:
+
+  '@playwright/test@1.63.0':
+    dependencies:
+      playwright: 1.63.0
+
+  playwright-core@1.63.0: {}
+
+  playwright@1.63.0:
+    dependencies:
+      playwright-core: 1.63.0
 
   '@babel/code-frame@7.29.7':
     dependencies:

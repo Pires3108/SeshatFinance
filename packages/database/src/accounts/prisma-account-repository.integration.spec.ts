@@ -34,6 +34,7 @@ describe('PrismaAccountRepository', () => {
     await migrationClient.connect();
     for (const path of [
       '../../prisma/migrations/20260920040000_create_accounts/migration.sql',
+      '../../prisma/migrations/20261015120000_add_account_agency/migration.sql',
       '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
     ]) {
       await migrationClient.query(
@@ -52,11 +53,53 @@ describe('PrismaAccountRepository', () => {
     await stop?.();
   });
 
+  it('persists and restores BRL 0.10 plus 0.20 as exactly 0.30', async () => {
+    if (client === undefined || repository === undefined) {
+      throw new Error('Repository was not initialized.');
+    }
+    const brl = Currency.create('BRL', 2);
+    const balance = Money.fromDecimal('0.10', brl).add(
+      Money.fromDecimal('0.20', brl),
+    );
+    const account = Account.create({
+      color: null,
+      createdAt: new Date('2026-09-20T12:00:00.000Z'),
+      description: null,
+      icon: null,
+      id: '09ee511c-0768-4546-b832-a2d19e233fa1',
+      initialBalance: balance,
+      institution: null,
+      name: 'Exact BRL account',
+      ownerId: '34c25d03-61d5-434d-b583-cb0ef1b296e5',
+      type: AccountType.create('checking-account'),
+    });
+
+    await repository.insert(
+      account,
+      auditEvent(account, 'created', '33ae528a-35cf-46c5-ac66-1ce8fc5afc8f'),
+    );
+
+    const restored = await repository.findByIdForOwner(
+      account.id,
+      account.ownerId,
+    );
+    expect(restored?.initialBalance.toDecimal()).toBe('0.30');
+    expect(restored?.initialBalance.currency.toSnapshot()).toEqual({
+      code: 'BRL',
+      minorUnitScale: 2,
+    });
+    const persisted = await client.account.findUniqueOrThrow({
+      where: { id: account.id },
+    });
+    expect(persisted.initialBalanceMinorUnits.toFixed(0)).toBe('30');
+  });
+
   it('round-trips exact money and enforces ownership in the query', async () => {
     if (client === undefined || repository === undefined) {
       throw new Error('Repository was not initialized.');
     }
     const account = Account.create({
+      agency: '0123',
       color: '#112233',
       createdAt: new Date('2026-09-20T12:00:00.000Z'),
       description: 'Synthetic account',
@@ -82,6 +125,7 @@ describe('PrismaAccountRepository', () => {
       account.ownerId,
     );
     expect(restored?.toSnapshot()).toEqual(account.toSnapshot());
+    expect(restored?.toSnapshot().agency).toBe('0123');
     expect(restored?.initialBalance.toDecimal()).toBe(
       '12345678901234567890.125',
     );
@@ -99,6 +143,14 @@ describe('PrismaAccountRepository', () => {
     ).resolves.toEqual([]);
     await expect(
       repository.listForOwner('e89b6ad0-7838-4a2c-9a21-c775ea78e22a'),
+    ).resolves.toEqual([]);
+    await expect(
+      repository.listForOwnedBalanceSummary(account.ownerId),
+    ).resolves.toHaveLength(1);
+    await expect(
+      repository.listForOwnedBalanceSummary(
+        'e89b6ad0-7838-4a2c-9a21-c775ea78e22a',
+      ),
     ).resolves.toEqual([]);
 
     if (restored === null) throw new Error('Account was not restored.');
@@ -125,7 +177,11 @@ describe('PrismaAccountRepository', () => {
         ),
       ),
     ).resolves.toBe(false);
-    await expect(client.financialAuditEvent.count()).resolves.toBe(2);
+    await expect(
+      client.financialAuditEvent.count({
+        where: { ownerId: account.ownerId, resourceId: account.id },
+      }),
+    ).resolves.toBe(2);
     const archived = await repository.findByIdForOwner(
       account.id,
       account.ownerId,
@@ -134,6 +190,9 @@ describe('PrismaAccountRepository', () => {
       throw new Error('Archived account was not restored.');
     const archivedAt = archived.toSnapshot().archivedAt;
     expect(archivedAt).toEqual(new Date('2026-09-20T13:00:00.000Z'));
+    await expect(
+      repository.listForOwnedBalanceSummary(account.ownerId),
+    ).resolves.toHaveLength(1);
 
     archived.moveToTrash(new Date('2026-09-20T14:00:00.000Z'));
     await expect(
@@ -152,6 +211,9 @@ describe('PrismaAccountRepository', () => {
       account.ownerId,
     );
     if (trashed === null) throw new Error('Trashed account was not restored.');
+    await expect(
+      repository.listForOwnedBalanceSummary(account.ownerId),
+    ).resolves.toEqual([]);
     trashed.restoreFromTrash(new Date('2026-09-20T15:00:00.000Z'));
     await expect(
       repository.save(
@@ -169,6 +231,7 @@ describe('PrismaAccountRepository', () => {
       account.ownerId,
     );
     expect(restoredAfterTrash?.toSnapshot()).toMatchObject({
+      agency: '0123',
       archivedAt,
       lifecycle: 'archived',
       trashedAt: null,
@@ -180,6 +243,48 @@ describe('PrismaAccountRepository', () => {
     await expect(
       repository.listForOwner(account.ownerId, 'trashed'),
     ).resolves.toEqual([]);
+    await expect(
+      repository.listForOwnedBalanceSummary(account.ownerId),
+    ).resolves.toHaveLength(1);
+    await expect(
+      client.financialAuditEvent.count({
+        where: {
+          action: 'restored_from_trash',
+          ownerId: account.ownerId,
+          resourceId: account.id,
+        },
+      }),
+    ).resolves.toBe(1);
+    if (restoredAfterTrash === null)
+      throw new Error('Account was not restored.');
+    restoredAfterTrash.updateDetails(
+      {
+        agency: null,
+        color: restoredAfterTrash.toSnapshot().color,
+        description: restoredAfterTrash.toSnapshot().description,
+        icon: restoredAfterTrash.toSnapshot().icon,
+        institution: restoredAfterTrash.toSnapshot().institution,
+        name: restoredAfterTrash.toSnapshot().name,
+        type: AccountType.create('checking-account'),
+      },
+      new Date('2026-09-20T16:00:00.000Z'),
+    );
+    await expect(
+      repository.save(
+        restoredAfterTrash,
+        4,
+        auditEvent(
+          restoredAfterTrash,
+          'updated',
+          'ffffffff-ffff-4fff-8fff-ffffffffffff',
+        ),
+      ),
+    ).resolves.toBe(true);
+    expect(
+      (
+        await repository.findByIdForOwner(account.id, account.ownerId)
+      )?.toSnapshot().agency,
+    ).toBeNull();
 
     const rolledBack = Account.create({
       color: null,
@@ -211,7 +316,12 @@ describe('PrismaAccountRepository', () => {
 
 function auditEvent(
   account: Account,
-  action: 'archived' | 'created' | 'moved-to-trash' | 'restored-from-trash',
+  action:
+    | 'archived'
+    | 'created'
+    | 'moved-to-trash'
+    | 'restored-from-trash'
+    | 'updated',
   id: string,
 ): FinancialAuditEvent {
   return FinancialAuditEvent.create({

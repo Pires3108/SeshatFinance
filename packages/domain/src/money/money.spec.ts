@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Currency } from './currency.js';
+import { Currency, InvalidCurrencyError } from './currency.js';
 import {
   CurrencyMismatchError,
   InvalidMoneyAmountError,
@@ -34,6 +34,21 @@ describe('Money', () => {
 
   it('rejects precision beyond the explicit currency scale', () => {
     expect(() => Money.fromDecimal('10.001', brl)).toThrow(
+      InvalidMoneyAmountError,
+    );
+  });
+
+  it('requires currency and a decimal text amount at runtime', () => {
+    expect(() => Money.fromDecimal('1.00', undefined as never)).toThrow(
+      InvalidCurrencyError,
+    );
+    expect(() => Money.fromMinorUnits(100n, undefined as never)).toThrow(
+      InvalidCurrencyError,
+    );
+    expect(() => Money.fromDecimal(1 as never, brl)).toThrow(
+      InvalidMoneyAmountError,
+    );
+    expect(() => Money.fromMinorUnits(100 as never, brl)).toThrow(
       InvalidMoneyAmountError,
     );
   });

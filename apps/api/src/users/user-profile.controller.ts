@@ -1,9 +1,11 @@
 import {
   GetOwnUserProfileUseCase,
+  InvalidUserProfilePreferencesError,
   UpdateOwnUserProfileUseCase,
   type UserProfile,
 } from '@seshat/application';
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -33,9 +35,21 @@ import { ZodValidationPipe } from '../platform/zod-validation.pipe.js';
 
 const updateProfileSchema = z.object({
   displayName: z.string().trim().min(1).max(120).nullable(),
-  locale: z.string().trim().min(2).max(16),
-  presentationCurrency: z.string().regex(/^[A-Z]{3}$/u),
-  timeZone: z.string().trim().min(1).max(64),
+  locale: z.literal('pt-BR'),
+  presentationCurrency: z.literal('BRL'),
+  timeZone: z
+    .string()
+    .trim()
+    .min(1)
+    .max(64)
+    .refine((value) => {
+      try {
+        new Intl.DateTimeFormat('en-US', { timeZone: value });
+        return true;
+      } catch {
+        return false;
+      }
+    }, 'Invalid IANA time zone.'),
 });
 
 type UpdateProfileRequest = z.infer<typeof updateProfileSchema>;
@@ -115,11 +129,9 @@ export class UserProfileController {
           nullable: true,
           type: 'string',
         },
-        locale: { maxLength: 16, minLength: 2, type: 'string' },
+        locale: { enum: ['pt-BR'], type: 'string' },
         presentationCurrency: {
-          maxLength: 3,
-          minLength: 3,
-          pattern: '^[A-Z]{3}$',
+          enum: ['BRL'],
           type: 'string',
         },
         timeZone: { maxLength: 64, minLength: 1, type: 'string' },
@@ -134,12 +146,19 @@ export class UserProfileController {
     @Body(new ZodValidationPipe(updateProfileSchema))
     body: UpdateProfileRequest,
   ): Promise<UserProfileResponse> {
-    return mapResponse(
-      await this.updateProfile.execute({
-        actorId: this.actorId(request),
-        ...body,
-      }),
-    );
+    try {
+      return mapResponse(
+        await this.updateProfile.execute({
+          actorId: this.actorId(request),
+          ...body,
+        }),
+      );
+    } catch (error) {
+      if (error instanceof InvalidUserProfilePreferencesError) {
+        throw new BadRequestException('Invalid profile preferences.');
+      }
+      throw error;
+    }
   }
 
   private actorId(request: FastifyRequest): string {

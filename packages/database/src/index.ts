@@ -1,4 +1,6 @@
 export { createPrismaClient } from './prisma/create-prisma-client.js';
+export { PrismaConfirmedIdentityProfileRepository } from './users/prisma-confirmed-identity-profile-repository.js';
+export { PrismaTransactionRunner } from './prisma/prisma-transaction-runner.js';
 export { PrismaUserProfileRepository } from './users/prisma-user-profile-repository.js';
 export { PrismaAccountRepository } from './accounts/prisma-account-repository.js';
 export { PrismaTransactionRepository } from './transactions/prisma-transaction-repository.js';
@@ -12,4 +14,8 @@ export { PrismaCostCenterRepository } from './classifications/prisma-cost-center
 export { PrismaFinancialAuditEventRepository } from './audit/prisma-financial-audit-event-repository.js';
 export { PrismaCreditCardRepository } from './cards/prisma-credit-card-repository.js';
 export { PrismaFamilyGroupRepository } from './family/prisma-family-group-repository.js';
+export { PrismaManualExchangeQuoteRepository } from './money/prisma-manual-exchange-quote-repository.js';
 export { PrismaOpaqueSessionRepository } from './auth/prisma-opaque-session-repository.js';
+export { PrismaLoginAttemptRepository } from './auth/prisma-login-attempt-repository.js';
+export { PrismaOriginAttemptRepository } from './auth/prisma-origin-attempt-repository.js';
+export { PrismaRecoveryRequestAttemptRepository } from './auth/prisma-recovery-request-attempt-repository.js';

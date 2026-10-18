@@ -6,9 +6,9 @@
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "prisma generate && tsc -p tsconfig.build.json",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
+    "build": "prisma generate --config prisma7.config.ts && tsc -p tsconfig.build.json",
+    "db:generate": "prisma generate --config prisma7.config.ts",
+    "db:migrate": "prisma migrate dev --config prisma7.config.ts",
     "db:seed": "tsx prisma/seed.ts",
     "lint": "eslint src",
     "test": "vitest run --passWithNoTests --exclude \"**/*.integration.spec.*\"",

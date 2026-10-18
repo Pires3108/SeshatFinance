@@ -1,4 +1,5 @@
 import {
+  AuthenticationRejectedError,
   AuthenticateUserUseCase,
   OpaqueSessionService,
 } from '@seshat/application';
@@ -13,8 +14,10 @@ import {
   Post,
   Req,
   Res,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { isIP } from 'node:net';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
@@ -56,15 +59,22 @@ export class SessionController {
   })
   public async login(
     @Body(new ZodValidationPipe(credentialsSchema)) credentials: Credentials,
+    @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ): Promise<void> {
-    let userId: string;
+    if (typeof request.ip !== 'string' || isIP(request.ip) === 0)
+      throw new ServiceUnavailableException();
+    let session: Awaited<ReturnType<OpaqueSessionService['issue']>>;
     try {
-      userId = (await this.authenticate.execute(credentials)).userId;
-    } catch {
-      throw new UnauthorizedException();
+      session = await this.authenticate.executeWith(
+        { ...credentials, origin: request.ip },
+        (identity) => this.sessions.issue(identity.userId),
+      );
+    } catch (error) {
+      if (error instanceof AuthenticationRejectedError)
+        throw new UnauthorizedException();
+      throw new ServiceUnavailableException();
     }
-    const session = await this.sessions.issue(userId);
     reply.header(
       'Set-Cookie',
       `${COOKIE_NAME}=${session.token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=43200`,
@@ -97,6 +107,21 @@ export class SessionController {
       'Set-Cookie',
       `${COOKIE_NAME}=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`,
     );
+  }
+
+  @Delete('others')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Close all other browser sessions' })
+  public async closeOtherSessions(
+    @Req() request: FastifyRequest,
+  ): Promise<void> {
+    const token = readSessionCookie(request.headers.cookie);
+    if (token === undefined) throw new UnauthorizedException();
+    try {
+      await this.sessions.revokeOtherSessions(token);
+    } catch {
+      throw new UnauthorizedException();
+    }
   }
 }
 

@@ -8,6 +8,10 @@ import type { PrismaClient } from '../generated/prisma/client.js';
 export class PrismaOpaqueSessionRepository implements OpaqueSessionRepository {
   public constructor(private readonly client: PrismaClient) {}
 
+  public async ready(): Promise<void> {
+    await this.client.$queryRaw`SELECT 1`;
+  }
+
   public async create(session: OpaqueSession): Promise<void> {
     await this.client.userSession.create({ data: session });
   }
@@ -34,6 +38,24 @@ export class PrismaOpaqueSessionRepository implements OpaqueSessionRepository {
   public async revoke(id: string, revokedAt: Date): Promise<void> {
     await this.client.userSession.updateMany({
       where: { id, revokedAt: null },
+      data: { revokedAt },
+    });
+  }
+
+  public async revokeOthers(
+    userId: string,
+    exceptId: string,
+    revokedAt: Date,
+  ): Promise<void> {
+    await this.client.userSession.updateMany({
+      where: { userId, id: { not: exceptId }, revokedAt: null },
+      data: { revokedAt },
+    });
+  }
+
+  public async revokeAll(userId: string, revokedAt: Date): Promise<void> {
+    await this.client.userSession.updateMany({
+      where: { userId, revokedAt: null },
       data: { revokedAt },
     });
   }

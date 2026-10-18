@@ -10,6 +10,7 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 
 **Dado** um e-mail ainda não cadastrado, **quando** o usuário concluir cadastro e confirmação, **então** poderá entrar com e-mail e senha. Cinco falhas consecutivas devem aplicar bloqueio temporário sem revelar se a conta existe.  
 **Dado** um usuário autenticado, **quando** ele sair ou a sessão atingir 30 minutos de inatividade ou 12 horas desde o login, **então** o token deixará de autorizar consultas e gravações; o logout também revoga a sessão no servidor.
+**Dado** um pedido de recuperação para e-mail existente ou inexistente, **quando** o usuário solicitar o link, **então** a resposta pública será indistinguível e pedidos repetidos para a mesma identidade serão limitados. **Dado** um link válido e senha de ao menos 12 caracteres que não conste da base de senhas comprometidas, **quando** concluir a recuperação, **então** a senha será atualizada uma vez e todas as sessões locais serão revogadas; link expirado ou reutilizado será rejeitado.
 **Referências:** RF-001 a RF-005; RNF-024 a RNF-028.
 
 ### CA-002 — Segundo fator
@@ -19,7 +20,13 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 
 ### CA-003 — Conta e saldo
 
-**Dado** usuário autenticado, **quando** cadastrar conta válida com saldo inicial, **então** ela aparecerá na lista e o consolidado será atualizado exatamente uma vez.  
+**Dado** usuário autenticado, **quando** cadastrar conta válida com saldo inicial, **então** ela aparecerá na lista e o consolidado na mesma moeda será atualizado exatamente uma vez. Moedas distintas não são somadas sem regra explícita de conversão.
+
+**Dado** uma cotação manual em BRL, USD ou EUR, **quando** ela for registrada ou corrigida com a mesma chave de idempotência, **então** a taxa decimal e sua origem serão preservadas, a correção criará nova versão apenas uma vez e nenhum saldo ou lançamento original será alterado.
+
+**Dado** contas com saldos em BRL e USD, **quando** consultar a consolidação em BRL, **então** a consulta apresentará cada saldo original e o total exato de cada moeda, indicará `conversion-policy-pending` e não apresentará um total convertido. Contas na lixeira não compõem a consulta; contas arquivadas permanecem no histórico financeiro.
+
+**Dado** um registro histórico em BRL com escala diferente da escala vigente, **quando** consultar a consolidação, **então** o sistema preservará seu valor e indicará `currency-scale-mismatch` sem descartar frações.
 **Dado** o catálogo padrão de tipos de conta, **quando** consultá-lo, **então** os tipos previstos em RF-016 serão apresentados em português sem impedir chaves personalizadas.
 **Referências:** RF-015 a RF-020; RN-002 a RN-005.
 

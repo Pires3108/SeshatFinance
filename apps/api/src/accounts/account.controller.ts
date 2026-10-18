@@ -53,14 +53,19 @@ import { z } from 'zod';
 import { AuthenticatedActorContext } from '../auth/authenticated-actor-context.js';
 import { BearerAuthGuard } from '../auth/bearer-auth.guard.js';
 import { ZodValidationPipe } from '../platform/zod-validation.pipe.js';
+import {
+  supportedCurrencyCodeSchema,
+  supportedCurrencyMinorUnitScaleSchema,
+} from '../platform/supported-currency-schema.js';
 
 const accountIdSchema = z.uuid();
 const plainDecimalPattern = /^-?\d+(?:\.\d+)?$/u;
 const typeKeyPattern = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u;
 const createAccountSchema = z.object({
+  agency: z.string().trim().nullable().optional(),
   color: z.string().trim().min(1).nullable(),
-  currencyCode: z.string().regex(/^[A-Z]{3}$/u),
-  currencyMinorUnitScale: z.number().int().min(0).max(18),
+  currencyCode: supportedCurrencyCodeSchema,
+  currencyMinorUnitScale: supportedCurrencyMinorUnitScaleSchema,
   description: z.string().trim().min(1).nullable(),
   icon: z.string().trim().min(1).nullable(),
   initialBalance: z.string().max(1002).regex(plainDecimalPattern),
@@ -80,6 +85,7 @@ const listAccountsSchema = z.object({
   lifecycle: z.enum(['active', 'archived', 'trashed']).optional(),
 });
 const updateAccountSchema = z.object({
+  agency: z.string().trim().nullable().optional(),
   color: z.string().trim().min(1).nullable(),
   description: z.string().trim().min(1).nullable(),
   icon: z.string().trim().min(1).nullable(),
@@ -93,6 +99,7 @@ type LifecycleRequest = z.infer<typeof lifecycleSchema>;
 type ListAccountsRequest = z.infer<typeof listAccountsSchema>;
 type UpdateAccountRequest = z.infer<typeof updateAccountSchema>;
 type AccountResponse = Readonly<{
+  agency: string | null;
   archivedAt: string | null;
   color: string | null;
   createdAt: string;
@@ -113,6 +120,7 @@ type AccountResponse = Readonly<{
 
 const accountResponseSchema: SchemaObject = {
   properties: {
+    agency: { nullable: true, type: 'string' },
     archivedAt: { format: 'date-time', nullable: true, type: 'string' },
     color: { nullable: true, type: 'string' },
     createdAt: { format: 'date-time', type: 'string' },
@@ -131,6 +139,7 @@ const accountResponseSchema: SchemaObject = {
     version: { minimum: 1, type: 'integer' },
   },
   required: [
+    'agency',
     'archivedAt',
     'color',
     'createdAt',
@@ -184,10 +193,12 @@ export class AccountController {
     body: CreateAccountRequest,
   ): Promise<AccountResponse> {
     try {
+      const { agency, ...details } = body;
       return mapAccount(
         await this.createAccount.execute({
           actorId: this.actorId(request),
-          ...body,
+          ...details,
+          ...(agency === undefined ? {} : { agency }),
         }),
       );
     } catch (error) {
@@ -248,11 +259,13 @@ export class AccountController {
     body: UpdateAccountRequest,
   ): Promise<AccountResponse> {
     try {
+      const { agency, ...details } = body;
       return mapAccount(
         await this.updateAccount.execute({
           accountId,
           actorId: this.actorId(request),
-          ...body,
+          ...details,
+          ...(agency === undefined ? {} : { agency }),
         }),
       );
     } catch (error) {
@@ -308,6 +321,7 @@ export class AccountController {
 function mapAccount(account: Account): AccountResponse {
   const snapshot = account.toSnapshot();
   return {
+    agency: snapshot.agency,
     archivedAt: snapshot.archivedAt?.toISOString() ?? null,
     color: snapshot.color,
     createdAt: snapshot.createdAt.toISOString(),
@@ -350,9 +364,10 @@ function createAccountBodySchema(): SchemaObject {
   return {
     additionalProperties: false,
     properties: {
+      agency: { nullable: true, type: 'string' },
       color: { nullable: true, type: 'string' },
-      currencyCode: { pattern: '^[A-Z]{3}$', type: 'string' },
-      currencyMinorUnitScale: { maximum: 18, minimum: 0, type: 'integer' },
+      currencyCode: { enum: ['BRL', 'USD', 'EUR'], type: 'string' },
+      currencyMinorUnitScale: { maximum: 2, minimum: 2, type: 'integer' },
       description: { nullable: true, type: 'string' },
       icon: { nullable: true, type: 'string' },
       initialBalance: {
@@ -383,6 +398,7 @@ function updateAccountBodySchema(): SchemaObject {
   return {
     additionalProperties: false,
     properties: {
+      agency: { nullable: true, type: 'string' },
       color: { nullable: true, type: 'string' },
       description: { nullable: true, type: 'string' },
       icon: { nullable: true, type: 'string' },

@@ -7,6 +7,12 @@
         "matcher": "Shell",
         "timeout": 5,
         "failClosed": true
+      },
+      {
+        "command": "node .cursor/hooks/require-webhook-waiter.mjs",
+        "matcher": "Shell",
+        "timeout": 5,
+        "failClosed": true
       }
     ]
   }

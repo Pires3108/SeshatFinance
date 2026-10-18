@@ -158,6 +158,8 @@ Uma história está concluída quando:
 - **US-007 [EP-00, L]** Configurar Prisma, schema inicial, migrations e seeds sintéticos.
 - **US-008 [EP-00, M]** Implementar envelope de erro, correlationId e logs estruturados sem dados financeiros.
 - **US-009 [EP-00, M]** Configurar REST v1, validação Zod e geração OpenAPI.
+  - Contrato verificável: requisições autenticadas válidas executam o caso de uso e retornam a forma documentada; entrada monetária inválida é rejeitada antes da escrita; divergência entre OpenAPI gerado e versão publicada falha no CI.
+  - O cabeçalho HTTP `Idempotency-Key` não integra o contrato da US-009. Sua semântica para transferências pertence à US-032 (SESHAT-48), incluindo repetição e concorrência; esta decisão não estende a US-032 a todos os comandos financeiros.
 - **US-010 [EP-00, M]** Gerar cliente TypeScript para o frontend e verificar mudanças de contrato no CI.
 - **US-011 [EP-00, M]** Configurar Vitest, Testcontainers e fixtures básicas.
 - **US-012 [EP-00, S]** Implementar clock, gerador de IDs e abstrações de transação injetáveis.
@@ -172,7 +174,7 @@ Uma história está concluída quando:
 
 - **US-013 [EP-01, L]** Integrar Supabase Auth por adaptador para cadastro com confirmação de e-mail.
 - **US-014 [EP-01, M]** Implementar login, logout e tratamento seguro de sessão.
-- **US-015 [EP-01, M]** Implementar recuperação de senha sem enumeração de usuários.
+- **US-015 [EP-01, M]** Implementar recuperação de senha sem enumeração de usuários; conclusão técnica descrita na ADR-032, sujeita às decisões RII-004 e RII-006.
 - **US-016 [EP-01, M]** Resolver ator autenticado na API e proteger endpoints.
 - **US-017 [EP-01, S]** Criar perfil e preferências iniciais.
 - **US-018 [EP-13, M]** Cobrir autenticação com testes de integração, rate limit e E2E.
@@ -184,9 +186,9 @@ Uma história está concluída quando:
 **Objetivo:** permitir estruturar o patrimônio inicial.
 
 - **US-019 [EP-02, L]** Implementar CRUD de contas, tipos, estado ativo e arquivamento.
-- **US-020 [EP-02, M]** Implementar saldo inicial e cálculo de saldo contábil.
-- **US-021 [EP-02, M]** Implementar Money, Currency e persistência Decimal.
-- **US-022 [EP-02, M]** Implementar multimoeda e cotação manual com origem preservada.
+- **US-020 [EP-02, M]** Implementar saldo inicial e cálculo exato do saldo contábil a partir de lançamentos efetivos; a prova de que projeções não o alteram pertence à US-059, quando existir seu modelo.
+- **US-021 [EP-02, M]** Implementar Money, Currency e persistência Decimal com moeda explícita e aritmética exata; operações que exigem arredondamento pertencem às histórias que as utilizam, após decisão RII-007.
+- **US-022 [EP-02, M]** Implementar multimoeda e cotação manual com origem preservada; conversão contábil depende de regra específica aprovada na RII-007.
 - **US-023 [EP-02, S]** Criar lista e detalhes de contas com estados vazios e erros.
 - **US-024 [EP-13, M]** Automatizar INV-003 a INV-006, INV-010 e INV-029.
 
@@ -276,7 +278,7 @@ Uma história está concluída quando:
 
 **Objetivo:** construir a base das previsões explícitas.
 
-- **US-059 [EP-08, L]** Implementar regras de recorrência, pausa, início e fim.
+- **US-059 [EP-08, L]** Implementar regras de recorrência, pausa, início e fim, com prova de que eventos projetados não alteram o saldo contábil efetivo.
 - **US-060 [EP-08, L]** Gerar ocorrências projetadas por até 12 meses.
 - **US-061 [EP-08, M]** Implementar eventos futuros opcionais e obrigatórios.
 - **US-062 [EP-08, L]** Implementar confirmação organizacional idempotente.

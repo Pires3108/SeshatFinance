@@ -5,7 +5,7 @@ import type {
 } from '@seshat/application';
 import type { FinancialAuditEvent } from '@seshat/domain';
 
-import { insertFinancialAuditEvent } from '../audit/prisma-financial-audit-event-repository.js';
+import { insertFinancialAuditEvent } from '../audit/index.js';
 import type { PrismaClient } from '../generated/prisma/client.js';
 
 export class PrismaTransactionClassificationRepository implements TransactionClassificationRepository {

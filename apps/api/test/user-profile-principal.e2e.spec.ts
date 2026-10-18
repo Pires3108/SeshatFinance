@@ -86,4 +86,26 @@ describe('User profile HTTP principal binding', () => {
       timeZone: 'America/Sao_Paulo',
     });
   });
+
+  it.each([
+    { presentationCurrency: 'USD', timeZone: 'America/Sao_Paulo' },
+    { presentationCurrency: 'BRL', timeZone: 'Invalid/Zone' },
+  ])(
+    'rejects unsupported preferences before invoking the update use case',
+    async (preferences) => {
+      const response = await application.inject({
+        headers: { authorization: 'Bearer actor-b-token' },
+        method: 'PATCH',
+        payload: {
+          displayName: 'Actor B',
+          locale: 'pt-BR',
+          ...preferences,
+        },
+        url: '/api/v1/users/me/profile',
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(updateProfile.execute).not.toHaveBeenCalled();
+    },
+  );
 });
