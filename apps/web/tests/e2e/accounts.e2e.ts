@@ -169,7 +169,8 @@ test('revoked session clears an already displayed account list on return', async
   await expect(page.locator('main').getByRole('alert')).toContainText(
     'Seu acesso expirou.',
   );
-  await expect(page.getByText('Saldo contábil')).toHaveCount(0);
+  await expect(page.getByText('1.234,50 BRL')).toHaveCount(0);
+  await expect(page.getByRole('listitem')).toHaveCount(0);
 });
 
 test('a visible account detail rechecks an expired session within one minute', async ({
