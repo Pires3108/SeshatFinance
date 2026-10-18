@@ -26,6 +26,7 @@ type ViewState =
   | 'forbidden'
   | 'not-found'
   | 'unavailable';
+const SESSION_RECHECK_MS = 60_000;
 
 export function AccountDetail({ accountId }: { accountId: string }): ReactNode {
   const [state, setState] = useState<ViewState>('loading');
@@ -89,9 +90,11 @@ export function AccountDetail({ accountId }: { accountId: string }): ReactNode {
     };
     window.addEventListener('focus', refresh);
     document.addEventListener('visibilitychange', refresh);
+    const interval = window.setInterval(refresh, SESSION_RECHECK_MS);
     return () => {
       window.removeEventListener('focus', refresh);
       document.removeEventListener('visibilitychange', refresh);
+      window.clearInterval(interval);
     };
   }, [load]);
   useEffect(() => {
@@ -210,73 +213,73 @@ export function AccountDetail({ accountId }: { accountId: string }): ReactNode {
         {state === 'ready' &&
           item !== null &&
           item.account.id === accountId && (
-          <article className="account-detail">
-            <span className="section-label">Detalhe da conta</span>
-            <h1 ref={resultRef} tabIndex={-1}>
-              {item.account.name}
-            </h1>
-            <dl>
-              <div>
-                <dt>Tipo</dt>
-                <dd>{typeLabel(item.account)}</dd>
+            <article className="account-detail">
+              <span className="section-label">Detalhe da conta</span>
+              <h1 ref={resultRef} tabIndex={-1}>
+                {item.account.name}
+              </h1>
+              <dl>
+                <div>
+                  <dt>Tipo</dt>
+                  <dd>{typeLabel(item.account)}</dd>
+                </div>
+                <div>
+                  <dt>Estado</dt>
+                  <dd>{lifecycleLabel(item.account.lifecycle)}</dd>
+                </div>
+                <div>
+                  <dt>Moeda</dt>
+                  <dd>{item.account.currencyCode}</dd>
+                </div>
+                <div>
+                  <dt>Saldo contábil</dt>
+                  <dd>{formatBalance(item.balance)}</dd>
+                </div>
+              </dl>
+              <p className="account-note">
+                O saldo contábil vem da API e inclui o histórico da conta.
+                Arquivar preserva esse histórico.
+              </p>
+              <div className="account-actions">
+                {item.account.lifecycle === 'active' && (
+                  <button
+                    disabled={busy}
+                    onClick={() => void change('archive')}
+                    type="button"
+                  >
+                    Arquivar
+                  </button>
+                )}
+                {item.account.lifecycle === 'archived' && (
+                  <button
+                    disabled={busy}
+                    onClick={() => void change('unarchive')}
+                    type="button"
+                  >
+                    Desarquivar
+                  </button>
+                )}
+                {item.account.lifecycle !== 'trashed' && (
+                  <button
+                    disabled={busy}
+                    onClick={() => void change('move-to-trash')}
+                    type="button"
+                  >
+                    Mover para a lixeira
+                  </button>
+                )}
+                {item.account.lifecycle === 'trashed' && (
+                  <button
+                    disabled={busy}
+                    onClick={() => void change('restore-from-trash')}
+                    type="button"
+                  >
+                    Restaurar da lixeira
+                  </button>
+                )}
               </div>
-              <div>
-                <dt>Estado</dt>
-                <dd>{lifecycleLabel(item.account.lifecycle)}</dd>
-              </div>
-              <div>
-                <dt>Moeda</dt>
-                <dd>{item.account.currencyCode}</dd>
-              </div>
-              <div>
-                <dt>Saldo contábil</dt>
-                <dd>{formatBalance(item.balance)}</dd>
-              </div>
-            </dl>
-            <p className="account-note">
-              O saldo contábil vem da API e inclui o histórico da conta.
-              Arquivar preserva esse histórico.
-            </p>
-            <div className="account-actions">
-              {item.account.lifecycle === 'active' && (
-                <button
-                  disabled={busy}
-                  onClick={() => void change('archive')}
-                  type="button"
-                >
-                  Arquivar
-                </button>
-              )}
-              {item.account.lifecycle === 'archived' && (
-                <button
-                  disabled={busy}
-                  onClick={() => void change('unarchive')}
-                  type="button"
-                >
-                  Desarquivar
-                </button>
-              )}
-              {item.account.lifecycle !== 'trashed' && (
-                <button
-                  disabled={busy}
-                  onClick={() => void change('move-to-trash')}
-                  type="button"
-                >
-                  Mover para a lixeira
-                </button>
-              )}
-              {item.account.lifecycle === 'trashed' && (
-                <button
-                  disabled={busy}
-                  onClick={() => void change('restore-from-trash')}
-                  type="button"
-                >
-                  Restaurar da lixeira
-                </button>
-              )}
-            </div>
-          </article>
-        )}
+            </article>
+          )}
       </main>
     </div>
   );

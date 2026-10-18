@@ -144,17 +144,19 @@ test('revoked session clears an already displayed account list on return', async
       await route.fulfill({ status: 401, json: { error: 'unauthorized' } });
     } else {
       await route.fulfill({
-        json: [{
-          account: {
-            id,
-            name: 'Conta protegida',
-            typeKey: 'checking-account',
-            lifecycle: 'active',
-            currencyCode: 'BRL',
-            currencyMinorUnitScale: 2,
+        json: [
+          {
+            account: {
+              id,
+              name: 'Conta protegida',
+              typeKey: 'checking-account',
+              lifecycle: 'active',
+              currencyCode: 'BRL',
+              currencyMinorUnitScale: 2,
+            },
+            balance,
           },
-          balance,
-        }],
+        ],
       });
     }
   });
@@ -162,6 +164,34 @@ test('revoked session clears an already displayed account list on return', async
   await expect(page.getByText('1.234,50 BRL')).toBeVisible();
   revoked = true;
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(page.getByRole('alert')).toContainText('Seu acesso expirou.');
+  await expect(page.getByText('Saldo contábil')).toHaveCount(0);
+});
+
+test('a visible account detail rechecks an expired session within one minute', async ({
+  page,
+}) => {
+  let revoked = false;
+  const account = {
+    id,
+    name: 'Conta protegida',
+    typeKey: 'checking-account',
+    lifecycle: 'active',
+    currencyCode: 'BRL',
+    currencyMinorUnitScale: 2,
+  };
+  await page.clock.install();
+  await page.route(`**/api/accounts/${id}`, async (route) => {
+    await route.fulfill(
+      revoked
+        ? { status: 401, json: { error: 'unauthorized' } }
+        : { json: { account, balance } },
+    );
+  });
+  await page.goto(`/contas/${id}`);
+  await expect(page.getByText('1.234,50 BRL')).toBeVisible();
+  revoked = true;
+  await page.clock.fastForward(60_000);
   await expect(page.getByRole('alert')).toContainText('Seu acesso expirou.');
   await expect(page.getByText('Saldo contábil')).toHaveCount(0);
 });
@@ -195,18 +225,20 @@ test('a delayed account response cannot replace a later account detail', async (
   await page.route(`**/api/accounts/${id}`, async (route) => {
     resolveFirst?.();
     await new Promise((resolve) => setTimeout(resolve, 500));
-    await route.fulfill({
-      json: {
-        account: {
-          ...accounts[0],
-          typeKey: 'checking-account',
-          lifecycle: 'active',
-          currencyCode: 'BRL',
-          currencyMinorUnitScale: 2,
+    await route
+      .fulfill({
+        json: {
+          account: {
+            ...accounts[0],
+            typeKey: 'checking-account',
+            lifecycle: 'active',
+            currencyCode: 'BRL',
+            currencyMinorUnitScale: 2,
+          },
+          balance,
         },
-        balance,
-      },
-    }).catch(() => undefined);
+      })
+      .catch(() => undefined);
   });
   await page.route(`**/api/accounts/${secondId}`, async (route) => {
     await route.fulfill({
@@ -227,7 +259,9 @@ test('a delayed account response cannot replace a later account detail', async (
   await firstRequested;
   await page.goBack();
   await page.getByRole('link', { name: 'Segunda conta' }).click();
-  await expect(page.getByRole('heading', { name: 'Segunda conta' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Segunda conta' }),
+  ).toBeVisible();
   await expect(page.getByText('55,00 BRL')).toBeVisible();
   await page.waitForTimeout(600);
   await expect(page.getByText('1.234,50 BRL')).toHaveCount(0);

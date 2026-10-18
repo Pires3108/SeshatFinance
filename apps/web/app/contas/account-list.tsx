@@ -25,6 +25,7 @@ const filters: readonly { value: Lifecycle; label: string }[] = [
   { value: 'archived', label: 'Arquivadas' },
   { value: 'trashed', label: 'Lixeira' },
 ];
+const SESSION_RECHECK_MS = 60_000;
 
 type ViewState =
   'loading' | 'ready' | 'unauthorized' | 'forbidden' | 'unavailable';
@@ -87,9 +88,11 @@ export function AccountList(): ReactNode {
     };
     window.addEventListener('focus', refresh);
     document.addEventListener('visibilitychange', refresh);
+    const interval = window.setInterval(refresh, SESSION_RECHECK_MS);
     return () => {
       window.removeEventListener('focus', refresh);
       document.removeEventListener('visibilitychange', refresh);
+      window.clearInterval(interval);
     };
   }, [filter, load]);
   useEffect(() => {
