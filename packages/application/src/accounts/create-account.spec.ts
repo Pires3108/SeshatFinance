@@ -6,6 +6,7 @@ import type { IdentifierGenerator } from '../ports/identifier-generator.js';
 import {
   AccountVersionConflictError,
   ChangeOwnedAccountLifecycleUseCase,
+  OwnedAccountNotFoundError,
   type AccountRepository,
   CreateAccountUseCase,
   GetOwnedAccountUseCase,
@@ -79,6 +80,7 @@ describe('CreateAccountUseCase', () => {
     const useCase = new CreateAccountUseCase(repository, clock, identifiers);
 
     const account = await useCase.execute({
+      agency: ' 0123 ',
       actorId: 'owner-id',
       color: null,
       currencyCode: 'BRL',
@@ -92,6 +94,7 @@ describe('CreateAccountUseCase', () => {
     });
 
     expect(account.toSnapshot()).toMatchObject({
+      agency: '0123',
       createdAt: instant,
       id: '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
       ownerId: 'owner-id',
@@ -170,6 +173,7 @@ describe('UpdateOwnedAccountDetailsUseCase', () => {
     );
 
     const result = await update.execute({
+      agency: ' 4567 ',
       accountId: 'account-id',
       actorId: 'owner-id',
       color: '#112233',
@@ -181,6 +185,7 @@ describe('UpdateOwnedAccountDetailsUseCase', () => {
     });
 
     expect(result.toSnapshot()).toMatchObject({
+      agency: '4567',
       color: '#112233',
       description: 'Reserva mensal',
       icon: 'piggy-bank',
@@ -194,10 +199,64 @@ describe('UpdateOwnedAccountDetailsUseCase', () => {
       id: 'update-audit-id',
       resourceId: 'account-id',
     });
+
+    await expect(
+      update.execute({
+        accountId: 'account-id',
+        actorId: 'foreign-owner',
+        agency: null,
+        color: null,
+        description: null,
+        icon: null,
+        institution: null,
+        name: 'Foreign change',
+        typeKey: 'checking-account',
+      }),
+    ).rejects.toBeInstanceOf(OwnedAccountNotFoundError);
+    expect(repository.inserted?.toSnapshot().agency).toBe('4567');
+    expect(repository.auditEvents).toHaveLength(2);
   });
 });
 
 describe('ChangeOwnedAccountLifecycleUseCase', () => {
+  it('refuses a foreign owner without changing state or recording an audit event', async () => {
+    const repository = new RecordingAccountRepository();
+    await new CreateAccountUseCase(
+      repository,
+      { now: (): Date => new Date('2026-09-20T12:00:00.000Z') },
+      { generate: (): string => 'account-id' },
+    ).execute({
+      actorId: 'owner-id',
+      color: null,
+      currencyCode: 'BRL',
+      currencyMinorUnitScale: 2,
+      description: null,
+      icon: null,
+      initialBalance: '0',
+      institution: null,
+      name: 'Conta',
+      typeKey: 'checking-account',
+    });
+    const useCase = new ChangeOwnedAccountLifecycleUseCase(
+      repository,
+      { now: (): Date => new Date('2026-09-20T13:00:00.000Z') },
+      { generate: (): string => 'audit-id' },
+    );
+
+    await expect(
+      useCase.execute({
+        accountId: 'account-id',
+        action: 'archive',
+        actorId: 'foreign-owner',
+      }),
+    ).rejects.toBeInstanceOf(OwnedAccountNotFoundError);
+    expect(repository.inserted?.toSnapshot()).toMatchObject({
+      lifecycle: 'active',
+      version: 1,
+    });
+    expect(repository.auditEvents).toHaveLength(1);
+  });
+
   it('persists an owned lifecycle transition with the expected version', async () => {
     const repository = new RecordingAccountRepository();
     const create = new CreateAccountUseCase(

@@ -25,29 +25,24 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-004 — Política de senha do cadastro
 
-- **Estado:** aberto.
-- **Referências:** RF-001; RNF-024; CA-001; US-013.
-- **Risco:** os requisitos delegam o armazenamento seguro ao provedor de identidade, mas não definem comprimento mínimo, composição, verificação contra senhas comprometidas ou mensagens de orientação.
-- **Decisão necessária:** definir a política no Supabase Auth e refletir a mesma orientação na interface, sem manter uma segunda política divergente na API.
-- **Limite atual:** a API valida somente presença e limites estruturais; o provedor aplica a política efetiva até a decisão ser registrada.
-- **Interface atual:** o formulário web de cadastro replica somente esses limites estruturais; não promete nem impõe uma política de força de senha ainda não decidida.
+- **Estado:** decisão registrada em 10/10/2026; implementação de cadastro e recuperação em US-015.
+- **Referências:** RF-001; RF-003; RNF-024; CA-001; US-013; US-015; ADR-032.
+- **Decisão:** exigir pelo menos 12 caracteres para senhas novas de cadastro e recuperação. A API consulta a versão gratuita do Pwned Passwords com o prefixo de cinco caracteres do SHA-1 via k-anonymity e rejeita senhas comprometidas. Falha da consulta impede a gravação. Não depender do recurso de proteção contra senhas vazadas do Supabase, disponível apenas em planos pagos.
+- **Limite:** o provedor continua responsável pelo armazenamento e pode aplicar regras adicionais; a API traduz `weak_password` para rejeição genérica. O login mantém compatibilidade com credenciais antigas sem impor mínimo estrutural antes da autenticação.
 
 ### RII-005 — Persistência e expiração da sessão web
 
-- **Estado:** aberto.
+- **Estado:** resolvido pela ADR-013 e implementado na US-014.
 - **Referências:** RF-002; RF-005; RNF-026; RNF-027; US-014; US-016.
-- **Risco:** retornar tokens ao JavaScript ou aceitar apenas a expiração padrão do Supabase não comprova cookies HttpOnly, 30 minutos de inatividade nem o máximo absoluto de 12 horas.
-- **Decisão necessária:** definir se a API manterá uma sessão opaca própria ou um envelope de refresh token no servidor, incluindo revogação, rotação, inatividade e múltiplos dispositivos.
-- **Limite atual:** autenticação e tradução da sessão ficam isoladas no adaptador; nenhum endpoint de login ou cookie é publicado até essa estratégia preservar todos os requisitos.
-- **Interface atual:** o cadastro web permite solicitar a confirmação de e-mail, mas não apresenta entrada na conta nem afirma que CA-001 esteja completo.
+- **Decisão:** a API mantém sessões opacas próprias com cookie `__Host-`, duração absoluta de 12 horas, inatividade de 30 minutos e revogação no servidor. Tokens do Supabase não são enviados ao navegador. Ver ADR-013.
+- **Verificação:** testes unitários de expiração e revogação e testes PostgreSQL de persistência de sessões. A recuperação de senha revoga todas as sessões locais do usuário conforme ADR-032.
 
 ### RII-006 — Política progressiva de limitação de autenticação
 
-- **Estado:** aberto.
-- **Referências:** RNF-025; US-014; US-018.
-- **Risco:** embora o bloqueio após cinco falhas esteja definido, não há duração inicial, progressão, janela de recuperação nem divisão de responsabilidade entre API e Supabase; inferir esses parâmetros pode bloquear usuários legítimos ou oferecer proteção apenas aparente.
-- **Decisão necessária:** definir as janelas e durações progressivas, as chaves de origem consideradas e qual camada manterá o estado compartilhado entre instâncias.
-- **Limite atual:** não publicar login nem afirmar a conclusão do rate limit; testes de cadastro, recuperação e resolução de ator continuam independentes.
+- **Estado:** decisão de origem registrada em 13/10/2026 para US-018; implementação e verificação em andamento.
+- **Referências:** RNF-025; US-014; US-015; US-018; ADR-032.
+- **Decisão:** login aplica bloqueio progressivo de 5 a 60 minutos após cinco falhas; pedidos de recuperação usam contagem própria e a mesma progressão após cinco pedidos por identidade normalizada. O estado compartilhado fica no PostgreSQL, com chave HMAC que não persiste e-mail em claro. A resposta pública de recuperação continua genérica inclusive quando limitada.
+- **Decisão US-018:** a origem é o IP do socket recebido pela API Fastify com `trustProxy: false`; `X-Forwarded-For` do cliente não é confiável. O controle compartilhado no PostgreSQL usa HMAC do IP e contadores separados para falhas de login e pedidos de recuperação, com bloqueio após cinco eventos e progressão de 5 a 60 minutos. Antes de implantar atrás de proxy, é obrigatória configuração e verificação explícita de uma lista de IPs/CIDRs de proxies confiáveis. A descrição antiga de SESHAT-35 menciona progressão até 80 minutos; prevalece a política já aceita e implementada de 5 a 60 minutos.
 
 ### RII-007 — Catálogo monetário e política de arredondamento
 
@@ -57,6 +52,8 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Decisão aplicada à US-022:** novos registros de contas, movimentações e transferências pela API aceitam BRL, USD e EUR, todos com duas casas, conforme os critérios detalhados no Jira. `Currency` e `Money` continuam representando explicitamente a moeda e a escala dos dados históricos. Cotação manual registra par, taxa decimal textual exata, vigência, origem, autor e versões imutáveis; não converte nem altera saldos.
 - **Decisão ainda necessária:** aprovar catálogo versionado além dessas três moedas, matriz de arredondamento para conversões, rateios, juros e apresentação, precedência entre cotações e comparação para ordenação por valor entre moedas diferentes.
 - **Limite atual:** a consulta de saldos por conta e totais por moeda informa `conversion-policy-pending` no consolidado em BRL quando houver moeda diferente de BRL. Sem moeda estrangeira, soma BRL exatamente; com moeda estrangeira, não apresenta total convertido. Não somar moedas distintas nem usar cotação externa informativa para modificar valor financeiro. Filtros por conta, tipo, estado e intervalo explícito, com ordenação por data, permanecem independentes.
+- **Decisão de escopo da US-021 (15/10/2026):** o aceite desta história cobre moeda obrigatória, aritmética exata entre valores da mesma moeda, rejeição de moedas incompatíveis e persistência Decimal sem perda de precisão. Divisão que precise arredondar, rateios, juros e apresentação arredondada pertencem às histórias das operações que os exigirem, após definição da matriz neste RII. Conversão contábil e cotação manual pertencem à US-022 e dependem de regra específica; não são aceitas implicitamente na US-021. Esta decisão não fecha a RII-007.
+- **Decisão provisória de US-017:** a preferência de moeda de apresentação aceita somente BRL até que o catálogo de apresentação e a conversão sejam definidos. A preferência não altera a moeda nem o valor dos registros de origem. O catálogo versionado e a política de arredondamento continuam pendentes neste RII.
 
 ### RII-008 — Semântica pública de restauração de conta
 
@@ -137,6 +134,7 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Risco:** transferências e ajustes são persistidos atomicamente, mas os casos de uso geram novos identificadores em cada requisição. Se a gravação tiver sucesso e a resposta se perder, repetir o mesmo `POST` pode criar outro par ou outro ajuste. A restrição de unicidade dos identificadores internos e o teste de duas inserções com o mesmo identificador não comprovam idempotência de tentativas HTTP distintas.
 - **Decisão necessária:** definir chave de idempotência fornecida pelo cliente, escopo por proprietário e operação, prazo de retenção, comparação do conteúdo da requisição, resposta para a mesma chave com conteúdo diferente, comportamento durante execução concorrente e resposta a uma repetição depois de alterações no ciclo de vida do registro. A reserva da chave, os registros financeiros e a auditoria devem ser gravados na mesma transação.
 - **Limite atual:** não afirmar que `POST /api/v1/transfers` ou `POST /api/v1/accounts/:accountId/balance-adjustments` é idempotente por requisição. Preservar a atomicidade existente e não adicionar política de repetição implícita, baseada apenas em valores ou intervalo de tempo, pois dois eventos legítimos podem ter dados iguais.
+- **Delimitação de contrato:** a US-009 verifica REST v1, validação e OpenAPI sem anunciar `Idempotency-Key` como implementado. O contrato HTTP de chave e repetição para transferências será definido e implementado na US-032 (SESHAT-48). A idempotência de outros comandos permanece sob seus próprios requisitos e decisões.
 
 ### RII-018 — Semântica de metas e reservas
 
@@ -161,6 +159,7 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Risco:** as regras não definem o fuso horário autoritativo, a ancoragem de uma recorrência mensal em meses curtos, o primeiro dia da semana, a interpretação de recorrências personalizadas nem os limites inclusivos de início, fim e quantidade de ocorrências. Também não determinam se o prazo de 14 dias para arquivamento de evento opcional usa data civil ou instante. Inferir essas regras pode gerar, omitir ou arquivar projeções em datas diferentes das declaradas pelo usuário.
 - **Decisão necessária:** aprovar o modelo de tempo civil, as regras de ajuste de dia inexistente, a semântica de cada frequência e recorrência personalizada, os limites de início/fim/contagem e o critério temporal para vencimento e arquivamento. A confirmação de um evento também depende da política de idempotência do RII-017.
 - **Limite atual:** não persistir regras de recorrência, materializar ocorrências, calcular vencimento ou converter eventos projetados em movimentações efetivadas até a decisão. Consultas internas já existentes por intervalo explícito de instantes `[from, to)` permanecem independentes.
+- **Decisão de escopo da US-020 (18/10/2026):** o aceite do saldo contábil nesta história cobre saldo inicial e lançamentos efetivos elegíveis, sem criar um modelo provisório de projeções. A prova de que eventos projetados não alteram o saldo efetivo fica na US-059, quando o modelo de projeções existir; esta decisão não fecha a RII-020.
 
 ### RII-021 — Contrato de portabilidade e datas da exportação
 
@@ -197,6 +196,14 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 ## 3. Itens resolvidos
 
 Mover um item para esta seção somente com evidência verificável, preservando o identificador e registrando commit, teste ou documento que o resolveu.
+
+### RII-025 — Proteção obrigatória de merge
+
+- **Estado:** resolvido em 08/10/2026 por decisão do responsável de tornar o repositório público.
+- **Referências:** US-004; RNF-050/RNF-051/RNF-054; ET-001/ET-006.
+- **Histórico:** em 06/10/2026, a API de proteção de `main` retornou HTTP 403 para o repositório privado no plano então disponível.
+- **Decisão e controle:** `Pires3108/SeshatFinance` passou a público. A proteção de `main` exige pull request e check `quality` verde, atualizado com a base (`strict: true`), inclusive para administradores; force push e exclusão estão desativados.
+- **Evidência:** o CI do PR #130 passou no commit `694fe15` (run `37777398352`). O PR temporário #146 alterou a versão de TypeScript sem atualizar o lockfile; o check `quality` falhou no commit `1468141` e o GitHub retornou `mergeStateStatus=BLOCKED`. O PR de teste foi fechado sem merge. A configuração de proteção retornou `required_status_checks.contexts=["quality"]`, `strict=true` e `enforce_admins.enabled=true`.
 
 ### RII-002 — Exposição HTTP do perfil antes da identidade autenticada
 

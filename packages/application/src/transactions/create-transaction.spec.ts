@@ -141,6 +141,63 @@ describe('CreateTransactionUseCase', () => {
       }),
     ).rejects.toBeInstanceOf(TransactionAccountUnavailableError);
   });
+
+  it('rejects new entries on an archived account without writing a transaction or audit event', async () => {
+    const repository = new RecordingTransactions();
+    const ownedAccounts = accounts();
+    const account = await ownedAccounts.findByIdForOwner(
+      'account-id',
+      'owner-id',
+    );
+    if (account === null) throw new Error('Account was not initialized.');
+    account.archive(new Date('2026-09-20T12:30:00.000Z'));
+    const useCase = new CreateTransactionUseCase(
+      repository,
+      ownedAccounts,
+      { now: (): Date => new Date('2026-09-20T13:00:00.000Z') },
+      { generate: (): string => 'transaction-id' },
+    );
+
+    await expect(
+      useCase.execute({
+        accountId: 'account-id',
+        actorId: 'owner-id',
+        amount: '12.34',
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        description: null,
+        kind: 'income',
+        occurredAt: new Date('2026-09-20T11:00:00.000Z'),
+      }),
+    ).rejects.toBeInstanceOf(TransactionAccountUnavailableError);
+    expect(repository.inserted).toBeUndefined();
+    expect(repository.auditEvents).toEqual([]);
+  });
+
+  it('rejects a different currency before writing a transaction or audit event', async () => {
+    const repository = new RecordingTransactions();
+    const useCase = new CreateTransactionUseCase(
+      repository,
+      accounts(),
+      { now: (): Date => new Date('2026-09-20T13:00:00.000Z') },
+      { generate: (): string => 'transaction-id' },
+    );
+
+    await expect(
+      useCase.execute({
+        accountId: 'account-id',
+        actorId: 'owner-id',
+        amount: '1.00',
+        currencyCode: 'USD',
+        currencyMinorUnitScale: 2,
+        description: null,
+        kind: 'income',
+        occurredAt: new Date('2026-09-20T11:00:00.000Z'),
+      }),
+    ).rejects.toBeInstanceOf(TransactionAccountUnavailableError);
+    expect(repository.inserted).toBeUndefined();
+    expect(repository.auditEvents).toEqual([]);
+  });
 });
 
 describe('ListOwnedAccountTransactionsUseCase', () => {

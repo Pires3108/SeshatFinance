@@ -18,9 +18,10 @@ describe('SupabaseIdentityAuthenticationGateway', () => {
       },
       error: null,
     });
-    const gateway = new SupabaseIdentityAuthenticationGateway(() => ({
-      auth: { signInWithPassword },
-    }));
+    const gateway = new SupabaseIdentityAuthenticationGateway(
+      () => ({ auth: { signInWithPassword } }),
+      () => Promise.resolve({ id: '00000000-0000-4000-8000-000000000001' }),
+    );
 
     const result = await gateway.authenticate({
       email: 'synthetic.user@example.test',
@@ -28,22 +29,22 @@ describe('SupabaseIdentityAuthenticationGateway', () => {
     });
 
     expect(result).toEqual({
-      accessToken: 'synthetic-access-token',
-      expiresAt: new Date(1_799_790_000_000),
-      refreshToken: 'synthetic-refresh-token',
       userId: '00000000-0000-4000-8000-000000000001',
     });
   });
 
   it('uses one generic error for invalid credentials or missing sessions', async () => {
-    const gateway = new SupabaseIdentityAuthenticationGateway(() => ({
-      auth: {
-        signInWithPassword: vi.fn().mockResolvedValue({
-          data: { session: null },
-          error: new Error('provider detail'),
-        }),
-      },
-    }));
+    const gateway = new SupabaseIdentityAuthenticationGateway(
+      () => ({
+        auth: {
+          signInWithPassword: vi.fn().mockResolvedValue({
+            data: { session: null },
+            error: { code: 'invalid_credentials' },
+          }),
+        },
+      }),
+      () => Promise.resolve({ id: '00000000-0000-4000-8000-000000000001' }),
+    );
 
     await expect(
       gateway.authenticate({
@@ -51,5 +52,45 @@ describe('SupabaseIdentityAuthenticationGateway', () => {
         password: 'synthetic-password-only-for-tests',
       }),
     ).rejects.toBeInstanceOf(IdentityAuthenticationError);
+  });
+
+  it('surfaces provider failures without counting them as invalid credentials', async () => {
+    const gateway = new SupabaseIdentityAuthenticationGateway(
+      () => ({
+        auth: {
+          signInWithPassword: vi.fn().mockResolvedValue({
+            data: { session: null },
+            error: { code: 'service_unavailable' },
+          }),
+        },
+      }),
+      () => Promise.resolve({ id: 'synthetic-id' }),
+    );
+    await expect(
+      gateway.authenticate({
+        email: 'synthetic@example.test',
+        password: 'synthetic',
+      }),
+    ).rejects.not.toBeInstanceOf(IdentityAuthenticationError);
+  });
+
+  it('surfaces identity verification failure as unavailable without counting credentials', async () => {
+    const gateway = new SupabaseIdentityAuthenticationGateway(
+      () => ({
+        auth: {
+          signInWithPassword: vi.fn().mockResolvedValue({
+            data: { session: { access_token: 'synthetic-provider-token' } },
+            error: null,
+          }),
+        },
+      }),
+      () => Promise.reject(new Error('Unconfirmed or pending identity.')),
+    );
+    await expect(
+      gateway.authenticate({
+        email: 'synthetic@example.test',
+        password: 'synthetic-password',
+      }),
+    ).rejects.not.toBeInstanceOf(IdentityAuthenticationError);
   });
 });

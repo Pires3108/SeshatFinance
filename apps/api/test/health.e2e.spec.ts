@@ -49,12 +49,14 @@ describe('API health', () => {
     await application.getHttpAdapter().getInstance().ready();
 
     const response = await application.inject({
-      headers: { 'x-correlation-id': 'integration-test-01' },
+      headers: { 'x-correlation-id': 'a36bf45e-2b6d-48e5-82d6-d4607bf2b4b9' },
       method: 'GET',
       url: '/api/v1/health',
     });
 
-    expect(response.headers['x-correlation-id']).toBe('integration-test-01');
+    expect(response.headers['x-correlation-id']).toBe(
+      'a36bf45e-2b6d-48e5-82d6-d4607bf2b4b9',
+    );
   });
 
   it.each([
@@ -85,7 +87,7 @@ describe('API health', () => {
       expect(response.json()).toEqual({ service: 'api', status: 'ok' });
     } else {
       expect(response.json()).toMatchObject({
-        error: { code: 'INTERNAL_ERROR' },
+        error: { code: 'SERVICE_UNAVAILABLE' },
       });
       expect(response.body).not.toContain('DATABASE_URL');
       expect(response.body).not.toContain('secret');

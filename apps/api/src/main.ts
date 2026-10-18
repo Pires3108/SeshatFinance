@@ -12,7 +12,7 @@ import { configureApplication } from './platform/configure-application.js';
 export async function bootstrap(): Promise<void> {
   const application = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter(),
+    new FastifyAdapter({ trustProxy: false }),
   );
   configureApplication(application);
 

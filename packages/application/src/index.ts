@@ -1,4 +1,28 @@
 export type { Clock } from './ports/clock.js';
+export {
+  PasswordRejectedError,
+  PasswordCheckUnavailableError,
+  type PasswordSafetyChecker,
+} from './auth/password-rejected.js';
+export {
+  ConfirmRegistrationUseCase,
+  IdentityProviderUnavailableError,
+  type ConfirmedRegistrationIdentity,
+  type RegistrationConfirmationGateway,
+  type ConfirmedIdentityProfileRepository,
+} from './auth/confirm-registration.js';
+export {
+  ResendRegistrationConfirmationUseCase,
+  type RegistrationConfirmationResendGateway,
+  type ResendRegistrationConfirmationCommand,
+} from './auth/resend-registration-confirmation.js';
+export type { PendingRegistrationProfileRepository } from './auth/register-user.js';
+export {
+  CompletePasswordRecoveryUseCase,
+  InvalidRecoveryTokenError,
+  type PasswordRecoveryCompletionGateway,
+} from './auth/complete-password-recovery.js';
+export { readCivilDate } from './ports/civil-date.js';
 export type { IdentifierGenerator } from './ports/identifier-generator.js';
 export type { TransactionRunner } from './ports/transaction-runner.js';
 export {
@@ -66,11 +90,25 @@ export {
   type CreateCostCenterCommand,
 } from './classifications/manage-cost-center.js';
 export {
+  AuthenticationRejectedError,
   AuthenticateUserUseCase,
+  IdentityCredentialsRejectedError,
   type AuthenticateUserCommand,
+  type LoginAttemptRepository,
+  type LoginOriginAttemptRepository,
+  type LoginAttemptState,
   type IdentityAuthenticationGateway,
   type IdentitySession,
 } from './auth/authenticate-user.js';
+export {
+  InvalidOpaqueSessionError,
+  OpaqueSessionService,
+  isSessionActive,
+  type IssuedOpaqueSession,
+  type OpaqueSession,
+  type OpaqueSessionRepository,
+  type OpaqueSessionTokenService,
+} from './auth/opaque-session.js';
 export {
   RegisterUserUseCase,
   type IdentityRegistrationGateway,
@@ -78,6 +116,8 @@ export {
 } from './auth/register-user.js';
 export {
   RequestPasswordRecoveryUseCase,
+  type RecoveryRequestAttemptRepository,
+  type RecoveryOriginAttemptRepository,
   type PasswordRecoveryGateway,
   type RequestPasswordRecoveryCommand,
 } from './auth/request-password-recovery.js';
@@ -88,6 +128,7 @@ export {
 } from './auth/resolve-authenticated-actor.js';
 export {
   GetOwnUserProfileUseCase,
+  InvalidUserProfilePreferencesError,
   UpdateOwnUserProfileUseCase,
   type UpdateOwnUserProfileCommand,
   type UserProfile,

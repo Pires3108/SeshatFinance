@@ -219,6 +219,10 @@
               "schema": {
                 "additionalProperties": false,
                 "properties": {
+                  "agency": {
+                    "nullable": true,
+                    "type": "string"
+                  },
                   "color": {
                     "nullable": true,
                     "type": "string"
@@ -281,6 +285,10 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "agency": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "archivedAt": {
                       "format": "date-time",
                       "nullable": true,
@@ -348,6 +356,7 @@
                     }
                   },
                   "required": [
+                    "agency",
                     "archivedAt",
                     "color",
                     "createdAt",
@@ -403,6 +412,10 @@
                 "schema": {
                   "items": {
                     "properties": {
+                      "agency": {
+                        "nullable": true,
+                        "type": "string"
+                      },
                       "archivedAt": {
                         "format": "date-time",
                         "nullable": true,
@@ -470,6 +483,7 @@
                       }
                     },
                     "required": [
+                      "agency",
                       "archivedAt",
                       "color",
                       "createdAt",
@@ -528,6 +542,10 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "agency": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "archivedAt": {
                       "format": "date-time",
                       "nullable": true,
@@ -595,6 +613,7 @@
                     }
                   },
                   "required": [
+                    "agency",
                     "archivedAt",
                     "color",
                     "createdAt",
@@ -652,6 +671,10 @@
               "schema": {
                 "additionalProperties": false,
                 "properties": {
+                  "agency": {
+                    "nullable": true,
+                    "type": "string"
+                  },
                   "color": {
                     "nullable": true,
                     "type": "string"
@@ -697,6 +720,10 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "agency": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "archivedAt": {
                       "format": "date-time",
                       "nullable": true,
@@ -764,6 +791,7 @@
                     }
                   },
                   "required": [
+                    "agency",
                     "archivedAt",
                     "color",
                     "createdAt",
@@ -846,6 +874,10 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "agency": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "archivedAt": {
                       "format": "date-time",
                       "nullable": true,
@@ -913,6 +945,7 @@
                     }
                   },
                   "required": [
+                    "agency",
                     "archivedAt",
                     "color",
                     "createdAt",
@@ -1675,7 +1708,7 @@
                   },
                   "password": {
                     "maxLength": 1024,
-                    "minLength": 1,
+                    "minLength": 12,
                     "type": "string"
                   }
                 },
@@ -1702,9 +1735,99 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Password rejected by provider policy"
           }
         },
         "summary": "Register a user and request email confirmation",
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/registrations/confirm": {
+      "post": {
+        "operationId": "AuthController_confirm",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "tokenHash": {
+                    "maxLength": 2048,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": ["tokenHash"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid, expired, or reused confirmation token"
+          },
+          "503": {
+            "description": "Confirmation is temporarily unavailable"
+          }
+        },
+        "summary": "Confirm a registration with a single-use email token",
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/registrations/resend": {
+      "post": {
+        "operationId": "AuthController_resend",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "email": {
+                    "format": "email",
+                    "maxLength": 320,
+                    "type": "string"
+                  }
+                },
+                "required": ["email"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "status": {
+                      "enum": ["confirmation_required"],
+                      "type": "string"
+                    }
+                  },
+                  "required": ["status"],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Resend is temporarily unavailable"
+          }
+        },
+        "summary": "Request another registration confirmation email",
         "tags": ["auth"]
       }
     },
@@ -2749,6 +2872,121 @@
         "tags": ["auth"]
       }
     },
+    "/api/v1/auth/password-recovery-completions": {
+      "post": {
+        "operationId": "PasswordRecoveryController_complete",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "tokenHash": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2048
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 12,
+                    "maxLength": 1024
+                  }
+                },
+                "required": ["tokenHash", "password"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid or expired recovery link"
+          },
+          "422": {
+            "description": "Password rejected by provider policy"
+          },
+          "503": {
+            "description": "Recovery is temporarily unavailable"
+          }
+        },
+        "summary": "Complete password recovery with a single-use token",
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/sessions": {
+      "post": {
+        "operationId": "SessionController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Create an opaque browser session",
+        "tags": ["auth"]
+      },
+      "get": {
+        "operationId": "SessionController_check",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Check the current browser session",
+        "tags": ["auth"]
+      },
+      "delete": {
+        "operationId": "SessionController_logout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Revoke the current browser session",
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/sessions/others": {
+      "delete": {
+        "operationId": "SessionController_closeOtherSessions",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Close all other browser sessions",
+        "tags": ["auth"]
+      }
+    },
     "/api/v1/tags": {
       "post": {
         "operationId": "TagController_create",
@@ -3124,6 +3362,37 @@
                     "updatedAt",
                     "version"
                   ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request validation failed before recording a transaction",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "enum": ["INVALID_REQUEST"],
+                          "type": "string"
+                        },
+                        "correlationId": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "correlationId", "message"],
+                      "type": "object"
+                    }
+                  },
+                  "required": ["error"],
                   "type": "object"
                 }
               }
@@ -4815,14 +5084,11 @@
                     "type": "string"
                   },
                   "locale": {
-                    "maxLength": 16,
-                    "minLength": 2,
+                    "enum": ["pt-BR"],
                     "type": "string"
                   },
                   "presentationCurrency": {
-                    "maxLength": 3,
-                    "minLength": 3,
-                    "pattern": "^[A-Z]{3}$",
+                    "enum": ["BRL"],
                     "type": "string"
                   },
                   "timeZone": {

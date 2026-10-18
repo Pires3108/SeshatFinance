@@ -19,6 +19,7 @@
 - [Stack técnica](architecture/09-stack-tecnica-seshat-finance.md)
 - [Arquitetura de software](architecture/10-arquitetura-de-software-seshat-finance.md)
 - [Decisões arquiteturais iniciais](architecture/11-decisoes-arquiteturais-iniciais-seshat-finance.md)
+- [ADR-001 — Receptor externo de eventos para espera do agente](decisions/0001-agent-webhook-waiter.md)
 
 ## Padrões
 

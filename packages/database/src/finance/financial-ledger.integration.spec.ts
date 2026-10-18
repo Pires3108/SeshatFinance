@@ -52,6 +52,7 @@ describe('financial ledger across accounts, transfers, and adjustments', () => {
     await migrationClient.connect();
     for (const path of [
       '../../prisma/migrations/20260920040000_create_accounts/migration.sql',
+      '../../prisma/migrations/20261015120000_add_account_agency/migration.sql',
       '../../prisma/migrations/20260920133000_create_transactions/migration.sql',
       '../../prisma/migrations/20260920180000_create_categories/migration.sql',
       '../../prisma/migrations/20260920190000_create_tags/migration.sql',
@@ -335,6 +336,14 @@ describe('financial ledger across accounts, transfers, and adjustments', () => {
     expect((await balances.execute(accountId, ownerId)).toDecimal()).toBe(
       '0.25',
     );
+    expect(
+      (await accounts.findByIdForOwner(accountId, ownerId))?.lifecycle,
+    ).toBe('archived');
+    expect(
+      (await transactions.listForAccountOwner(accountId, ownerId)).map(
+        (entry) => entry.id,
+      ),
+    ).toEqual(entries.map((entry) => entry.id));
 
     const trashedEntry = created[1];
     if (trashedEntry === undefined) throw new Error('Missing synthetic entry.');
@@ -376,6 +385,108 @@ describe('financial ledger across accounts, transfers, and adjustments', () => {
       '0.25',
     );
   });
+
+  it('replaces an edited posted effect exactly once in the account balance', async () => {
+    if (
+      client === undefined ||
+      accounts === undefined ||
+      transactions === undefined
+    ) {
+      throw new Error('Financial repositories are unavailable.');
+    }
+    const accountId = 'd0d0d0d0-d0d0-40d0-80d0-d0d0d0d0d0d0';
+    const ownedAccount = account(accountId, '100.00');
+    await accounts.insert(
+      ownedAccount,
+      audit(
+        'd1d1d1d1-d1d1-41d1-81d1-d1d1d1d1d1d1',
+        accountId,
+        'account',
+        'created',
+        '2026-09-23T09:00:00.000Z',
+      ),
+    );
+    const balances = new GetOwnedAccountBalanceUseCase(accounts, transactions);
+    expect((await balances.execute(accountId, ownerId)).toDecimal()).toBe(
+      '100.00',
+    );
+
+    const income = Transaction.create({
+      accountId,
+      amount: Money.fromDecimal('30.00', currency),
+      createdAt: new Date('2026-09-23T10:00:00.000Z'),
+      description: null,
+      id: 'd2d2d2d2-d2d2-42d2-82d2-d2d2d2d2d2d2',
+      kind: 'income',
+      occurredAt: new Date('2026-09-23T10:00:00.000Z'),
+      ownerId,
+    });
+    const expense = Transaction.create({
+      accountId,
+      amount: Money.fromDecimal('20.00', currency),
+      createdAt: new Date('2026-09-23T10:00:00.000Z'),
+      description: null,
+      id: 'd3d3d3d3-d3d3-43d3-83d3-d3d3d3d3d3d3',
+      kind: 'expense',
+      occurredAt: new Date('2026-09-23T10:00:00.000Z'),
+      ownerId,
+    });
+    await transactions.insert(
+      income,
+      audit(
+        'd4d4d4d4-d4d4-44d4-84d4-d4d4d4d4d4d4',
+        income.id,
+        'transaction',
+        'created',
+        '2026-09-23T10:00:00.000Z',
+      ),
+    );
+    await transactions.insert(
+      expense,
+      audit(
+        'd5d5d5d5-d5d5-45d5-85d5-d5d5d5d5d5d5',
+        expense.id,
+        'transaction',
+        'created',
+        '2026-09-23T10:00:00.000Z',
+      ),
+    );
+    expect((await balances.execute(accountId, ownerId)).toDecimal()).toBe(
+      '110.00',
+    );
+
+    income.updateDetails(
+      {
+        amount: Money.fromDecimal('40.00', currency),
+        description: null,
+        kind: 'income',
+        occurredAt: new Date('2026-09-23T10:00:00.000Z'),
+      },
+      new Date('2026-09-23T11:00:00.000Z'),
+    );
+    await expect(
+      transactions.save(
+        income,
+        1,
+        audit(
+          'd6d6d6d6-d6d6-46d6-86d6-d6d6d6d6d6d6',
+          income.id,
+          'transaction',
+          'updated',
+          '2026-09-23T11:00:00.000Z',
+        ),
+      ),
+    ).resolves.toBe(true);
+    expect((await balances.execute(accountId, ownerId)).toDecimal()).toBe(
+      '120.00',
+    );
+    await expect(
+      client.transaction.count({ where: { accountId } }),
+    ).resolves.toBe(2);
+    await expect(
+      client.financialAuditEvent.count({ where: { resourceId: income.id } }),
+    ).resolves.toBe(2);
+  });
 });
 
 function account(id: string, initialBalance: string): Account {
@@ -397,7 +508,12 @@ function audit(
   id: string,
   resourceId: string,
   resourceType: 'account' | 'transfer' | 'balance-adjustment' | 'transaction',
-  action: 'created' | 'archived' | 'moved-to-trash' | 'restored-from-trash',
+  action:
+    | 'created'
+    | 'updated'
+    | 'archived'
+    | 'moved-to-trash'
+    | 'restored-from-trash',
   at: string,
 ): FinancialAuditEvent {
   return FinancialAuditEvent.create({

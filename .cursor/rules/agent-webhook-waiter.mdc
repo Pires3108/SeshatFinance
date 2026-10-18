@@ -1,0 +1,17 @@
+---
+description: Require event-driven waiting for GitHub Actions and Jira
+alwaysApply: true
+---
+
+# Event-driven external waits
+
+When CI or Jira work requires waiting, do not poll, use `--watch`, retry with
+sleep, or keep reasoning until a status changes. The signed delivery is an
+observability signal only; it does not prove that a CI run or Jira item is
+complete. The production webhooks are already configured at:
+
+- `https://agent-waiter.vercel.app/api/github`
+- `https://agent-waiter.vercel.app/api/jira`
+
+A single read-only diagnostic lookup is allowed at the decision point before
+declaring completion. Do not repeat lookups while waiting.

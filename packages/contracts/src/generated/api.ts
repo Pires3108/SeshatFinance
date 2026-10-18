@@ -196,6 +196,40 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/auth/registrations/confirm": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Confirm a registration with a single-use email token */
+        readonly post: operations["AuthController_confirm"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/auth/registrations/resend": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Request another registration confirmation email */
+        readonly post: operations["AuthController_resend"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/categories": {
         readonly parameters: {
             readonly query?: never;
@@ -365,6 +399,59 @@ export type paths = {
         /** Request a password recovery email */
         readonly post: operations["PasswordRecoveryController_request"];
         readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/auth/password-recovery-completions": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Complete password recovery with a single-use token */
+        readonly post: operations["PasswordRecoveryController_complete"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/auth/sessions": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Check the current browser session */
+        readonly get: operations["SessionController_check"];
+        readonly put?: never;
+        /** Create an opaque browser session */
+        readonly post: operations["SessionController_login"];
+        /** Revoke the current browser session */
+        readonly delete: operations["SessionController_logout"];
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/auth/sessions/others": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post?: never;
+        /** Close all other browser sessions */
+        readonly delete: operations["SessionController_closeOtherSessions"];
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
@@ -702,6 +789,7 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": readonly {
+                        readonly agency: string | null;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
                         readonly color: string | null;
@@ -746,6 +834,7 @@ export interface operations {
         readonly requestBody: {
             readonly content: {
                 readonly "application/json": {
+                    readonly agency?: string | null;
                     readonly color: string | null;
                     /** @enum {string} */
                     readonly currencyCode: "BRL" | "USD" | "EUR";
@@ -766,6 +855,7 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly agency: string | null;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
                         readonly color: string | null;
@@ -817,6 +907,7 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly agency: string | null;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
                         readonly color: string | null;
@@ -870,6 +961,7 @@ export interface operations {
         readonly requestBody: {
             readonly content: {
                 readonly "application/json": {
+                    readonly agency?: string | null;
                     readonly color: string | null;
                     readonly description: string | null;
                     readonly icon: string | null;
@@ -886,6 +978,7 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly agency: string | null;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
                         readonly color: string | null;
@@ -951,6 +1044,7 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly agency: string | null;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
                         readonly color: string | null;
@@ -1390,6 +1484,86 @@ export interface operations {
                         readonly status: "confirmation_required";
                     };
                 };
+            };
+            /** @description Password rejected by provider policy */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly AuthController_confirm: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly tokenHash: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid, expired, or reused confirmation token */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Confirmation is temporarily unavailable */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly AuthController_resend: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Format: email */
+                    readonly email: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 202: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** @enum {string} */
+                        readonly status: "confirmation_required";
+                    };
+                };
+            };
+            /** @description Resend is temporarily unavailable */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1966,6 +2140,127 @@ export interface operations {
             };
         };
     };
+    readonly PasswordRecoveryController_complete: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly tokenHash: string;
+                    readonly password: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid or expired recovery link */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Password rejected by provider policy */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Recovery is temporarily unavailable */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly SessionController_check: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly SessionController_login: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Format: email */
+                    readonly email: string;
+                    readonly password: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly SessionController_logout: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly SessionController_closeOtherSessions: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly TagController_list: {
         readonly parameters: {
             readonly query?: never;
@@ -2203,6 +2498,22 @@ export interface operations {
                         /** Format: date-time */
                         readonly updatedAt: string;
                         readonly version: number;
+                    };
+                };
+            };
+            /** @description Request validation failed before recording a transaction */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly error: {
+                            /** @enum {string} */
+                            readonly code: "INVALID_REQUEST";
+                            readonly correlationId: string;
+                            readonly message: string;
+                        };
                     };
                 };
             };
@@ -3010,8 +3321,10 @@ export interface operations {
             readonly content: {
                 readonly "application/json": {
                     readonly displayName: string | null;
-                    readonly locale: string;
-                    readonly presentationCurrency: string;
+                    /** @enum {string} */
+                    readonly locale: "pt-BR";
+                    /** @enum {string} */
+                    readonly presentationCurrency: "BRL";
                     readonly timeZone: string;
                 };
             };
