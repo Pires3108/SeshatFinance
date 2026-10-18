@@ -189,10 +189,12 @@ export class AccountController {
     body: CreateAccountRequest,
   ): Promise<AccountResponse> {
     try {
+      const { agency, ...details } = body;
       return mapAccount(
         await this.createAccount.execute({
           actorId: this.actorId(request),
-          ...body,
+          ...details,
+          ...(agency === undefined ? {} : { agency }),
         }),
       );
     } catch (error) {
@@ -253,11 +255,13 @@ export class AccountController {
     body: UpdateAccountRequest,
   ): Promise<AccountResponse> {
     try {
+      const { agency, ...details } = body;
       return mapAccount(
         await this.updateAccount.execute({
           accountId,
           actorId: this.actorId(request),
-          ...body,
+          ...details,
+          ...(agency === undefined ? {} : { agency }),
         }),
       );
     } catch (error) {
