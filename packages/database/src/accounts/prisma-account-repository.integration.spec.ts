@@ -312,6 +312,45 @@ describe('PrismaAccountRepository', () => {
       repository.findByIdForOwner(rolledBack.id, rolledBack.ownerId),
     ).resolves.toBeNull();
   });
+
+  it('lists all owned accounts beyond the former 100-row cap', async () => {
+    if (repository === undefined)
+      throw new Error('Repository was not initialized.');
+    const ownerId = 'f0000000-0000-4000-8000-000000000000';
+    const createdAt = new Date('2026-09-20T12:00:00.000Z');
+    const currency = Currency.create('BRL', 2);
+
+    for (let index = 1; index <= 101; index += 1) {
+      const suffix = String(index).padStart(12, '0');
+      const account = Account.create({
+        color: null,
+        createdAt,
+        description: null,
+        icon: null,
+        id: `f1000000-0000-4000-8000-${suffix}`,
+        initialBalance: Money.fromDecimal('0.00', currency),
+        institution: null,
+        name: `Account ${String(index)}`,
+        ownerId,
+        type: AccountType.create('checking-account'),
+      });
+      await repository.insert(
+        account,
+        auditEvent(account, 'created', `f2000000-0000-4000-8000-${suffix}`),
+      );
+    }
+
+    const listed = await repository.listForOwner(ownerId);
+    expect(listed).toHaveLength(101);
+    expect(listed[0]?.id).toBe('f1000000-0000-4000-8000-000000000001');
+    expect(listed[100]?.id).toBe('f1000000-0000-4000-8000-000000000101');
+    await expect(
+      repository.listForOwner(ownerId, 'active'),
+    ).resolves.toHaveLength(101);
+    await expect(repository.listForOwner(ownerId, 'archived')).resolves.toEqual(
+      [],
+    );
+  });
 });
 
 function auditEvent(

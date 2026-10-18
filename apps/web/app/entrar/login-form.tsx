@@ -89,6 +89,9 @@ export function LoginForm(): ReactNode {
         >
           <strong>Sessão ativa.</strong>
           <p>Você entrou na Seshat Finance.</p>
+          <p>
+            <Link href="/contas">Ver minhas contas</Link>
+          </p>
           <button
             className="primary-action"
             type="button"
