@@ -131,7 +131,9 @@ test('revoked session clears an already displayed detail balance on return', asy
   await expect(page.getByText('1.234,50 BRL')).toBeVisible();
   revoked = true;
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
-  await expect(page.getByRole('alert')).toContainText('Seu acesso expirou.');
+  await expect(page.locator('main').getByRole('alert')).toContainText(
+    'Seu acesso expirou.',
+  );
   await expect(page.getByText('Saldo contábil')).toHaveCount(0);
 });
 
@@ -164,7 +166,9 @@ test('revoked session clears an already displayed account list on return', async
   await expect(page.getByText('1.234,50 BRL')).toBeVisible();
   revoked = true;
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
-  await expect(page.getByRole('alert')).toContainText('Seu acesso expirou.');
+  await expect(page.locator('main').getByRole('alert')).toContainText(
+    'Seu acesso expirou.',
+  );
   await expect(page.getByText('Saldo contábil')).toHaveCount(0);
 });
 
@@ -192,7 +196,9 @@ test('a visible account detail rechecks an expired session within one minute', a
   await expect(page.getByText('1.234,50 BRL')).toBeVisible();
   revoked = true;
   await page.clock.fastForward(60_000);
-  await expect(page.getByRole('alert')).toContainText('Seu acesso expirou.');
+  await expect(page.locator('main').getByRole('alert')).toContainText(
+    'Seu acesso expirou.',
+  );
   await expect(page.getByText('Saldo contábil')).toHaveCount(0);
 });
 
