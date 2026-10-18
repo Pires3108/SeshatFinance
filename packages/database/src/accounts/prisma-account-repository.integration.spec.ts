@@ -232,7 +232,7 @@ describe('PrismaAccountRepository', () => {
     await expect(
       client.financialAuditEvent.count({
         where: {
-          action: 'restored-from-trash',
+          action: 'restored_from_trash',
           ownerId: account.ownerId,
           resourceId: account.id,
         },
