@@ -4,6 +4,7 @@ import {
   OwnedAccountNotFoundError,
   type OwnedBalanceSummary,
 } from '@seshat/application';
+import type { Money } from '@seshat/domain';
 import {
   Controller,
   Get,
@@ -171,9 +172,7 @@ export class AccountBalanceController {
 }
 
 function mapSummary(summary: OwnedBalanceSummary): BalanceSummaryResponse {
-  const mapBalance = (
-    balance: OwnedBalanceSummary['totalsByCurrency'][number],
-  ): AccountBalanceResponse => ({
+  const mapBalance = (balance: Money): AccountBalanceResponse => ({
     amount: balance.toDecimal(),
     currencyCode: balance.currency.code,
     currencyMinorUnitScale: balance.currency.minorUnitScale,
