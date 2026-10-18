@@ -68,7 +68,7 @@ export class CreateAccountUseCase {
     );
     const at = this.clock.now();
     const account = Account.create({
-      agency: command.agency,
+      ...(command.agency === undefined ? {} : { agency: command.agency }),
       color: command.color,
       createdAt: at,
       description: command.description,
@@ -146,7 +146,7 @@ export class UpdateOwnedAccountDetailsUseCase {
     const at = this.clock.now();
     account.updateDetails(
       {
-        agency: command.agency,
+        ...(command.agency === undefined ? {} : { agency: command.agency }),
         color: command.color,
         description: command.description,
         icon: command.icon,
