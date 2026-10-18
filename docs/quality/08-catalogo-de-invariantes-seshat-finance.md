@@ -52,7 +52,7 @@ Diferenças de arredondamento de parcelas são atribuídas à última parcela, e
 
 ### INV-006 — Equação do saldo de conta
 
-Saldo contábil é igual ao saldo inicial mais receitas, entradas pareadas e ajustes positivos, menos despesas, saídas pareadas e ajustes negativos, considerando apenas registros ativos.
+Saldo contábil é igual ao saldo inicial mais receitas, entradas pareadas e ajustes positivos, menos despesas, saídas pareadas e ajustes negativos, considerando registros efetivos ativos ou arquivados. Registros na lixeira e eventos apenas projetados não compõem o saldo; o arquivamento preserva o efeito histórico conforme INV-010.
 
 **Referências:** RF-018; RN-005 a RN-010.
 

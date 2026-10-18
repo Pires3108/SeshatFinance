@@ -55,6 +55,31 @@ function transactions(
 }
 
 describe('GetOwnedAccountBalanceUseCase', () => {
+  it('returns the opening BRL 100.00 when there are no confirmed entries', async () => {
+    const ownedAccount = account();
+    const balance = await new GetOwnedAccountBalanceUseCase(
+      accounts(ownedAccount),
+      transactions([]),
+    ).execute(ownedAccount.id, ownedAccount.ownerId);
+
+    expect(balance.toDecimal()).toBe('100.00');
+    expect(balance.currency).toEqual(currency);
+  });
+
+  it('calculates BRL 100.00 plus income 30.00 less expense 20.00 exactly', async () => {
+    const ownedAccount = account();
+    const balance = await new GetOwnedAccountBalanceUseCase(
+      accounts(ownedAccount),
+      transactions([
+        Money.fromDecimal('30.00', currency),
+        Money.fromDecimal('-20.00', currency),
+      ]),
+    ).execute(ownedAccount.id, ownedAccount.ownerId);
+
+    expect(balance.toDecimal()).toBe('110.00');
+    expect(balance.currency).toEqual(currency);
+  });
+
   it('adds exact grouped income and expense effects to the initial balance', async () => {
     const ownedAccount = account();
     const useCase = new GetOwnedAccountBalanceUseCase(

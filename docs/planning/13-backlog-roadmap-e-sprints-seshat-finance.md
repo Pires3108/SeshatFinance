@@ -186,7 +186,7 @@ Uma história está concluída quando:
 **Objetivo:** permitir estruturar o patrimônio inicial.
 
 - **US-019 [EP-02, L]** Implementar CRUD de contas, tipos, estado ativo e arquivamento.
-- **US-020 [EP-02, M]** Implementar saldo inicial e cálculo de saldo contábil.
+- **US-020 [EP-02, M]** Implementar saldo inicial e cálculo exato do saldo contábil a partir de lançamentos efetivos; a prova de que projeções não o alteram pertence à US-059, quando existir seu modelo.
 - **US-021 [EP-02, M]** Implementar Money, Currency e persistência Decimal com moeda explícita e aritmética exata; operações que exigem arredondamento pertencem às histórias que as utilizam, após decisão RII-007.
 - **US-022 [EP-02, M]** Implementar multimoeda e cotação manual com origem preservada; conversão contábil depende de regra específica aprovada na RII-007.
 - **US-023 [EP-02, S]** Criar lista e detalhes de contas com estados vazios e erros.
@@ -278,7 +278,7 @@ Uma história está concluída quando:
 
 **Objetivo:** construir a base das previsões explícitas.
 
-- **US-059 [EP-08, L]** Implementar regras de recorrência, pausa, início e fim.
+- **US-059 [EP-08, L]** Implementar regras de recorrência, pausa, início e fim, com prova de que eventos projetados não alteram o saldo contábil efetivo.
 - **US-060 [EP-08, L]** Gerar ocorrências projetadas por até 12 meses.
 - **US-061 [EP-08, M]** Implementar eventos futuros opcionais e obrigatórios.
 - **US-062 [EP-08, L]** Implementar confirmação organizacional idempotente.
