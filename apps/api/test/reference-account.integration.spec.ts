@@ -90,11 +90,11 @@ describe('Reference account use case across HTTP and PostgreSQL', () => {
       payload: {
         agency: '0123',
         color: null,
-        currencyCode: 'BHD',
-        currencyMinorUnitScale: 3,
+        currencyCode: 'USD',
+        currencyMinorUnitScale: 2,
         description: null,
         icon: null,
-        initialBalance: '12345678901234567890.125',
+        initialBalance: '12345678901234567890.12',
         institution: null,
         name: 'Synthetic reference account',
         typeKey: 'checking-account',
@@ -114,8 +114,8 @@ describe('Reference account use case across HTTP and PostgreSQL', () => {
     }
     expect(body).toMatchObject({
       agency: '0123',
-      currencyCode: 'BHD',
-      initialBalance: '12345678901234567890.125',
+      currencyCode: 'USD',
+      initialBalance: '12345678901234567890.12',
       lifecycle: 'active',
       version: 1,
     });
@@ -139,9 +139,9 @@ describe('Reference account use case across HTTP and PostgreSQL', () => {
         agency: '0123',
         id: body.id,
         owner_id: actorId,
-        initial_balance_minor_units: '12345678901234567890125',
-        currency_code: 'BHD',
-        currency_minor_unit_scale: 3,
+        initial_balance_minor_units: '1234567890123456789012',
+        currency_code: 'USD',
+        currency_minor_unit_scale: 2,
       },
     ]);
 
