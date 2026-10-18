@@ -67,7 +67,7 @@ export function AccountDetail({ accountId }: { accountId: string }): ReactNode {
         return;
       }
       const data: unknown = await response.json();
-      if (controller.signal.aborted) return;
+      if (requestRef.current !== controller) return;
       if (!isAccountWithBalance(data) || data.account.id !== accountId) {
         setState('unavailable');
         return;

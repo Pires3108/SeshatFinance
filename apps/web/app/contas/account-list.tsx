@@ -66,7 +66,7 @@ export function AccountList(): ReactNode {
         return;
       }
       const data: unknown = await response.json();
-      if (controller.signal.aborted) return;
+      if (requestRef.current !== controller) return;
       if (!Array.isArray(data) || !data.every(isAccountWithBalance)) {
         setState('unavailable');
         return;
