@@ -330,7 +330,7 @@ describe('PrismaAccountRepository', () => {
         id: `f1000000-0000-4000-8000-${suffix}`,
         initialBalance: Money.fromDecimal('0.00', currency),
         institution: null,
-        name: `Account ${index}`,
+        name: `Account ${String(index)}`,
         ownerId,
         type: AccountType.create('checking-account'),
       });
