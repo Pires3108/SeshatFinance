@@ -59,7 +59,6 @@ export class PrismaAccountRepository implements AccountRepository {
   ): Promise<readonly Account[]> {
     const persisted = await this.client.account.findMany({
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-      take: 100,
       where: { ownerId, ...(lifecycle === undefined ? {} : { lifecycle }) },
     });
     return persisted.map(restoreAccount);
