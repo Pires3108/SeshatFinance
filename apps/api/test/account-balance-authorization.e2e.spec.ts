@@ -1,8 +1,10 @@
 import {
   GetOwnedAccountBalanceUseCase,
+  GetOwnedBalanceSummaryUseCase,
   OwnedAccountNotFoundError,
   ResolveAuthenticatedActorUseCase,
 } from '@seshat/application';
+import { Currency, Money } from '@seshat/domain';
 import { Test } from '@nestjs/testing';
 import {
   FastifyAdapter,
@@ -28,10 +30,25 @@ describe('Account balance HTTP authorization', () => {
       .fn<GetOwnedAccountBalanceUseCase['execute']>()
       .mockRejectedValue(new OwnedAccountNotFoundError()),
   };
+  const getSummary = {
+    execute: vi
+      .fn<GetOwnedBalanceSummaryUseCase['execute']>()
+      .mockResolvedValue({
+        accountBalances: [],
+        brlConsolidation: {
+          reason: 'conversion-policy-pending',
+          status: 'unavailable',
+        },
+        totalsByCurrency: [
+          Money.fromDecimal('10.25', Currency.create('USD', 2)),
+        ],
+      }),
+  };
 
   beforeEach(async (): Promise<void> => {
     resolveActor.execute.mockClear();
     getBalance.execute.mockClear();
+    getSummary.execute.mockClear();
     const testingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
@@ -39,6 +56,8 @@ describe('Account balance HTTP authorization', () => {
       .useValue(resolveActor)
       .overrideProvider(GetOwnedAccountBalanceUseCase)
       .useValue(getBalance)
+      .overrideProvider(GetOwnedBalanceSummaryUseCase)
+      .useValue(getSummary)
       .compile();
     application = testingModule.createNestApplication<NestFastifyApplication>(
       new FastifyAdapter(),
@@ -67,5 +86,32 @@ describe('Account balance HTTP authorization', () => {
       accountOwnedByAnotherActor,
       authenticatedActorId,
     );
+  });
+
+  it('requires an actor and returns explicit unavailable consolidation', async () => {
+    const anonymous = await application.inject({
+      method: 'GET',
+      url: '/api/v1/accounts/consolidation',
+    });
+    expect(anonymous.statusCode).toBe(401);
+    expect(getSummary.execute).not.toHaveBeenCalled();
+
+    const response = await application.inject({
+      headers: { authorization: 'Bearer actor-b-token' },
+      method: 'GET',
+      url: '/api/v1/accounts/consolidation',
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({
+      accountBalances: [],
+      brlConsolidation: {
+        reason: 'conversion-policy-pending',
+        status: 'unavailable',
+      },
+      totalsByCurrency: [
+        { amount: '10.25', currencyCode: 'USD', currencyMinorUnitScale: 2 },
+      ],
+    });
+    expect(getSummary.execute).toHaveBeenCalledWith(authenticatedActorId);
   });
 });

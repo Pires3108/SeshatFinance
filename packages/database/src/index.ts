@@ -14,6 +14,7 @@ export { PrismaCostCenterRepository } from './classifications/prisma-cost-center
 export { PrismaFinancialAuditEventRepository } from './audit/prisma-financial-audit-event-repository.js';
 export { PrismaCreditCardRepository } from './cards/prisma-credit-card-repository.js';
 export { PrismaFamilyGroupRepository } from './family/prisma-family-group-repository.js';
+export { PrismaManualExchangeQuoteRepository } from './money/prisma-manual-exchange-quote-repository.js';
 export { PrismaOpaqueSessionRepository } from './auth/prisma-opaque-session-repository.js';
 export { PrismaLoginAttemptRepository } from './auth/prisma-login-attempt-repository.js';
 export { PrismaOriginAttemptRepository } from './auth/prisma-origin-attempt-repository.js';
