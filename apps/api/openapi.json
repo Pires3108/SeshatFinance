@@ -73,6 +73,10 @@
               "schema": {
                 "additionalProperties": false,
                 "properties": {
+                  "agency": {
+                    "nullable": true,
+                    "type": "string"
+                  },
                   "color": {
                     "nullable": true,
                     "type": "string"
@@ -135,6 +139,10 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "agency": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "archivedAt": {
                       "format": "date-time",
                       "nullable": true,
@@ -202,6 +210,7 @@
                     }
                   },
                   "required": [
+                    "agency",
                     "archivedAt",
                     "color",
                     "createdAt",
@@ -257,6 +266,10 @@
                 "schema": {
                   "items": {
                     "properties": {
+                      "agency": {
+                        "nullable": true,
+                        "type": "string"
+                      },
                       "archivedAt": {
                         "format": "date-time",
                         "nullable": true,
@@ -324,6 +337,7 @@
                       }
                     },
                     "required": [
+                      "agency",
                       "archivedAt",
                       "color",
                       "createdAt",
@@ -382,6 +396,10 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "agency": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "archivedAt": {
                       "format": "date-time",
                       "nullable": true,
@@ -449,6 +467,7 @@
                     }
                   },
                   "required": [
+                    "agency",
                     "archivedAt",
                     "color",
                     "createdAt",
@@ -506,6 +525,10 @@
               "schema": {
                 "additionalProperties": false,
                 "properties": {
+                  "agency": {
+                    "nullable": true,
+                    "type": "string"
+                  },
                   "color": {
                     "nullable": true,
                     "type": "string"
@@ -551,6 +574,10 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "agency": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "archivedAt": {
                       "format": "date-time",
                       "nullable": true,
@@ -618,6 +645,7 @@
                     }
                   },
                   "required": [
+                    "agency",
                     "archivedAt",
                     "color",
                     "createdAt",
@@ -700,6 +728,10 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "agency": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "archivedAt": {
                       "format": "date-time",
                       "nullable": true,
@@ -767,6 +799,7 @@
                     }
                   },
                   "required": [
+                    "agency",
                     "archivedAt",
                     "color",
                     "createdAt",

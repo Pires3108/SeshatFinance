@@ -35,6 +35,7 @@ describe('Reference account use case across HTTP and PostgreSQL', () => {
 
     for (const migration of [
       '20260920040000_create_accounts',
+      '20261015120000_add_account_agency',
       '20260921210000_create_financial_audit_events',
     ]) {
       const source = await readFile(
@@ -87,6 +88,7 @@ describe('Reference account use case across HTTP and PostgreSQL', () => {
       headers: { authorization: `Bearer ${accessToken}` },
       method: 'POST',
       payload: {
+        agency: '0123',
         color: null,
         currencyCode: 'BHD',
         currencyMinorUnitScale: 3,
@@ -111,6 +113,7 @@ describe('Reference account use case across HTTP and PostgreSQL', () => {
       throw new Error('Created account response is missing its id.');
     }
     expect(body).toMatchObject({
+      agency: '0123',
       currencyCode: 'BHD',
       initialBalance: '12345678901234567890.125',
       lifecycle: 'active',
@@ -119,19 +122,21 @@ describe('Reference account use case across HTTP and PostgreSQL', () => {
     expect(body.id).toMatch(/^[0-9a-f-]{36}$/u);
 
     const accounts = await sql.query<{
+      agency: string | null;
       id: string;
       owner_id: string;
       initial_balance_minor_units: string;
       currency_code: string;
       currency_minor_unit_scale: number;
     }>(
-      `SELECT id, owner_id, initial_balance_minor_units::text,
+      `SELECT id, owner_id, agency, initial_balance_minor_units::text,
               currency_code, currency_minor_unit_scale
          FROM accounts WHERE id = $1`,
       [body.id],
     );
     expect(accounts.rows).toEqual([
       {
+        agency: '0123',
         id: body.id,
         owner_id: actorId,
         initial_balance_minor_units: '12345678901234567890125',
