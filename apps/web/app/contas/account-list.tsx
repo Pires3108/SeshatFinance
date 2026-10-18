@@ -52,6 +52,7 @@ export function AccountList(): ReactNode {
         cache: 'no-store',
         signal: controller.signal,
       });
+      if (controller.signal.aborted) return;
       if (response.status === 401) {
         setState('unauthorized');
         return;
