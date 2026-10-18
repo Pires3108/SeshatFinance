@@ -35,15 +35,20 @@ export function AccountDetail({ accountId }: { accountId: string }): ReactNode {
   const statusRef = useRef<HTMLParagraphElement>(null);
   const resultRef = useRef<HTMLHeadingElement>(null);
   const actionRef = useRef<HTMLButtonElement | null>(null);
+  const requestRef = useRef<AbortController | null>(null);
 
   const load = useCallback(async (): Promise<void> => {
+    requestRef.current?.abort();
+    const controller = new AbortController();
+    requestRef.current = controller;
     setState('loading');
     setItem(null);
     try {
       const response = await fetch(
         `/api/accounts/${encodeURIComponent(accountId)}`,
-        { cache: 'no-store' },
+        { cache: 'no-store', signal: controller.signal },
       );
+      if (controller.signal.aborted) return;
       if (response.status === 401) {
         setState('unauthorized');
         return;
@@ -61,6 +66,7 @@ export function AccountDetail({ accountId }: { accountId: string }): ReactNode {
         return;
       }
       const data: unknown = await response.json();
+      if (controller.signal.aborted) return;
       if (!isAccountWithBalance(data) || data.account.id !== accountId) {
         setState('unavailable');
         return;
@@ -68,12 +74,25 @@ export function AccountDetail({ accountId }: { accountId: string }): ReactNode {
       setItem(data);
       setState('ready');
     } catch {
+      if (controller.signal.aborted) return;
       setState('unavailable');
     }
   }, [accountId]);
 
   useEffect(() => {
     void load();
+    return () => requestRef.current?.abort();
+  }, [load]);
+  useEffect(() => {
+    const refresh = (): void => {
+      if (document.visibilityState === 'visible') void load();
+    };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
   }, [load]);
   useEffect(() => {
     if (state !== 'ready' && state !== 'loading') statusRef.current?.focus();
@@ -188,7 +207,9 @@ export function AccountDetail({ accountId }: { accountId: string }): ReactNode {
             {actionError}
           </p>
         )}
-        {state === 'ready' && item !== null && (
+        {state === 'ready' &&
+          item !== null &&
+          item.account.id === accountId && (
           <article className="account-detail">
             <span className="section-label">Detalhe da conta</span>
             <h1 ref={resultRef} tabIndex={-1}>

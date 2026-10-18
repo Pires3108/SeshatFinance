@@ -108,6 +108,131 @@ test('expired session removes financial data from account detail', async ({
   await expect(page.getByText('Saldo contábil')).toHaveCount(0);
 });
 
+test('revoked session clears an already displayed detail balance on return', async ({
+  page,
+}) => {
+  let revoked = false;
+  const account = {
+    id,
+    name: 'Conta protegida',
+    typeKey: 'checking-account',
+    lifecycle: 'active',
+    currencyCode: 'BRL',
+    currencyMinorUnitScale: 2,
+  };
+  await page.route(`**/api/accounts/${id}`, async (route) => {
+    if (revoked) {
+      await route.fulfill({ status: 401, json: { error: 'unauthorized' } });
+    } else {
+      await route.fulfill({ json: { account, balance } });
+    }
+  });
+  await page.goto(`/contas/${id}`);
+  await expect(page.getByText('1.234,50 BRL')).toBeVisible();
+  revoked = true;
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(page.getByRole('alert')).toContainText('Seu acesso expirou.');
+  await expect(page.getByText('Saldo contábil')).toHaveCount(0);
+});
+
+test('revoked session clears an already displayed account list on return', async ({
+  page,
+}) => {
+  let revoked = false;
+  await page.route('**/api/accounts?lifecycle=active', async (route) => {
+    if (revoked) {
+      await route.fulfill({ status: 401, json: { error: 'unauthorized' } });
+    } else {
+      await route.fulfill({
+        json: [{
+          account: {
+            id,
+            name: 'Conta protegida',
+            typeKey: 'checking-account',
+            lifecycle: 'active',
+            currencyCode: 'BRL',
+            currencyMinorUnitScale: 2,
+          },
+          balance,
+        }],
+      });
+    }
+  });
+  await page.goto('/contas');
+  await expect(page.getByText('1.234,50 BRL')).toBeVisible();
+  revoked = true;
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(page.getByRole('alert')).toContainText('Seu acesso expirou.');
+  await expect(page.getByText('Saldo contábil')).toHaveCount(0);
+});
+
+test('a delayed account response cannot replace a later account detail', async ({
+  page,
+}) => {
+  const secondId = 'b414a4aa-f43d-4f58-9558-1e875db670ca';
+  const accounts = [
+    { id, name: 'Primeira conta' },
+    { id: secondId, name: 'Segunda conta' },
+  ];
+  await page.route('**/api/accounts?lifecycle=active', async (route) => {
+    await route.fulfill({
+      json: accounts.map((account) => ({
+        account: {
+          ...account,
+          typeKey: 'checking-account',
+          lifecycle: 'active',
+          currencyCode: 'BRL',
+          currencyMinorUnitScale: 2,
+        },
+        balance,
+      })),
+    });
+  });
+  let resolveFirst: (() => void) | undefined;
+  const firstRequested = new Promise<void>((resolve) => {
+    resolveFirst = resolve;
+  });
+  await page.route(`**/api/accounts/${id}`, async (route) => {
+    resolveFirst?.();
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await route.fulfill({
+      json: {
+        account: {
+          ...accounts[0],
+          typeKey: 'checking-account',
+          lifecycle: 'active',
+          currencyCode: 'BRL',
+          currencyMinorUnitScale: 2,
+        },
+        balance,
+      },
+    }).catch(() => undefined);
+  });
+  await page.route(`**/api/accounts/${secondId}`, async (route) => {
+    await route.fulfill({
+      json: {
+        account: {
+          ...accounts[1],
+          typeKey: 'checking-account',
+          lifecycle: 'active',
+          currencyCode: 'BRL',
+          currencyMinorUnitScale: 2,
+        },
+        balance: { ...balance, amount: '55.00' },
+      },
+    });
+  });
+  await page.goto('/contas');
+  await page.getByRole('link', { name: 'Primeira conta' }).click();
+  await firstRequested;
+  await page.goBack();
+  await page.getByRole('link', { name: 'Segunda conta' }).click();
+  await expect(page.getByRole('heading', { name: 'Segunda conta' })).toBeVisible();
+  await expect(page.getByText('55,00 BRL')).toBeVisible();
+  await page.waitForTimeout(600);
+  await expect(page.getByText('1.234,50 BRL')).toHaveCount(0);
+});
+
 for (const status of [403, 404]) {
   test(`detail handles ${String(status)} with a focused safe next step`, async ({
     page,

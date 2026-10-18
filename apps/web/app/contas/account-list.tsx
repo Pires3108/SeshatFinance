@@ -82,6 +82,17 @@ export function AccountList(): ReactNode {
     return () => requestRef.current?.abort();
   }, [filter, load]);
   useEffect(() => {
+    const refresh = (): void => {
+      if (document.visibilityState === 'visible') void load(filter);
+    };
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [filter, load]);
+  useEffect(() => {
     if (
       state === 'unauthorized' ||
       state === 'forbidden' ||
