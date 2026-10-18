@@ -13,6 +13,7 @@ export default function HomePage(): ReactNode {
           Seshat Finance
         </Link>
         <Link href="/cadastro">Criar conta</Link>
+        <Link href="/entrar">Entrar</Link>
       </header>
       <main className="page-grid" id="main-content" tabIndex={-1}>
         <section className="intro" aria-labelledby="page-title">
@@ -31,8 +32,8 @@ export default function HomePage(): ReactNode {
         <section className="form-panel" aria-labelledby="start-title">
           <h2 id="start-title">Comece pelo cadastro</h2>
           <p>
-            Crie sua conta e confirme seu e-mail. O acesso aos registros virá em
-            uma próxima etapa.
+            Crie sua conta, confirme seu e-mail e entre para acessar seus
+            registros.
           </p>
           <Link
             className="primary-action"

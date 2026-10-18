@@ -11,7 +11,7 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -31,6 +31,10 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - name: Install Chromium for browser journeys
+        run: pnpm --filter @seshat/web exec playwright install --with-deps chromium
+      - name: Verify browser auth and account journeys
+        run: pnpm --filter @seshat/web test:e2e
       - name: Verify negative quality gates
         run: pnpm test:ci
       - run: pnpm test:bootstrap

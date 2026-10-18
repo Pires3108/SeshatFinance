@@ -3,7 +3,8 @@ import type {
   UpdateOwnUserProfileUseCase,
   UserProfile,
 } from '@seshat/application';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { InvalidUserProfilePreferencesError } from '@seshat/application';
 import type { FastifyRequest } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -66,5 +67,26 @@ describe('UserProfileController', () => {
     await expect(
       controller.get(requestWithActor(actors)),
     ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('maps application preference rejection to a client error', async (): Promise<void> => {
+    const actors = new AuthenticatedActorContext();
+    const controller = new UserProfileController(
+      { execute: vi.fn() } as unknown as GetOwnUserProfileUseCase,
+      {
+        execute: vi
+          .fn()
+          .mockRejectedValue(new InvalidUserProfilePreferencesError()),
+      } as unknown as UpdateOwnUserProfileUseCase,
+      actors,
+    );
+    await expect(
+      controller.update(requestWithActor(actors), {
+        displayName: null,
+        locale: 'pt-BR',
+        presentationCurrency: 'BRL',
+        timeZone: 'America/Sao_Paulo',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });

@@ -1,10 +1,15 @@
 import {
   ChangeOwnedTransactionLifecycleUseCase,
+  AuthenticateUserUseCase,
   ChangeOwnedTransferLifecycleUseCase,
   ChangeOwnedAccountLifecycleUseCase,
   CreateBalanceAdjustmentUseCase,
   ListOwnedBalanceAdjustmentsUseCase,
   CreateCreditCardUseCase,
+  CreateManualExchangeQuoteUseCase,
+  CorrectOwnedManualExchangeQuoteUseCase,
+  GetOwnedManualExchangeQuoteUseCase,
+  ListOwnedManualExchangeQuotesUseCase,
   CreateFamilyGroupUseCase,
   GetOwnedCreditCardUseCase,
   GetOwnedTransferUseCase,
@@ -19,6 +24,7 @@ import {
   CreateTransferUseCase,
   GetOwnedAccountUseCase,
   GetOwnedAccountBalanceUseCase,
+  GetOwnedBalanceSummaryUseCase,
   GetOwnedTransactionUseCase,
   GetOwnedTransactionClassificationUseCase,
   ListOwnedTransactionTagsUseCase,
@@ -31,8 +37,12 @@ import {
   ListInvestmentTypesUseCase,
   ListDefaultAccountTypesUseCase,
   RegisterUserUseCase,
+  OpaqueSessionService,
+  ConfirmRegistrationUseCase,
+  ResendRegistrationConfirmationUseCase,
   ResolveAuthenticatedActorUseCase,
   RequestPasswordRecoveryUseCase,
+  CompletePasswordRecoveryUseCase,
   RenameOwnedCategoryUseCase,
   RenameOwnedCostCenterUseCase,
   RenameOwnedTagUseCase,
@@ -43,11 +53,14 @@ import {
   UpdateOwnedAccountDetailsUseCase,
   UpdateOwnedTransactionUseCase,
   type UserProfileRepository,
+  type OpaqueSessionRepository,
   type AccountRepository,
+  type OwnedBalanceSummaryAccountRepository,
   type AccountTransactionBalanceRepository,
   type BalanceAdjustmentRepository,
   type BalanceAdjustmentHistoryRepository,
   type CreditCardRepository,
+  type ManualExchangeQuoteRepository,
   type FamilyGroupRepository,
   type CategoryRepository,
   type CostCenterRepository,
@@ -63,6 +76,12 @@ import {
 } from '@seshat/application';
 import { Module } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
+import {
+  PrismaConfirmedIdentityProfileRepository,
+  PrismaLoginAttemptRepository,
+  PrismaOriginAttemptRepository,
+  PrismaRecoveryRequestAttemptRepository,
+} from '@seshat/database';
 
 import { AccountController } from './accounts/account.controller.js';
 import { AccountBalanceController } from './accounts/account-balance.controller.js';
@@ -75,13 +94,23 @@ import { LazyCreditCardRepository } from './cards/lazy-credit-card-repository.js
 import { FamilyGroupController } from './family/family-group.controller.js';
 import { LazyFamilyGroupRepository } from './family/lazy-family-group-repository.js';
 import { AuthConfiguration } from './auth/auth-configuration.js';
+import { HibpPasswordSafetyChecker } from './auth/hibp-password-safety.checker.js';
+import { CryptoOpaqueSessionTokens } from './auth/crypto-opaque-session-tokens.js';
+import { LazyOpaqueSessionRepository } from './auth/lazy-opaque-session-repository.js';
 import { AuthController } from './auth/auth.controller.js';
 import { AuthenticatedActorContext } from './auth/authenticated-actor-context.js';
 import { BearerAuthGuard } from './auth/bearer-auth.guard.js';
 import { PasswordRecoveryController } from './auth/password-recovery.controller.js';
 import { SupabaseIdentityRegistrationGateway } from './auth/supabase-identity-registration.gateway.js';
+import { SupabaseIdentityAuthenticationGateway } from './auth/supabase-identity-authentication.gateway.js';
+import { SessionController } from './auth/session.controller.js';
+import { SupabaseRegistrationConfirmationGateway } from './auth/supabase-registration-confirmation.gateway.js';
+import { SupabaseRegistrationConfirmationResendGateway } from './auth/supabase-registration-confirmation-resend.gateway.js';
+import { RegistrationIntentPruner } from './auth/registration-intent-pruner.js';
+import { RecoveryRequestAttemptPruner } from './auth/recovery-request-attempt-pruner.js';
 import { SupabaseIdentityTokenVerifier } from './auth/supabase-identity-token-verifier.js';
 import { SupabasePasswordRecoveryGateway } from './auth/supabase-password-recovery.gateway.js';
+import { SupabasePasswordRecoveryCompletionGateway } from './auth/supabase-password-recovery-completion.gateway.js';
 import { CategoryController } from './classifications/category.controller.js';
 import { CostCenterController } from './classifications/cost-center.controller.js';
 import { LazyCategoryRepository } from './classifications/lazy-category-repository.js';
@@ -91,6 +120,8 @@ import { TagController } from './classifications/tag.controller.js';
 import { HealthController } from './health/health.controller.js';
 import { DatabaseReadiness } from './health/database-readiness.js';
 import { InvestmentTypeController } from './investments/investment-type.controller.js';
+import { LazyManualExchangeQuoteRepository } from './money/lazy-manual-exchange-quote-repository.js';
+import { ManualExchangeQuoteController } from './money/manual-exchange-quote.controller.js';
 import { CorrelationContext } from './platform/correlation-context.js';
 import { PrivacySafeLogger } from './platform/privacy-safe-logger.js';
 import { LazyPrismaClient } from './platform/lazy-prisma-client.js';
@@ -120,7 +151,9 @@ import { UserProfileController } from './users/user-profile.controller.js';
     CostCenterController,
     HealthController,
     InvestmentTypeController,
+    ManualExchangeQuoteController,
     PasswordRecoveryController,
+    SessionController,
     TagController,
     TransactionController,
     TransactionClassificationController,
@@ -129,6 +162,8 @@ import { UserProfileController } from './users/user-profile.controller.js';
     UserProfileController,
   ],
   providers: [
+    RegistrationIntentPruner,
+    RecoveryRequestAttemptPruner,
     {
       provide: ListDefaultAccountTypesUseCase,
       useFactory: (): ListDefaultAccountTypesUseCase =>
@@ -140,15 +175,18 @@ import { UserProfileController } from './users/user-profile.controller.js';
         new ListInvestmentTypesUseCase(),
     },
     AuthConfiguration,
+    HibpPasswordSafetyChecker,
     AuthenticatedActorContext,
     BearerAuthGuard,
     CorrelationContext,
     DatabaseReadiness,
     PrivacySafeLogger,
     LazyPrismaClient,
+    LazyOpaqueSessionRepository,
     LazyAccountRepository,
     LazyBalanceAdjustmentRepository,
     LazyCreditCardRepository,
+    LazyManualExchangeQuoteRepository,
     LazyFamilyGroupRepository,
     LazyCategoryRepository,
     LazyCostCenterRepository,
@@ -158,6 +196,57 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyTransactionTagRepository,
     LazyTransferRepository,
     LazyUserProfileRepository,
+    {
+      inject: [LazyManualExchangeQuoteRepository],
+      provide: CreateManualExchangeQuoteUseCase,
+      useFactory: (
+        quotes: ManualExchangeQuoteRepository,
+      ): CreateManualExchangeQuoteUseCase =>
+        new CreateManualExchangeQuoteUseCase(
+          quotes,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyOpaqueSessionRepository],
+      provide: OpaqueSessionService,
+      useFactory: (sessions: OpaqueSessionRepository): OpaqueSessionService =>
+        new OpaqueSessionService(
+          sessions,
+          new CryptoOpaqueSessionTokens(),
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyManualExchangeQuoteRepository],
+      provide: CorrectOwnedManualExchangeQuoteUseCase,
+      useFactory: (
+        quotes: ManualExchangeQuoteRepository,
+      ): CorrectOwnedManualExchangeQuoteUseCase =>
+        new CorrectOwnedManualExchangeQuoteUseCase(
+          quotes,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyManualExchangeQuoteRepository],
+      provide: GetOwnedManualExchangeQuoteUseCase,
+      useFactory: (
+        quotes: ManualExchangeQuoteRepository,
+      ): GetOwnedManualExchangeQuoteUseCase =>
+        new GetOwnedManualExchangeQuoteUseCase(quotes),
+    },
+    {
+      inject: [LazyManualExchangeQuoteRepository],
+      provide: ListOwnedManualExchangeQuotesUseCase,
+      useFactory: (
+        quotes: ManualExchangeQuoteRepository,
+      ): ListOwnedManualExchangeQuotesUseCase =>
+        new ListOwnedManualExchangeQuotesUseCase(quotes),
+    },
     {
       inject: [LazyFamilyGroupRepository],
       provide: CreateFamilyGroupUseCase,
@@ -511,6 +600,15 @@ import { UserProfileController } from './users/user-profile.controller.js';
         new GetOwnedAccountBalanceUseCase(accounts, transactions),
     },
     {
+      inject: [LazyAccountRepository, GetOwnedAccountBalanceUseCase],
+      provide: GetOwnedBalanceSummaryUseCase,
+      useFactory: (
+        accounts: OwnedBalanceSummaryAccountRepository,
+        balances: GetOwnedAccountBalanceUseCase,
+      ): GetOwnedBalanceSummaryUseCase =>
+        new GetOwnedBalanceSummaryUseCase(accounts, balances),
+    },
+    {
       inject: [LazyAccountRepository],
       provide: ListOwnedAccountsUseCase,
       useFactory: (accounts: AccountRepository): ListOwnedAccountsUseCase =>
@@ -555,32 +653,44 @@ import { UserProfileController } from './users/user-profile.controller.js';
         new UpdateOwnUserProfileUseCase(profiles, new SystemClock()),
     },
     {
-      inject: [AuthConfiguration],
+      inject: [AuthConfiguration, LazyPrismaClient],
       provide: ResolveAuthenticatedActorUseCase,
       useFactory: (
         configuration: AuthConfiguration,
+        prisma: LazyPrismaClient,
       ): ResolveAuthenticatedActorUseCase =>
         new ResolveAuthenticatedActorUseCase(
-          new SupabaseIdentityTokenVerifier(() => {
-            const values = configuration.read();
-            return createClient(
-              values.supabaseUrl,
-              values.supabasePublishableKey,
-              {
-                auth: {
-                  autoRefreshToken: false,
-                  detectSessionInUrl: false,
-                  persistSession: false,
+          new SupabaseIdentityTokenVerifier(
+            () => {
+              const values = configuration.read();
+              return createClient(
+                values.supabaseUrl,
+                values.supabasePublishableKey,
+                {
+                  auth: {
+                    autoRefreshToken: false,
+                    detectSessionInUrl: false,
+                    persistSession: false,
+                  },
                 },
-              },
-            );
-          }),
+              );
+            },
+            new PrismaConfirmedIdentityProfileRepository(
+              () => prisma.get(),
+              () => configuration.readIntentHmacKey(),
+            ),
+            new SystemClock(),
+          ),
         ),
     },
     {
-      inject: [AuthConfiguration],
+      inject: [AuthConfiguration, LazyPrismaClient, HibpPasswordSafetyChecker],
       provide: RegisterUserUseCase,
-      useFactory: (configuration: AuthConfiguration): RegisterUserUseCase =>
+      useFactory: (
+        configuration: AuthConfiguration,
+        prisma: LazyPrismaClient,
+        passwords: HibpPasswordSafetyChecker,
+      ): RegisterUserUseCase =>
         new RegisterUserUseCase(
           new SupabaseIdentityRegistrationGateway(() => {
             const values = configuration.read();
@@ -596,13 +706,112 @@ import { UserProfileController } from './users/user-profile.controller.js';
               },
             );
           }),
+          new PrismaConfirmedIdentityProfileRepository(
+            () => prisma.get(),
+            () => configuration.readIntentHmacKey(),
+          ),
+          passwords,
+        ),
+    },
+    {
+      inject: [AuthConfiguration, LazyPrismaClient],
+      provide: ConfirmRegistrationUseCase,
+      useFactory: (
+        configuration: AuthConfiguration,
+        prisma: LazyPrismaClient,
+      ): ConfirmRegistrationUseCase =>
+        new ConfirmRegistrationUseCase(
+          new SupabaseRegistrationConfirmationGateway(() => {
+            const values = configuration.read();
+            return createClient(
+              values.supabaseUrl,
+              values.supabasePublishableKey,
+              {
+                auth: {
+                  autoRefreshToken: false,
+                  detectSessionInUrl: false,
+                  persistSession: false,
+                },
+              },
+            );
+          }),
+          new PrismaConfirmedIdentityProfileRepository(
+            () => prisma.get(),
+            () => configuration.readIntentHmacKey(),
+          ),
+          new SystemClock(),
+        ),
+    },
+    {
+      inject: [
+        AuthConfiguration,
+        LazyPrismaClient,
+        ResolveAuthenticatedActorUseCase,
+      ],
+      provide: AuthenticateUserUseCase,
+      useFactory: (
+        configuration: AuthConfiguration,
+        prisma: LazyPrismaClient,
+        resolveActor: ResolveAuthenticatedActorUseCase,
+      ): AuthenticateUserUseCase =>
+        new AuthenticateUserUseCase(
+          new SupabaseIdentityAuthenticationGateway(
+            () => {
+              const values = configuration.read();
+              return createClient(
+                values.supabaseUrl,
+                values.supabasePublishableKey,
+                {
+                  auth: {
+                    autoRefreshToken: false,
+                    detectSessionInUrl: false,
+                    persistSession: false,
+                  },
+                },
+              );
+            },
+            (token) => resolveActor.execute(token),
+          ),
+          new PrismaLoginAttemptRepository(
+            () => prisma.get(),
+            () => configuration.readIntentHmacKey(),
+          ),
+          new SystemClock(),
+          new PrismaOriginAttemptRepository(
+            () => prisma.get(),
+            () => configuration.readIntentHmacKey(),
+          ),
         ),
     },
     {
       inject: [AuthConfiguration],
+      provide: ResendRegistrationConfirmationUseCase,
+      useFactory: (
+        configuration: AuthConfiguration,
+      ): ResendRegistrationConfirmationUseCase =>
+        new ResendRegistrationConfirmationUseCase(
+          new SupabaseRegistrationConfirmationResendGateway(() => {
+            const values = configuration.read();
+            return createClient(
+              values.supabaseUrl,
+              values.supabasePublishableKey,
+              {
+                auth: {
+                  autoRefreshToken: false,
+                  detectSessionInUrl: false,
+                  persistSession: false,
+                },
+              },
+            );
+          }),
+        ),
+    },
+    {
+      inject: [AuthConfiguration, LazyPrismaClient],
       provide: RequestPasswordRecoveryUseCase,
       useFactory: (
         configuration: AuthConfiguration,
+        prisma: LazyPrismaClient,
       ): RequestPasswordRecoveryUseCase =>
         new RequestPasswordRecoveryUseCase(
           new SupabasePasswordRecoveryGateway(() => {
@@ -619,6 +828,52 @@ import { UserProfileController } from './users/user-profile.controller.js';
               },
             );
           }),
+          new PrismaRecoveryRequestAttemptRepository(
+            () => prisma.get(),
+            () => configuration.readIntentHmacKey(),
+          ),
+          new SystemClock(),
+          new PrismaOriginAttemptRepository(
+            () => prisma.get(),
+            () => configuration.readIntentHmacKey(),
+          ),
+        ),
+    },
+    {
+      inject: [
+        AuthConfiguration,
+        OpaqueSessionService,
+        LazyPrismaClient,
+        HibpPasswordSafetyChecker,
+      ],
+      provide: CompletePasswordRecoveryUseCase,
+      useFactory: (
+        configuration: AuthConfiguration,
+        sessions: OpaqueSessionService,
+        prisma: LazyPrismaClient,
+        passwords: HibpPasswordSafetyChecker,
+      ): CompletePasswordRecoveryUseCase =>
+        new CompletePasswordRecoveryUseCase(
+          new SupabasePasswordRecoveryCompletionGateway(() => {
+            const values = configuration.read();
+            return createClient(
+              values.supabaseUrl,
+              values.supabasePublishableKey,
+              {
+                auth: {
+                  autoRefreshToken: false,
+                  detectSessionInUrl: false,
+                  persistSession: false,
+                },
+              },
+            );
+          }),
+          sessions,
+          new PrismaLoginAttemptRepository(
+            () => prisma.get(),
+            () => configuration.readIntentHmacKey(),
+          ),
+          passwords,
         ),
     },
   ],

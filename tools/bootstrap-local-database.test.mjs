@@ -30,6 +30,7 @@ test('a migration failure prevents the synthetic seed', () => {
           calls.push({ command, args });
           assert.ok(env.DATABASE_URL);
           assert.equal(new URL(env.DATABASE_URL).port, '55439');
+          assert.equal(env.SESHAT_ALLOW_SYNTHETIC_SEED, '1');
           return args.includes('migrate') ? 1 : 0;
         },
       ),

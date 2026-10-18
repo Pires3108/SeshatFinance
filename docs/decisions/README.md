@@ -12,3 +12,5 @@ Use nomes no formato `NNNN-titulo-em-kebab-case.md`. Cada registro deve descreve
 O status de uma decisão não comprova a conclusão da implementação. As evidências dos critérios BDD, testes e publicação devem constar no pull request e no Jira.
 
 - [ADR-001 — Receptor externo de eventos para espera do agente](0001-agent-webhook-waiter.md)
+- [ADR-030 — Contexto transacional injetável](0030-contexto-transacional-injetavel.md)
+- [ADR-031 — Correlação e metadados seguros entre processos](0031-correlacao-e-metadados-seguros.md)

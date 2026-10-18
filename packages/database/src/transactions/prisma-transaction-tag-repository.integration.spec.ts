@@ -37,6 +37,7 @@ describe('PrismaTransactionTagRepository', () => {
     stop = async (): Promise<void> => container.stop().then(() => undefined);
     const migrationPaths = [
       '../../prisma/migrations/20260920040000_create_accounts/migration.sql',
+      '../../prisma/migrations/20261015120000_add_account_agency/migration.sql',
       '../../prisma/migrations/20260920133000_create_transactions/migration.sql',
       '../../prisma/migrations/20260920190000_create_tags/migration.sql',
       '../../prisma/migrations/20260920200000_assign_transaction_tags/migration.sql',

@@ -11,6 +11,7 @@ import {
   BalanceAdjustment,
   Currency,
   FinancialAuditEvent,
+  ManualExchangeQuote,
   Money,
   Transaction,
   Transfer,
@@ -21,6 +22,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { PrismaAccountRepository } from '../accounts/prisma-account-repository.js';
 import { PrismaBalanceAdjustmentRepository } from '../adjustments/prisma-balance-adjustment-repository.js';
 import type { PrismaClient } from '../generated/prisma/client.js';
+import { PrismaManualExchangeQuoteRepository } from '../money/prisma-manual-exchange-quote-repository.js';
 import { createPrismaClient } from '../prisma/create-prisma-client.js';
 import { PrismaTransactionRepository } from '../transactions/prisma-transaction-repository.js';
 import { PrismaTransferRepository } from '../transfers/prisma-transfer-repository.js';
@@ -52,6 +54,7 @@ describe('financial ledger across accounts, transfers, and adjustments', () => {
     await migrationClient.connect();
     for (const path of [
       '../../prisma/migrations/20260920040000_create_accounts/migration.sql',
+      '../../prisma/migrations/20261015120000_add_account_agency/migration.sql',
       '../../prisma/migrations/20260920133000_create_transactions/migration.sql',
       '../../prisma/migrations/20260920180000_create_categories/migration.sql',
       '../../prisma/migrations/20260920190000_create_tags/migration.sql',
@@ -62,6 +65,7 @@ describe('financial ledger across accounts, transfers, and adjustments', () => {
       '../../prisma/migrations/20260921150000_create_transfers/migration.sql',
       '../../prisma/migrations/20260921170000_create_balance_adjustments/migration.sql',
       '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
+      '../../prisma/migrations/20261001010000_create_manual_exchange_quotes/migration.sql',
     ]) {
       await migrationClient.query(
         await readFile(new URL(path, import.meta.url), 'utf8'),
@@ -335,6 +339,14 @@ describe('financial ledger across accounts, transfers, and adjustments', () => {
     expect((await balances.execute(accountId, ownerId)).toDecimal()).toBe(
       '0.25',
     );
+    expect(
+      (await accounts.findByIdForOwner(accountId, ownerId))?.lifecycle,
+    ).toBe('archived');
+    expect(
+      (await transactions.listForAccountOwner(accountId, ownerId)).map(
+        (entry) => entry.id,
+      ),
+    ).toEqual(entries.map((entry) => entry.id));
 
     const trashedEntry = created[1];
     if (trashedEntry === undefined) throw new Error('Missing synthetic entry.');
@@ -376,6 +388,209 @@ describe('financial ledger across accounts, transfers, and adjustments', () => {
       '0.25',
     );
   });
+
+  it('replaces an edited posted effect exactly once in the account balance', async () => {
+    if (
+      client === undefined ||
+      accounts === undefined ||
+      transactions === undefined
+    ) {
+      throw new Error('Financial repositories are unavailable.');
+    }
+    const accountId = 'd0d0d0d0-d0d0-40d0-80d0-d0d0d0d0d0d0';
+    const ownedAccount = account(accountId, '100.00');
+    await accounts.insert(
+      ownedAccount,
+      audit(
+        'd1d1d1d1-d1d1-41d1-81d1-d1d1d1d1d1d1',
+        accountId,
+        'account',
+        'created',
+        '2026-09-23T09:00:00.000Z',
+      ),
+    );
+    const balances = new GetOwnedAccountBalanceUseCase(accounts, transactions);
+    expect((await balances.execute(accountId, ownerId)).toDecimal()).toBe(
+      '100.00',
+    );
+
+    const income = Transaction.create({
+      accountId,
+      amount: Money.fromDecimal('30.00', currency),
+      createdAt: new Date('2026-09-23T10:00:00.000Z'),
+      description: null,
+      id: 'd2d2d2d2-d2d2-42d2-82d2-d2d2d2d2d2d2',
+      kind: 'income',
+      occurredAt: new Date('2026-09-23T10:00:00.000Z'),
+      ownerId,
+    });
+    const expense = Transaction.create({
+      accountId,
+      amount: Money.fromDecimal('20.00', currency),
+      createdAt: new Date('2026-09-23T10:00:00.000Z'),
+      description: null,
+      id: 'd3d3d3d3-d3d3-43d3-83d3-d3d3d3d3d3d3',
+      kind: 'expense',
+      occurredAt: new Date('2026-09-23T10:00:00.000Z'),
+      ownerId,
+    });
+    await transactions.insert(
+      income,
+      audit(
+        'd4d4d4d4-d4d4-44d4-84d4-d4d4d4d4d4d4',
+        income.id,
+        'transaction',
+        'created',
+        '2026-09-23T10:00:00.000Z',
+      ),
+    );
+    await transactions.insert(
+      expense,
+      audit(
+        'd5d5d5d5-d5d5-45d5-85d5-d5d5d5d5d5d5',
+        expense.id,
+        'transaction',
+        'created',
+        '2026-09-23T10:00:00.000Z',
+      ),
+    );
+    expect((await balances.execute(accountId, ownerId)).toDecimal()).toBe(
+      '110.00',
+    );
+
+    income.updateDetails(
+      {
+        amount: Money.fromDecimal('40.00', currency),
+        description: null,
+        kind: 'income',
+        occurredAt: new Date('2026-09-23T10:00:00.000Z'),
+      },
+      new Date('2026-09-23T11:00:00.000Z'),
+    );
+    await expect(
+      transactions.save(
+        income,
+        1,
+        audit(
+          'd6d6d6d6-d6d6-46d6-86d6-d6d6d6d6d6d6',
+          income.id,
+          'transaction',
+          'updated',
+          '2026-09-23T11:00:00.000Z',
+        ),
+      ),
+    ).resolves.toBe(true);
+    expect((await balances.execute(accountId, ownerId)).toDecimal()).toBe(
+      '120.00',
+    );
+    await expect(
+      client.transaction.count({ where: { accountId } }),
+    ).resolves.toBe(2);
+    await expect(
+      client.financialAuditEvent.count({ where: { resourceId: income.id } }),
+    ).resolves.toBe(2);
+  });
+
+  it('keeps original USD account and entry values after an informative manual quote', async () => {
+    if (
+      client === undefined ||
+      accounts === undefined ||
+      transactions === undefined
+    ) {
+      throw new Error('Financial repositories are unavailable.');
+    }
+    const accountId = 'e0e0e0e0-e0e0-40e0-80e0-e0e0e0e0e0e0';
+    const transactionId = 'e1e1e1e1-e1e1-41e1-81e1-e1e1e1e1e1e1';
+    const usd = Currency.create('USD', 2);
+    const ownedAccount = Account.create({
+      color: null,
+      createdAt: new Date('2026-09-23T09:00:00.000Z'),
+      description: null,
+      icon: null,
+      id: accountId,
+      initialBalance: Money.fromDecimal('10.25', usd),
+      institution: null,
+      name: 'USD account',
+      ownerId,
+      type: AccountType.create('checking-account'),
+    });
+    await accounts.insert(
+      ownedAccount,
+      audit(
+        'e2e2e2e2-e2e2-42e2-82e2-e2e2e2e2e2e2',
+        accountId,
+        'account',
+        'created',
+        '2026-09-23T09:00:00.000Z',
+      ),
+    );
+    const entry = Transaction.create({
+      accountId,
+      amount: Money.fromDecimal('1.10', usd),
+      createdAt: new Date('2026-09-23T10:00:00.000Z'),
+      description: null,
+      id: transactionId,
+      kind: 'income',
+      occurredAt: new Date('2026-09-23T10:00:00.000Z'),
+      ownerId,
+    });
+    await transactions.insert(
+      entry,
+      audit(
+        'e3e3e3e3-e3e3-43e3-83e3-e3e3e3e3e3e3',
+        transactionId,
+        'transaction',
+        'created',
+        '2026-09-23T10:00:00.000Z',
+      ),
+    );
+    const balances = new GetOwnedAccountBalanceUseCase(accounts, transactions);
+    expect((await balances.execute(accountId, ownerId)).toDecimal()).toBe(
+      '11.35',
+    );
+
+    const quote = ManualExchangeQuote.create({
+      authorId: ownerId,
+      effectiveAt: new Date('2026-09-23T11:00:00.000Z'),
+      id: 'e4e4e4e4-e4e4-44e4-84e4-e4e4e4e4e4e4',
+      ownerId,
+      rate: '5.123456789123456789',
+      recordedAt: new Date('2026-09-23T11:00:00.000Z'),
+      source: 'Manual observation',
+      sourceCurrencyCode: 'USD',
+      targetCurrencyCode: 'BRL',
+      version: 1,
+    });
+    const quotes = new PrismaManualExchangeQuoteRepository(client);
+    await expect(
+      quotes.insertVersion(
+        quote,
+        audit(
+          'e5e5e5e5-e5e5-45e5-85e5-e5e5e5e5e5e5',
+          quote.toSnapshot().id,
+          'manual-exchange-quote',
+          'created',
+          '2026-09-23T11:00:00.000Z',
+        ),
+        'usd-brl-observation',
+      ),
+    ).resolves.toBe(true);
+
+    const restoredAccount = await accounts.findByIdForOwner(accountId, ownerId);
+    const restoredEntry = await transactions.findByIdForOwner(
+      transactionId,
+      ownerId,
+    );
+    expect(restoredAccount?.initialBalance.toSnapshot()).toEqual(
+      Money.fromDecimal('10.25', usd).toSnapshot(),
+    );
+    expect(restoredEntry?.amount.toSnapshot()).toEqual(
+      Money.fromDecimal('1.10', usd).toSnapshot(),
+    );
+    expect((await balances.execute(accountId, ownerId)).toDecimal()).toBe(
+      '11.35',
+    );
+  });
 });
 
 function account(id: string, initialBalance: string): Account {
@@ -396,8 +611,18 @@ function account(id: string, initialBalance: string): Account {
 function audit(
   id: string,
   resourceId: string,
-  resourceType: 'account' | 'transfer' | 'balance-adjustment' | 'transaction',
-  action: 'created' | 'archived' | 'moved-to-trash' | 'restored-from-trash',
+  resourceType:
+    | 'account'
+    | 'transfer'
+    | 'balance-adjustment'
+    | 'transaction'
+    | 'manual-exchange-quote',
+  action:
+    | 'created'
+    | 'updated'
+    | 'archived'
+    | 'moved-to-trash'
+    | 'restored-from-trash',
   at: string,
 ): FinancialAuditEvent {
   return FinancialAuditEvent.create({

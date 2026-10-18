@@ -15,6 +15,7 @@ export class PrismaAccountRepository implements AccountRepository {
     await this.client.$transaction(async (client) => {
       await client.account.create({
         data: {
+          agency: snapshot.agency,
           archivedAt: snapshot.archivedAt,
           color: snapshot.color,
           createdAt: snapshot.createdAt,
@@ -58,8 +59,17 @@ export class PrismaAccountRepository implements AccountRepository {
   ): Promise<readonly Account[]> {
     const persisted = await this.client.account.findMany({
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-      take: 100,
       where: { ownerId, ...(lifecycle === undefined ? {} : { lifecycle }) },
+    });
+    return persisted.map(restoreAccount);
+  }
+
+  public async listForOwnedBalanceSummary(
+    ownerId: string,
+  ): Promise<readonly Account[]> {
+    const persisted = await this.client.account.findMany({
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      where: { ownerId, lifecycle: { in: ['active', 'archived'] } },
     });
     return persisted.map(restoreAccount);
   }
@@ -73,6 +83,7 @@ export class PrismaAccountRepository implements AccountRepository {
     return this.client.$transaction(async (client) => {
       const result = await client.account.updateMany({
         data: {
+          agency: snapshot.agency,
           archivedAt: snapshot.archivedAt,
           color: snapshot.color,
           description: snapshot.description,
@@ -105,6 +116,7 @@ type PersistedAccount =
 
 function restoreAccount(persisted: PersistedAccount): Account {
   return Account.restore({
+    agency: persisted.agency,
     archivedAt: persisted.archivedAt,
     color: persisted.color,
     createdAt: persisted.createdAt,
