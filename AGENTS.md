@@ -4,6 +4,10 @@
 
 Use the project-scoped Codex agents in `.codex/agents/` for substantive development work: `backend-dev`, `frontend-dev`, `qa-engineer`, `devops-engineer`, and `code-reviewer`. Keep the primary session responsible for scope, ordering, decisions, integration, and reporting. Delegate only the specialists needed for the current story, with a bounded brief naming the Jira issue, acceptance criteria, checkout, owned files, dependencies, and required evidence. Prefer a fresh agent context with that brief. Do not assign two agents to edit the same files; serialize dependent work. These agents follow this file and the user's instructions. Do not create separate user-facing chats for delegation.
 
+## Workspace and versioning
+
+Keep new agent checkouts, worktrees, and development artifacts for this project inside `D:\SeshatFinance`. Do not create sibling project folders or agent worktrees elsewhere. Before reusing an existing checkout, inspect its Git status, branch, and worktree registration; do not move or remove existing external worktrees as part of this rule. Develop each increment on a branch in this repository and publish its commits and pull request to the project's GitHub remote. Local folders are not the versioning record.
+
 ## Product boundary
 
 - This application only records and organizes financial information.
