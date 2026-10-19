@@ -114,6 +114,39 @@ describe('PrismaManualExchangeQuoteRepository', () => {
     expect(
       await client.manualExchangeQuoteVersion.count({ where: { quoteId } }),
     ).toBe(2);
+    const persistedVersions = await client.manualExchangeQuoteVersion.findMany({
+      where: { quoteId },
+      orderBy: { version: 'asc' },
+    });
+    expect(
+      persistedVersions.map(
+        ({ authorId, effectiveAt, rate, recordedAt, source, version }) => ({
+          authorId,
+          effectiveAt,
+          rate,
+          recordedAt,
+          source,
+          version,
+        }),
+      ),
+    ).toEqual([
+      {
+        authorId: ownerId,
+        effectiveAt: first.toSnapshot().effectiveAt,
+        rate: '5.123456789123456789',
+        recordedAt: first.toSnapshot().recordedAt,
+        source: 'Synthetic declared quote',
+        version: 1,
+      },
+      {
+        authorId: ownerId,
+        effectiveAt: second.toSnapshot().effectiveAt,
+        rate: '5.2',
+        recordedAt: second.toSnapshot().recordedAt,
+        source: 'Synthetic declared quote',
+        version: 2,
+      },
+    ]);
     expect(
       (
         await repository.findByIdempotencyKeyForOwner(
@@ -142,6 +175,9 @@ describe('PrismaManualExchangeQuoteRepository', () => {
       await client.financialAuditEvent.count({
         where: { resourceId: quoteId },
       }),
+    ).toBe(2);
+    expect(
+      await client.manualExchangeQuoteVersion.count({ where: { quoteId } }),
     ).toBe(2);
     await expect(
       client.manualExchangeQuoteVersion.update({

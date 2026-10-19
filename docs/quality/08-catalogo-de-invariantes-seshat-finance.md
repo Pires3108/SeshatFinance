@@ -42,9 +42,9 @@ Todo valor financeiro possui uma moeda associada; valores de moedas diferentes n
 
 ### INV-005 — Arredondamento reconciliável
 
-Diferenças de arredondamento de parcelas são atribuídas à última parcela, e a soma permanece igual ao total.
+Na divisão igual de um total monetário, as parcelas anteriores truncam unidades da menor fração da moeda em direção a zero e a última recebe o resíduo. A soma permanece igual ao total, inclusive para valores negativos. Juros e taxas dependem das regras da operação que os aplica.
 
-**Verificação:** testar divisões inexatas positivas, negativas e com juros.
+**Verificação:** testar divisões exatas e inexatas positivas e negativas, moeda e escala preservadas, última parcela reconciliada; testar juros quando o fluxo de parcelamento da US-044 existir.
 
 **Referências:** RN-018; CA-009.
 

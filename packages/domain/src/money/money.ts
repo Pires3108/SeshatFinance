@@ -5,6 +5,7 @@ import {
 } from './currency.js';
 
 const decimalAmountPattern = /^(-?)(\d+)(?:\.(\d+))?$/u;
+const maximumMoneySplitCount = 10_000;
 
 export type MoneyComparison = -1 | 0 | 1;
 
@@ -17,6 +18,13 @@ export class InvalidMoneyAmountError extends Error {
   public constructor(message: string) {
     super(message);
     this.name = 'InvalidMoneyAmountError';
+  }
+}
+
+export class InvalidMoneySplitCountError extends Error {
+  public constructor() {
+    super('Money split count must be an integer from 1 to 10000.');
+    this.name = 'InvalidMoneySplitCountError';
   }
 }
 
@@ -70,6 +78,29 @@ export class Money {
 
   public negate(): Money {
     return new Money(-this.minorUnits, this.currency);
+  }
+
+  public split(count: number): readonly Money[] {
+    if (
+      !Number.isSafeInteger(count) ||
+      count <= 0 ||
+      count > maximumMoneySplitCount
+    ) {
+      throw new InvalidMoneySplitCountError();
+    }
+
+    const regularShare = this.minorUnits / BigInt(count);
+    const shares: Money[] = [];
+    for (let index = 1; index < count; index += 1) {
+      shares.push(new Money(regularShare, this.currency));
+    }
+    shares.push(
+      new Money(
+        this.minorUnits - regularShare * BigInt(count - 1),
+        this.currency,
+      ),
+    );
+    return shares;
   }
 
   public compare(other: Money): MoneyComparison {

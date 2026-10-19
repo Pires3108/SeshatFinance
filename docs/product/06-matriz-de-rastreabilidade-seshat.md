@@ -44,6 +44,7 @@ Esta matriz relaciona áreas funcionais, requisitos, regras e critérios de acei
 - Itens de fase posterior não bloqueiam a aceitação da primeira versão.
 - O recorte da US-021 comprova RN-002, INV-003 e INV-004 por moeda explícita, aritmética exata e persistência Decimal; conversão e arredondamento dependem da RII-007 e são rastreados nas histórias das operações correspondentes, começando pela US-022 para cotação manual.
 - O recorte da US-020 comprova RF-018 e INV-006 com saldo inicial e lançamentos efetivos; a prova de exclusão de eventos projetados fica na US-059, quando seu modelo existir, preservando INV-020.
+- O recorte da US-024 comprova INV-005 e RN-018 na divisão exata do principal em unidades da moeda; a prévia, juros e confirmação de parcelas de CA-009 permanecem na US-044. Os demais cenários de US-024 verificam INV-003, INV-004, INV-006, INV-010 e INV-029 sobre operações já implementadas, sem criar conversão contábil.
 - Mudanças em saldo, patrimônio, fatura, juros ou retenção exigem revisão dos testes críticos.
 
 ## 4. Documentos de teste
