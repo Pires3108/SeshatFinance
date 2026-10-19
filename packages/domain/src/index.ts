@@ -6,6 +6,7 @@ export {
 export {
   CurrencyMismatchError,
   InvalidMoneyAmountError,
+  InvalidMoneySplitCountError,
   Money,
   type MoneyComparison,
   type MoneySnapshot,
