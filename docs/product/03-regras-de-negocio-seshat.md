@@ -25,7 +25,7 @@
 - **RN-015:** a despesa é reconhecida na compra, não no pagamento da fatura.
 - **RN-016:** após declaração do usuário, o registro de pagamento de fatura reduz saldo organizacional da conta pagadora e obrigação do cartão sem criar nova despesa nem efetuar pagamento externo.
 - **RN-017:** o limite organizacional estimado diminui na compra registrada e aumenta na quitação ou estorno registrados, sem bloquear ou liberar limite real.
-- **RN-018:** o principal é distribuído entre parcelas; diferença de arredondamento fica na última.
+- **RN-018:** o principal é distribuído entre parcelas na menor unidade da moeda original. Na divisão igual, cada parcela anterior trunca o quociente em direção a zero e a última recebe todo o resíduo, inclusive para total negativo; a soma permanece igual ao principal. Juros, taxas e a confirmação do parcelamento exigem suas regras próprias.
 - **RN-019:** juros são calculados pelo método escolhido e exibidos separadamente do principal.
 - **RN-020:** juros simples usam juros = principal × taxa × períodos; compostos usam montante = principal × (1 + taxa)^períodos.
 - **RN-021:** antes da confirmação, mostrar total financiado, juros, total final, valor e vencimento das parcelas.
