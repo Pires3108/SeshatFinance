@@ -20,6 +20,8 @@ import {
   DeleteOwnedCategoryUseCase,
   GetOwnedCategoryUseCase,
   CreateCostCenterUseCase,
+  DeleteOwnedCostCenterUseCase,
+  GetOwnedCostCenterUseCase,
   CreateTagUseCase,
   DeleteOwnedTagUseCase,
   GetOwnedTagUseCase,
@@ -50,6 +52,7 @@ import {
   RenameOwnedCategoryUseCase,
   SetOwnedCategoryArchivedUseCase,
   RenameOwnedCostCenterUseCase,
+  SetOwnedCostCenterArchivedUseCase,
   RenameOwnedTagUseCase,
   SetOwnedTagArchivedUseCase,
   SetOwnedTransactionTagsUseCase,
@@ -391,6 +394,30 @@ import { UserProfileController } from './users/user-profile.controller.js';
         costCenters: CostCenterRepository,
       ): RenameOwnedCostCenterUseCase =>
         new RenameOwnedCostCenterUseCase(costCenters, new SystemClock()),
+    },
+    {
+      inject: [LazyCostCenterRepository],
+      provide: GetOwnedCostCenterUseCase,
+      useFactory: (
+        costCenters: CostCenterRepository,
+      ): GetOwnedCostCenterUseCase =>
+        new GetOwnedCostCenterUseCase(costCenters),
+    },
+    {
+      inject: [LazyCostCenterRepository],
+      provide: SetOwnedCostCenterArchivedUseCase,
+      useFactory: (
+        costCenters: CostCenterRepository,
+      ): SetOwnedCostCenterArchivedUseCase =>
+        new SetOwnedCostCenterArchivedUseCase(costCenters, new SystemClock()),
+    },
+    {
+      inject: [LazyCostCenterRepository],
+      provide: DeleteOwnedCostCenterUseCase,
+      useFactory: (
+        costCenters: CostCenterRepository,
+      ): DeleteOwnedCostCenterUseCase =>
+        new DeleteOwnedCostCenterUseCase(costCenters),
     },
     {
       inject: [LazyTagRepository],

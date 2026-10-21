@@ -17,7 +17,7 @@ export class LazyTransactionClassificationRepository implements TransactionClass
   public getForOwner(
     transactionId: string,
     ownerId: string,
-  ): Promise<TransactionClassificationSelection> {
+  ): Promise<TransactionClassificationSelection | null> {
     return this.getRepository().getForOwner(transactionId, ownerId);
   }
 

@@ -15,6 +15,14 @@ export class LazyCostCenterRepository implements CostCenterRepository {
     return this.getRepository().insert(costCenter);
   }
 
+  public deleteUnlinked(
+    id: string,
+    ownerId: string,
+    expectedVersion: number,
+  ): Promise<'deleted' | 'linked' | 'conflict'> {
+    return this.getRepository().deleteUnlinked(id, ownerId, expectedVersion);
+  }
+
   public findByIdForOwner(
     id: string,
     ownerId: string,

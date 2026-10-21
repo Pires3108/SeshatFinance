@@ -11,11 +11,13 @@ import { describe, expect, it } from 'vitest';
 import type { CategoryRepository } from '../classifications/manage-category.js';
 import type { CostCenterRepository } from '../classifications/manage-cost-center.js';
 import {
+  OwnedTransactionNotFoundError,
   TransactionRequiresTransferMutationError,
   type TransactionFinancialLinkRepository,
   type TransactionRepository,
 } from './create-transaction.js';
 import {
+  GetOwnedTransactionClassificationUseCase,
   InvalidOwnedTransactionClassificationError,
   InvalidSubcategorySelectionError,
   SetOwnedTransactionClassificationUseCase,
@@ -52,6 +54,7 @@ function category(id: string, parentCategoryId: string | null): Category {
 function createUseCase(values: {
   categories: readonly Category[];
   costCenters?: readonly CostCenter[];
+  currentSelection?: TransactionClassificationSelection | null;
   onReplace?: (selection: TransactionClassificationSelection) => void;
   onAudit?: (event: FinancialAuditEvent) => void;
   transferId?: string | null;
@@ -93,11 +96,15 @@ function createUseCase(values: {
   };
   const classifications: TransactionClassificationRepository = {
     getForOwner: () =>
-      Promise.resolve({
-        categoryId: null,
-        costCenterId: null,
-        subcategoryId: null,
-      }),
+      Promise.resolve(
+        values.currentSelection === undefined
+          ? {
+              categoryId: null,
+              costCenterId: null,
+              subcategoryId: null,
+            }
+          : values.currentSelection,
+      ),
     replaceForOwner: (_transactionId, _actorId, selection, auditEvent) => {
       values.onReplace?.(selection);
       values.onAudit?.(auditEvent);
@@ -156,6 +163,63 @@ describe('SetOwnedTransactionClassificationUseCase', () => {
       resourceId: 'transaction-id',
       resourceType: 'transaction',
     });
+  });
+
+  it('rejects a new link to an archived cost center', async () => {
+    const center = CostCenter.create({
+      createdAt: now,
+      id: 'center-id',
+      name: 'Casa',
+      ownerId,
+    });
+    center.setArchived(true, new Date('2026-09-21T13:00:00.000Z'));
+    let replaced = false;
+    const useCase = createUseCase({
+      categories: [],
+      costCenters: [center],
+      onReplace: () => {
+        replaced = true;
+      },
+    });
+
+    await expect(
+      useCase.execute({
+        actorId: ownerId,
+        categoryId: null,
+        costCenterId: center.id,
+        subcategoryId: null,
+        transactionId: 'transaction-id',
+      }),
+    ).rejects.toBeInstanceOf(InvalidOwnedTransactionClassificationError);
+    expect(replaced).toBe(false);
+  });
+
+  it('retains an archived cost center already linked to the transaction', async () => {
+    const center = CostCenter.create({
+      createdAt: now,
+      id: 'center-id',
+      name: 'Casa',
+      ownerId,
+    });
+    center.setArchived(true, new Date('2026-09-21T13:00:00.000Z'));
+    const selection = {
+      categoryId: null,
+      costCenterId: center.id,
+      subcategoryId: null,
+    };
+    const useCase = createUseCase({
+      categories: [],
+      costCenters: [center],
+      currentSelection: selection,
+    });
+
+    await expect(
+      useCase.execute({
+        actorId: ownerId,
+        ...selection,
+        transactionId: 'transaction-id',
+      }),
+    ).resolves.toEqual(selection);
   });
 
   it('rejects a child from another root', async () => {
@@ -237,5 +301,50 @@ describe('SetOwnedTransactionClassificationUseCase', () => {
         transactionId: 'transaction-id',
       }),
     ).rejects.toBeInstanceOf(TransactionRequiresTransferMutationError);
+  });
+
+  it('reports a transaction deleted after the initial ownership check on write', async () => {
+    let replaced = false;
+    const useCase = createUseCase({
+      categories: [],
+      currentSelection: null,
+      onReplace: () => {
+        replaced = true;
+      },
+    });
+    await expect(
+      useCase.execute({
+        actorId: ownerId,
+        categoryId: null,
+        costCenterId: null,
+        subcategoryId: null,
+        transactionId: 'transaction-id',
+      }),
+    ).rejects.toBeInstanceOf(OwnedTransactionNotFoundError);
+    expect(replaced).toBe(false);
+  });
+});
+
+describe('GetOwnedTransactionClassificationUseCase', () => {
+  it('reports a transaction deleted after the initial ownership check on read', async () => {
+    const transactions: TransactionRepository = {
+      findByIdForOwner: (): Promise<Transaction> =>
+        Promise.resolve(transaction()),
+      insert: (): Promise<void> => Promise.resolve(),
+      listForAccountOwner: (): Promise<readonly Transaction[]> =>
+        Promise.resolve([]),
+      save: (): Promise<boolean> => Promise.resolve(true),
+    };
+    const selections: TransactionClassificationRepository = {
+      getForOwner: (): Promise<null> => Promise.resolve(null),
+      replaceForOwner: (): Promise<'unchanged'> => Promise.resolve('unchanged'),
+    };
+    const useCase = new GetOwnedTransactionClassificationUseCase(
+      transactions,
+      selections,
+    );
+    await expect(
+      useCase.execute('transaction-id', ownerId),
+    ).rejects.toBeInstanceOf(OwnedTransactionNotFoundError);
   });
 });

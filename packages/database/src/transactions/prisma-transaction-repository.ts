@@ -122,6 +122,9 @@ export class PrismaTransactionRepository
         ...(filters?.accountId === undefined
           ? {}
           : { accountId: filters.accountId }),
+        ...(filters?.costCenterId === undefined
+          ? {}
+          : { costCenterId: filters.costCenterId }),
         ...(filters?.kind === undefined ? {} : { kind: filters.kind }),
         ...(filters?.tagId === undefined
           ? {}

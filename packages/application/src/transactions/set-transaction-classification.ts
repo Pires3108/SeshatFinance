@@ -29,7 +29,7 @@ export interface TransactionClassificationRepository {
   getForOwner(
     transactionId: string,
     ownerId: string,
-  ): Promise<TransactionClassificationSelection>;
+  ): Promise<TransactionClassificationSelection | null>;
   replaceForOwner(
     transactionId: string,
     ownerId: string,
@@ -98,7 +98,12 @@ export class SetOwnedTransactionClassificationUseCase {
       costCenterId: command.costCenterId,
       subcategoryId: command.subcategoryId,
     };
-    await this.assertValidSelection(selection, command.actorId);
+    const current = await this.classifications.getForOwner(
+      command.transactionId,
+      command.actorId,
+    );
+    if (current === null) throw new OwnedTransactionNotFoundError();
+    await this.assertValidSelection(selection, command.actorId, current);
     const result = await this.classifications.replaceForOwner(
       command.transactionId,
       command.actorId,
@@ -123,6 +128,7 @@ export class SetOwnedTransactionClassificationUseCase {
   private async assertValidSelection(
     selection: TransactionClassificationSelection,
     actorId: string,
+    current: TransactionClassificationSelection,
   ): Promise<void> {
     const category =
       selection.categoryId === null
@@ -149,12 +155,18 @@ export class SetOwnedTransactionClassificationUseCase {
     ) {
       throw new InvalidSubcategorySelectionError();
     }
+    const costCenter =
+      selection.costCenterId === null
+        ? null
+        : await this.costCenters.findByIdForOwner(
+            selection.costCenterId,
+            actorId,
+          );
     if (
       selection.costCenterId !== null &&
-      (await this.costCenters.findByIdForOwner(
-        selection.costCenterId,
-        actorId,
-      )) === null
+      (costCenter === null ||
+        (costCenter.isArchived &&
+          current.costCenterId !== selection.costCenterId))
     ) {
       throw new InvalidOwnedTransactionClassificationError();
     }
@@ -177,6 +189,11 @@ export class GetOwnedTransactionClassificationUseCase {
     ) {
       throw new OwnedTransactionNotFoundError();
     }
-    return this.classifications.getForOwner(transactionId, actorId);
+    const selection = await this.classifications.getForOwner(
+      transactionId,
+      actorId,
+    );
+    if (selection === null) throw new OwnedTransactionNotFoundError();
+    return selection;
   }
 }

@@ -37,6 +37,7 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 
 **Dado** uma classificação vinculada a lançamento, **quando** sua exclusão for solicitada, **então** a exclusão será recusada sem modificar o histórico.
 **Dado** duas etiquetas próprias e um lançamento próprio, **quando** associá-las repetidamente, **então** cada etiqueta aparecerá uma única vez; remover uma associação preservará o lançamento e seu valor contábil. Etiquetas alheias ou arquivadas não poderão ser associadas, mas vínculos históricos de etiquetas arquivadas permanecerão consultáveis. Consultas e filtros de etiquetas retornarão somente dados do titular.
+**Dado** um centro de custo próprio vinculado a um lançamento, **quando** ele for arquivado, **então** o vínculo e o saldo permanecerão iguais e novos vínculos serão recusados até sua restauração. Um centro de outro titular será recusado; consultas e filtros por centro de custo respeitarão o titular.
 **Referências:** RF-021 a RF-023, RF-026, RF-027, RF-030, RF-067 a RF-069; RN-006, RN-007, RN-013; RII-010.
 
 ### CA-005 — Transferência
