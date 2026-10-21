@@ -92,10 +92,15 @@ export {
 } from './classifications/manage-tag.js';
 export {
   CostCenterVersionConflictError,
+  CostCenterLinkedError,
   CreateCostCenterUseCase,
+  DeleteOwnedCostCenterUseCase,
+  DuplicateCostCenterError,
+  GetOwnedCostCenterUseCase,
   ListOwnedCostCentersUseCase,
   OwnedCostCenterNotFoundError,
   RenameOwnedCostCenterUseCase,
+  SetOwnedCostCenterArchivedUseCase,
   type CostCenterRepository,
   type CreateCostCenterCommand,
 } from './classifications/manage-cost-center.js';

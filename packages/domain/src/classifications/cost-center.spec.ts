@@ -14,6 +14,7 @@ describe('CostCenter', () => {
     });
 
     expect(costCenter.toSnapshot()).toEqual({
+      archivedAt: null,
       createdAt,
       id: 'cost-center-id',
       name: 'Casa',
@@ -77,5 +78,46 @@ describe('CostCenter', () => {
         version: 0,
       }),
     ).toThrow(InvalidCostCenterError);
+  });
+
+  it('archives and restores without changing identity or ownership', () => {
+    const costCenter = CostCenter.create({
+      createdAt,
+      id: 'cost-center-id',
+      name: 'Casa',
+      ownerId: 'owner-id',
+    });
+    const archivedAt = new Date('2026-09-20T13:00:00.000Z');
+    costCenter.setArchived(true, archivedAt);
+    expect(costCenter.isArchived).toBe(true);
+    expect(costCenter.toSnapshot()).toMatchObject({
+      archivedAt,
+      id: 'cost-center-id',
+      name: 'Casa',
+      ownerId: 'owner-id',
+      version: 2,
+    });
+
+    const restoredAt = new Date('2026-09-20T14:00:00.000Z');
+    costCenter.setArchived(false, restoredAt);
+    expect(costCenter.isArchived).toBe(false);
+    expect(costCenter.toSnapshot()).toMatchObject({
+      archivedAt: null,
+      updatedAt: restoredAt,
+      version: 3,
+    });
+  });
+
+  it('rejects archiving before the previous update', () => {
+    const costCenter = CostCenter.create({
+      createdAt,
+      id: 'cost-center-id',
+      name: 'Casa',
+      ownerId: 'owner-id',
+    });
+    costCenter.rename('Família', new Date('2026-09-20T13:00:00.000Z'));
+    expect(() => {
+      costCenter.setArchived(true, new Date('2026-09-20T12:59:59.000Z'));
+    }).toThrow(InvalidCostCenterError);
   });
 });

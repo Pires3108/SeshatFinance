@@ -2389,6 +2389,11 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "createdAt": {
                       "format": "date-time",
                       "type": "string"
@@ -2411,6 +2416,7 @@
                     }
                   },
                   "required": [
+                    "archivedAt",
                     "createdAt",
                     "id",
                     "name",
@@ -2445,6 +2451,11 @@
                 "schema": {
                   "items": {
                     "properties": {
+                      "archivedAt": {
+                        "format": "date-time",
+                        "nullable": true,
+                        "type": "string"
+                      },
                       "createdAt": {
                         "format": "date-time",
                         "type": "string"
@@ -2467,6 +2478,7 @@
                       }
                     },
                     "required": [
+                      "archivedAt",
                       "createdAt",
                       "id",
                       "name",
@@ -2494,6 +2506,80 @@
       }
     },
     "/api/v1/cost-centers/{costCenterId}": {
+      "get": {
+        "operationId": "CostCenterController_get",
+        "parameters": [
+          {
+            "name": "costCenterId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "archivedAt",
+                    "createdAt",
+                    "id",
+                    "name",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned cost center was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get an owned cost center",
+        "tags": ["cost-centers"]
+      },
       "patch": {
         "operationId": "CostCenterController_rename",
         "parameters": [
@@ -2532,6 +2618,11 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "createdAt": {
                       "format": "date-time",
                       "type": "string"
@@ -2554,6 +2645,7 @@
                     }
                   },
                   "required": [
+                    "archivedAt",
                     "createdAt",
                     "id",
                     "name",
@@ -2578,6 +2670,181 @@
           }
         ],
         "summary": "Rename an owned cost center",
+        "tags": ["cost-centers"]
+      },
+      "delete": {
+        "operationId": "CostCenterController_remove",
+        "parameters": [
+          {
+            "name": "costCenterId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an unlinked owned cost center",
+        "tags": ["cost-centers"]
+      }
+    },
+    "/api/v1/cost-centers/{costCenterId}/archive": {
+      "patch": {
+        "operationId": "CostCenterController_archive",
+        "parameters": [
+          {
+            "name": "costCenterId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "archivedAt",
+                    "createdAt",
+                    "id",
+                    "name",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Archive an owned cost center",
+        "tags": ["cost-centers"]
+      }
+    },
+    "/api/v1/cost-centers/{costCenterId}/restore": {
+      "patch": {
+        "operationId": "CostCenterController_restore",
+        "parameters": [
+          {
+            "name": "costCenterId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "archivedAt",
+                    "createdAt",
+                    "id",
+                    "name",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Restore an owned cost center",
         "tags": ["cost-centers"]
       }
     },
@@ -4126,6 +4393,14 @@
           },
           {
             "name": "tagId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "costCenterId",
             "required": false,
             "in": "query",
             "schema": {

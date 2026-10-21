@@ -14,8 +14,8 @@ export class PrismaTransactionClassificationRepository implements TransactionCla
   public async getForOwner(
     transactionId: string,
     ownerId: string,
-  ): Promise<TransactionClassificationSelection> {
-    const value = await this.client.transaction.findFirstOrThrow({
+  ): Promise<TransactionClassificationSelection | null> {
+    const value = await this.client.transaction.findFirst({
       select: { categoryId: true, costCenterId: true, subcategoryId: true },
       where: { id: transactionId, ownerId },
     });
@@ -29,6 +29,10 @@ export class PrismaTransactionClassificationRepository implements TransactionCla
     auditEvent: FinancialAuditEvent,
   ): Promise<ReplaceTransactionClassificationResult> {
     return this.client.$transaction(async (client) => {
+      await client.$queryRaw`
+        SELECT id FROM transactions
+        WHERE id = ${transactionId}::uuid AND owner_id = ${ownerId}::uuid
+        FOR UPDATE`;
       const transaction = await client.transaction.findFirst({
         select: {
           categoryId: true,
@@ -73,11 +77,20 @@ export class PrismaTransactionClassificationRepository implements TransactionCla
         if (subcategory === null) return 'subcategory-not-found';
       }
       if (selection.costCenterId !== null) {
+        await client.$queryRaw`
+          SELECT id FROM cost_centers
+          WHERE id = ${selection.costCenterId}::uuid AND owner_id = ${ownerId}::uuid
+          FOR SHARE`;
         const costCenter = await client.costCenter.findFirst({
-          select: { id: true },
+          select: { id: true, archivedAt: true },
           where: { id: selection.costCenterId, ownerId },
         });
-        if (costCenter === null) return 'cost-center-not-found';
+        if (
+          costCenter === null ||
+          (costCenter.archivedAt !== null &&
+            transaction.costCenterId !== selection.costCenterId)
+        )
+          return 'cost-center-not-found';
       }
       if (
         transaction.categoryId === selection.categoryId &&
