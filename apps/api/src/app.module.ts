@@ -21,6 +21,8 @@ import {
   GetOwnedCategoryUseCase,
   CreateCostCenterUseCase,
   CreateTagUseCase,
+  DeleteOwnedTagUseCase,
+  GetOwnedTagUseCase,
   CreateAccountUseCase,
   CreateTransactionUseCase,
   CreateTransferUseCase,
@@ -49,6 +51,7 @@ import {
   SetOwnedCategoryArchivedUseCase,
   RenameOwnedCostCenterUseCase,
   RenameOwnedTagUseCase,
+  SetOwnedTagArchivedUseCase,
   SetOwnedTransactionTagsUseCase,
   SetOwnedTransactionClassificationUseCase,
   GetOwnUserProfileUseCase,
@@ -410,6 +413,24 @@ import { UserProfileController } from './users/user-profile.controller.js';
       provide: RenameOwnedTagUseCase,
       useFactory: (tags: TagRepository): RenameOwnedTagUseCase =>
         new RenameOwnedTagUseCase(tags, new SystemClock()),
+    },
+    {
+      inject: [LazyTagRepository],
+      provide: GetOwnedTagUseCase,
+      useFactory: (tags: TagRepository): GetOwnedTagUseCase =>
+        new GetOwnedTagUseCase(tags),
+    },
+    {
+      inject: [LazyTagRepository],
+      provide: SetOwnedTagArchivedUseCase,
+      useFactory: (tags: TagRepository): SetOwnedTagArchivedUseCase =>
+        new SetOwnedTagArchivedUseCase(tags, new SystemClock()),
+    },
+    {
+      inject: [LazyTagRepository],
+      provide: DeleteOwnedTagUseCase,
+      useFactory: (tags: TagRepository): DeleteOwnedTagUseCase =>
+        new DeleteOwnedTagUseCase(tags),
     },
     {
       inject: [LazyCategoryRepository],

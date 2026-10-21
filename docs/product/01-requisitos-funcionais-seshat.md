@@ -58,7 +58,7 @@ A primeira versão será uma aplicação web responsiva e instalável como PWA, 
 ### 4.4 Classificação e entidades
 
 - **RF-021 — Categorias:** fornecer categorias iniciais e CRUD completo de categorias e subcategorias.
-- **RF-022 — Etiquetas:** permitir várias etiquetas por movimentação e CRUD completo delas.
+- **RF-022 — Etiquetas:** permitir várias etiquetas por movimentação e criação, consulta, edição, arquivamento, restauração e exclusão das etiquetas do titular. Vínculos repetidos são idempotentes; a exclusão só é permitida sem vínculos, e o arquivamento preserva os históricos sem permitir novas associações.
 - **RF-023 — Centros de custo:** permitir um centro de custo por movimentação e CRUD completo.
 - **RF-024 — Entidades:** permitir cadastrar pessoas, empresas e instituições com nome, tipo, documento opcional, e-mail opcional, telefone opcional, observações e status.
 - **RF-025 — Vínculos:** vincular uma entidade a movimentações, empréstimos e instituições sem exigir seu cadastro.

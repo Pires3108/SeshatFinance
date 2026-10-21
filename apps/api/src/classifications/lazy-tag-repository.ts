@@ -15,6 +15,14 @@ export class LazyTagRepository implements TagRepository {
     return this.getRepository().insert(tag);
   }
 
+  public deleteUnlinked(
+    id: string,
+    ownerId: string,
+    expectedVersion: number,
+  ): Promise<'deleted' | 'linked' | 'conflict'> {
+    return this.getRepository().deleteUnlinked(id, ownerId, expectedVersion);
+  }
+
   public findByIdForOwner(id: string, ownerId: string): Promise<Tag | null> {
     return this.getRepository().findByIdForOwner(id, ownerId);
   }

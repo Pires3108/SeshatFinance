@@ -123,6 +123,9 @@ export class PrismaTransactionRepository
           ? {}
           : { accountId: filters.accountId }),
         ...(filters?.kind === undefined ? {} : { kind: filters.kind }),
+        ...(filters?.tagId === undefined
+          ? {}
+          : { tagAssignments: { some: { ownerId, tagId: filters.tagId } } }),
       },
     });
     return rows.map(restoreTransaction);

@@ -68,10 +68,19 @@ export class SetOwnedTransactionTagsUseCase {
       throw new TransactionRequiresTransferMutationError(transferId);
     }
     const tagIds = [...new Set(command.tagIds)];
+    const currentTagIds = await this.assignments.listTagIdsForOwner(
+      command.transactionId,
+      command.actorId,
+    );
+    const currentTagSet = new Set(currentTagIds);
     const selectedTags = await Promise.all(
       tagIds.map((tagId) => this.tags.findByIdForOwner(tagId, command.actorId)),
     );
-    if (selectedTags.some((tag) => tag === null)) {
+    if (
+      selectedTags.some(
+        (tag) => tag === null || (tag.isArchived && !currentTagSet.has(tag.id)),
+      )
+    ) {
       throw new InvalidOwnedTagSelectionError();
     }
     const result = await this.assignments.replaceForOwner(

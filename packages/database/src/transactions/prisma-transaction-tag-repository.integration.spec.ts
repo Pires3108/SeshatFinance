@@ -27,6 +27,7 @@ describe('PrismaTransactionTagRepository', () => {
   let transactions: PrismaTransactionRepository | undefined;
   let accounts: PrismaAccountRepository | undefined;
   let client: ReturnType<typeof createPrismaClient> | undefined;
+  let connectionUri: string | undefined;
 
   beforeAll(async (): Promise<void> => {
     const container = await new PostgreSqlContainer('postgres:17-alpine')
@@ -35,6 +36,7 @@ describe('PrismaTransactionTagRepository', () => {
       .withPassword('synthetic-test-password')
       .start();
     stop = async (): Promise<void> => container.stop().then(() => undefined);
+    connectionUri = container.getConnectionUri();
     const migrationPaths = [
       '../../prisma/migrations/20260920040000_create_accounts/migration.sql',
       '../../prisma/migrations/20261015120000_add_account_agency/migration.sql',
@@ -46,6 +48,7 @@ describe('PrismaTransactionTagRepository', () => {
       '../../prisma/migrations/20260921010000_assign_transaction_classifications/migration.sql',
       '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
       '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
+      '../../prisma/migrations/20261020130000_tag_lifecycle/migration.sql',
     ];
     const migrationClient = new Client({
       connectionString: container.getConnectionUri(),
@@ -144,6 +147,25 @@ describe('PrismaTransactionTagRepository', () => {
     ).resolves.toEqual([second.id]);
     await expect(client.financialAuditEvent.count()).resolves.toBe(4);
 
+    const foreignTag = Tag.create({
+      createdAt: new Date('2026-09-20T12:03:00.000Z'),
+      id: '67fda51c-245b-418e-849f-dae4753d989f',
+      name: 'Foreign',
+      ownerId: 'e89b6ad0-7838-4a2c-9a21-c775ea78e22a',
+    });
+    await tags.insert(foreignTag);
+    await expect(
+      assignments.replaceForOwner(
+        transaction.id,
+        ownerId,
+        [foreignTag.id],
+        updatedAuditEvent(transaction),
+      ),
+    ).resolves.toBe('tag-not-found');
+    await expect(
+      assignments.listTagIdsForOwner(transaction.id, ownerId),
+    ).resolves.toEqual([second.id]);
+
     await expect(
       assignments.replaceForOwner(
         transaction.id,
@@ -165,8 +187,103 @@ describe('PrismaTransactionTagRepository', () => {
     await expect(
       assignments.listTagIdsForOwner(transaction.id, ownerId),
     ).resolves.toEqual([second.id]);
+
+    second.setArchived(true, new Date('2026-09-20T13:00:00.000Z'));
+    await expect(tags.save(second, 1)).resolves.toBe(true);
+    await expect(tags.deleteUnlinked(second.id, ownerId, 2)).resolves.toBe(
+      'linked',
+    );
+    await expect(
+      assignments.replaceForOwner(
+        transaction.id,
+        ownerId,
+        [second.id],
+        updatedAuditEvent(transaction),
+      ),
+    ).resolves.toBe('unchanged');
+    await expect(
+      assignments.replaceForOwner(
+        transaction.id,
+        ownerId,
+        [second.id, first.id],
+        updatedAuditEvent(transaction),
+      ),
+    ).resolves.toBe('updated');
+    await expect(
+      assignments.replaceForOwner(
+        transaction.id,
+        ownerId,
+        [first.id],
+        updatedAuditEvent(transaction),
+      ),
+    ).resolves.toBe('updated');
+    await expect(
+      assignments.replaceForOwner(
+        transaction.id,
+        ownerId,
+        [second.id],
+        updatedAuditEvent(transaction),
+      ),
+    ).resolves.toBe('tag-not-found');
+    await expect(
+      assignments.listTagIdsForOwner(transaction.id, ownerId),
+    ).resolves.toEqual([first.id]);
+    const persisted = await client.transaction.findUniqueOrThrow({
+      where: { id: transaction.id },
+    });
+    expect(persisted.amountMinorUnits.toString()).toBe('1000');
+    await expect(tags.deleteUnlinked(second.id, ownerId, 2)).resolves.toBe(
+      'deleted',
+    );
+
+    if (connectionUri === undefined)
+      throw new Error('Database URI was not initialized.');
+    const candidate = Tag.create({
+      createdAt: new Date('2026-09-20T12:05:00.000Z'),
+      id: '32244e5b-e11a-4f36-b8a4-2d94f0518ac3',
+      name: 'Candidate',
+      ownerId,
+    });
+    await tags.insert(candidate);
+    const blocker = new Client({ connectionString: connectionUri });
+    await blocker.connect();
+    try {
+      await blocker.query('BEGIN');
+      await blocker.query('SELECT id FROM tags WHERE id = $1 FOR UPDATE', [
+        candidate.id,
+      ]);
+      candidate.setArchived(true, new Date('2026-09-20T13:00:00.000Z'));
+      const archive = tags.save(candidate, 1);
+      await waitForAnotherAdvisoryLock(blocker);
+      const link = assignments.replaceForOwner(
+        transaction.id,
+        ownerId,
+        [first.id, candidate.id],
+        updatedAuditEvent(transaction),
+      );
+      await blocker.query('COMMIT');
+      await expect(archive).resolves.toBe(true);
+      await expect(link).resolves.toBe('tag-not-found');
+      await expect(
+        assignments.listTagIdsForOwner(transaction.id, ownerId),
+      ).resolves.toEqual([first.id]);
+    } finally {
+      await blocker.query('ROLLBACK');
+      await blocker.end();
+    }
   });
 });
+
+async function waitForAnotherAdvisoryLock(client: Client): Promise<void> {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const result = await client.query<{ count: string }>(
+      "SELECT count(*)::text AS count FROM pg_locks WHERE locktype = 'advisory' AND granted AND pid <> pg_backend_pid()",
+    );
+    if (Number(result.rows[0]?.count) > 0) return;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  throw new Error('Concurrent tag archive did not acquire its advisory lock.');
+}
 
 function auditEvent(transaction: Transaction): FinancialAuditEvent {
   return FinancialAuditEvent.create({
