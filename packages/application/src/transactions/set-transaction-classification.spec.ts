@@ -174,6 +174,40 @@ describe('SetOwnedTransactionClassificationUseCase', () => {
     ).rejects.toBeInstanceOf(InvalidSubcategorySelectionError);
   });
 
+  it('rejects a new link to an archived root, including its active child', async () => {
+    const root = category('root-id', null);
+    const child = category('child-id', root.id);
+    root.setArchived(true, new Date('2026-09-21T13:00:00.000Z'));
+    const useCase = createUseCase({ categories: [root, child] });
+
+    await expect(
+      useCase.execute({
+        actorId: ownerId,
+        categoryId: root.id,
+        costCenterId: null,
+        subcategoryId: child.id,
+        transactionId: 'transaction-id',
+      }),
+    ).rejects.toBeInstanceOf(InvalidOwnedTransactionClassificationError);
+  });
+
+  it('rejects a new link to an archived child of an active root', async () => {
+    const root = category('root-id', null);
+    const child = category('child-id', root.id);
+    child.setArchived(true, new Date('2026-09-21T13:00:00.000Z'));
+    const useCase = createUseCase({ categories: [root, child] });
+
+    await expect(
+      useCase.execute({
+        actorId: ownerId,
+        categoryId: root.id,
+        costCenterId: null,
+        subcategoryId: child.id,
+        transactionId: 'transaction-id',
+      }),
+    ).rejects.toBeInstanceOf(InvalidSubcategorySelectionError);
+  });
+
   it('rejects a foreign or missing cost center', async () => {
     const useCase = createUseCase({ categories: [] });
 

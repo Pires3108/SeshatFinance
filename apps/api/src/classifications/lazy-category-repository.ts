@@ -15,6 +15,18 @@ export class LazyCategoryRepository implements CategoryRepository {
     return this.getRepository().insert(category);
   }
 
+  public ensureInitialCatalog(ownerId: string): Promise<void> {
+    return this.getRepository().ensureInitialCatalog(ownerId);
+  }
+
+  public deleteUnlinked(
+    id: string,
+    ownerId: string,
+    expectedVersion: number,
+  ): Promise<'deleted' | 'linked' | 'conflict'> {
+    return this.getRepository().deleteUnlinked(id, ownerId, expectedVersion);
+  }
+
   public findByIdForOwner(
     id: string,
     ownerId: string,

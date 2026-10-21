@@ -128,7 +128,10 @@ export class SetOwnedTransactionClassificationUseCase {
       selection.categoryId === null
         ? null
         : await this.categories.findByIdForOwner(selection.categoryId, actorId);
-    if (selection.categoryId !== null && category?.parentCategoryId !== null) {
+    if (
+      selection.categoryId !== null &&
+      (category?.parentCategoryId !== null || category.isArchived)
+    ) {
       throw new InvalidOwnedTransactionClassificationError();
     }
     const subcategory =
@@ -141,7 +144,8 @@ export class SetOwnedTransactionClassificationUseCase {
     if (
       selection.subcategoryId !== null &&
       (selection.categoryId === null ||
-        subcategory?.parentCategoryId !== selection.categoryId)
+        subcategory?.parentCategoryId !== selection.categoryId ||
+        subcategory.isArchived)
     ) {
       throw new InvalidSubcategorySelectionError();
     }

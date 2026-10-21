@@ -255,14 +255,50 @@ export type paths = {
             readonly path?: never;
             readonly cookie?: never;
         };
+        /** Get an owned category */
+        readonly get: operations["CategoryController_get"];
+        readonly put?: never;
+        readonly post?: never;
+        /** Delete an unlinked owned category */
+        readonly delete: operations["CategoryController_remove"];
+        readonly options?: never;
+        readonly head?: never;
+        /** Rename an owned category */
+        readonly patch: operations["CategoryController_rename"];
+        readonly trace?: never;
+    };
+    readonly "/api/v1/categories/{categoryId}/archive": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
         readonly get?: never;
         readonly put?: never;
         readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
-        /** Rename an owned category */
-        readonly patch: operations["CategoryController_rename"];
+        /** Archive an owned category */
+        readonly patch: operations["CategoryController_archive"];
+        readonly trace?: never;
+    };
+    readonly "/api/v1/categories/{categoryId}/restore": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        /** Restore an owned category */
+        readonly patch: operations["CategoryController_restore"];
         readonly trace?: never;
     };
     readonly "/api/v1/cost-centers": {
@@ -1583,6 +1619,8 @@ export interface operations {
                 content: {
                     readonly "application/json": readonly {
                         /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: uuid */
                         readonly id: string;
@@ -1628,6 +1666,8 @@ export interface operations {
                 content: {
                     readonly "application/json": {
                         /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: uuid */
                         readonly id: string;
@@ -1639,6 +1679,80 @@ export interface operations {
                         readonly version: number;
                     };
                 };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CategoryController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly categoryId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly name: string;
+                        /** Format: uuid */
+                        readonly parentCategoryId: string | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned category was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CategoryController_remove: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly categoryId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Bearer token missing or invalid */
             readonly 401: {
@@ -1673,6 +1787,8 @@ export interface operations {
                 content: {
                     readonly "application/json": {
                         /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: uuid */
                         readonly id: string;
@@ -1694,6 +1810,88 @@ export interface operations {
             };
             /** @description Owned category was not found */
             readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CategoryController_archive: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly categoryId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly name: string;
+                        /** Format: uuid */
+                        readonly parentCategoryId: string | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CategoryController_restore: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly categoryId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly name: string;
+                        /** Format: uuid */
+                        readonly parentCategoryId: string | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
                 headers: {
                     readonly [name: string]: unknown;
                 };

@@ -15,6 +15,7 @@ describe('Category', () => {
     });
 
     expect(category.toSnapshot()).toEqual({
+      archivedAt: null,
       createdAt,
       id: 'category-id',
       name: 'Alimentação',
@@ -81,6 +82,49 @@ describe('Category', () => {
 
     expect(() => {
       category.rename('Comida', new Date('2026-09-20T11:59:59.000Z'));
+    }).toThrow(InvalidCategoryError);
+  });
+
+  it('archives and restores while preserving ownership and hierarchy', () => {
+    const category = Category.create({
+      createdAt,
+      id: 'subcategory-id',
+      name: 'Mercado',
+      ownerId: 'owner-id',
+      parentCategoryId: 'category-id',
+    });
+    const archivedAt = new Date('2026-09-20T13:00:00.000Z');
+    const restoredAt = new Date('2026-09-20T14:00:00.000Z');
+
+    category.setArchived(true, archivedAt);
+    expect(category.isArchived).toBe(true);
+    expect(category.toSnapshot()).toMatchObject({
+      archivedAt,
+      ownerId: 'owner-id',
+      parentCategoryId: 'category-id',
+      version: 2,
+    });
+
+    category.setArchived(false, restoredAt);
+    expect(category.isArchived).toBe(false);
+    expect(category.toSnapshot()).toMatchObject({
+      archivedAt: null,
+      updatedAt: restoredAt,
+      version: 3,
+    });
+  });
+
+  it('rejects a lifecycle update before the current state', () => {
+    const category = Category.create({
+      createdAt,
+      id: 'category-id',
+      name: 'Alimentação',
+      ownerId: 'owner-id',
+      parentCategoryId: null,
+    });
+
+    expect(() => {
+      category.setArchived(true, new Date('2026-09-20T11:59:59.000Z'));
     }).toThrow(InvalidCategoryError);
   });
 });

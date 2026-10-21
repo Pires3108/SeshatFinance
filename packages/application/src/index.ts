@@ -63,11 +63,16 @@ export {
 export { ListInvestmentTypesUseCase } from './investments/list-investment-types.js';
 export {
   CategoryVersionConflictError,
+  CategoryLinkedError,
   CreateCategoryUseCase,
+  DeleteOwnedCategoryUseCase,
+  DuplicateCategoryError,
+  GetOwnedCategoryUseCase,
   InvalidCategoryParentError,
   ListOwnedCategoriesUseCase,
   OwnedCategoryNotFoundError,
   RenameOwnedCategoryUseCase,
+  SetOwnedCategoryArchivedUseCase,
   type CategoryRepository,
   type CreateCategoryCommand,
 } from './classifications/manage-category.js';
