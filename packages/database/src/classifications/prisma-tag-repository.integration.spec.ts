@@ -45,6 +45,15 @@ describe('PrismaTagRepository', () => {
       'utf8',
     );
     await migrationClient.query(lifecycleMigration);
+    await migrationClient.query(`
+      CREATE TABLE transaction_tags (
+        transaction_id UUID NOT NULL,
+        tag_id UUID NOT NULL REFERENCES tags(id) ON DELETE RESTRICT,
+        owner_id UUID NOT NULL,
+        created_at TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (transaction_id, tag_id)
+      )
+    `);
     await migrationClient.end();
     const prisma = createPrismaClient(container.getConnectionUri());
     disconnect = async (): Promise<void> => prisma.$disconnect();
