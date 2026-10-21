@@ -40,20 +40,34 @@ export class PrismaTransactionClassificationRepository implements TransactionCla
       });
       if (transaction === null) return 'transaction-not-found';
       if (selection.categoryId !== null) {
+        await client.$queryRaw`
+          SELECT id FROM categories
+          WHERE id = ${selection.categoryId}::uuid AND owner_id = ${ownerId}::uuid
+          FOR SHARE`;
         const category = await client.category.findFirst({
           select: { id: true },
-          where: { id: selection.categoryId, ownerId, parentCategoryId: null },
+          where: {
+            id: selection.categoryId,
+            ownerId,
+            parentCategoryId: null,
+            archivedAt: null,
+          },
         });
         if (category === null) return 'category-not-found';
       }
       if (selection.subcategoryId !== null) {
         if (selection.categoryId === null) return 'subcategory-not-found';
+        await client.$queryRaw`
+          SELECT id FROM categories
+          WHERE id = ${selection.subcategoryId}::uuid AND owner_id = ${ownerId}::uuid
+          FOR SHARE`;
         const subcategory = await client.category.findFirst({
           select: { id: true },
           where: {
             id: selection.subcategoryId,
             ownerId,
             parentCategoryId: selection.categoryId,
+            archivedAt: null,
           },
         });
         if (subcategory === null) return 'subcategory-not-found';

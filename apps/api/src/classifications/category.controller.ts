@@ -1,10 +1,15 @@
 import {
   CategoryVersionConflictError,
+  CategoryLinkedError,
   CreateCategoryUseCase,
+  DeleteOwnedCategoryUseCase,
+  DuplicateCategoryError,
+  GetOwnedCategoryUseCase,
   InvalidCategoryParentError,
   ListOwnedCategoriesUseCase,
   OwnedCategoryNotFoundError,
   RenameOwnedCategoryUseCase,
+  SetOwnedCategoryArchivedUseCase,
 } from '@seshat/application';
 import { InvalidCategoryError, type Category } from '@seshat/domain';
 import {
@@ -12,6 +17,7 @@ import {
   Body,
   ConflictException,
   Controller,
+  Delete,
   Get,
   Inject,
   NotFoundException,
@@ -53,6 +59,7 @@ const renameCategorySchema = z.object({
 type CreateCategoryRequest = z.infer<typeof createCategorySchema>;
 type RenameCategoryRequest = z.infer<typeof renameCategorySchema>;
 type CategoryResponse = Readonly<{
+  archivedAt: string | null;
   createdAt: string;
   id: string;
   name: string;
@@ -63,6 +70,7 @@ type CategoryResponse = Readonly<{
 
 const categoryResponseSchema: SchemaObject = {
   properties: {
+    archivedAt: { format: 'date-time', nullable: true, type: 'string' },
     createdAt: { format: 'date-time', type: 'string' },
     id: { format: 'uuid', type: 'string' },
     name: { minLength: 1, type: 'string' },
@@ -71,6 +79,7 @@ const categoryResponseSchema: SchemaObject = {
     version: { minimum: 1, type: 'integer' },
   },
   required: [
+    'archivedAt',
     'createdAt',
     'id',
     'name',
@@ -96,6 +105,12 @@ export class CategoryController {
     private readonly renameCategory: RenameOwnedCategoryUseCase,
     @Inject(AuthenticatedActorContext)
     private readonly actors: AuthenticatedActorContext,
+    @Inject(SetOwnedCategoryArchivedUseCase)
+    private readonly setArchived: SetOwnedCategoryArchivedUseCase,
+    @Inject(DeleteOwnedCategoryUseCase)
+    private readonly deleteCategory: DeleteOwnedCategoryUseCase,
+    @Inject(GetOwnedCategoryUseCase)
+    private readonly getCategory: GetOwnedCategoryUseCase,
   ) {}
 
   @Post()
@@ -129,6 +144,28 @@ export class CategoryController {
     return categories.map(mapCategory);
   }
 
+  @Get(':categoryId')
+  @ApiOperation({ summary: 'Get an owned category' })
+  @ApiParam({ format: 'uuid', name: 'categoryId', type: 'string' })
+  @ApiOkResponse({ schema: categoryResponseSchema })
+  @ApiNotFoundResponse({ description: 'Owned category was not found' })
+  public async get(
+    @Req() request: FastifyRequest,
+    @Param('categoryId', new ZodValidationPipe(categoryIdSchema))
+    categoryId: string,
+  ): Promise<CategoryResponse> {
+    try {
+      return mapCategory(
+        await this.getCategory.execute({
+          actorId: this.actorId(request),
+          categoryId,
+        }),
+      );
+    } catch (error) {
+      throw mapCategoryError(error);
+    }
+  }
+
   @Patch(':categoryId')
   @ApiOperation({ summary: 'Rename an owned category' })
   @ApiParam({ format: 'uuid', name: 'categoryId', type: 'string' })
@@ -155,6 +192,68 @@ export class CategoryController {
     }
   }
 
+  @Patch(':categoryId/archive')
+  @ApiOperation({ summary: 'Archive an owned category' })
+  @ApiParam({ format: 'uuid', name: 'categoryId', type: 'string' })
+  @ApiOkResponse({ schema: categoryResponseSchema })
+  public async archive(
+    @Req() request: FastifyRequest,
+    @Param('categoryId', new ZodValidationPipe(categoryIdSchema))
+    categoryId: string,
+  ): Promise<CategoryResponse> {
+    try {
+      return mapCategory(
+        await this.setArchived.execute({
+          actorId: this.actorId(request),
+          categoryId,
+          archived: true,
+        }),
+      );
+    } catch (error) {
+      throw mapCategoryError(error);
+    }
+  }
+
+  @Patch(':categoryId/restore')
+  @ApiOperation({ summary: 'Restore an owned category' })
+  @ApiParam({ format: 'uuid', name: 'categoryId', type: 'string' })
+  @ApiOkResponse({ schema: categoryResponseSchema })
+  public async restore(
+    @Req() request: FastifyRequest,
+    @Param('categoryId', new ZodValidationPipe(categoryIdSchema))
+    categoryId: string,
+  ): Promise<CategoryResponse> {
+    try {
+      return mapCategory(
+        await this.setArchived.execute({
+          actorId: this.actorId(request),
+          categoryId,
+          archived: false,
+        }),
+      );
+    } catch (error) {
+      throw mapCategoryError(error);
+    }
+  }
+
+  @Delete(':categoryId')
+  @ApiOperation({ summary: 'Delete an unlinked owned category' })
+  @ApiParam({ format: 'uuid', name: 'categoryId', type: 'string' })
+  public async remove(
+    @Req() request: FastifyRequest,
+    @Param('categoryId', new ZodValidationPipe(categoryIdSchema))
+    categoryId: string,
+  ): Promise<void> {
+    try {
+      await this.deleteCategory.execute({
+        actorId: this.actorId(request),
+        categoryId,
+      });
+    } catch (error) {
+      throw mapCategoryError(error);
+    }
+  }
+
   private actorId(request: FastifyRequest): string {
     const actor = this.actors.get(request);
     if (actor === undefined) throw new UnauthorizedException();
@@ -166,6 +265,7 @@ function mapCategory(category: Category): CategoryResponse {
   const snapshot = category.toSnapshot();
   return {
     createdAt: snapshot.createdAt.toISOString(),
+    archivedAt: snapshot.archivedAt?.toISOString() ?? null,
     id: snapshot.id,
     name: snapshot.name,
     parentCategoryId: snapshot.parentCategoryId,
@@ -180,6 +280,12 @@ function mapCategoryError(error: unknown): Error {
   }
   if (error instanceof CategoryVersionConflictError) {
     return new ConflictException('Category was modified concurrently.');
+  }
+  if (
+    error instanceof DuplicateCategoryError ||
+    error instanceof CategoryLinkedError
+  ) {
+    return new ConflictException(error.message);
   }
   if (
     error instanceof InvalidCategoryError ||

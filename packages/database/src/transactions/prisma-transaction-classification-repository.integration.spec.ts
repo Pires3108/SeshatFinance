@@ -35,6 +35,7 @@ describe('PrismaTransactionClassificationRepository', () => {
     | undefined;
   let repository: PrismaTransactionClassificationRepository | undefined;
   let client: ReturnType<typeof createPrismaClient> | undefined;
+  let connectionUri: string | undefined;
 
   beforeAll(async (): Promise<void> => {
     const container = await new PostgreSqlContainer('postgres:17-alpine')
@@ -43,6 +44,7 @@ describe('PrismaTransactionClassificationRepository', () => {
       .withPassword('synthetic-test-password')
       .start();
     stop = async (): Promise<void> => container.stop().then(() => undefined);
+    connectionUri = container.getConnectionUri();
     const migrationPaths = [
       '../../prisma/migrations/20260920040000_create_accounts/migration.sql',
       '../../prisma/migrations/20261015120000_add_account_agency/migration.sql',
@@ -52,6 +54,7 @@ describe('PrismaTransactionClassificationRepository', () => {
       '../../prisma/migrations/20260921010000_assign_transaction_classifications/migration.sql',
       '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
       '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
+      '../../prisma/migrations/20261020120000_category_catalog_lifecycle/migration.sql',
     ];
     const migrationClient = new Client({
       connectionString: container.getConnectionUri(),
@@ -182,8 +185,49 @@ describe('PrismaTransactionClassificationRepository', () => {
     await expect(
       repository.getForOwner(transaction.id, ownerId),
     ).resolves.toEqual(selection);
+
+    if (connectionUri === undefined)
+      throw new Error('Database URI was not initialized.');
+    const blocker = new Client({ connectionString: connectionUri });
+    await blocker.connect();
+    try {
+      await blocker.query('BEGIN');
+      await blocker.query(
+        'SELECT id FROM categories WHERE id = $1 FOR UPDATE',
+        [category.id],
+      );
+      category.setArchived(true, new Date('2026-09-21T13:00:00.000Z'));
+      const archive = new PrismaCategoryRepository(client).save(category, 1);
+      await waitForAnotherAdvisoryLock(blocker);
+      const link = repository.replaceForOwner(
+        transaction.id,
+        ownerId,
+        { categoryId: category.id, costCenterId: null, subcategoryId: null },
+        updatedAuditEvent(transaction),
+      );
+      await blocker.query('COMMIT');
+      await expect(archive).resolves.toBe(true);
+      await expect(link).resolves.toBe('category-not-found');
+      await expect(
+        repository.getForOwner(transaction.id, ownerId),
+      ).resolves.toEqual(selection);
+    } finally {
+      await blocker.query('ROLLBACK');
+      await blocker.end();
+    }
   });
 });
+
+async function waitForAnotherAdvisoryLock(client: Client): Promise<void> {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const result = await client.query<{ count: string }>(
+      "SELECT count(*)::text AS count FROM pg_locks WHERE locktype = 'advisory' AND granted AND pid <> pg_backend_pid()",
+    );
+    if (Number(result.rows[0]?.count) > 0) return;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  throw new Error('Concurrent archive did not acquire its advisory lock.');
+}
 
 function auditEvent(transaction: Transaction): FinancialAuditEvent {
   return FinancialAuditEvent.create({

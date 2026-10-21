@@ -17,6 +17,8 @@ import {
   ListOwnedCreditCardsUseCase,
   ListOwnFamilyGroupsUseCase,
   CreateCategoryUseCase,
+  DeleteOwnedCategoryUseCase,
+  GetOwnedCategoryUseCase,
   CreateCostCenterUseCase,
   CreateTagUseCase,
   CreateAccountUseCase,
@@ -44,6 +46,7 @@ import {
   RequestPasswordRecoveryUseCase,
   CompletePasswordRecoveryUseCase,
   RenameOwnedCategoryUseCase,
+  SetOwnedCategoryArchivedUseCase,
   RenameOwnedCostCenterUseCase,
   RenameOwnedTagUseCase,
   SetOwnedTransactionTagsUseCase,
@@ -428,11 +431,33 @@ import { UserProfileController } from './users/user-profile.controller.js';
     },
     {
       inject: [LazyCategoryRepository],
+      provide: GetOwnedCategoryUseCase,
+      useFactory: (categories: CategoryRepository): GetOwnedCategoryUseCase =>
+        new GetOwnedCategoryUseCase(categories),
+    },
+    {
+      inject: [LazyCategoryRepository],
       provide: RenameOwnedCategoryUseCase,
       useFactory: (
         categories: CategoryRepository,
       ): RenameOwnedCategoryUseCase =>
         new RenameOwnedCategoryUseCase(categories, new SystemClock()),
+    },
+    {
+      inject: [LazyCategoryRepository],
+      provide: SetOwnedCategoryArchivedUseCase,
+      useFactory: (
+        categories: CategoryRepository,
+      ): SetOwnedCategoryArchivedUseCase =>
+        new SetOwnedCategoryArchivedUseCase(categories, new SystemClock()),
+    },
+    {
+      inject: [LazyCategoryRepository],
+      provide: DeleteOwnedCategoryUseCase,
+      useFactory: (
+        categories: CategoryRepository,
+      ): DeleteOwnedCategoryUseCase =>
+        new DeleteOwnedCategoryUseCase(categories),
     },
     {
       inject: [

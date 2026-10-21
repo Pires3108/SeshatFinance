@@ -1865,6 +1865,11 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "createdAt": {
                       "format": "date-time",
                       "type": "string"
@@ -1892,6 +1897,7 @@
                     }
                   },
                   "required": [
+                    "archivedAt",
                     "createdAt",
                     "id",
                     "name",
@@ -1927,6 +1933,11 @@
                 "schema": {
                   "items": {
                     "properties": {
+                      "archivedAt": {
+                        "format": "date-time",
+                        "nullable": true,
+                        "type": "string"
+                      },
                       "createdAt": {
                         "format": "date-time",
                         "type": "string"
@@ -1954,6 +1965,7 @@
                       }
                     },
                     "required": [
+                      "archivedAt",
                       "createdAt",
                       "id",
                       "name",
@@ -1982,6 +1994,86 @@
       }
     },
     "/api/v1/categories/{categoryId}": {
+      "get": {
+        "operationId": "CategoryController_get",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "parentCategoryId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "archivedAt",
+                    "createdAt",
+                    "id",
+                    "name",
+                    "parentCategoryId",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned category was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get an owned category",
+        "tags": ["categories"]
+      },
       "patch": {
         "operationId": "CategoryController_rename",
         "parameters": [
@@ -2020,6 +2112,11 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "createdAt": {
                       "format": "date-time",
                       "type": "string"
@@ -2047,6 +2144,7 @@
                     }
                   },
                   "required": [
+                    "archivedAt",
                     "createdAt",
                     "id",
                     "name",
@@ -2072,6 +2170,193 @@
           }
         ],
         "summary": "Rename an owned category",
+        "tags": ["categories"]
+      },
+      "delete": {
+        "operationId": "CategoryController_remove",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an unlinked owned category",
+        "tags": ["categories"]
+      }
+    },
+    "/api/v1/categories/{categoryId}/archive": {
+      "patch": {
+        "operationId": "CategoryController_archive",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "parentCategoryId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "archivedAt",
+                    "createdAt",
+                    "id",
+                    "name",
+                    "parentCategoryId",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Archive an owned category",
+        "tags": ["categories"]
+      }
+    },
+    "/api/v1/categories/{categoryId}/restore": {
+      "patch": {
+        "operationId": "CategoryController_restore",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "parentCategoryId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "archivedAt",
+                    "createdAt",
+                    "id",
+                    "name",
+                    "parentCategoryId",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Restore an owned category",
         "tags": ["categories"]
       }
     },

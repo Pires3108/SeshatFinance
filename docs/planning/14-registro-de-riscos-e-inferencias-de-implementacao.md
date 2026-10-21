@@ -74,11 +74,11 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-010 — Catálogo inicial e exclusão de classificações
 
-- **Estado:** aberto.
+- **Estado:** decidido em 20/10/2026; implementação distribuída entre US-025 a US-027.
 - **Referências:** RF-021 a RF-023; RN-013; US-025 a US-027.
 - **Risco:** os requisitos não enumeram as categorias iniciais, não definem se o catálogo é global ou copiado por usuário e não determinam o efeito de excluir uma categoria, subcategoria, etiqueta ou centro de custo já utilizado. Inferir essas escolhas pode apagar referências históricas, impedir personalização ou tornar futuras atualizações do catálogo incompatíveis.
-- **Decisão necessária:** aprovar o catálogo inicial versionado, seu modelo de ownership e personalização, além das regras de arquivamento, restauração e exclusão para classificações referenciadas.
-- **Limite atual:** permitir evoluir o núcleo de categorias com ownership e hierarquia validada, mas não publicar seed inicial nem exclusão destrutiva até a decisão. Referências históricas nunca devem ser removidas em cascata.
+- **Decisão:** copiar por proprietário, de modo idempotente, a versão 1 do catálogo: `Receitas` com `Salário`, `Rendimentos` e `Outras receitas`; `Despesas` com `Moradia`, `Alimentação`, `Transporte`, `Saúde`, `Educação`, `Lazer` e `Outras despesas`. Cada cópia pertence ao usuário e pode ser personalizada. A instalação pode reutilizar itens próprios ativos com o mesmo nome e nível, mas não reativa itens arquivados; cria uma cópia ativa nesses casos. Mudanças futuras no catálogo exigem nova versão e migração explícita; não renomeiam automaticamente cópias existentes.
+- **Ciclo de vida:** categorias, subcategorias, etiquetas e centros de custo podem ser arquivados e restaurados. Um item arquivado preserva vínculos históricos e não aceita novos; arquivar uma categoria raiz também torna suas subcategorias inelegíveis para novos vínculos. Exclusão só é permitida quando não há vínculos financeiros nem descendentes, sem cascata. Nomes duplicados no mesmo nível e ciclos de hierarquia são rejeitados. Referências históricas nunca são removidas em cascata.
 
 ### RII-011 — Estado e preservação histórica de entidades
 

@@ -1,7 +1,10 @@
 import type {
   CreateCategoryUseCase,
+  DeleteOwnedCategoryUseCase,
+  GetOwnedCategoryUseCase,
   ListOwnedCategoriesUseCase,
   RenameOwnedCategoryUseCase,
+  SetOwnedCategoryArchivedUseCase,
 } from '@seshat/application';
 import { Category } from '@seshat/domain';
 import type { FastifyRequest } from 'fastify';
@@ -35,6 +38,9 @@ describe('CategoryController', () => {
       { execute: vi.fn() } as unknown as ListOwnedCategoriesUseCase,
       { execute: vi.fn() } as unknown as RenameOwnedCategoryUseCase,
       actors,
+      { execute: vi.fn() } as unknown as SetOwnedCategoryArchivedUseCase,
+      { execute: vi.fn() } as unknown as DeleteOwnedCategoryUseCase,
+      { execute: vi.fn() } as unknown as GetOwnedCategoryUseCase,
     );
 
     await controller.create(request(actors), {
@@ -57,6 +63,9 @@ describe('CategoryController', () => {
       { execute } as unknown as ListOwnedCategoriesUseCase,
       { execute: vi.fn() } as unknown as RenameOwnedCategoryUseCase,
       actors,
+      { execute: vi.fn() } as unknown as SetOwnedCategoryArchivedUseCase,
+      { execute: vi.fn() } as unknown as DeleteOwnedCategoryUseCase,
+      { execute: vi.fn() } as unknown as GetOwnedCategoryUseCase,
     );
 
     const result = await controller.list(request(actors));

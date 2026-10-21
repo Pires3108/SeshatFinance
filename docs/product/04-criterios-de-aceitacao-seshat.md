@@ -33,7 +33,10 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 ### CA-004 — Receita e despesa
 
 **Dado** uma conta ativa, **quando** registrar receita e despesa, **então** o saldo será aumentado e reduzido, respectivamente, e os registros aparecerão nas visões temporais.  
-**Referências:** RF-026, RF-027, RF-030, RF-067 a RF-069; RN-006, RN-007.
+**Dado** uma categoria ou subcategoria própria usada em lançamentos, **quando** ela for arquivada, **então** os vínculos históricos permanecerão consultáveis e ela não poderá ser aplicada a novos lançamentos; arquivar a raiz também bloqueia suas subcategorias.
+
+**Dado** uma classificação vinculada a lançamento, **quando** sua exclusão for solicitada, **então** a exclusão será recusada sem modificar o histórico.
+**Referências:** RF-021 a RF-023, RF-026, RF-027, RF-030, RF-067 a RF-069; RN-006, RN-007, RN-013; RII-010.
 
 ### CA-005 — Transferência
 
