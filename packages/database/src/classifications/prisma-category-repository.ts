@@ -84,6 +84,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
               ownerId,
               name: root.name,
               parentCategoryId: null,
+              createdAt: now,
               updatedAt: now,
             },
           });
@@ -96,6 +97,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
                 ownerId,
                 name,
                 parentCategoryId: rootId,
+                createdAt: now,
                 updatedAt: now,
               },
             });

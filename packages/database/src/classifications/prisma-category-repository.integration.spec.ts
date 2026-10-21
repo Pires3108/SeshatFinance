@@ -47,6 +47,14 @@ describe('PrismaCategoryRepository', () => {
       'utf8',
     );
     await migrationClient.query(lifecycleMigration);
+    await migrationClient.query(`
+      CREATE TABLE transactions (
+        id UUID PRIMARY KEY,
+        owner_id UUID NOT NULL,
+        category_id UUID REFERENCES categories(id) ON DELETE RESTRICT,
+        subcategory_id UUID REFERENCES categories(id) ON DELETE RESTRICT
+      )
+    `);
     await migrationClient.end();
     const prisma = createPrismaClient(container.getConnectionUri());
     disconnect = async (): Promise<void> => prisma.$disconnect();
@@ -260,6 +268,36 @@ describe('PrismaCategoryRepository', () => {
     await expect(repository.deleteUnlinked(root.id, ownerId, 1)).resolves.toBe(
       'deleted',
     );
+  });
+
+  it('keeps a category referenced by a historical transaction', async () => {
+    if (repository === undefined || connectionUri === undefined)
+      throw new Error('Repository was not initialized.');
+    const ownerId = 'f42a4c37-e3d3-426b-9d84-d1e9e3504788';
+    const category = Category.create({
+      createdAt: new Date('2026-09-20T12:00:00.000Z'),
+      id: 'e21d4741-4b4b-47a3-aa1b-9b38fe3b2546',
+      name: 'Historical expense',
+      ownerId,
+      parentCategoryId: null,
+    });
+    await repository.insert(category);
+    const client = new Client({ connectionString: connectionUri });
+    await client.connect();
+    try {
+      await client.query(
+        'INSERT INTO transactions (id, owner_id, category_id) VALUES ($1, $2, $3)',
+        ['76c3e809-92b7-4940-a027-189a750ad218', ownerId, category.id],
+      );
+    } finally {
+      await client.end();
+    }
+    await expect(
+      repository.deleteUnlinked(category.id, ownerId, 1),
+    ).resolves.toBe('linked');
+    await expect(
+      repository.findByIdForOwner(category.id, ownerId),
+    ).resolves.not.toBeNull();
   });
 
   it('preserves archived categories and rejects a stale lifecycle write', async () => {
