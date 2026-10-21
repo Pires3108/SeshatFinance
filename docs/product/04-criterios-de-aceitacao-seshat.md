@@ -36,6 +36,7 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 **Dado** uma categoria ou subcategoria própria usada em lançamentos, **quando** ela for arquivada, **então** os vínculos históricos permanecerão consultáveis e ela não poderá ser aplicada a novos lançamentos; arquivar a raiz também bloqueia suas subcategorias.
 
 **Dado** uma classificação vinculada a lançamento, **quando** sua exclusão for solicitada, **então** a exclusão será recusada sem modificar o histórico.
+**Dado** duas etiquetas próprias e um lançamento próprio, **quando** associá-las repetidamente, **então** cada etiqueta aparecerá uma única vez; remover uma associação preservará o lançamento e seu valor contábil. Etiquetas alheias ou arquivadas não poderão ser associadas, mas vínculos históricos de etiquetas arquivadas permanecerão consultáveis. Consultas e filtros de etiquetas retornarão somente dados do titular.
 **Referências:** RF-021 a RF-023, RF-026, RF-027, RF-030, RF-067 a RF-069; RN-006, RN-007, RN-013; RII-010.
 
 ### CA-005 — Transferência

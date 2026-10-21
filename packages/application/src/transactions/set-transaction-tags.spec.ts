@@ -139,6 +139,100 @@ describe('SetOwnedTransactionTagsUseCase', () => {
     ).rejects.toBeInstanceOf(InvalidOwnedTagSelectionError);
   });
 
+  it('rejects an archived tag before creating a new assignment', async () => {
+    const value = transaction();
+    const archived = tag('archived-tag-id');
+    archived.setArchived(true, new Date('2026-09-20T13:00:00.000Z'));
+    let replaced = false;
+    const assignments: TransactionTagRepository = {
+      listTagIdsForOwner: (): Promise<readonly string[]> => Promise.resolve([]),
+      replaceForOwner: (): Promise<'updated'> => {
+        replaced = true;
+        return Promise.resolve('updated');
+      },
+    };
+    const useCase = new SetOwnedTransactionTagsUseCase(
+      transactions(value),
+      links(),
+      tags([archived]),
+      assignments,
+      { now: () => now },
+      { generate: () => 'audit-event-id' },
+    );
+
+    await expect(
+      useCase.execute({
+        actorId: value.ownerId,
+        tagIds: [archived.id],
+        transactionId: value.id,
+      }),
+    ).rejects.toBeInstanceOf(InvalidOwnedTagSelectionError);
+    expect(replaced).toBe(false);
+  });
+
+  it('keeps an existing archived assignment during an idempotent replacement', async () => {
+    const value = transaction();
+    const archived = tag('archived-tag-id');
+    archived.setArchived(true, new Date('2026-09-20T13:00:00.000Z'));
+    const assignments: TransactionTagRepository = {
+      listTagIdsForOwner: (): Promise<readonly string[]> =>
+        Promise.resolve([archived.id]),
+      replaceForOwner: (_id, _ownerId, tagIds): Promise<'unchanged'> => {
+        expect(tagIds).toEqual([archived.id]);
+        return Promise.resolve('unchanged');
+      },
+    };
+    const useCase = new SetOwnedTransactionTagsUseCase(
+      transactions(value),
+      links(),
+      tags([archived]),
+      assignments,
+      { now: () => now },
+      { generate: () => 'audit-event-id' },
+    );
+
+    await expect(
+      useCase.execute({
+        actorId: value.ownerId,
+        tagIds: [archived.id],
+        transactionId: value.id,
+      }),
+    ).resolves.toEqual([archived.id]);
+  });
+
+  it('can remove another tag while retaining an already linked archived tag', async () => {
+    const value = transaction();
+    const archived = tag('archived-tag-id');
+    const removable = tag('removable-tag-id');
+    archived.setArchived(true, new Date('2026-09-20T13:00:00.000Z'));
+    let selected: readonly string[] = [];
+    const assignments: TransactionTagRepository = {
+      listTagIdsForOwner: (): Promise<readonly string[]> =>
+        Promise.resolve([archived.id, removable.id]),
+      replaceForOwner: (_id, _ownerId, tagIds): Promise<'updated'> => {
+        selected = tagIds;
+        return Promise.resolve('updated');
+      },
+    };
+    const useCase = new SetOwnedTransactionTagsUseCase(
+      transactions(value),
+      links(),
+      tags([archived, removable]),
+      assignments,
+      { now: () => now },
+      { generate: () => 'audit-event-id' },
+    );
+
+    await expect(
+      useCase.execute({
+        actorId: value.ownerId,
+        tagIds: [archived.id],
+        transactionId: value.id,
+      }),
+    ).resolves.toEqual([archived.id]);
+    expect(selected).toEqual([archived.id]);
+  });
+
   it('rejects isolated tag changes for a transfer entry', async () => {
     const value = transaction();
     const useCase = new SetOwnedTransactionTagsUseCase(

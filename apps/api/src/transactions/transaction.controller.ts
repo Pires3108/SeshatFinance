@@ -91,6 +91,7 @@ const lifecycleSchema = z.object({
 const lifecycleFilterSchema = z.enum(['active', 'archived', 'trashed']);
 const instantRangeSchema = z.object({
   accountId: idSchema.optional(),
+  tagId: idSchema.optional(),
   from: z.iso.datetime({ offset: true }),
   kind: z.enum(['income', 'expense']).optional(),
   lifecycle: lifecycleFilterSchema.optional(),
@@ -266,6 +267,7 @@ export class TransactionController {
   })
   @ApiQuery({ format: 'date-time', name: 'to', required: true, type: 'string' })
   @ApiQuery({ format: 'uuid', name: 'accountId', required: false })
+  @ApiQuery({ format: 'uuid', name: 'tagId', required: false })
   @ApiQuery({ enum: ['income', 'expense'], name: 'kind', required: false })
   @ApiQuery({
     enum: ['active', 'archived', 'trashed'],
@@ -291,6 +293,7 @@ export class TransactionController {
               ? {}
               : { accountId: query.accountId }),
             ...(query.kind === undefined ? {} : { kind: query.kind }),
+            ...(query.tagId === undefined ? {} : { tagId: query.tagId }),
             ...(query.occurredAtOrder === undefined
               ? {}
               : { occurredAtOrder: query.occurredAtOrder }),

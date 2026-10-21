@@ -14,6 +14,7 @@ describe('Tag', () => {
     });
 
     expect(tag.toSnapshot()).toEqual({
+      archivedAt: null,
       createdAt,
       id: 'tag-id',
       name: 'Essencial',
@@ -63,6 +64,47 @@ describe('Tag', () => {
 
     expect(() => {
       tag.rename('Prioritário', new Date('2026-09-20T11:59:59.000Z'));
+    }).toThrow(InvalidTagError);
+  });
+
+  it('archives and restores without changing identity or name', () => {
+    const tag = Tag.create({
+      createdAt,
+      id: 'tag-id',
+      name: 'Essencial',
+      ownerId: 'owner-id',
+    });
+    const archivedAt = new Date('2026-09-20T13:00:00.000Z');
+    tag.setArchived(true, archivedAt);
+    expect(tag.isArchived).toBe(true);
+    expect(tag.toSnapshot()).toMatchObject({
+      archivedAt,
+      id: 'tag-id',
+      name: 'Essencial',
+      ownerId: 'owner-id',
+      version: 2,
+    });
+
+    const restoredAt = new Date('2026-09-20T14:00:00.000Z');
+    tag.setArchived(false, restoredAt);
+    expect(tag.isArchived).toBe(false);
+    expect(tag.toSnapshot()).toMatchObject({
+      archivedAt: null,
+      updatedAt: restoredAt,
+      version: 3,
+    });
+  });
+
+  it('rejects an archive instant before its last update', () => {
+    const tag = Tag.create({
+      createdAt,
+      id: 'tag-id',
+      name: 'Essencial',
+      ownerId: 'owner-id',
+    });
+    tag.rename('Prioritário', new Date('2026-09-20T13:00:00.000Z'));
+    expect(() => {
+      tag.setArchived(true, new Date('2026-09-20T12:59:59.000Z'));
     }).toThrow(InvalidTagError);
   });
 });

@@ -177,6 +177,7 @@ export type TransactionTimelineFilters = Readonly<{
   accountId?: string;
   kind?: TransactionKind;
   occurredAtOrder?: 'asc' | 'desc';
+  tagId?: string;
 }>;
 
 export class ListOwnedTransactionsBetweenUseCase {

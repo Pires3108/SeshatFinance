@@ -78,9 +78,14 @@ export {
 } from './classifications/manage-category.js';
 export {
   CreateTagUseCase,
+  DeleteOwnedTagUseCase,
+  DuplicateTagError,
+  GetOwnedTagUseCase,
   ListOwnedTagsUseCase,
   OwnedTagNotFoundError,
   RenameOwnedTagUseCase,
+  SetOwnedTagArchivedUseCase,
+  TagLinkedError,
   TagVersionConflictError,
   type CreateTagCommand,
   type TagRepository,

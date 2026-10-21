@@ -518,14 +518,50 @@ export type paths = {
             readonly path?: never;
             readonly cookie?: never;
         };
+        /** Get an owned tag */
+        readonly get: operations["TagController_get"];
+        readonly put?: never;
+        readonly post?: never;
+        /** Delete an unlinked owned tag */
+        readonly delete: operations["TagController_remove"];
+        readonly options?: never;
+        readonly head?: never;
+        /** Rename an owned tag */
+        readonly patch: operations["TagController_rename"];
+        readonly trace?: never;
+    };
+    readonly "/api/v1/tags/{tagId}/archive": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
         readonly get?: never;
         readonly put?: never;
         readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
-        /** Rename an owned tag */
-        readonly patch: operations["TagController_rename"];
+        /** Archive an owned tag */
+        readonly patch: operations["TagController_archive"];
+        readonly trace?: never;
+    };
+    readonly "/api/v1/tags/{tagId}/restore": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        /** Restore an owned tag */
+        readonly patch: operations["TagController_restore"];
         readonly trace?: never;
     };
     readonly "/api/v1/accounts/{accountId}/transactions": {
@@ -2475,6 +2511,8 @@ export interface operations {
                 content: {
                     readonly "application/json": readonly {
                         /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: uuid */
                         readonly id: string;
@@ -2516,6 +2554,8 @@ export interface operations {
                 content: {
                     readonly "application/json": {
                         /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: uuid */
                         readonly id: string;
@@ -2525,6 +2565,78 @@ export interface operations {
                         readonly version: number;
                     };
                 };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TagController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly tagId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly name: string;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned tag was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TagController_remove: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly tagId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Bearer token missing or invalid */
             readonly 401: {
@@ -2559,6 +2671,8 @@ export interface operations {
                 content: {
                     readonly "application/json": {
                         /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: uuid */
                         readonly id: string;
@@ -2578,6 +2692,84 @@ export interface operations {
             };
             /** @description Owned tag was not found */
             readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TagController_archive: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly tagId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly name: string;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TagController_restore: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly tagId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly name: string;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
                 headers: {
                     readonly [name: string]: unknown;
                 };
@@ -2730,6 +2922,7 @@ export interface operations {
                 readonly occurredAtOrder?: "asc" | "desc";
                 readonly lifecycle?: "active" | "archived" | "trashed";
                 readonly kind?: "income" | "expense";
+                readonly tagId?: unknown;
                 readonly accountId?: unknown;
                 readonly to: string;
                 readonly from: string;
