@@ -45,8 +45,18 @@ model Counterparty {
   @@map("counterparties")
 }
 
+model RegistrationIntent {
+  emailHash Bytes @id @map("email_hash") @db.ByteA
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+
+  @@index([expiresAt])
+  @@map("registration_intents")
+}
+
 model UserProfile {
   id                   String   @id @db.Uuid
+  registrationConfirmed Boolean @default(true) @map("registration_confirmed")
   displayName          String?  @map("display_name") @db.VarChar(120)
   locale               String   @default("pt-BR") @db.VarChar(16)
   timeZone             String   @default("America/Sao_Paulo") @map("time_zone") @db.VarChar(64)
@@ -56,6 +66,18 @@ model UserProfile {
   version              Int      @default(1)
 
   @@map("user_profiles")
+}
+
+model UserSession {
+  id         String       @id @db.Uuid
+  userId     String       @map("user_id") @db.Uuid
+  tokenHash  String       @unique @map("token_hash") @db.Char(64)
+  createdAt  DateTime     @map("created_at") @db.Timestamptz(6)
+  lastSeenAt DateTime     @map("last_seen_at") @db.Timestamptz(6)
+  revokedAt  DateTime?    @map("revoked_at") @db.Timestamptz(6)
+
+  @@index([userId, revokedAt])
+  @@map("user_sessions")
 }
 
 enum FamilyGroupRole {
@@ -97,6 +119,7 @@ enum AccountLifecycle {
 
 model Account {
   id                       String              @id @db.Uuid
+  agency                   String?
   ownerId                  String              @map("owner_id") @db.Uuid
   name                     String
   description              String?
@@ -245,6 +268,7 @@ enum FinancialAuditResourceType {
   transfer
   balance_adjustment @map("balance-adjustment")
   credit_card        @map("credit-card")
+  manual_exchange_quote @map("manual-exchange-quote")
 
   @@map("financial_audit_resource_type")
 }
@@ -263,10 +287,32 @@ model FinancialAuditEvent {
   @@map("financial_audit_events")
 }
 
+model ManualExchangeQuoteVersion {
+  quoteId            String   @map("quote_id") @db.Uuid
+  version            Int
+  commandType        String   @map("command_type") @db.VarChar(8)
+  idempotencyKey     String   @map("idempotency_key") @db.VarChar(128)
+  ownerId            String   @map("owner_id") @db.Uuid
+  authorId           String   @map("author_id") @db.Uuid
+  sourceCurrencyCode String   @map("source_currency_code") @db.Char(3)
+  targetCurrencyCode String   @map("target_currency_code") @db.Char(3)
+  rate               String   @db.VarChar(1000)
+  source             String   @db.VarChar(120)
+  effectiveAt        DateTime @map("effective_at") @db.Timestamptz(6)
+  recordedAt         DateTime @map("recorded_at") @db.Timestamptz(6)
+
+  @@id([quoteId, version])
+  @@unique([ownerId, commandType, idempotencyKey])
+  @@index([ownerId, quoteId, version])
+  @@index([ownerId, recordedAt, quoteId])
+  @@map("manual_exchange_quote_versions")
+}
+
 model Category {
   id                         String        @id @db.Uuid
   ownerId                    String        @map("owner_id") @db.Uuid
   name                       String
+  archivedAt                 DateTime?     @map("archived_at") @db.Timestamptz(6)
   parentCategoryId           String?       @map("parent_category_id") @db.Uuid
   parentCategory             Category?     @relation("category_hierarchy", fields: [parentCategoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
   childCategories            Category[]    @relation("category_hierarchy")
@@ -281,10 +327,19 @@ model Category {
   @@map("categories")
 }
 
+model CategoryCatalogInstallation {
+  ownerId   String   @id @map("owner_id") @db.Uuid
+  version   Int
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("category_catalog_installations")
+}
+
 model Tag {
   id                     String           @id @db.Uuid
   ownerId                String           @map("owner_id") @db.Uuid
   name                   String
+  archivedAt             DateTime?        @map("archived_at") @db.Timestamptz(6)
   createdAt              DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt              DateTime         @map("updated_at") @db.Timestamptz(6)
   version                Int              @default(1)
@@ -299,6 +354,7 @@ model CostCenter {
   id           String        @id @db.Uuid
   ownerId      String        @map("owner_id") @db.Uuid
   name         String
+  archivedAt   DateTime?     @map("archived_at") @db.Timestamptz(6)
   createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime      @map("updated_at") @db.Timestamptz(6)
   version      Int           @default(1)

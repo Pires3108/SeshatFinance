@@ -1,4 +1,5 @@
 export type CategorySnapshot = Readonly<{
+  archivedAt?: Date | null;
   createdAt: Date;
   id: string;
   name: string;
@@ -34,6 +35,7 @@ export class Category {
     assertValidParent(properties.id, properties.parentCategoryId);
 
     return new Category({
+      archivedAt: null,
       createdAt: new Date(properties.createdAt),
       id: properties.id,
       name: properties.name.trim(),
@@ -59,6 +61,25 @@ export class Category {
 
   public get parentCategoryId(): string | null {
     return this.state.parentCategoryId;
+  }
+
+  public get isArchived(): boolean {
+    return this.state.archivedAt != null;
+  }
+
+  public setArchived(archived: boolean, at: Date): void {
+    assertValidInstant(at, 'Category update instant');
+    if (at < this.state.updatedAt) {
+      throw new InvalidCategoryError(
+        'Category update cannot precede the previous update.',
+      );
+    }
+    this.state = {
+      ...this.state,
+      archivedAt: archived ? new Date(at) : null,
+      updatedAt: new Date(at),
+      version: this.state.version + 1,
+    };
   }
 
   public rename(name: string, at: Date): void {
@@ -88,6 +109,8 @@ function validateSnapshot(snapshot: CategorySnapshot): void {
   assertRequiredText(snapshot.name, 'Category name');
   assertValidInstant(snapshot.createdAt, 'Category creation instant');
   assertValidInstant(snapshot.updatedAt, 'Category update instant');
+  if (snapshot.archivedAt != null)
+    assertValidInstant(snapshot.archivedAt, 'Category archive instant');
   assertValidParent(snapshot.id, snapshot.parentCategoryId);
   if (snapshot.updatedAt < snapshot.createdAt) {
     throw new InvalidCategoryError('Category update cannot precede creation.');
@@ -128,5 +151,7 @@ function copySnapshot(snapshot: CategorySnapshot): CategorySnapshot {
     ...snapshot,
     createdAt: new Date(snapshot.createdAt),
     updatedAt: new Date(snapshot.updatedAt),
+    archivedAt:
+      snapshot.archivedAt == null ? null : new Date(snapshot.archivedAt),
   };
 }

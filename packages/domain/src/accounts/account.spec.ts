@@ -77,6 +77,7 @@ describe('Account', () => {
 
     account.updateDetails(
       {
+        agency: ' 0123 ',
         color: ' #112233 ',
         description: ' Reserva ',
         icon: ' piggy-bank ',
@@ -88,6 +89,7 @@ describe('Account', () => {
     );
 
     expect(account.toSnapshot()).toMatchObject({
+      agency: '0123',
       color: '#112233',
       description: 'Reserva',
       icon: 'piggy-bank',
@@ -96,6 +98,19 @@ describe('Account', () => {
       type: { key: 'savings-account' },
       version: 2,
     });
+    account.updateDetails(
+      {
+        agency: null,
+        color: null,
+        description: null,
+        icon: null,
+        institution: null,
+        name: 'Conta reserva',
+        type: AccountType.create('savings-account'),
+      },
+      new Date('2026-09-20T14:00:00.000Z'),
+    );
+    expect(account.toSnapshot().agency).toBeNull();
   });
 
   it('rejects stale lifecycle transitions', () => {

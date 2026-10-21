@@ -24,24 +24,27 @@ Esta matriz relaciona áreas funcionais, requisitos, regras e critérios de acei
 
 ## 2. Decisões inferidas
 
-| Decisão                                                | Motivo                                                                      | Registros                                  |
-| ------------------------------------------------------ | --------------------------------------------------------------------------- | ------------------------------------------ |
-| PWA web instalável                                     | Entrega web e desktop com uma base                                          | Escopo; RNF-001 a RNF-004                  |
-| Pagamento de fatura é somente registrado como quitação | Evita dupla contabilização e não sugere execução externa                    | RF-039, RF-044; RN-001, RN-015, RN-016     |
-| A plataforma é exclusivamente organizacional           | Impede iniciação, bloqueio, autorização ou cancelamento de transações reais | Limite operacional; RN-001; CA-005, CA-008 |
-| Contas individuais são privadas                        | Aplica menor privilégio                                                     | RF-011; RN-049                             |
-| Lixeira retém por 30 dias                              | Recuperação e integridade                                                   | RF-032, RF-090; RNF-056                    |
-| Backup diário retido por 14 dias                       | Reduz perda e interpreta “duas semanas” como retenção                       | RNF-015 a RNF-018                          |
-| WCAG 2.2 AA                                            | Padrão verificável atual                                                    | RNF-041 a RNF-046                          |
-| Monitoramento sem dados financeiros                    | Mede disponibilidade sem acesso de suporte                                  | RNF-013, RNF-019, RNF-040                  |
-| Câmbio manual no MVP                                   | Evita integração paga                                                       | RF-020; RN-037                             |
-| Baselines mensuráveis                                  | Substitui itens indefinidos                                                 | RNF-006 a RNF-012                          |
+| Decisão                                                | Motivo                                                                                 | Registros                                  |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------- | ------------------------------------------ |
+| PWA web instalável                                     | Entrega web e desktop com uma base                                                     | Escopo; RNF-001 a RNF-004                  |
+| Pagamento de fatura é somente registrado como quitação | Evita dupla contabilização e não sugere execução externa                               | RF-039, RF-044; RN-001, RN-015, RN-016     |
+| A plataforma é exclusivamente organizacional           | Impede iniciação, bloqueio, autorização ou cancelamento de transações reais            | Limite operacional; RN-001; CA-005, CA-008 |
+| Contas individuais são privadas                        | Aplica menor privilégio                                                                | RF-011; RN-049                             |
+| Lixeira retém por 30 dias                              | Recuperação e integridade                                                              | RF-032, RF-090; RNF-056                    |
+| Backup diário retido por 14 dias                       | Reduz perda e interpreta “duas semanas” como retenção                                  | RNF-015 a RNF-018                          |
+| WCAG 2.2 AA                                            | Padrão verificável atual                                                               | RNF-041 a RNF-046                          |
+| Monitoramento sem dados financeiros                    | Mede disponibilidade sem acesso de suporte                                             | RNF-013, RNF-019, RNF-040                  |
+| Câmbio manual e consulta multimoeda no MVP             | Preserva origem e versões; totaliza por moeda e informa indisponibilidade de conversão | RF-020; RN-002; CA-003; INV-029; US-022    |
+| Baselines mensuráveis                                  | Substitui itens indefinidos                                                            | RNF-006 a RNF-012                          |
 
 ## 3. Gestão de mudanças
 
 - Identificadores não devem ser reutilizados.
 - Mudança funcional deve atualizar requisito, regra, aceitação e matriz.
 - Itens de fase posterior não bloqueiam a aceitação da primeira versão.
+- O recorte da US-021 comprova RN-002, INV-003 e INV-004 por moeda explícita, aritmética exata e persistência Decimal; conversão e arredondamento dependem da RII-007 e são rastreados nas histórias das operações correspondentes, começando pela US-022 para cotação manual.
+- O recorte da US-020 comprova RF-018 e INV-006 com saldo inicial e lançamentos efetivos; a prova de exclusão de eventos projetados fica na US-059, quando seu modelo existir, preservando INV-020.
+- O recorte da US-024 comprova INV-005 e RN-018 na divisão exata do principal em unidades da moeda; a prévia, juros e confirmação de parcelas de CA-009 permanecem na US-044. Os demais cenários de US-024 verificam INV-003, INV-004, INV-006, INV-010 e INV-029 sobre operações já implementadas, sem criar conversão contábil.
 - Mudanças em saldo, patrimônio, fatura, juros ou retenção exigem revisão dos testes críticos.
 
 ## 4. Documentos de teste

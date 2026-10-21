@@ -33,6 +33,7 @@ A primeira versão será uma aplicação web responsiva e instalável como PWA, 
 - **RF-004 — Segundo fator:** permitir ativar, confirmar, desativar e recuperar 2FA por aplicativo autenticador TOTP ou código por e-mail.
 - **RF-005 — Sessões:** mostrar sessões ativas e permitir encerrá-las individualmente ou em conjunto.
 - **RF-006 — Perfil:** permitir consultar e atualizar nome, preferências, moeda de apresentação e configurações de notificação.
+- **Recorte US-017 de RF-006:** o perfil inicial aceita `pt-BR`, fuso horário IANA válido e somente `BRL` como moeda de apresentação até a definição do catálogo de apresentação e da conversão na RII-007; alterar preferências não reescreve registros financeiros de origem. Configurações de notificação seguem fora deste recorte.
 - **RF-007 — Eliminação da conta:** permitir solicitar eliminação da conta mediante confirmação dupla e novo desafio de autenticação; exigir 2FA quando estiver ativo.
 - **RF-008 — Portabilidade:** permitir exportar os dados pessoais e financeiros do usuário antes da eliminação.
 
@@ -52,13 +53,13 @@ A primeira versão será uma aplicação web responsiva e instalável como PWA, 
 - **RF-017 — CRUD de conta:** consultar, editar, arquivar, restaurar e enviar contas para a lixeira sem apagar seu histórico.
 - **RF-018 — Saldo:** calcular saldo contábil a partir do saldo inicial e das movimentações válidas.
 - **RF-019 — Conciliação:** permitir informar saldo real, calcular a diferença e criar ajuste positivo ou negativo com justificativa e saldo anterior registrado.
-- **RF-020 — Multimoeda:** registrar contas e movimentações em moedas distintas, mantendo BRL como consolidação principal por cotação manual na primeira versão.
+- **RF-020 — Multimoeda:** registrar contas e movimentações em moedas distintas, mantendo BRL como moeda principal de apresentação. O catálogo inicial para novos registros é BRL, USD e EUR, com duas casas decimais. Cotação manual mantém par, taxa decimal textual, vigência, origem, autor e histórico imutável de correções; registro e correção usam chave de idempotência. Nenhuma cotação altera saldo ou lançamento original. A consulta preserva saldos por conta e totaliza apenas valores da mesma moeda; quando houver moeda diferente de BRL ou escala histórica incompatível, indica motivo explícito de indisponibilidade do total em BRL. Consolidação convertida permanece indisponível até a aprovação das regras contábeis de conversão, precedência e arredondamento.
 
 ### 4.4 Classificação e entidades
 
 - **RF-021 — Categorias:** fornecer categorias iniciais e CRUD completo de categorias e subcategorias.
-- **RF-022 — Etiquetas:** permitir várias etiquetas por movimentação e CRUD completo delas.
-- **RF-023 — Centros de custo:** permitir um centro de custo por movimentação e CRUD completo.
+- **RF-022 — Etiquetas:** permitir várias etiquetas por movimentação e criação, consulta, edição, arquivamento, restauração e exclusão das etiquetas do titular. Vínculos repetidos são idempotentes; a exclusão só é permitida sem vínculos, e o arquivamento preserva os históricos sem permitir novas associações.
+- **RF-023 — Centros de custo:** permitir um centro de custo próprio por movimentação e criação, consulta, edição, arquivamento, restauração e exclusão dos centros do titular. Centros arquivados permanecem em vínculos históricos, mas não recebem novos; a exclusão só é permitida sem vínculos.
 - **RF-024 — Entidades:** permitir cadastrar pessoas, empresas e instituições com nome, tipo, documento opcional, e-mail opcional, telefone opcional, observações e status.
 - **RF-025 — Vínculos:** vincular uma entidade a movimentações, empréstimos e instituições sem exigir seu cadastro.
 

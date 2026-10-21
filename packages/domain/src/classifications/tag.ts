@@ -1,4 +1,5 @@
 export type TagSnapshot = Readonly<{
+  archivedAt?: Date | null;
   createdAt: Date;
   id: string;
   name: string;
@@ -30,6 +31,7 @@ export class Tag {
     assertRequiredText(properties.name, 'Tag name');
     assertValidInstant(properties.createdAt, 'Tag creation instant');
     return new Tag({
+      archivedAt: null,
       createdAt: new Date(properties.createdAt),
       id: properties.id,
       name: properties.name.trim(),
@@ -50,6 +52,24 @@ export class Tag {
 
   public get ownerId(): string {
     return this.state.ownerId;
+  }
+
+  public get isArchived(): boolean {
+    return this.state.archivedAt != null;
+  }
+
+  public setArchived(archived: boolean, at: Date): void {
+    assertValidInstant(at, 'Tag update instant');
+    if (at < this.state.updatedAt)
+      throw new InvalidTagError(
+        'Tag update cannot precede the previous update.',
+      );
+    this.state = {
+      ...this.state,
+      archivedAt: archived ? new Date(at) : null,
+      updatedAt: new Date(at),
+      version: this.state.version + 1,
+    };
   }
 
   public rename(name: string, at: Date): void {
@@ -79,6 +99,8 @@ function validateSnapshot(snapshot: TagSnapshot): void {
   assertRequiredText(snapshot.name, 'Tag name');
   assertValidInstant(snapshot.createdAt, 'Tag creation instant');
   assertValidInstant(snapshot.updatedAt, 'Tag update instant');
+  if (snapshot.archivedAt != null)
+    assertValidInstant(snapshot.archivedAt, 'Tag archive instant');
   if (snapshot.updatedAt < snapshot.createdAt) {
     throw new InvalidTagError('Tag update cannot precede creation.');
   }
@@ -104,5 +126,7 @@ function copySnapshot(snapshot: TagSnapshot): TagSnapshot {
     ...snapshot,
     createdAt: new Date(snapshot.createdAt),
     updatedAt: new Date(snapshot.updatedAt),
+    archivedAt:
+      snapshot.archivedAt == null ? null : new Date(snapshot.archivedAt),
   };
 }

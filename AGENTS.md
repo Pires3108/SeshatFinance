@@ -1,5 +1,13 @@
 # Seshat Finance
 
+## Project specialists
+
+Use the project-scoped Codex agents in `.codex/agents/` for substantive development work: `backend-dev`, `frontend-dev`, `qa-engineer`, `devops-engineer`, and `code-reviewer`. Keep the primary session responsible for scope, ordering, decisions, integration, and reporting. Delegate only the specialists needed for the current story, with a bounded brief naming the Jira issue, acceptance criteria, checkout, owned files, dependencies, and required evidence. Prefer a fresh agent context with that brief. Do not assign two agents to edit the same files; serialize dependent work. These agents follow this file and the user's instructions. Do not create separate user-facing chats for delegation.
+
+## Workspace and versioning
+
+Keep new agent checkouts, worktrees, and development artifacts for this project inside `D:\SeshatFinance`. Do not create sibling project folders or agent worktrees elsewhere. Before reusing an existing checkout, inspect its Git status, branch, and worktree registration; do not move or remove existing external worktrees as part of this rule. Develop each increment on a branch in this repository and publish its commits and pull request to the project's GitHub remote. Local folders are not the versioning record.
+
 ## Product boundary
 
 - This application only records and organizes financial information.
@@ -45,15 +53,7 @@
 - Test affected financial invariants for changes to balances, statements, installments, forecasts, imports, or net worth.
 - Use unit tests for Domain, PostgreSQL integration tests for persistence, and Playwright for critical journeys.
 - Run formatting, lint, type checking, and affected tests before completion.
-
-## Agent waiting policy
-
-- Do not use watch modes, retry loops, or periodic status checks to wait for CI
-  or Jira state changes.
-- Treat a signed webhook delivery as a progress signal only. Before declaring
-  CI or Jira work complete, make one current-state lookup at the decision point.
-- A single diagnostic status lookup is allowed when it informs the next action;
-  repeated lookups are not.
+- If Docker or Testcontainers reports that no container runtime is available, start Docker Desktop, wait for the engine to become ready, and rerun the affected integration tests before reporting an environment limitation or leaving the verification pending.
 
 ## Change discipline
 
@@ -63,3 +63,24 @@
 - Update requirements, rules, acceptance criteria, invariants, and traceability when behavior changes.
 - Keep commits small and use Conventional Commits.
 - Inspect the final diff and do not overwrite unrelated user changes.
+
+## Jira blockers
+
+- Move a Jira item to **Bloqueado** when implementation cannot proceed safely because a product, domain, security, privacy, architectural, or acceptance-criteria decision is missing.
+- When leaving that task, first add a concise comment identifying the unresolved decision, affected requirement or invariant, and the condition for resuming work; then move it to **Bloqueado**. Do not use **Bloqueado** for ordinary implementation work, review feedback, transient environment failures, or work that can safely continue in the same task.
+- When the decision is recorded, resume implementation. At the next Jira update boundary, move the item from **Bloqueado** to the accurate active status or **Done** and link the decision to the implementation evidence.
+
+## Jira completion per task
+
+- Read Jira when needed to understand or triage a story. Write to Jira only at a task boundary: after the scoped work is complete and the required CI has passed, or immediately before switching to another task for any reason. Do not add progress comments or transition statuses while continuing work on the same task.
+- At that boundary, add one concise evidence comment and set the accurate status. Include completed verification and precisely what remains if the task is unfinished; avoid separate comments for each intermediate commit, CI run, or review step.
+- Move an item to **Done** only when its scoped implementation is complete, the required formatting, linting, type checking and affected tests have passed, relevant financial invariants have been checked, and the work is committed and published in its reviewable branch or pull request. Include links or identifiers for the commit, pull request and verification in the Jira comment.
+- If any of those completion conditions is pending, do not move the item to **Done**. Keep it in the applicable active/review status and comment precisely what remains. If a missing decision prevents safe progress, use **Bloqueado** following the blocker rules above.
+- Do not switch to another task or finish a completed task without this boundary update, unless no Jira item is in scope; state that exception explicitly in the final report.
+
+## Sprint execution cadence
+
+- Work through all detailed BDD/Gherkin stories in the planned sprints. Triage the backlog in batches, then implement each story on its own reviewable branch without repeatedly redoing the same discovery.
+- Favor focused local verification and the required quality gates. Do not spend time repeatedly checking GitHub or Jira for a response after an action has been submitted.
+- Use the project's signed GitHub and Jira webhooks as the completion signal for asynchronous events. Wait for the corresponding event instead of polling either provider. If a webhook fails or is unavailable, record the failure once and continue with independent work; use a direct status check only when needed to resolve that specific failure.
+- Before moving to the next safe story after publishing an increment, perform the single Jira boundary update for the story being left. Document any missing decision that makes a story unsafe to implement and move that story to **Bloqueado** using the Jira blocker process above.

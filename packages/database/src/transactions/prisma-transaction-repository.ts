@@ -12,7 +12,7 @@ import {
 } from '@seshat/domain';
 
 import type { PrismaClient } from '../generated/prisma/client.js';
-import { insertFinancialAuditEvent } from '../audit/prisma-financial-audit-event-repository.js';
+import { insertFinancialAuditEvent } from '../audit/index.js';
 
 export class PrismaTransactionRepository
   implements
@@ -122,7 +122,13 @@ export class PrismaTransactionRepository
         ...(filters?.accountId === undefined
           ? {}
           : { accountId: filters.accountId }),
+        ...(filters?.costCenterId === undefined
+          ? {}
+          : { costCenterId: filters.costCenterId }),
         ...(filters?.kind === undefined ? {} : { kind: filters.kind }),
+        ...(filters?.tagId === undefined
+          ? {}
+          : { tagAssignments: { some: { ownerId, tagId: filters.tagId } } }),
       },
     });
     return rows.map(restoreTransaction);

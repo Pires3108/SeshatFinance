@@ -8,16 +8,22 @@
     "lint": "eslint .",
     "start": "next start",
     "test": "vitest run --passWithNoTests",
+    "test:e2e": "pnpm exec turbo run build --filter=@seshat/api && playwright test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@seshat/contracts": "workspace:*",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@testcontainers/postgresql": "12.1.0",
     "@types/node": "latest",
+    "@types/pg": "8.15.5",
     "@types/react": "latest",
-    "@types/react-dom": "latest"
+    "@types/react-dom": "latest",
+    "pg": "8.16.3"
   }
 }

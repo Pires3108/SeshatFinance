@@ -19,3 +19,7 @@ Liste resultados positivos, custos, riscos e trabalho futuro.
 ## Alternativas consideradas
 
 Registre as alternativas e por que não foram escolhidas.
+
+## Referências e rastreabilidade
+
+Vincule os identificadores existentes de requisitos, regras, invariantes, história Jira e pull request da implementação. Registre como verificar os efeitos da decisão.

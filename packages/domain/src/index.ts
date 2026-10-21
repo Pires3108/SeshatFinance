@@ -6,10 +6,19 @@ export {
 export {
   CurrencyMismatchError,
   InvalidMoneyAmountError,
+  InvalidMoneySplitCountError,
   Money,
   type MoneyComparison,
   type MoneySnapshot,
 } from './money/money.js';
+export {
+  InvalidManualExchangeQuoteError,
+  ManualExchangeQuote,
+  manualQuoteCurrencies,
+  manualQuoteCurrency,
+  type ManualExchangeQuoteSnapshot,
+  type ManualQuoteCurrency,
+} from './money/manual-exchange-quote.js';
 export {
   Account,
   AccountLifecycleError,

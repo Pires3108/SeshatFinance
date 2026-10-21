@@ -1,6 +1,152 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/accounts/consolidation": {
+      "get": {
+        "operationId": "AccountBalanceController_consolidation",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "accountBalances": {
+                      "items": {
+                        "properties": {
+                          "amount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "currencyCode": {
+                            "pattern": "^[A-Z]{3}$",
+                            "type": "string"
+                          },
+                          "currencyMinorUnitScale": {
+                            "maximum": 18,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "accountId": {
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "amount",
+                          "currencyCode",
+                          "currencyMinorUnitScale",
+                          "accountId"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "brlConsolidation": {
+                      "oneOf": [
+                        {
+                          "properties": {
+                            "balance": {
+                              "properties": {
+                                "amount": {
+                                  "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                  "type": "string"
+                                },
+                                "currencyCode": {
+                                  "pattern": "^[A-Z]{3}$",
+                                  "type": "string"
+                                },
+                                "currencyMinorUnitScale": {
+                                  "maximum": 18,
+                                  "minimum": 0,
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "amount",
+                                "currencyCode",
+                                "currencyMinorUnitScale"
+                              ],
+                              "type": "object"
+                            },
+                            "status": {
+                              "enum": ["available"],
+                              "type": "string"
+                            }
+                          },
+                          "required": ["balance", "status"],
+                          "type": "object"
+                        },
+                        {
+                          "properties": {
+                            "reason": {
+                              "enum": [
+                                "conversion-policy-pending",
+                                "currency-scale-mismatch"
+                              ],
+                              "type": "string"
+                            },
+                            "status": {
+                              "enum": ["unavailable"],
+                              "type": "string"
+                            }
+                          },
+                          "required": ["reason", "status"],
+                          "type": "object"
+                        }
+                      ]
+                    },
+                    "totalsByCurrency": {
+                      "items": {
+                        "properties": {
+                          "amount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "currencyCode": {
+                            "pattern": "^[A-Z]{3}$",
+                            "type": "string"
+                          },
+                          "currencyMinorUnitScale": {
+                            "maximum": 18,
+                            "minimum": 0,
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "amount",
+                          "currencyCode",
+                          "currencyMinorUnitScale"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "accountBalances",
+                    "brlConsolidation",
+                    "totalsByCurrency"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List exact owned balances and BRL consolidation availability",
+        "tags": ["accounts"]
+      }
+    },
     "/api/v1/accounts/{accountId}/balance": {
       "get": {
         "operationId": "AccountBalanceController_get",
@@ -73,17 +219,21 @@
               "schema": {
                 "additionalProperties": false,
                 "properties": {
+                  "agency": {
+                    "nullable": true,
+                    "type": "string"
+                  },
                   "color": {
                     "nullable": true,
                     "type": "string"
                   },
                   "currencyCode": {
-                    "pattern": "^[A-Z]{3}$",
+                    "enum": ["BRL", "USD", "EUR"],
                     "type": "string"
                   },
                   "currencyMinorUnitScale": {
-                    "maximum": 18,
-                    "minimum": 0,
+                    "maximum": 2,
+                    "minimum": 2,
                     "type": "integer"
                   },
                   "description": {
@@ -135,6 +285,10 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "agency": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "archivedAt": {
                       "format": "date-time",
                       "nullable": true,
@@ -202,6 +356,7 @@
                     }
                   },
                   "required": [
+                    "agency",
                     "archivedAt",
                     "color",
                     "createdAt",
@@ -257,6 +412,10 @@
                 "schema": {
                   "items": {
                     "properties": {
+                      "agency": {
+                        "nullable": true,
+                        "type": "string"
+                      },
                       "archivedAt": {
                         "format": "date-time",
                         "nullable": true,
@@ -324,6 +483,7 @@
                       }
                     },
                     "required": [
+                      "agency",
                       "archivedAt",
                       "color",
                       "createdAt",
@@ -382,6 +542,10 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "agency": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "archivedAt": {
                       "format": "date-time",
                       "nullable": true,
@@ -449,6 +613,7 @@
                     }
                   },
                   "required": [
+                    "agency",
                     "archivedAt",
                     "color",
                     "createdAt",
@@ -506,6 +671,10 @@
               "schema": {
                 "additionalProperties": false,
                 "properties": {
+                  "agency": {
+                    "nullable": true,
+                    "type": "string"
+                  },
                   "color": {
                     "nullable": true,
                     "type": "string"
@@ -551,6 +720,10 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "agency": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "archivedAt": {
                       "format": "date-time",
                       "nullable": true,
@@ -618,6 +791,7 @@
                     }
                   },
                   "required": [
+                    "agency",
                     "archivedAt",
                     "color",
                     "createdAt",
@@ -700,6 +874,10 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "agency": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "archivedAt": {
                       "format": "date-time",
                       "nullable": true,
@@ -767,6 +945,7 @@
                     }
                   },
                   "required": [
+                    "agency",
                     "archivedAt",
                     "color",
                     "createdAt",
@@ -1529,7 +1708,7 @@
                   },
                   "password": {
                     "maxLength": 1024,
-                    "minLength": 1,
+                    "minLength": 12,
                     "type": "string"
                   }
                 },
@@ -1556,9 +1735,99 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Password rejected by provider policy"
           }
         },
         "summary": "Register a user and request email confirmation",
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/registrations/confirm": {
+      "post": {
+        "operationId": "AuthController_confirm",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "tokenHash": {
+                    "maxLength": 2048,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": ["tokenHash"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid, expired, or reused confirmation token"
+          },
+          "503": {
+            "description": "Confirmation is temporarily unavailable"
+          }
+        },
+        "summary": "Confirm a registration with a single-use email token",
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/registrations/resend": {
+      "post": {
+        "operationId": "AuthController_resend",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "email": {
+                    "format": "email",
+                    "maxLength": 320,
+                    "type": "string"
+                  }
+                },
+                "required": ["email"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "status": {
+                      "enum": ["confirmation_required"],
+                      "type": "string"
+                    }
+                  },
+                  "required": ["status"],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Resend is temporarily unavailable"
+          }
+        },
+        "summary": "Request another registration confirmation email",
         "tags": ["auth"]
       }
     },
@@ -1596,6 +1865,11 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "createdAt": {
                       "format": "date-time",
                       "type": "string"
@@ -1623,6 +1897,7 @@
                     }
                   },
                   "required": [
+                    "archivedAt",
                     "createdAt",
                     "id",
                     "name",
@@ -1658,6 +1933,11 @@
                 "schema": {
                   "items": {
                     "properties": {
+                      "archivedAt": {
+                        "format": "date-time",
+                        "nullable": true,
+                        "type": "string"
+                      },
                       "createdAt": {
                         "format": "date-time",
                         "type": "string"
@@ -1685,6 +1965,7 @@
                       }
                     },
                     "required": [
+                      "archivedAt",
                       "createdAt",
                       "id",
                       "name",
@@ -1713,6 +1994,86 @@
       }
     },
     "/api/v1/categories/{categoryId}": {
+      "get": {
+        "operationId": "CategoryController_get",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "parentCategoryId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "archivedAt",
+                    "createdAt",
+                    "id",
+                    "name",
+                    "parentCategoryId",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned category was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get an owned category",
+        "tags": ["categories"]
+      },
       "patch": {
         "operationId": "CategoryController_rename",
         "parameters": [
@@ -1751,6 +2112,11 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "createdAt": {
                       "format": "date-time",
                       "type": "string"
@@ -1778,6 +2144,7 @@
                     }
                   },
                   "required": [
+                    "archivedAt",
                     "createdAt",
                     "id",
                     "name",
@@ -1803,6 +2170,193 @@
           }
         ],
         "summary": "Rename an owned category",
+        "tags": ["categories"]
+      },
+      "delete": {
+        "operationId": "CategoryController_remove",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an unlinked owned category",
+        "tags": ["categories"]
+      }
+    },
+    "/api/v1/categories/{categoryId}/archive": {
+      "patch": {
+        "operationId": "CategoryController_archive",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "parentCategoryId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "archivedAt",
+                    "createdAt",
+                    "id",
+                    "name",
+                    "parentCategoryId",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Archive an owned category",
+        "tags": ["categories"]
+      }
+    },
+    "/api/v1/categories/{categoryId}/restore": {
+      "patch": {
+        "operationId": "CategoryController_restore",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "parentCategoryId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "archivedAt",
+                    "createdAt",
+                    "id",
+                    "name",
+                    "parentCategoryId",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Restore an owned category",
         "tags": ["categories"]
       }
     },
@@ -1835,6 +2389,11 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "createdAt": {
                       "format": "date-time",
                       "type": "string"
@@ -1857,6 +2416,7 @@
                     }
                   },
                   "required": [
+                    "archivedAt",
                     "createdAt",
                     "id",
                     "name",
@@ -1891,6 +2451,11 @@
                 "schema": {
                   "items": {
                     "properties": {
+                      "archivedAt": {
+                        "format": "date-time",
+                        "nullable": true,
+                        "type": "string"
+                      },
                       "createdAt": {
                         "format": "date-time",
                         "type": "string"
@@ -1913,6 +2478,7 @@
                       }
                     },
                     "required": [
+                      "archivedAt",
                       "createdAt",
                       "id",
                       "name",
@@ -1940,6 +2506,80 @@
       }
     },
     "/api/v1/cost-centers/{costCenterId}": {
+      "get": {
+        "operationId": "CostCenterController_get",
+        "parameters": [
+          {
+            "name": "costCenterId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "archivedAt",
+                    "createdAt",
+                    "id",
+                    "name",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned cost center was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get an owned cost center",
+        "tags": ["cost-centers"]
+      },
       "patch": {
         "operationId": "CostCenterController_rename",
         "parameters": [
@@ -1978,6 +2618,11 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "createdAt": {
                       "format": "date-time",
                       "type": "string"
@@ -2000,6 +2645,7 @@
                     }
                   },
                   "required": [
+                    "archivedAt",
                     "createdAt",
                     "id",
                     "name",
@@ -2024,6 +2670,181 @@
           }
         ],
         "summary": "Rename an owned cost center",
+        "tags": ["cost-centers"]
+      },
+      "delete": {
+        "operationId": "CostCenterController_remove",
+        "parameters": [
+          {
+            "name": "costCenterId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an unlinked owned cost center",
+        "tags": ["cost-centers"]
+      }
+    },
+    "/api/v1/cost-centers/{costCenterId}/archive": {
+      "patch": {
+        "operationId": "CostCenterController_archive",
+        "parameters": [
+          {
+            "name": "costCenterId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "archivedAt",
+                    "createdAt",
+                    "id",
+                    "name",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Archive an owned cost center",
+        "tags": ["cost-centers"]
+      }
+    },
+    "/api/v1/cost-centers/{costCenterId}/restore": {
+      "patch": {
+        "operationId": "CostCenterController_restore",
+        "parameters": [
+          {
+            "name": "costCenterId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "archivedAt",
+                    "createdAt",
+                    "id",
+                    "name",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Restore an owned cost center",
         "tags": ["cost-centers"]
       }
     },
@@ -2153,6 +2974,410 @@
         "tags": ["investments"]
       }
     },
+    "/api/v1/manual-exchange-quotes": {
+      "post": {
+        "operationId": "ManualExchangeQuoteController_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "effectiveAt": {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  "rate": {
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "source": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "sourceCurrencyCode": {
+                    "enum": ["BRL", "USD", "EUR"],
+                    "type": "string"
+                  },
+                  "targetCurrencyCode": {
+                    "enum": ["BRL", "USD", "EUR"],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "effectiveAt",
+                  "rate",
+                  "source",
+                  "sourceCurrencyCode",
+                  "targetCurrencyCode"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "authorId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "effectiveAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "rate": {
+                      "type": "string"
+                    },
+                    "recordedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "sourceCurrencyCode": {
+                      "enum": ["BRL", "USD", "EUR"],
+                      "type": "string"
+                    },
+                    "targetCurrencyCode": {
+                      "enum": ["BRL", "USD", "EUR"],
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "authorId",
+                    "effectiveAt",
+                    "id",
+                    "rate",
+                    "recordedAt",
+                    "source",
+                    "sourceCurrencyCode",
+                    "targetCurrencyCode",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record an informational manual exchange quote",
+        "tags": ["manual-exchange-quotes"]
+      },
+      "get": {
+        "operationId": "ManualExchangeQuoteController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "properties": {
+                      "authorId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "effectiveAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "rate": {
+                        "type": "string"
+                      },
+                      "recordedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "source": {
+                        "type": "string"
+                      },
+                      "sourceCurrencyCode": {
+                        "enum": ["BRL", "USD", "EUR"],
+                        "type": "string"
+                      },
+                      "targetCurrencyCode": {
+                        "enum": ["BRL", "USD", "EUR"],
+                        "type": "string"
+                      },
+                      "version": {
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "authorId",
+                      "effectiveAt",
+                      "id",
+                      "rate",
+                      "recordedAt",
+                      "source",
+                      "sourceCurrencyCode",
+                      "targetCurrencyCode",
+                      "version"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List latest owned manual exchange quote versions",
+        "tags": ["manual-exchange-quotes"]
+      }
+    },
+    "/api/v1/manual-exchange-quotes/{quoteId}": {
+      "get": {
+        "operationId": "ManualExchangeQuoteController_get",
+        "parameters": [
+          {
+            "name": "quoteId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "authorId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "effectiveAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "rate": {
+                      "type": "string"
+                    },
+                    "recordedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "sourceCurrencyCode": {
+                      "enum": ["BRL", "USD", "EUR"],
+                      "type": "string"
+                    },
+                    "targetCurrencyCode": {
+                      "enum": ["BRL", "USD", "EUR"],
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "authorId",
+                    "effectiveAt",
+                    "id",
+                    "rate",
+                    "recordedAt",
+                    "source",
+                    "sourceCurrencyCode",
+                    "targetCurrencyCode",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get latest owned manual exchange quote version",
+        "tags": ["manual-exchange-quotes"]
+      },
+      "patch": {
+        "operationId": "ManualExchangeQuoteController_correct",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "quoteId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "effectiveAt": {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  "rate": {
+                    "maxLength": 1000,
+                    "type": "string"
+                  },
+                  "source": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": ["effectiveAt", "rate", "source"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "authorId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "effectiveAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "rate": {
+                      "type": "string"
+                    },
+                    "recordedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "sourceCurrencyCode": {
+                      "enum": ["BRL", "USD", "EUR"],
+                      "type": "string"
+                    },
+                    "targetCurrencyCode": {
+                      "enum": ["BRL", "USD", "EUR"],
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "authorId",
+                    "effectiveAt",
+                    "id",
+                    "rate",
+                    "recordedAt",
+                    "source",
+                    "sourceCurrencyCode",
+                    "targetCurrencyCode",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Append a corrected owned manual exchange quote version",
+        "tags": ["manual-exchange-quotes"]
+      }
+    },
     "/api/v1/auth/password-recovery-requests": {
       "post": {
         "operationId": "PasswordRecoveryController_request",
@@ -2199,6 +3424,121 @@
         "tags": ["auth"]
       }
     },
+    "/api/v1/auth/password-recovery-completions": {
+      "post": {
+        "operationId": "PasswordRecoveryController_complete",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "tokenHash": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2048
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 12,
+                    "maxLength": 1024
+                  }
+                },
+                "required": ["tokenHash", "password"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid or expired recovery link"
+          },
+          "422": {
+            "description": "Password rejected by provider policy"
+          },
+          "503": {
+            "description": "Recovery is temporarily unavailable"
+          }
+        },
+        "summary": "Complete password recovery with a single-use token",
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/sessions": {
+      "post": {
+        "operationId": "SessionController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Create an opaque browser session",
+        "tags": ["auth"]
+      },
+      "get": {
+        "operationId": "SessionController_check",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Check the current browser session",
+        "tags": ["auth"]
+      },
+      "delete": {
+        "operationId": "SessionController_logout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Revoke the current browser session",
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/sessions/others": {
+      "delete": {
+        "operationId": "SessionController_closeOtherSessions",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Close all other browser sessions",
+        "tags": ["auth"]
+      }
+    },
     "/api/v1/tags": {
       "post": {
         "operationId": "TagController_create",
@@ -2228,6 +3568,11 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "createdAt": {
                       "format": "date-time",
                       "type": "string"
@@ -2250,6 +3595,7 @@
                     }
                   },
                   "required": [
+                    "archivedAt",
                     "createdAt",
                     "id",
                     "name",
@@ -2284,6 +3630,11 @@
                 "schema": {
                   "items": {
                     "properties": {
+                      "archivedAt": {
+                        "format": "date-time",
+                        "nullable": true,
+                        "type": "string"
+                      },
                       "createdAt": {
                         "format": "date-time",
                         "type": "string"
@@ -2306,6 +3657,7 @@
                       }
                     },
                     "required": [
+                      "archivedAt",
                       "createdAt",
                       "id",
                       "name",
@@ -2333,6 +3685,80 @@
       }
     },
     "/api/v1/tags/{tagId}": {
+      "get": {
+        "operationId": "TagController_get",
+        "parameters": [
+          {
+            "name": "tagId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "archivedAt",
+                    "createdAt",
+                    "id",
+                    "name",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned tag was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get an owned tag",
+        "tags": ["tags"]
+      },
       "patch": {
         "operationId": "TagController_rename",
         "parameters": [
@@ -2371,6 +3797,11 @@
               "application/json": {
                 "schema": {
                   "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "createdAt": {
                       "format": "date-time",
                       "type": "string"
@@ -2393,6 +3824,7 @@
                     }
                   },
                   "required": [
+                    "archivedAt",
                     "createdAt",
                     "id",
                     "name",
@@ -2417,6 +3849,181 @@
           }
         ],
         "summary": "Rename an owned tag",
+        "tags": ["tags"]
+      },
+      "delete": {
+        "operationId": "TagController_remove",
+        "parameters": [
+          {
+            "name": "tagId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an unlinked owned tag",
+        "tags": ["tags"]
+      }
+    },
+    "/api/v1/tags/{tagId}/archive": {
+      "patch": {
+        "operationId": "TagController_archive",
+        "parameters": [
+          {
+            "name": "tagId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "archivedAt",
+                    "createdAt",
+                    "id",
+                    "name",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Archive an owned tag",
+        "tags": ["tags"]
+      }
+    },
+    "/api/v1/tags/{tagId}/restore": {
+      "patch": {
+        "operationId": "TagController_restore",
+        "parameters": [
+          {
+            "name": "tagId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "archivedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "name": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "archivedAt",
+                    "createdAt",
+                    "id",
+                    "name",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Restore an owned tag",
         "tags": ["tags"]
       }
     },
@@ -2447,12 +4054,12 @@
                     "type": "string"
                   },
                   "currencyCode": {
-                    "pattern": "^[A-Z]{3}$",
+                    "enum": ["BRL", "USD", "EUR"],
                     "type": "string"
                   },
                   "currencyMinorUnitScale": {
-                    "maximum": 18,
-                    "minimum": 0,
+                    "maximum": 2,
+                    "minimum": 2,
                     "type": "integer"
                   },
                   "description": {
@@ -2574,6 +4181,37 @@
                     "updatedAt",
                     "version"
                   ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request validation failed before recording a transaction",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "error": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "code": {
+                          "enum": ["INVALID_REQUEST"],
+                          "type": "string"
+                        },
+                        "correlationId": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "correlationId", "message"],
+                      "type": "object"
+                    }
+                  },
+                  "required": ["error"],
                   "type": "object"
                 }
               }
@@ -2751,6 +4389,22 @@
             "schema": {
               "enum": ["income", "expense"],
               "type": "string"
+            }
+          },
+          {
+            "name": "tagId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "costCenterId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid"
             }
           },
           {
@@ -3751,12 +5405,12 @@
                     "type": "string"
                   },
                   "currencyCode": {
-                    "pattern": "^[A-Z]{3}$",
+                    "enum": ["BRL", "USD", "EUR"],
                     "type": "string"
                   },
                   "currencyMinorUnitScale": {
-                    "maximum": 18,
-                    "minimum": 0,
+                    "maximum": 2,
+                    "minimum": 2,
                     "type": "integer"
                   },
                   "description": {
@@ -4265,14 +5919,11 @@
                     "type": "string"
                   },
                   "locale": {
-                    "maxLength": 16,
-                    "minLength": 2,
+                    "enum": ["pt-BR"],
                     "type": "string"
                   },
                   "presentationCurrency": {
-                    "maxLength": 3,
-                    "minLength": 3,
-                    "pattern": "^[A-Z]{3}$",
+                    "enum": ["BRL"],
                     "type": "string"
                   },
                   "timeZone": {

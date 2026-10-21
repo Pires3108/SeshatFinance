@@ -1,6 +1,11 @@
-import { Currency, type CurrencySnapshot } from './currency.js';
+import {
+  Currency,
+  InvalidCurrencyError,
+  type CurrencySnapshot,
+} from './currency.js';
 
 const decimalAmountPattern = /^(-?)(\d+)(?:\.(\d+))?$/u;
+const maximumMoneySplitCount = 10_000;
 
 export type MoneyComparison = -1 | 0 | 1;
 
@@ -13,6 +18,13 @@ export class InvalidMoneyAmountError extends Error {
   public constructor(message: string) {
     super(message);
     this.name = 'InvalidMoneyAmountError';
+  }
+}
+
+export class InvalidMoneySplitCountError extends Error {
+  public constructor() {
+    super('Money split count must be an integer from 1 to 10000.');
+    this.name = 'InvalidMoneySplitCountError';
   }
 }
 
@@ -32,6 +44,7 @@ export class Money {
   ) {}
 
   public static fromDecimal(amount: string, currency: Currency): Money {
+    assertCurrency(currency);
     return new Money(
       parseMinorUnits(amount, currency.minorUnitScale),
       currency,
@@ -39,6 +52,10 @@ export class Money {
   }
 
   public static fromMinorUnits(minorUnits: bigint, currency: Currency): Money {
+    assertCurrency(currency);
+    if (typeof minorUnits !== 'bigint') {
+      throw new InvalidMoneyAmountError('Money minor units must be a bigint.');
+    }
     return new Money(minorUnits, currency);
   }
 
@@ -61,6 +78,29 @@ export class Money {
 
   public negate(): Money {
     return new Money(-this.minorUnits, this.currency);
+  }
+
+  public split(count: number): readonly Money[] {
+    if (
+      !Number.isSafeInteger(count) ||
+      count <= 0 ||
+      count > maximumMoneySplitCount
+    ) {
+      throw new InvalidMoneySplitCountError();
+    }
+
+    const regularShare = this.minorUnits / BigInt(count);
+    const shares: Money[] = [];
+    for (let index = 1; index < count; index += 1) {
+      shares.push(new Money(regularShare, this.currency));
+    }
+    shares.push(
+      new Money(
+        this.minorUnits - regularShare * BigInt(count - 1),
+        this.currency,
+      ),
+    );
+    return shares;
   }
 
   public compare(other: Money): MoneyComparison {
@@ -101,6 +141,11 @@ export class Money {
 }
 
 function parseMinorUnits(amount: string, scale: number): bigint {
+  if (typeof amount !== 'string') {
+    throw new InvalidMoneyAmountError(
+      'Money amount must be a plain decimal string.',
+    );
+  }
   const match = decimalAmountPattern.exec(amount);
   if (match === null) {
     throw new InvalidMoneyAmountError(
@@ -118,6 +163,12 @@ function parseMinorUnits(amount: string, scale: number): bigint {
   const paddedFraction = fractionalPart.padEnd(scale, '0');
   const digits = `${integerPart}${paddedFraction}`.replace(/^0+(?=\d)/u, '');
   return sign * BigInt(digits);
+}
+
+function assertCurrency(currency: Currency): void {
+  if (!(currency instanceof Currency)) {
+    throw new InvalidCurrencyError('Money requires an explicit currency.');
+  }
 }
 
 function formatMinorUnits(minorUnits: bigint, scale: number): string {

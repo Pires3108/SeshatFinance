@@ -1,4 +1,11 @@
-import { RegisterUserUseCase } from '@seshat/application';
+import {
+  ConfirmRegistrationUseCase,
+  IdentityProviderUnavailableError,
+  RegisterUserUseCase,
+  ResendRegistrationConfirmationUseCase,
+  PasswordRejectedError,
+  PasswordCheckUnavailableError,
+} from '@seshat/application';
 import {
   Body,
   Controller,
@@ -6,23 +13,34 @@ import {
   HttpStatus,
   Inject,
   Post,
+  BadRequestException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import {
   ApiAcceptedResponse,
+  ApiBadRequestResponse,
   ApiBody,
+  ApiNoContentResponse,
   ApiOperation,
+  ApiUnprocessableEntityResponse,
+  ApiServiceUnavailableResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { z } from 'zod';
 
 import { ZodValidationPipe } from '../platform/zod-validation.pipe.js';
+import { PasswordRejectedException } from '../platform/password-rejected.exception.js';
 import { AuthConfiguration } from './auth-configuration.js';
 
 const registerUserRequestSchema = z.object({
   displayName: z.string().trim().min(1).max(120),
   email: z.email().max(320),
-  password: z.string().min(1).max(1024),
+  password: z.string().min(12).max(1024),
 });
+const confirmationRequestSchema = z.object({
+  tokenHash: z.string().min(1).max(2048),
+});
+const resendRequestSchema = z.object({ email: z.email().max(320) });
 
 type RegisterUserRequest = z.infer<typeof registerUserRequestSchema>;
 
@@ -38,6 +56,10 @@ export class AuthController {
     private readonly registerUser: RegisterUserUseCase,
     @Inject(AuthConfiguration)
     private readonly configuration: AuthConfiguration,
+    @Inject(ConfirmRegistrationUseCase)
+    private readonly confirmRegistration: ConfirmRegistrationUseCase,
+    @Inject(ResendRegistrationConfirmationUseCase)
+    private readonly resendConfirmation: ResendRegistrationConfirmationUseCase,
   ) {}
 
   @Post()
@@ -49,7 +71,7 @@ export class AuthController {
       properties: {
         displayName: { maxLength: 120, minLength: 1, type: 'string' },
         email: { format: 'email', maxLength: 320, type: 'string' },
-        password: { maxLength: 1024, minLength: 1, type: 'string' },
+        password: { maxLength: 1024, minLength: 12, type: 'string' },
       },
       required: ['displayName', 'email', 'password'],
       type: 'object',
@@ -64,15 +86,106 @@ export class AuthController {
       type: 'object',
     },
   })
+  @ApiUnprocessableEntityResponse({
+    description: 'Password rejected by provider policy',
+  })
   public async register(
     @Body(new ZodValidationPipe(registerUserRequestSchema))
     request: RegisterUserRequest,
   ): Promise<RegisterUserResponse> {
     const configuration = this.configuration.read();
-    await this.registerUser.execute({
-      ...request,
-      confirmationRedirectUrl: configuration.confirmationRedirectUrl,
-    });
+    try {
+      await this.registerUser.execute({
+        ...request,
+        confirmationRedirectUrl: configuration.confirmationRedirectUrl,
+      });
+    } catch (error) {
+      if (error instanceof PasswordRejectedError)
+        throw new PasswordRejectedException();
+      if (error instanceof PasswordCheckUnavailableError)
+        throw new ServiceUnavailableException();
+      throw error;
+    }
+    return { status: 'confirmation_required' };
+  }
+
+  @Post('confirm')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Confirm a registration with a single-use email token',
+  })
+  @ApiBody({
+    schema: {
+      additionalProperties: false,
+      properties: {
+        tokenHash: { maxLength: 2048, minLength: 1, type: 'string' },
+      },
+      required: ['tokenHash'],
+      type: 'object',
+    },
+  })
+  @ApiNoContentResponse()
+  @ApiBadRequestResponse({
+    description: 'Invalid, expired, or reused confirmation token',
+  })
+  @ApiServiceUnavailableResponse({
+    description: 'Confirmation is temporarily unavailable',
+  })
+  public async confirm(
+    @Body(new ZodValidationPipe(confirmationRequestSchema))
+    request: z.infer<typeof confirmationRequestSchema>,
+  ): Promise<void> {
+    try {
+      if (!(await this.confirmRegistration.execute(request.tokenHash)))
+        throw new BadRequestException(
+          'Link de confirmação inválido ou expirado.',
+        );
+    } catch (error) {
+      if (error instanceof BadRequestException) throw error;
+      if (error instanceof IdentityProviderUnavailableError)
+        throw new ServiceUnavailableException();
+      throw new ServiceUnavailableException();
+    }
+  }
+
+  @Post('resend')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({ summary: 'Request another registration confirmation email' })
+  @ApiBody({
+    schema: {
+      additionalProperties: false,
+      properties: {
+        email: { format: 'email', maxLength: 320, type: 'string' },
+      },
+      required: ['email'],
+      type: 'object',
+    },
+  })
+  @ApiAcceptedResponse({
+    schema: {
+      properties: {
+        status: { enum: ['confirmation_required'], type: 'string' },
+      },
+      required: ['status'],
+      type: 'object',
+    },
+  })
+  @ApiServiceUnavailableResponse({
+    description: 'Resend is temporarily unavailable',
+  })
+  public async resend(
+    @Body(new ZodValidationPipe(resendRequestSchema))
+    request: z.infer<typeof resendRequestSchema>,
+  ): Promise<RegisterUserResponse> {
+    const configuration = this.configuration.read();
+    try {
+      await this.resendConfirmation.execute({
+        email: request.email,
+        confirmationRedirectUrl: configuration.confirmationRedirectUrl,
+      });
+    } catch {
+      throw new ServiceUnavailableException();
+    }
     return { status: 'confirmation_required' };
   }
 }

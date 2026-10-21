@@ -175,8 +175,10 @@ export interface TransactionTimelineRepository {
 
 export type TransactionTimelineFilters = Readonly<{
   accountId?: string;
+  costCenterId?: string;
   kind?: TransactionKind;
   occurredAtOrder?: 'asc' | 'desc';
+  tagId?: string;
 }>;
 
 export class ListOwnedTransactionsBetweenUseCase {

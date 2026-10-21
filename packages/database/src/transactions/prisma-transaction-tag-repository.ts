@@ -4,7 +4,7 @@ import type {
 } from '@seshat/application';
 import type { FinancialAuditEvent } from '@seshat/domain';
 
-import { insertFinancialAuditEvent } from '../audit/prisma-financial-audit-event-repository.js';
+import { insertFinancialAuditEvent } from '../audit/index.js';
 import type { PrismaClient } from '../generated/prisma/client.js';
 
 export class PrismaTransactionTagRepository implements TransactionTagRepository {
@@ -29,21 +29,34 @@ export class PrismaTransactionTagRepository implements TransactionTagRepository 
     auditEvent: FinancialAuditEvent,
   ): Promise<ReplaceTransactionTagsResult> {
     return this.client.$transaction(async (client) => {
+      await client.$queryRaw`
+        SELECT id FROM transactions
+        WHERE id = ${transactionId}::uuid AND owner_id = ${ownerId}::uuid
+        FOR UPDATE`;
       const transaction = await client.transaction.findFirst({
         select: { id: true },
         where: { id: transactionId, ownerId },
       });
       if (transaction === null) return 'transaction-not-found';
-      const tagCount = await client.tag.count({
-        where: { id: { in: [...tagIds] }, ownerId },
-      });
-      if (tagCount !== tagIds.length) return 'tag-not-found';
       const current = await client.transactionTag.findMany({
         orderBy: { tagId: 'asc' },
         select: { tagId: true },
         where: { ownerId, transactionId },
       });
-      const next = [...tagIds].sort();
+      const next = [...new Set(tagIds)].sort();
+      const currentIds = new Set(current.map(({ tagId }) => tagId));
+      for (const tagId of next) {
+        await client.$queryRaw`
+          SELECT id FROM tags
+          WHERE id = ${tagId}::uuid AND owner_id = ${ownerId}::uuid
+          FOR SHARE`;
+        const tag = await client.tag.findFirst({
+          select: { id: true, archivedAt: true },
+          where: { id: tagId, ownerId },
+        });
+        if (tag === null || (tag.archivedAt !== null && !currentIds.has(tagId)))
+          return 'tag-not-found';
+      }
       if (
         current.length === next.length &&
         current.every(({ tagId }, index) => tagId === next[index])
@@ -51,11 +64,12 @@ export class PrismaTransactionTagRepository implements TransactionTagRepository 
         return 'unchanged';
       }
       await client.transactionTag.deleteMany({
-        where: { ownerId, transactionId },
+        where: { ownerId, transactionId, tagId: { notIn: next } },
       });
-      if (tagIds.length > 0) {
+      const added = next.filter((tagId) => !currentIds.has(tagId));
+      if (added.length > 0) {
         await client.transactionTag.createMany({
-          data: tagIds.map((tagId) => ({ ownerId, tagId, transactionId })),
+          data: added.map((tagId) => ({ ownerId, tagId, transactionId })),
         });
       }
       await insertFinancialAuditEvent(client, auditEvent);

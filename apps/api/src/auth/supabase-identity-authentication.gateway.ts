@@ -1,3 +1,4 @@
+import { IdentityCredentialsRejectedError } from '@seshat/application';
 import type {
   AuthenticateUserCommand,
   IdentityAuthenticationGateway,
@@ -11,9 +12,6 @@ export type SupabaseAuthenticationClient = Readonly<{
         data: Readonly<{
           session: Readonly<{
             access_token: string;
-            expires_at?: number;
-            refresh_token: string;
-            user: Readonly<{ id: string }>;
           }> | null;
         }>;
         error: unknown;
@@ -22,9 +20,9 @@ export type SupabaseAuthenticationClient = Readonly<{
   }>;
 }>;
 
-export class IdentityAuthenticationError extends Error {
+export class IdentityAuthenticationError extends IdentityCredentialsRejectedError {
   public constructor() {
-    super('Identity authentication was not accepted.');
+    super();
     this.name = 'IdentityAuthenticationError';
   }
 }
@@ -32,22 +30,56 @@ export class IdentityAuthenticationError extends Error {
 export class SupabaseIdentityAuthenticationGateway implements IdentityAuthenticationGateway {
   public constructor(
     private readonly clientFactory: () => SupabaseAuthenticationClient,
+    private readonly verifyIdentity: (
+      accessToken: string,
+    ) => Promise<Readonly<{ id: string }>>,
   ) {}
 
   public async authenticate(
     command: AuthenticateUserCommand,
   ): Promise<IdentitySession> {
-    const { data, error } =
-      await this.clientFactory().auth.signInWithPassword(command);
-    if (error || data.session?.expires_at === undefined) {
+    const { data, error } = await withTimeout(
+      this.clientFactory().auth.signInWithPassword(command),
+    );
+    if (error && !isCredentialRejection(error))
+      throw new Error('Identity provider is unavailable.');
+    if (error || data.session === null) {
       throw new IdentityAuthenticationError();
     }
 
-    return {
-      accessToken: data.session.access_token,
-      expiresAt: new Date(data.session.expires_at * 1000),
-      refreshToken: data.session.refresh_token,
-      userId: data.session.user.id,
-    };
+    const actor = await withTimeout(
+      this.verifyIdentity(data.session.access_token),
+    );
+    return { userId: actor.id };
+  }
+}
+
+function isCredentialRejection(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null || !('code' in error))
+    return false;
+  return (
+    error.code === 'invalid_credentials' || error.code === 'email_not_confirmed'
+  );
+}
+
+async function withTimeout<T>(operation: PromiseLike<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve(operation),
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(() => {
+          reject(new IdentityProviderTimeoutError());
+        }, 30_000);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+class IdentityProviderTimeoutError extends Error {
+  public constructor() {
+    super('Identity provider timed out.');
   }
 }

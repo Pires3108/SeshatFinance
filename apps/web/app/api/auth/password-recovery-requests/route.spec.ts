@@ -34,15 +34,32 @@ describe('web password recovery proxy', () => {
     process.env.SESHAT_API_URL = 'http://api.internal:3001';
     globalThis.fetch = vi
       .fn()
-      .mockResolvedValue(new Response(null, { status: 202 }));
+      .mockResolvedValue(
+        Response.json({ status: 'accepted' }, { status: 202 }),
+      );
     const response = await POST(request({ email: 'pessoa@example.com' }));
     expect(response.status).toBe(202);
     expect(await response.json()).toEqual({ status: 'accepted' });
-    expect(globalThis.fetch).toHaveBeenCalledWith(
-      new URL(
-        'http://api.internal:3001/api/v1/auth/password-recovery-requests',
-      ),
-      expect.objectContaining({ cache: 'no-store', method: 'POST' }),
+    const upstreamRequest = vi.mocked(globalThis.fetch).mock.calls[0]?.[0];
+    expect(upstreamRequest).toBeInstanceOf(Request);
+    const forwardedRequest = upstreamRequest as Request;
+    expect(forwardedRequest.url).toBe(
+      'http://api.internal:3001/api/v1/auth/password-recovery-requests',
     );
+    expect(forwardedRequest.cache).toBe('no-store');
+    expect(forwardedRequest.method).toBe('POST');
+    expect(await forwardedRequest.json()).toEqual({
+      email: 'pessoa@example.com',
+    });
+  });
+
+  it('rejects an unexpected response body', async () => {
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValue(
+        Response.json({ status: 'unexpected' }, { status: 202 }),
+      );
+    const response = await POST(request({ email: 'pessoa@example.com' }));
+    expect(response.status).toBe(502);
   });
 });

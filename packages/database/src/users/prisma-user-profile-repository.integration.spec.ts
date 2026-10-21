@@ -1,6 +1,8 @@
+import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
+import { UpdateOwnUserProfileUseCase } from '@seshat/application';
 import { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -20,18 +22,23 @@ describe('PrismaUserProfileRepository', () => {
       .start();
     stop = async (): Promise<void> => container.stop().then(() => undefined);
 
-    const migration = await readFile(
-      new URL(
-        '../../prisma/migrations/20260919210000_create_user_profiles/migration.sql',
-        import.meta.url,
-      ),
-      'utf8',
-    );
     const migrationClient = new Client({
       connectionString: container.getConnectionUri(),
     });
     await migrationClient.connect();
-    await migrationClient.query(migration);
+    for (const name of [
+      '20260919210000_create_user_profiles',
+      '20261009120000_registration_pending',
+    ]) {
+      const migration = await readFile(
+        new URL(
+          `../../prisma/migrations/${name}/migration.sql`,
+          import.meta.url,
+        ),
+        'utf8',
+      );
+      await migrationClient.query(migration);
+    }
     await migrationClient.end();
 
     const prisma = createPrismaClient(container.getConnectionUri());
@@ -69,4 +76,38 @@ describe('PrismaUserProfileRepository', () => {
     expect(updated.version).toBe(2);
     expect(updated.createdAt).toEqual(createdAt);
   });
+
+  it.each([
+    { presentationCurrency: 'USD', timeZone: 'America/Sao_Paulo' },
+    { presentationCurrency: 'BRL', timeZone: 'Invalid/Zone' },
+  ])(
+    'preserves persisted preferences and version after invalid input',
+    async (preferences): Promise<void> => {
+      if (repository === undefined)
+        throw new Error('Repository was not initialized.');
+      const id = randomUUID();
+      const before = await repository.upsert({
+        id,
+        displayName: 'Pessoa fictícia',
+        locale: 'pt-BR',
+        presentationCurrency: 'BRL',
+        timeZone: 'America/Sao_Paulo',
+        createdAt: new Date('2026-10-13T12:00:00Z'),
+        updatedAt: new Date('2026-10-13T12:00:00Z'),
+        version: 1,
+      });
+      const useCase = new UpdateOwnUserProfileUseCase(repository, {
+        now: (): Date => new Date('2026-10-13T13:00:00Z'),
+      });
+      await expect(
+        useCase.execute({
+          actorId: id,
+          displayName: 'Outro nome',
+          locale: 'pt-BR',
+          ...preferences,
+        }),
+      ).rejects.toThrow();
+      await expect(repository.findById(id)).resolves.toEqual(before);
+    },
+  );
 });

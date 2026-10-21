@@ -119,4 +119,36 @@ describe('Transaction tag HTTP authorization', () => {
       transactionId: transactionOwnedByAnotherActor,
     });
   });
+
+  it('passes multiple selected tags through the authenticated write boundary', async () => {
+    const first = '0863dc92-54f3-4bfc-96c5-a8bac9190181';
+    const second = 'b3ea562a-2e77-4337-9402-027511b133e7';
+    replaceTags.execute.mockResolvedValueOnce([first, second]);
+
+    const response = await application.inject({
+      headers: { authorization: 'Bearer actor-b-token' },
+      method: 'PUT',
+      payload: { tagIds: [first, second, first] },
+      url: `/api/v1/transactions/${transactionOwnedByAnotherActor}/tags`,
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ tagIds: [first, second] });
+    expect(replaceTags.execute).toHaveBeenCalledWith({
+      actorId: authenticatedActorId,
+      tagIds: [first, second, first],
+      transactionId: transactionOwnedByAnotherActor,
+    });
+  });
+
+  it('allows removing all tag assignments', async () => {
+    replaceTags.execute.mockResolvedValueOnce([]);
+    const response = await application.inject({
+      headers: { authorization: 'Bearer actor-b-token' },
+      method: 'PUT',
+      payload: { tagIds: [] },
+      url: `/api/v1/transactions/${transactionOwnedByAnotherActor}/tags`,
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ tagIds: [] });
+  });
 });

@@ -343,3 +343,26 @@ Uma mudança está concluída quando:
 - OpenAPI e migrations estão atualizados;
 - documentação e rastreabilidade foram ajustadas;
 - pipeline obrigatório está verde.
+
+## 19. Guardas executáveis de arquitetura — US-002
+
+`pnpm lint` aplica `architecture/boundaries` a imports estáticos, reexports,
+imports dinâmicos literais, `require` literal e imports de tipo. Caminhos relativos
+são resolvidos a partir do arquivo chamador; o alias `@seshat/` também é verificado.
+Domain rejeita frameworks, ORM e camadas externas. Application rejeita infraestrutura;
+o browser rejeita Domain, Application e acesso ao banco. Repositories internos de
+outro módulo do banco são proibidos no código de produção; módulos expõem uma API
+pública. Fixtures de integração podem montar repositories para verificar persistência.
+
+`architecture/precise-money` rejeita anotações `number` em valores monetários e taxas
+identificados por seus nomes. Essa guarda complementa os tipos de `Money`, que aceitam
+apenas strings decimais ou `bigint` com moeda explícita; não substitui revisão de nomes
+arbitrários ou cálculos financeiros. Escalas, dias e versões continuam inteiros válidos.
+
+`pnpm test:architecture` executa exemplos proibidos e permitidos contra o ESLint real
+e compila chamadas reais de `Money` com TypeScript strict. Os diagnósticos incluem
+localização. O comando faz parte de `pnpm test`, executado pela CI após checkout,
+instalação com lockfile congelado e geração explícita de Prisma. A configuração de
+lint, a implementação das regras e o tsconfig base invalidam o cache do Turbo.
+
+Rastreabilidade: US-002 / SESHAT-18, RNF-047/RNF-050/RNF-054 e INV-003/INV-004.

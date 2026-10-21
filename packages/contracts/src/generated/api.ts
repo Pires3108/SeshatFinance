@@ -4,6 +4,23 @@
  */
 
 export type paths = {
+    readonly "/api/v1/accounts/consolidation": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List exact owned balances and BRL consolidation availability */
+        readonly get: operations["AccountBalanceController_consolidation"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/accounts/{accountId}/balance": {
         readonly parameters: {
             readonly query?: never;
@@ -179,6 +196,40 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/auth/registrations/confirm": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Confirm a registration with a single-use email token */
+        readonly post: operations["AuthController_confirm"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/auth/registrations/resend": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Request another registration confirmation email */
+        readonly post: operations["AuthController_resend"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/categories": {
         readonly parameters: {
             readonly query?: never;
@@ -204,14 +255,50 @@ export type paths = {
             readonly path?: never;
             readonly cookie?: never;
         };
+        /** Get an owned category */
+        readonly get: operations["CategoryController_get"];
+        readonly put?: never;
+        readonly post?: never;
+        /** Delete an unlinked owned category */
+        readonly delete: operations["CategoryController_remove"];
+        readonly options?: never;
+        readonly head?: never;
+        /** Rename an owned category */
+        readonly patch: operations["CategoryController_rename"];
+        readonly trace?: never;
+    };
+    readonly "/api/v1/categories/{categoryId}/archive": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
         readonly get?: never;
         readonly put?: never;
         readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
-        /** Rename an owned category */
-        readonly patch: operations["CategoryController_rename"];
+        /** Archive an owned category */
+        readonly patch: operations["CategoryController_archive"];
+        readonly trace?: never;
+    };
+    readonly "/api/v1/categories/{categoryId}/restore": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        /** Restore an owned category */
+        readonly patch: operations["CategoryController_restore"];
         readonly trace?: never;
     };
     readonly "/api/v1/cost-centers": {
@@ -239,14 +326,50 @@ export type paths = {
             readonly path?: never;
             readonly cookie?: never;
         };
+        /** Get an owned cost center */
+        readonly get: operations["CostCenterController_get"];
+        readonly put?: never;
+        readonly post?: never;
+        /** Delete an unlinked owned cost center */
+        readonly delete: operations["CostCenterController_remove"];
+        readonly options?: never;
+        readonly head?: never;
+        /** Rename an owned cost center */
+        readonly patch: operations["CostCenterController_rename"];
+        readonly trace?: never;
+    };
+    readonly "/api/v1/cost-centers/{costCenterId}/archive": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
         readonly get?: never;
         readonly put?: never;
         readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
-        /** Rename an owned cost center */
-        readonly patch: operations["CostCenterController_rename"];
+        /** Archive an owned cost center */
+        readonly patch: operations["CostCenterController_archive"];
+        readonly trace?: never;
+    };
+    readonly "/api/v1/cost-centers/{costCenterId}/restore": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        /** Restore an owned cost center */
+        readonly patch: operations["CostCenterController_restore"];
         readonly trace?: never;
     };
     readonly "/api/v1/health": {
@@ -300,6 +423,42 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/manual-exchange-quotes": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List latest owned manual exchange quote versions */
+        readonly get: operations["ManualExchangeQuoteController_list"];
+        readonly put?: never;
+        /** Record an informational manual exchange quote */
+        readonly post: operations["ManualExchangeQuoteController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/manual-exchange-quotes/{quoteId}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get latest owned manual exchange quote version */
+        readonly get: operations["ManualExchangeQuoteController_get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        /** Append a corrected owned manual exchange quote version */
+        readonly patch: operations["ManualExchangeQuoteController_correct"];
+        readonly trace?: never;
+    };
     readonly "/api/v1/auth/password-recovery-requests": {
         readonly parameters: {
             readonly query?: never;
@@ -312,6 +471,59 @@ export type paths = {
         /** Request a password recovery email */
         readonly post: operations["PasswordRecoveryController_request"];
         readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/auth/password-recovery-completions": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Complete password recovery with a single-use token */
+        readonly post: operations["PasswordRecoveryController_complete"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/auth/sessions": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Check the current browser session */
+        readonly get: operations["SessionController_check"];
+        readonly put?: never;
+        /** Create an opaque browser session */
+        readonly post: operations["SessionController_login"];
+        /** Revoke the current browser session */
+        readonly delete: operations["SessionController_logout"];
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/auth/sessions/others": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post?: never;
+        /** Close all other browser sessions */
+        readonly delete: operations["SessionController_closeOtherSessions"];
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
@@ -342,14 +554,50 @@ export type paths = {
             readonly path?: never;
             readonly cookie?: never;
         };
+        /** Get an owned tag */
+        readonly get: operations["TagController_get"];
+        readonly put?: never;
+        readonly post?: never;
+        /** Delete an unlinked owned tag */
+        readonly delete: operations["TagController_remove"];
+        readonly options?: never;
+        readonly head?: never;
+        /** Rename an owned tag */
+        readonly patch: operations["TagController_rename"];
+        readonly trace?: never;
+    };
+    readonly "/api/v1/tags/{tagId}/archive": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
         readonly get?: never;
         readonly put?: never;
         readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
-        /** Rename an owned tag */
-        readonly patch: operations["TagController_rename"];
+        /** Archive an owned tag */
+        readonly patch: operations["TagController_archive"];
+        readonly trace?: never;
+    };
+    readonly "/api/v1/tags/{tagId}/restore": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        /** Restore an owned tag */
+        readonly patch: operations["TagController_restore"];
         readonly trace?: never;
     };
     readonly "/api/v1/accounts/{accountId}/transactions": {
@@ -540,6 +788,59 @@ export type components = {
 };
 export type $defs = Record<string, never>;
 export interface operations {
+    readonly AccountBalanceController_consolidation: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly accountBalances: readonly {
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                            readonly currencyMinorUnitScale: number;
+                            /** Format: uuid */
+                            readonly accountId: string;
+                        }[];
+                        readonly brlConsolidation: {
+                            readonly balance: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                                readonly currencyMinorUnitScale: number;
+                            };
+                            /** @enum {string} */
+                            readonly status: "available";
+                        } | {
+                            /** @enum {string} */
+                            readonly reason: "conversion-policy-pending" | "currency-scale-mismatch";
+                            /** @enum {string} */
+                            readonly status: "unavailable";
+                        };
+                        readonly totalsByCurrency: readonly {
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                            readonly currencyMinorUnitScale: number;
+                        }[];
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly AccountBalanceController_get: {
         readonly parameters: {
             readonly query?: never;
@@ -596,6 +897,7 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": readonly {
+                        readonly agency: string | null;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
                         readonly color: string | null;
@@ -640,8 +942,10 @@ export interface operations {
         readonly requestBody: {
             readonly content: {
                 readonly "application/json": {
+                    readonly agency?: string | null;
                     readonly color: string | null;
-                    readonly currencyCode: string;
+                    /** @enum {string} */
+                    readonly currencyCode: "BRL" | "USD" | "EUR";
                     readonly currencyMinorUnitScale: number;
                     readonly description: string | null;
                     readonly icon: string | null;
@@ -659,6 +963,7 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly agency: string | null;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
                         readonly color: string | null;
@@ -710,6 +1015,7 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly agency: string | null;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
                         readonly color: string | null;
@@ -763,6 +1069,7 @@ export interface operations {
         readonly requestBody: {
             readonly content: {
                 readonly "application/json": {
+                    readonly agency?: string | null;
                     readonly color: string | null;
                     readonly description: string | null;
                     readonly icon: string | null;
@@ -779,6 +1086,7 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly agency: string | null;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
                         readonly color: string | null;
@@ -844,6 +1152,7 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly agency: string | null;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
                         readonly color: string | null;
@@ -1284,6 +1593,86 @@ export interface operations {
                     };
                 };
             };
+            /** @description Password rejected by provider policy */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly AuthController_confirm: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly tokenHash: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid, expired, or reused confirmation token */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Confirmation is temporarily unavailable */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly AuthController_resend: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Format: email */
+                    readonly email: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 202: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** @enum {string} */
+                        readonly status: "confirmation_required";
+                    };
+                };
+            };
+            /** @description Resend is temporarily unavailable */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     readonly CategoryController_list: {
@@ -1301,6 +1690,8 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": readonly {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
                         /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: uuid */
@@ -1347,6 +1738,8 @@ export interface operations {
                 content: {
                     readonly "application/json": {
                         /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: uuid */
                         readonly id: string;
@@ -1358,6 +1751,80 @@ export interface operations {
                         readonly version: number;
                     };
                 };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CategoryController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly categoryId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly name: string;
+                        /** Format: uuid */
+                        readonly parentCategoryId: string | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned category was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CategoryController_remove: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly categoryId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Bearer token missing or invalid */
             readonly 401: {
@@ -1392,6 +1859,8 @@ export interface operations {
                 content: {
                     readonly "application/json": {
                         /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: uuid */
                         readonly id: string;
@@ -1420,6 +1889,88 @@ export interface operations {
             };
         };
     };
+    readonly CategoryController_archive: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly categoryId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly name: string;
+                        /** Format: uuid */
+                        readonly parentCategoryId: string | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CategoryController_restore: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly categoryId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly name: string;
+                        /** Format: uuid */
+                        readonly parentCategoryId: string | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly CostCenterController_list: {
         readonly parameters: {
             readonly query?: never;
@@ -1435,6 +1986,8 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": readonly {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
                         /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: uuid */
@@ -1477,6 +2030,8 @@ export interface operations {
                 content: {
                     readonly "application/json": {
                         /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: uuid */
                         readonly id: string;
@@ -1486,6 +2041,78 @@ export interface operations {
                         readonly version: number;
                     };
                 };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CostCenterController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly costCenterId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly name: string;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned cost center was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CostCenterController_remove: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly costCenterId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Bearer token missing or invalid */
             readonly 401: {
@@ -1520,6 +2147,8 @@ export interface operations {
                 content: {
                     readonly "application/json": {
                         /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: uuid */
                         readonly id: string;
@@ -1539,6 +2168,84 @@ export interface operations {
             };
             /** @description Owned cost center was not found */
             readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CostCenterController_archive: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly costCenterId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly name: string;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CostCenterController_restore: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly costCenterId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly name: string;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
                 headers: {
                     readonly [name: string]: unknown;
                 };
@@ -1631,6 +2338,204 @@ export interface operations {
             };
         };
     };
+    readonly ManualExchangeQuoteController_list: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        /** Format: uuid */
+                        readonly authorId: string;
+                        /** Format: date-time */
+                        readonly effectiveAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly rate: string;
+                        /** Format: date-time */
+                        readonly recordedAt: string;
+                        readonly source: string;
+                        /** @enum {string} */
+                        readonly sourceCurrencyCode: "BRL" | "USD" | "EUR";
+                        /** @enum {string} */
+                        readonly targetCurrencyCode: "BRL" | "USD" | "EUR";
+                        readonly version: number;
+                    }[];
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly ManualExchangeQuoteController_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                readonly "Idempotency-Key": string;
+            };
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Format: date-time */
+                    readonly effectiveAt: string;
+                    readonly rate: string;
+                    readonly source: string;
+                    /** @enum {string} */
+                    readonly sourceCurrencyCode: "BRL" | "USD" | "EUR";
+                    /** @enum {string} */
+                    readonly targetCurrencyCode: "BRL" | "USD" | "EUR";
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly authorId: string;
+                        /** Format: date-time */
+                        readonly effectiveAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly rate: string;
+                        /** Format: date-time */
+                        readonly recordedAt: string;
+                        readonly source: string;
+                        /** @enum {string} */
+                        readonly sourceCurrencyCode: "BRL" | "USD" | "EUR";
+                        /** @enum {string} */
+                        readonly targetCurrencyCode: "BRL" | "USD" | "EUR";
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly ManualExchangeQuoteController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly quoteId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly authorId: string;
+                        /** Format: date-time */
+                        readonly effectiveAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly rate: string;
+                        /** Format: date-time */
+                        readonly recordedAt: string;
+                        readonly source: string;
+                        /** @enum {string} */
+                        readonly sourceCurrencyCode: "BRL" | "USD" | "EUR";
+                        /** @enum {string} */
+                        readonly targetCurrencyCode: "BRL" | "USD" | "EUR";
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly ManualExchangeQuoteController_correct: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly quoteId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Format: date-time */
+                    readonly effectiveAt: string;
+                    readonly rate: string;
+                    readonly source: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly authorId: string;
+                        /** Format: date-time */
+                        readonly effectiveAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly rate: string;
+                        /** Format: date-time */
+                        readonly recordedAt: string;
+                        readonly source: string;
+                        /** @enum {string} */
+                        readonly sourceCurrencyCode: "BRL" | "USD" | "EUR";
+                        /** @enum {string} */
+                        readonly targetCurrencyCode: "BRL" | "USD" | "EUR";
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly PasswordRecoveryController_request: {
         readonly parameters: {
             readonly query?: never;
@@ -1661,6 +2566,127 @@ export interface operations {
             };
         };
     };
+    readonly PasswordRecoveryController_complete: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly tokenHash: string;
+                    readonly password: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid or expired recovery link */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Password rejected by provider policy */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Recovery is temporarily unavailable */
+            readonly 503: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly SessionController_check: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly SessionController_login: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Format: email */
+                    readonly email: string;
+                    readonly password: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly SessionController_logout: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly SessionController_closeOtherSessions: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly TagController_list: {
         readonly parameters: {
             readonly query?: never;
@@ -1676,6 +2702,8 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": readonly {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
                         /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: uuid */
@@ -1718,6 +2746,8 @@ export interface operations {
                 content: {
                     readonly "application/json": {
                         /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: uuid */
                         readonly id: string;
@@ -1727,6 +2757,78 @@ export interface operations {
                         readonly version: number;
                     };
                 };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TagController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly tagId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly name: string;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned tag was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TagController_remove: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly tagId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Bearer token missing or invalid */
             readonly 401: {
@@ -1761,6 +2863,8 @@ export interface operations {
                 content: {
                     readonly "application/json": {
                         /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: uuid */
                         readonly id: string;
@@ -1780,6 +2884,84 @@ export interface operations {
             };
             /** @description Owned tag was not found */
             readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TagController_archive: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly tagId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly name: string;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TagController_restore: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly tagId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly archivedAt: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly name: string;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
                 headers: {
                     readonly [name: string]: unknown;
                 };
@@ -1855,7 +3037,8 @@ export interface operations {
             readonly content: {
                 readonly "application/json": {
                     readonly amount: string;
-                    readonly currencyCode: string;
+                    /** @enum {string} */
+                    readonly currencyCode: "BRL" | "USD" | "EUR";
                     readonly currencyMinorUnitScale: number;
                     readonly description: string | null;
                     /** @enum {string} */
@@ -1900,6 +3083,22 @@ export interface operations {
                     };
                 };
             };
+            /** @description Request validation failed before recording a transaction */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly error: {
+                            /** @enum {string} */
+                            readonly code: "INVALID_REQUEST";
+                            readonly correlationId: string;
+                            readonly message: string;
+                        };
+                    };
+                };
+            };
             /** @description Bearer token missing or invalid */
             readonly 401: {
                 headers: {
@@ -1915,6 +3114,8 @@ export interface operations {
                 readonly occurredAtOrder?: "asc" | "desc";
                 readonly lifecycle?: "active" | "archived" | "trashed";
                 readonly kind?: "income" | "expense";
+                readonly tagId?: unknown;
+                readonly costCenterId?: unknown;
                 readonly accountId?: unknown;
                 readonly to: string;
                 readonly from: string;
@@ -2448,7 +3649,8 @@ export interface operations {
             readonly content: {
                 readonly "application/json": {
                     readonly amount: string;
-                    readonly currencyCode: string;
+                    /** @enum {string} */
+                    readonly currencyCode: "BRL" | "USD" | "EUR";
                     readonly currencyMinorUnitScale: number;
                     readonly description: string | null;
                     /** Format: uuid */
@@ -2703,8 +3905,10 @@ export interface operations {
             readonly content: {
                 readonly "application/json": {
                     readonly displayName: string | null;
-                    readonly locale: string;
-                    readonly presentationCurrency: string;
+                    /** @enum {string} */
+                    readonly locale: "pt-BR";
+                    /** @enum {string} */
+                    readonly presentationCurrency: "BRL";
                     readonly timeZone: string;
                 };
             };

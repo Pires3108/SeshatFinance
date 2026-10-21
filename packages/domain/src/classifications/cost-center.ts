@@ -1,4 +1,5 @@
 export type CostCenterSnapshot = Readonly<{
+  archivedAt?: Date | null;
   createdAt: Date;
   id: string;
   name: string;
@@ -30,6 +31,7 @@ export class CostCenter {
     assertRequiredText(properties.name, 'Cost center name');
     assertValidInstant(properties.createdAt, 'Cost center creation instant');
     return new CostCenter({
+      archivedAt: null,
       createdAt: new Date(properties.createdAt),
       id: properties.id,
       name: properties.name.trim(),
@@ -50,6 +52,24 @@ export class CostCenter {
 
   public get ownerId(): string {
     return this.state.ownerId;
+  }
+
+  public get isArchived(): boolean {
+    return this.state.archivedAt != null;
+  }
+
+  public setArchived(archived: boolean, at: Date): void {
+    assertValidInstant(at, 'Cost center update instant');
+    if (at < this.state.updatedAt)
+      throw new InvalidCostCenterError(
+        'Cost center update cannot precede the previous update.',
+      );
+    this.state = {
+      ...this.state,
+      archivedAt: archived ? new Date(at) : null,
+      updatedAt: new Date(at),
+      version: this.state.version + 1,
+    };
   }
 
   public rename(name: string, at: Date): void {
@@ -79,6 +99,8 @@ function validateSnapshot(snapshot: CostCenterSnapshot): void {
   assertRequiredText(snapshot.name, 'Cost center name');
   assertValidInstant(snapshot.createdAt, 'Cost center creation instant');
   assertValidInstant(snapshot.updatedAt, 'Cost center update instant');
+  if (snapshot.archivedAt != null)
+    assertValidInstant(snapshot.archivedAt, 'Cost center archive instant');
   if (snapshot.updatedAt < snapshot.createdAt) {
     throw new InvalidCostCenterError(
       'Cost center update cannot precede creation.',
@@ -108,5 +130,7 @@ function copySnapshot(snapshot: CostCenterSnapshot): CostCenterSnapshot {
     ...snapshot,
     createdAt: new Date(snapshot.createdAt),
     updatedAt: new Date(snapshot.updatedAt),
+    archivedAt:
+      snapshot.archivedAt == null ? null : new Date(snapshot.archivedAt),
   };
 }

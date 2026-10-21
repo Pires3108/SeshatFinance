@@ -3,7 +3,7 @@
 ## 1. Princípios do domínio
 
 - **RN-001:** a Seshat Finance é um sistema exclusivamente organizacional; nenhum registro inicia, agenda, autoriza, confirma perante terceiros, impede, bloqueia, cancela ou altera uma transação financeira real.
-- **RN-002:** todo valor monetário deve ter moeda explícita e precisão compatível com ela.
+- **RN-002:** todo valor monetário deve ter moeda explícita e precisão compatível com ela. Novos registros financeiros usam inicialmente BRL, USD ou EUR com duas casas; valor e moeda originais não são reescritos por cotação manual ou informativa.
 - **RN-003:** patrimônio líquido corresponde a ativos menos obrigações; transferências internas não o alteram.
 - **RN-004:** saldo disponível, dinheiro guardado, saldo investido, dívidas e patrimônio líquido são métricas distintas.
 - **RN-005:** registros arquivados continuam no histórico; registros na lixeira deixam de compor saldos e indicadores.
@@ -25,7 +25,7 @@
 - **RN-015:** a despesa é reconhecida na compra, não no pagamento da fatura.
 - **RN-016:** após declaração do usuário, o registro de pagamento de fatura reduz saldo organizacional da conta pagadora e obrigação do cartão sem criar nova despesa nem efetuar pagamento externo.
 - **RN-017:** o limite organizacional estimado diminui na compra registrada e aumenta na quitação ou estorno registrados, sem bloquear ou liberar limite real.
-- **RN-018:** o principal é distribuído entre parcelas; diferença de arredondamento fica na última.
+- **RN-018:** o principal é distribuído entre parcelas na menor unidade da moeda original. Na divisão igual, cada parcela anterior trunca o quociente em direção a zero e a última recebe todo o resíduo, inclusive para total negativo; a soma permanece igual ao principal. Juros, taxas e a confirmação do parcelamento exigem suas regras próprias.
 - **RN-019:** juros são calculados pelo método escolhido e exibidos separadamente do principal.
 - **RN-020:** juros simples usam juros = principal × taxa × períodos; compostos usam montante = principal × (1 + taxa)^períodos.
 - **RN-021:** antes da confirmação, mostrar total financiado, juros, total final, valor e vencimento das parcelas.

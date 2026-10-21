@@ -42,9 +42,9 @@ Todo valor financeiro possui uma moeda associada; valores de moedas diferentes n
 
 ### INV-005 — Arredondamento reconciliável
 
-Diferenças de arredondamento de parcelas são atribuídas à última parcela, e a soma permanece igual ao total.
+Na divisão igual de um total monetário, as parcelas anteriores truncam unidades da menor fração da moeda em direção a zero e a última recebe o resíduo. A soma permanece igual ao total, inclusive para valores negativos. Juros e taxas dependem das regras da operação que os aplica.
 
-**Verificação:** testar divisões inexatas positivas, negativas e com juros.
+**Verificação:** testar divisões exatas e inexatas positivas e negativas, moeda e escala preservadas, última parcela reconciliada; testar juros quando o fluxo de parcelamento da US-044 existir.
 
 **Referências:** RN-018; CA-009.
 
@@ -52,7 +52,7 @@ Diferenças de arredondamento de parcelas são atribuídas à última parcela, e
 
 ### INV-006 — Equação do saldo de conta
 
-Saldo contábil é igual ao saldo inicial mais receitas, entradas pareadas e ajustes positivos, menos despesas, saídas pareadas e ajustes negativos, considerando apenas registros ativos.
+Saldo contábil é igual ao saldo inicial mais receitas, entradas pareadas e ajustes positivos, menos despesas, saídas pareadas e ajustes negativos, considerando registros efetivos ativos ou arquivados. Registros na lixeira e eventos apenas projetados não compõem o saldo; o arquivamento preserva o efeito histórico conforme INV-010.
 
 **Referências:** RF-018; RN-005 a RN-010.
 
@@ -202,7 +202,9 @@ Custo acumulado, valor atual e renda recebida permanecem grandezas separadas.
 
 ### INV-029 — Conversão preserva origem
 
-Consolidação em BRL conserva valor original, moeda, cotação manual e data de referência.
+Cotação manual conserva par de moedas, taxa decimal textual, origem, autor, vigência e versões anteriores. Repetir o mesmo comando não cria versão ou auditoria adicional. Quando houver consolidação em BRL aprovada, ela conservará valor original, moeda, cotação e data de referência; antes disso, não existe soma entre moedas distintas.
+
+A consulta de saldos preserva cada valor com sua moeda e só agrega valores da mesma moeda. A presença de moeda diferente de BRL torna o total consolidado em BRL indisponível, com motivo explícito, independentemente de existir cotação manual ou informativa.
 
 **Referências:** RF-020; RN-037.
 

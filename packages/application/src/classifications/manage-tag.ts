@@ -8,6 +8,25 @@ export interface TagRepository {
   findByIdForOwner(id: string, ownerId: string): Promise<Tag | null>;
   listForOwner(ownerId: string): Promise<readonly Tag[]>;
   save(tag: Tag, expectedVersion: number): Promise<boolean>;
+  deleteUnlinked?(
+    id: string,
+    ownerId: string,
+    expectedVersion: number,
+  ): Promise<'deleted' | 'linked' | 'conflict'>;
+}
+
+export class DuplicateTagError extends Error {
+  public constructor() {
+    super('Tag name already exists.');
+    this.name = 'DuplicateTagError';
+  }
+}
+
+export class TagLinkedError extends Error {
+  public constructor() {
+    super('Tag has transaction links.');
+    this.name = 'TagLinkedError';
+  }
 }
 
 export type CreateTagCommand = Readonly<{
@@ -53,6 +72,71 @@ export class ListOwnedTagsUseCase {
 
   public execute(actorId: string): Promise<readonly Tag[]> {
     return this.tags.listForOwner(actorId);
+  }
+}
+
+export class GetOwnedTagUseCase {
+  public constructor(private readonly tags: TagRepository) {}
+
+  public async execute(command: {
+    actorId: string;
+    tagId: string;
+  }): Promise<Tag> {
+    const tag = await this.tags.findByIdForOwner(
+      command.tagId,
+      command.actorId,
+    );
+    if (tag === null) throw new OwnedTagNotFoundError();
+    return tag;
+  }
+}
+
+export class SetOwnedTagArchivedUseCase {
+  public constructor(
+    private readonly tags: TagRepository,
+    private readonly clock: Clock,
+  ) {}
+
+  public async execute(command: {
+    actorId: string;
+    tagId: string;
+    archived: boolean;
+  }): Promise<Tag> {
+    const tag = await this.tags.findByIdForOwner(
+      command.tagId,
+      command.actorId,
+    );
+    if (tag === null) throw new OwnedTagNotFoundError();
+    if (tag.isArchived === command.archived) return tag;
+    const version = tag.toSnapshot().version;
+    tag.setArchived(command.archived, this.clock.now());
+    if (!(await this.tags.save(tag, version)))
+      throw new TagVersionConflictError();
+    return tag;
+  }
+}
+
+export class DeleteOwnedTagUseCase {
+  public constructor(private readonly tags: TagRepository) {}
+
+  public async execute(command: {
+    actorId: string;
+    tagId: string;
+  }): Promise<void> {
+    const tag = await this.tags.findByIdForOwner(
+      command.tagId,
+      command.actorId,
+    );
+    if (tag === null) throw new OwnedTagNotFoundError();
+    if (this.tags.deleteUnlinked === undefined)
+      throw new Error('Tag deletion unavailable.');
+    const result = await this.tags.deleteUnlinked(
+      tag.id,
+      command.actorId,
+      tag.toSnapshot().version,
+    );
+    if (result === 'linked') throw new TagLinkedError();
+    if (result === 'conflict') throw new TagVersionConflictError();
   }
 }
 

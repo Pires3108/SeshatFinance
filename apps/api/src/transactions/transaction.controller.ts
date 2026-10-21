@@ -39,6 +39,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBadRequestResponse,
   ApiBody,
   ApiCreatedResponse,
   ApiConflictResponse,
@@ -57,6 +58,10 @@ import { z } from 'zod';
 import { AuthenticatedActorContext } from '../auth/authenticated-actor-context.js';
 import { BearerAuthGuard } from '../auth/bearer-auth.guard.js';
 import { ZodValidationPipe } from '../platform/zod-validation.pipe.js';
+import {
+  supportedCurrencyCodeSchema,
+  supportedCurrencyMinorUnitScaleSchema,
+} from '../platform/supported-currency-schema.js';
 
 const idSchema = z.uuid();
 const createSchema = z.object({
@@ -64,8 +69,8 @@ const createSchema = z.object({
     .string()
     .max(1002)
     .regex(/^\d+(?:\.\d+)?$/u),
-  currencyCode: z.string().regex(/^[A-Z]{3}$/u),
-  currencyMinorUnitScale: z.number().int().min(0).max(18),
+  currencyCode: supportedCurrencyCodeSchema,
+  currencyMinorUnitScale: supportedCurrencyMinorUnitScaleSchema,
   description: z.string().trim().min(1).nullable(),
   kind: z.enum(['income', 'expense']),
   observations: z.string().trim().min(1).nullable(),
@@ -86,6 +91,8 @@ const lifecycleSchema = z.object({
 const lifecycleFilterSchema = z.enum(['active', 'archived', 'trashed']);
 const instantRangeSchema = z.object({
   accountId: idSchema.optional(),
+  costCenterId: idSchema.optional(),
+  tagId: idSchema.optional(),
   from: z.iso.datetime({ offset: true }),
   kind: z.enum(['income', 'expense']).optional(),
   lifecycle: lifecycleFilterSchema.optional(),
@@ -182,6 +189,26 @@ export class TransactionController {
   @ApiParam({ format: 'uuid', name: 'accountId', type: 'string' })
   @ApiBody({ schema: createBodySchema() })
   @ApiCreatedResponse({ schema: responseSchema })
+  @ApiBadRequestResponse({
+    description: 'Request validation failed before recording a transaction',
+    schema: {
+      additionalProperties: false,
+      properties: {
+        error: {
+          additionalProperties: false,
+          properties: {
+            code: { enum: ['INVALID_REQUEST'], type: 'string' },
+            correlationId: { type: 'string' },
+            message: { type: 'string' },
+          },
+          required: ['code', 'correlationId', 'message'],
+          type: 'object',
+        },
+      },
+      required: ['error'],
+      type: 'object',
+    },
+  })
   public async create(
     @Req() request: FastifyRequest,
     @Param('accountId', new ZodValidationPipe(idSchema)) accountId: string,
@@ -241,6 +268,8 @@ export class TransactionController {
   })
   @ApiQuery({ format: 'date-time', name: 'to', required: true, type: 'string' })
   @ApiQuery({ format: 'uuid', name: 'accountId', required: false })
+  @ApiQuery({ format: 'uuid', name: 'costCenterId', required: false })
+  @ApiQuery({ format: 'uuid', name: 'tagId', required: false })
   @ApiQuery({ enum: ['income', 'expense'], name: 'kind', required: false })
   @ApiQuery({
     enum: ['active', 'archived', 'trashed'],
@@ -265,7 +294,11 @@ export class TransactionController {
             ...(query.accountId === undefined
               ? {}
               : { accountId: query.accountId }),
+            ...(query.costCenterId === undefined
+              ? {}
+              : { costCenterId: query.costCenterId }),
             ...(query.kind === undefined ? {} : { kind: query.kind }),
+            ...(query.tagId === undefined ? {} : { tagId: query.tagId }),
             ...(query.occurredAtOrder === undefined
               ? {}
               : { occurredAtOrder: query.occurredAtOrder }),
@@ -442,8 +475,8 @@ function createBodySchema(): SchemaObject {
         pattern: '^\\d+(?:\\.\\d+)?$',
         type: 'string',
       },
-      currencyCode: { pattern: '^[A-Z]{3}$', type: 'string' },
-      currencyMinorUnitScale: { maximum: 18, minimum: 0, type: 'integer' },
+      currencyCode: { enum: ['BRL', 'USD', 'EUR'], type: 'string' },
+      currencyMinorUnitScale: { maximum: 2, minimum: 2, type: 'integer' },
       description: { nullable: true, type: 'string' },
       kind: { enum: ['income', 'expense'], type: 'string' },
       observations: { nullable: true, type: 'string' },
