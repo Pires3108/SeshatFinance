@@ -1,7 +1,9 @@
 import type {
+  ChangeFamilyGroupRoleUseCase,
   CreateFamilyGroupUseCase,
   ListOwnFamilyGroupsUseCase,
 } from '@seshat/application';
+import { FamilyGroupRoleChangeDeniedError } from '@seshat/application';
 import { FamilyGroupMembership } from '@seshat/domain';
 import type { FastifyRequest } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
@@ -28,6 +30,7 @@ describe('FamilyGroupController', () => {
     const controller = new FamilyGroupController(
       { execute } as unknown as CreateFamilyGroupUseCase,
       { execute: vi.fn() } as unknown as ListOwnFamilyGroupsUseCase,
+      { execute: vi.fn() } as unknown as ChangeFamilyGroupRoleUseCase,
       actors,
     );
 
@@ -39,5 +42,36 @@ describe('FamilyGroupController', () => {
       joinedAt: '2026-09-24T12:00:00.000Z',
       role: 'owner',
     });
+  });
+
+  it('derives role-change authority from the verified actor', async () => {
+    const actors = new AuthenticatedActorContext();
+    const execute = vi.fn().mockResolvedValue('member');
+    const controller = new FamilyGroupController(
+      { execute: vi.fn() } as unknown as CreateFamilyGroupUseCase,
+      { execute: vi.fn() } as unknown as ListOwnFamilyGroupsUseCase,
+      { execute } as unknown as ChangeFamilyGroupRoleUseCase,
+      actors,
+    );
+    const groupId = '7c2c7a54-73fe-49a3-b0ea-19034bf22baf';
+    const targetUserId = '8c2c7a54-73fe-49a3-b0ea-19034bf22baf';
+
+    await expect(
+      controller.changeRole(request(actors), groupId, targetUserId, {
+        role: 'member',
+      }),
+    ).resolves.toEqual({ role: 'member' });
+    expect(execute).toHaveBeenCalledWith({
+      actorId: 'actor-id',
+      groupId,
+      nextRole: 'member',
+      targetUserId,
+    });
+    execute.mockRejectedValueOnce(new FamilyGroupRoleChangeDeniedError());
+    await expect(
+      controller.changeRole(request(actors), groupId, targetUserId, {
+        role: 'member',
+      }),
+    ).rejects.toThrow('not allowed');
   });
 });

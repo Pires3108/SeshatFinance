@@ -11,6 +11,7 @@ import {
   GetOwnedManualExchangeQuoteUseCase,
   ListOwnedManualExchangeQuotesUseCase,
   CreateFamilyGroupUseCase,
+  ChangeFamilyGroupRoleUseCase,
   GetOwnedCreditCardUseCase,
   GetOwnedTransferUseCase,
   ListOwnedTransfersUseCase,
@@ -271,6 +272,18 @@ import { UserProfileController } from './users/user-profile.controller.js';
       provide: ListOwnFamilyGroupsUseCase,
       useFactory: (groups: FamilyGroupRepository): ListOwnFamilyGroupsUseCase =>
         new ListOwnFamilyGroupsUseCase(groups),
+    },
+    {
+      inject: [LazyFamilyGroupRepository],
+      provide: ChangeFamilyGroupRoleUseCase,
+      useFactory: (
+        groups: FamilyGroupRepository,
+      ): ChangeFamilyGroupRoleUseCase =>
+        new ChangeFamilyGroupRoleUseCase(
+          groups,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
     },
     {
       inject: [LazyAccountRepository, LazyCreditCardRepository],
