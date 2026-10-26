@@ -17,6 +17,15 @@ import {
   ListOwnedCreditCardsUseCase,
   ListOwnFamilyGroupsUseCase,
   CreateCategoryUseCase,
+  CreateCounterpartyUseCase,
+  ListOwnedCounterpartiesUseCase,
+  GetOwnedCounterpartyUseCase,
+  UpdateOwnedCounterpartyUseCase,
+  ChangeOwnedCounterpartyStatusUseCase,
+  MergeOwnedCounterpartiesUseCase,
+  PreviewOwnedCounterpartyImpactUseCase,
+  EliminateOwnedCounterpartyUseCase,
+  RestoreOwnedCounterpartyUseCase,
   DeleteOwnedCategoryUseCase,
   GetOwnedCategoryUseCase,
   CreateCostCenterUseCase,
@@ -72,6 +81,7 @@ import {
   type ManualExchangeQuoteRepository,
   type FamilyGroupRepository,
   type CategoryRepository,
+  type CounterpartyRepository,
   type CostCenterRepository,
   type TagRepository,
   type TransactionRepository,
@@ -99,6 +109,8 @@ import { LazyAccountRepository } from './accounts/lazy-account-repository.js';
 import { BalanceAdjustmentController } from './adjustments/balance-adjustment.controller.js';
 import { LazyBalanceAdjustmentRepository } from './adjustments/lazy-balance-adjustment-repository.js';
 import { CreditCardController } from './cards/credit-card.controller.js';
+import { CounterpartyController } from './counterparties/counterparty.controller.js';
+import { LazyCounterpartyRepository } from './counterparties/lazy-counterparty-repository.js';
 import { LazyCreditCardRepository } from './cards/lazy-credit-card-repository.js';
 import { FamilyGroupController } from './family/family-group.controller.js';
 import { LazyFamilyGroupRepository } from './family/lazy-family-group-repository.js';
@@ -154,6 +166,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     AccountTypeController,
     BalanceAdjustmentController,
     CreditCardController,
+    CounterpartyController,
     FamilyGroupController,
     AuthController,
     CategoryController,
@@ -195,6 +208,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyAccountRepository,
     LazyBalanceAdjustmentRepository,
     LazyCreditCardRepository,
+    LazyCounterpartyRepository,
     LazyManualExchangeQuoteRepository,
     LazyFamilyGroupRepository,
     LazyCategoryRepository,
@@ -205,6 +219,82 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyTransactionTagRepository,
     LazyTransferRepository,
     LazyUserProfileRepository,
+    {
+      inject: [LazyCounterpartyRepository],
+      provide: CreateCounterpartyUseCase,
+      useFactory: (
+        repository: CounterpartyRepository,
+      ): CreateCounterpartyUseCase =>
+        new CreateCounterpartyUseCase(
+          repository,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyCounterpartyRepository],
+      provide: ListOwnedCounterpartiesUseCase,
+      useFactory: (
+        repository: CounterpartyRepository,
+      ): ListOwnedCounterpartiesUseCase =>
+        new ListOwnedCounterpartiesUseCase(repository),
+    },
+    {
+      inject: [LazyCounterpartyRepository],
+      provide: GetOwnedCounterpartyUseCase,
+      useFactory: (
+        repository: CounterpartyRepository,
+      ): GetOwnedCounterpartyUseCase =>
+        new GetOwnedCounterpartyUseCase(repository),
+    },
+    {
+      inject: [LazyCounterpartyRepository],
+      provide: UpdateOwnedCounterpartyUseCase,
+      useFactory: (
+        repository: CounterpartyRepository,
+      ): UpdateOwnedCounterpartyUseCase =>
+        new UpdateOwnedCounterpartyUseCase(repository, new SystemClock()),
+    },
+    {
+      inject: [LazyCounterpartyRepository],
+      provide: ChangeOwnedCounterpartyStatusUseCase,
+      useFactory: (
+        repository: CounterpartyRepository,
+      ): ChangeOwnedCounterpartyStatusUseCase =>
+        new ChangeOwnedCounterpartyStatusUseCase(repository, new SystemClock()),
+    },
+    {
+      inject: [LazyCounterpartyRepository],
+      provide: MergeOwnedCounterpartiesUseCase,
+      useFactory: (
+        repository: CounterpartyRepository,
+      ): MergeOwnedCounterpartiesUseCase =>
+        new MergeOwnedCounterpartiesUseCase(repository, new SystemClock()),
+    },
+    {
+      inject: [LazyCounterpartyRepository],
+      provide: PreviewOwnedCounterpartyImpactUseCase,
+      useFactory: (
+        repository: CounterpartyRepository,
+      ): PreviewOwnedCounterpartyImpactUseCase =>
+        new PreviewOwnedCounterpartyImpactUseCase(repository),
+    },
+    {
+      inject: [LazyCounterpartyRepository],
+      provide: EliminateOwnedCounterpartyUseCase,
+      useFactory: (
+        repository: CounterpartyRepository,
+      ): EliminateOwnedCounterpartyUseCase =>
+        new EliminateOwnedCounterpartyUseCase(repository, new SystemClock()),
+    },
+    {
+      inject: [LazyCounterpartyRepository],
+      provide: RestoreOwnedCounterpartyUseCase,
+      useFactory: (
+        repository: CounterpartyRepository,
+      ): RestoreOwnedCounterpartyUseCase =>
+        new RestoreOwnedCounterpartyUseCase(repository, new SystemClock()),
+    },
     {
       inject: [LazyManualExchangeQuoteRepository],
       provide: CreateManualExchangeQuoteUseCase,

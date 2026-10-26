@@ -82,11 +82,12 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-011 — Estado e preservação histórica de entidades
 
-- **Estado:** aberto.
+- **Estado:** decidido em 26/10/2026 para US-028.
 - **Referências:** RF-024; RF-025; RN-014; US-028.
 - **Risco:** o cadastro de pessoas, empresas e instituições exige um status, mas os requisitos não definem os estados permitidos, o estado inicial, as transições nem o efeito de desativar uma entidade já vinculada. Inferir essas regras pode ocultar vínculos válidos ou reescrever a interpretação do histórico financeiro.
-- **Decisão necessária:** definir a máquina de estados pública das entidades, incluindo criação, desativação, reativação, exclusão e comportamento nas consultas e vínculos históricos.
-- **Limite atual:** não implementar persistência nem contratos públicos de entidade até a decisão. Vínculos opcionais por texto ou referência futura não devem exigir cadastro, e alterações cadastrais nunca devem reescrever silenciosamente o histórico.
+- **Decisão aplicada em US-028:** estados públicos Ativa, Desativada, Mesclada e Eliminada/anonimizada. A criação inicia ativa; desativar preserva histórico e bloqueia novos vínculos; reativar restaura elegibilidade; mesclar redireciona vínculos futuros à principal com rastreabilidade. A eliminação só ocorre sem impedimentos financeiros, legais ou de auditoria, após painel de impacto.
+- **Eliminação e retenção:** apresentar antes a contagem de vínculos e impedimentos ao titular. Qualquer vínculo financeiro ou relação de mesclagem impede a eliminação; a referência histórica nunca é removida em cascata. Uma retenção legal explícita, registrada no banco por operação administrativa, também impede a eliminação e a anonimização enquanto durar; não há comando público para o titular alterá-la. Entidade sem impedimentos entra no estado Eliminada por 30 dias, fica fora das seleções comuns e pode ser restaurada antes do fim desse prazo. A partir do dia 30, o worker verifica periodicamente as entidades devidas e anonimiza os campos identificadores de modo irreversível, mantendo somente identificador opaco, titular, estado, datas e metadados mínimos de auditoria sem dados pessoais. O worker depende de `DATABASE_URL` e deve permanecer ativo para cumprir o prazo. Essa regra aplica RN-046/RN-047 e a escolha do usuário de 26/10/2026; não apaga eventos de auditoria nem altera valores financeiros.
+- **Vínculos:** um lançamento pode omitir entidade ou conter texto livre sem cadastro implícito. Vínculos antigos mantêm o identificador da origem após mesclagem; apenas novos vínculos são direcionados à entidade principal ativa. Mesclas cíclicas, entre titulares diferentes ou para destino inelegível são recusadas. Alterações cadastrais não reescrevem silenciosamente o histórico.
 
 ### RII-012 — Limites calendáricos das visões temporais
 

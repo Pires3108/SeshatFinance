@@ -120,6 +120,39 @@ describe('CreateTransactionUseCase', () => {
     expect(result.toSnapshot().observations).toBe('Confirmada no banco');
   });
 
+  it('accepts an optional entity reference and free text without changing the exact amount', async () => {
+    for (const reference of [
+      { counterpartyId: 'entity-id' },
+      { counterpartyName: 'Loja livre' },
+      {},
+    ]) {
+      const repository = new RecordingTransactions();
+      const useCase = new CreateTransactionUseCase(
+        repository,
+        accounts(),
+        { now: () => new Date('2026-09-20T13:00:00.000Z') },
+        { generate: () => 'transaction-id' },
+      );
+      const result = await useCase.execute({
+        accountId: 'account-id',
+        actorId: 'owner-id',
+        amount: '12.34',
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        description: null,
+        kind: 'expense',
+        occurredAt: new Date('2026-09-20T11:00:00.000Z'),
+        ...reference,
+      });
+      expect(result.toSnapshot()).toMatchObject({
+        counterpartyId: reference.counterpartyId ?? null,
+        counterpartyName: reference.counterpartyName ?? null,
+      });
+      expect(result.amount.toDecimal()).toBe('12.34');
+      expect(repository.auditEvents).toHaveLength(1);
+    }
+  });
+
   it('rejects accounts not owned by the actor', async () => {
     const useCase = new CreateTransactionUseCase(
       new RecordingTransactions(),
@@ -221,6 +254,56 @@ describe('ListOwnedAccountTransactionsUseCase', () => {
 });
 
 describe('owned transaction changes', () => {
+  it('preserves a historical entity on unrelated edits and permits explicit replacement or clearing', async () => {
+    const repository = new RecordingTransactions();
+    await new CreateTransactionUseCase(
+      repository,
+      accounts(),
+      { now: () => new Date('2026-09-20T13:00:00.000Z') },
+      { generate: () => 'transaction-id' },
+    ).execute({
+      accountId: 'account-id',
+      actorId: 'owner-id',
+      amount: '12.34',
+      currencyCode: 'BRL',
+      currencyMinorUnitScale: 2,
+      description: null,
+      counterpartyId: 'historical-source',
+      kind: 'expense',
+      occurredAt: new Date('2026-09-20T11:00:00.000Z'),
+    });
+    const update = new UpdateOwnedTransactionUseCase(
+      repository,
+      repository,
+      accounts(),
+      { now: () => new Date('2026-09-20T14:00:00.000Z') },
+      { generate: () => 'audit-id' },
+    );
+    const command = {
+      actorId: 'owner-id',
+      amount: '12.34',
+      description: 'Editada',
+      kind: 'expense' as const,
+      occurredAt: new Date('2026-09-20T11:00:00.000Z'),
+      transactionId: 'transaction-id',
+    };
+    await update.execute(command);
+    expect(repository.inserted?.toSnapshot()).toMatchObject({
+      counterpartyId: 'historical-source',
+      counterpartyName: null,
+    });
+    await update.execute({ ...command, counterpartyName: 'Texto livre' });
+    expect(repository.inserted?.toSnapshot()).toMatchObject({
+      counterpartyId: null,
+      counterpartyName: 'Texto livre',
+    });
+    await update.execute({ ...command, counterpartyName: null });
+    expect(repository.inserted?.toSnapshot()).toMatchObject({
+      counterpartyId: null,
+      counterpartyName: null,
+    });
+  });
+
   it('updates editable details and persists the expected version', async () => {
     const repository = new RecordingTransactions();
     await new CreateTransactionUseCase(

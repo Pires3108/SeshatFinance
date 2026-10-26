@@ -72,6 +72,8 @@ const createSchema = z.object({
   currencyCode: supportedCurrencyCodeSchema,
   currencyMinorUnitScale: supportedCurrencyMinorUnitScaleSchema,
   description: z.string().trim().min(1).nullable(),
+  counterpartyId: idSchema.nullable().optional(),
+  counterpartyName: z.string().trim().min(1).max(200).nullable().optional(),
   kind: z.enum(['income', 'expense']),
   observations: z.string().trim().min(1).nullable(),
   occurredAt: z.iso.datetime({ offset: true }),
@@ -111,6 +113,8 @@ type Response = Readonly<{
   currencyCode: string;
   currencyMinorUnitScale: number;
   description: string | null;
+  counterpartyId: string | null;
+  counterpartyName: string | null;
   id: string;
   kind: TransactionSnapshot['kind'];
   lifecycle: TransactionSnapshot['lifecycle'];
@@ -130,6 +134,8 @@ const responseSchema: SchemaObject = {
     currencyCode: { pattern: '^[A-Z]{3}$', type: 'string' },
     currencyMinorUnitScale: { maximum: 18, minimum: 0, type: 'integer' },
     description: { nullable: true, type: 'string' },
+    counterpartyId: { format: 'uuid', nullable: true, type: 'string' },
+    counterpartyName: { nullable: true, type: 'string' },
     id: { format: 'uuid', type: 'string' },
     kind: { enum: ['income', 'expense'], type: 'string' },
     lifecycle: { enum: ['active', 'archived', 'trashed'], type: 'string' },
@@ -144,6 +150,8 @@ const responseSchema: SchemaObject = {
     'amount',
     'archivedAt',
     'createdAt',
+    'counterpartyId',
+    'counterpartyName',
     'currencyCode',
     'currencyMinorUnitScale',
     'description',
@@ -215,11 +223,18 @@ export class TransactionController {
     @Body(new ZodValidationPipe(createSchema)) body: CreateRequest,
   ): Promise<Response> {
     try {
+      if (body.counterpartyId != null && body.counterpartyName != null)
+        throw new BadRequestException(
+          'Informe entidade ou texto livre, não ambos.',
+        );
+      const { counterpartyId, counterpartyName, ...details } = body;
       return mapTransaction(
         await this.createTransaction.execute({
           accountId,
           actorId: this.actorId(request),
-          ...body,
+          ...details,
+          ...(counterpartyId === undefined ? {} : { counterpartyId }),
+          ...(counterpartyName === undefined ? {} : { counterpartyName }),
           occurredAt: new Date(body.occurredAt),
         }),
       );
@@ -348,10 +363,17 @@ export class TransactionController {
     @Body(new ZodValidationPipe(updateSchema)) body: UpdateRequest,
   ): Promise<Response> {
     try {
+      if (body.counterpartyId != null && body.counterpartyName != null)
+        throw new BadRequestException(
+          'Informe entidade ou texto livre, não ambos.',
+        );
+      const { counterpartyId, counterpartyName, ...details } = body;
       return mapTransaction(
         await this.updateTransaction.execute({
           actorId: this.actorId(request),
-          ...body,
+          ...details,
+          ...(counterpartyId === undefined ? {} : { counterpartyId }),
+          ...(counterpartyName === undefined ? {} : { counterpartyName }),
           occurredAt: new Date(body.occurredAt),
           transactionId,
         }),
@@ -419,6 +441,8 @@ function mapTransaction(transaction: Transaction): Response {
     currencyCode: value.amount.currency.code,
     currencyMinorUnitScale: value.amount.currency.minorUnitScale,
     description: value.description,
+    counterpartyId: value.counterpartyId ?? null,
+    counterpartyName: value.counterpartyName ?? null,
     id: value.id,
     kind: value.kind,
     lifecycle: value.lifecycle,
@@ -478,6 +502,8 @@ function createBodySchema(): SchemaObject {
       currencyCode: { enum: ['BRL', 'USD', 'EUR'], type: 'string' },
       currencyMinorUnitScale: { maximum: 2, minimum: 2, type: 'integer' },
       description: { nullable: true, type: 'string' },
+      counterpartyId: { format: 'uuid', nullable: true, type: 'string' },
+      counterpartyName: { maxLength: 200, nullable: true, type: 'string' },
       kind: { enum: ['income', 'expense'], type: 'string' },
       observations: { nullable: true, type: 'string' },
       occurredAt: { format: 'date-time', type: 'string' },

@@ -49,6 +49,8 @@ describe('PrismaTransactionTagRepository', () => {
       '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
       '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
       '../../prisma/migrations/20261020130000_tag_lifecycle/migration.sql',
+      '../../prisma/migrations/20261005180000_create_counterparties/migration.sql',
+      '../../prisma/migrations/20261021180000_counterparty_lifecycle_and_transaction_reference/migration.sql',
     ];
     const migrationClient = new Client({
       connectionString: container.getConnectionUri(),

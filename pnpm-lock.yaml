@@ -145,6 +145,12 @@ importers:
 
   apps/worker:
     dependencies:
+      '@seshat/application':
+        specifier: workspace:*
+        version: link:../../packages/application
+      '@seshat/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       '@seshat/observability':
         specifier: workspace:*
         version: link:../../packages/observability
