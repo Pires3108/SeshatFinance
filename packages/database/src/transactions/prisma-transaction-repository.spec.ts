@@ -107,6 +107,8 @@ describe('PrismaTransactionRepository', () => {
       data: {
         amountMinorUnits: '42375',
         archivedAt: null,
+        counterpartyId: null,
+        counterpartyName: null,
         description: 'Updated transaction',
         kind: 'expense',
         lifecycle: 'active',

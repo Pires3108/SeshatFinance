@@ -43,6 +43,8 @@ export type CreateTransactionCommand = Readonly<{
   currencyCode: string;
   currencyMinorUnitScale: number;
   description: string | null;
+  counterpartyId?: string | null;
+  counterpartyName?: string | null;
   kind: TransactionKind;
   observations?: string | null;
   occurredAt: Date;
@@ -114,6 +116,8 @@ export class CreateTransactionUseCase {
       amount: Money.fromDecimal(command.amount, currency),
       createdAt: at,
       description: command.description,
+      counterpartyId: command.counterpartyId ?? null,
+      counterpartyName: command.counterpartyName ?? null,
       id: this.identifiers.generate(),
       kind: command.kind,
       observations: command.observations ?? null,
@@ -130,7 +134,12 @@ export class CreateTransactionUseCase {
       resourceType: 'transaction',
     });
     await this.transactions.insert(transaction, auditEvent);
-    return transaction;
+    return (
+      (await this.transactions.findByIdForOwner(
+        transaction.id,
+        command.actorId,
+      )) ?? transaction
+    );
   }
 }
 
@@ -213,6 +222,8 @@ export class ListOwnedTransactionsBetweenUseCase {
 export type UpdateOwnedTransactionCommand = Readonly<{
   actorId: string;
   amount: string;
+  counterpartyId?: string | null;
+  counterpartyName?: string | null;
   description: string | null;
   kind: TransactionKind;
   observations?: string | null;
@@ -250,6 +261,12 @@ export class UpdateOwnedTransactionUseCase {
           command.amount,
           account.initialBalance.currency,
         ),
+        ...(command.counterpartyId === undefined
+          ? {}
+          : { counterpartyId: command.counterpartyId }),
+        ...(command.counterpartyName === undefined
+          ? {}
+          : { counterpartyName: command.counterpartyName }),
         description: command.description,
         kind: command.kind,
         observations:
@@ -273,7 +290,12 @@ export class UpdateOwnedTransactionUseCase {
         resourceType: 'transaction',
       }),
     );
-    return transaction;
+    return (
+      (await this.transactions.findByIdForOwner(
+        transaction.id,
+        command.actorId,
+      )) ?? transaction
+    );
   }
 
   private async requireOwned(

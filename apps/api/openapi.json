@@ -1598,6 +1598,172 @@
         "tags": ["credit-cards"]
       }
     },
+    "/api/v1/counterparties": {
+      "post": {
+        "operationId": "CounterpartyController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["counterparties"]
+      },
+      "get": {
+        "operationId": "CounterpartyController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["counterparties"]
+      }
+    },
+    "/api/v1/counterparties/{id}": {
+      "get": {
+        "operationId": "CounterpartyController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["counterparties"]
+      },
+      "patch": {
+        "operationId": "CounterpartyController_update",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["counterparties"]
+      }
+    },
+    "/api/v1/counterparties/{id}/deactivate": {
+      "post": {
+        "operationId": "CounterpartyController_deactivate",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["counterparties"]
+      }
+    },
+    "/api/v1/counterparties/{id}/reactivate": {
+      "post": {
+        "operationId": "CounterpartyController_reactivate",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["counterparties"]
+      }
+    },
+    "/api/v1/counterparties/{id}/merge": {
+      "post": {
+        "operationId": "CounterpartyController_merge",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["counterparties"]
+      }
+    },
+    "/api/v1/counterparties/{id}/impact": {
+      "get": {
+        "operationId": "CounterpartyController_impact",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["counterparties"]
+      }
+    },
+    "/api/v1/counterparties/{id}/eliminate": {
+      "post": {
+        "operationId": "CounterpartyController_eliminate",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["counterparties"]
+      }
+    },
+    "/api/v1/counterparties/{id}/restore": {
+      "post": {
+        "operationId": "CounterpartyController_restore",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["counterparties"]
+      }
+    },
     "/api/v1/family-groups": {
       "post": {
         "operationId": "FamilyGroupController_create",
@@ -4066,6 +4232,16 @@
                     "nullable": true,
                     "type": "string"
                   },
+                  "counterpartyId": {
+                    "format": "uuid",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "counterpartyName": {
+                    "maxLength": 200,
+                    "nullable": true,
+                    "type": "string"
+                  },
                   "kind": {
                     "enum": ["income", "expense"],
                     "type": "string"
@@ -4130,6 +4306,15 @@
                       "nullable": true,
                       "type": "string"
                     },
+                    "counterpartyId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "counterpartyName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "id": {
                       "format": "uuid",
                       "type": "string"
@@ -4169,6 +4354,8 @@
                     "amount",
                     "archivedAt",
                     "createdAt",
+                    "counterpartyId",
+                    "counterpartyName",
                     "currencyCode",
                     "currencyMinorUnitScale",
                     "description",
@@ -4289,6 +4476,15 @@
                         "nullable": true,
                         "type": "string"
                       },
+                      "counterpartyId": {
+                        "format": "uuid",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "counterpartyName": {
+                        "nullable": true,
+                        "type": "string"
+                      },
                       "id": {
                         "format": "uuid",
                         "type": "string"
@@ -4328,6 +4524,8 @@
                       "amount",
                       "archivedAt",
                       "createdAt",
+                      "counterpartyId",
+                      "counterpartyName",
                       "currencyCode",
                       "currencyMinorUnitScale",
                       "description",
@@ -4472,6 +4670,15 @@
                         "nullable": true,
                         "type": "string"
                       },
+                      "counterpartyId": {
+                        "format": "uuid",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "counterpartyName": {
+                        "nullable": true,
+                        "type": "string"
+                      },
                       "id": {
                         "format": "uuid",
                         "type": "string"
@@ -4511,6 +4718,8 @@
                       "amount",
                       "archivedAt",
                       "createdAt",
+                      "counterpartyId",
+                      "counterpartyName",
                       "currencyCode",
                       "currencyMinorUnitScale",
                       "description",
@@ -4594,6 +4803,15 @@
                       "nullable": true,
                       "type": "string"
                     },
+                    "counterpartyId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "counterpartyName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "id": {
                       "format": "uuid",
                       "type": "string"
@@ -4633,6 +4851,8 @@
                     "amount",
                     "archivedAt",
                     "createdAt",
+                    "counterpartyId",
+                    "counterpartyName",
                     "currencyCode",
                     "currencyMinorUnitScale",
                     "description",
@@ -4691,6 +4911,16 @@
                     "type": "string"
                   },
                   "description": {
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "counterpartyId": {
+                    "format": "uuid",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "counterpartyName": {
+                    "maxLength": 200,
                     "nullable": true,
                     "type": "string"
                   },
@@ -4756,6 +4986,15 @@
                       "nullable": true,
                       "type": "string"
                     },
+                    "counterpartyId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "counterpartyName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "id": {
                       "format": "uuid",
                       "type": "string"
@@ -4795,6 +5034,8 @@
                     "amount",
                     "archivedAt",
                     "createdAt",
+                    "counterpartyId",
+                    "counterpartyName",
                     "currencyCode",
                     "currencyMinorUnitScale",
                     "description",
@@ -4905,6 +5146,15 @@
                       "nullable": true,
                       "type": "string"
                     },
+                    "counterpartyId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "counterpartyName": {
+                      "nullable": true,
+                      "type": "string"
+                    },
                     "id": {
                       "format": "uuid",
                       "type": "string"
@@ -4944,6 +5194,8 @@
                     "amount",
                     "archivedAt",
                     "createdAt",
+                    "counterpartyId",
+                    "counterpartyName",
                     "currencyCode",
                     "currencyMinorUnitScale",
                     "description",

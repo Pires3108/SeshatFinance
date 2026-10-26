@@ -1,6 +1,11 @@
 export const counterpartyTypes = ['person', 'company', 'institution'] as const;
 export type CounterpartyType = (typeof counterpartyTypes)[number];
-export const counterpartyStatuses = ['active', 'inactive', 'merged'] as const;
+export const counterpartyStatuses = [
+  'active',
+  'inactive',
+  'merged',
+  'eliminated',
+] as const;
 export type CounterpartyStatus = (typeof counterpartyStatuses)[number];
 
 export type CounterpartySnapshot = Readonly<{
@@ -14,6 +19,9 @@ export type CounterpartySnapshot = Readonly<{
   notes: string | null;
   status: CounterpartyStatus;
   mergedIntoId: string | null;
+  eliminatedAt?: Date | null;
+  anonymizedAt?: Date | null;
+  legalHold?: boolean;
   createdAt: Date;
   updatedAt: Date;
   version: number;
@@ -47,6 +55,9 @@ export class Counterparty {
       ownerId: required(input.ownerId, 'ownerId'),
       status: 'active',
       mergedIntoId: null,
+      eliminatedAt: null,
+      anonymizedAt: null,
+      legalHold: false,
       createdAt: validDate(input.createdAt),
       updatedAt: validDate(input.createdAt),
       version: 1,
@@ -63,11 +74,24 @@ export class Counterparty {
       throw new InvalidCounterpartyError(
         'Unmerged counterparty cannot have a target.',
       );
+    if (state.status === 'eliminated' && state.eliminatedAt == null)
+      throw new InvalidCounterpartyError(
+        'Eliminated counterparty needs an instant.',
+      );
+    if (state.status !== 'eliminated' && state.eliminatedAt != null)
+      throw new InvalidCounterpartyError(
+        'Non-eliminated counterparty cannot have elimination instant.',
+      );
     return new Counterparty({
       ...state,
       ...normalizeDetails(state),
       createdAt: validDate(state.createdAt),
       updatedAt: validDate(state.updatedAt),
+      eliminatedAt:
+        state.eliminatedAt == null ? null : validDate(state.eliminatedAt),
+      anonymizedAt:
+        state.anonymizedAt == null ? null : validDate(state.anonymizedAt),
+      legalHold: state.legalHold ?? false,
     });
   }
 
@@ -79,7 +103,7 @@ export class Counterparty {
   }
 
   public update(details: CounterpartyDetails, at: Date): void {
-    this.assertNotMerged();
+    this.assertEditable();
     this.change({ ...this.state, ...normalizeDetails(details) }, at);
   }
 
@@ -100,7 +124,7 @@ export class Counterparty {
   }
 
   public mergeInto(targetId: string, at: Date): void {
-    this.assertNotMerged();
+    this.assertEditable();
     if (this.id === targetId)
       throw new InvalidCounterpartyError(
         'A counterparty cannot merge into itself.',
@@ -115,18 +139,85 @@ export class Counterparty {
     );
   }
 
+  public eliminate(at: Date): void {
+    this.assertEditable();
+    this.change(
+      { ...this.state, status: 'eliminated', eliminatedAt: validDate(at) },
+      at,
+    );
+  }
+
+  public restoreEliminated(at: Date): void {
+    if (
+      this.state.status !== 'eliminated' ||
+      this.state.eliminatedAt == null ||
+      this.state.anonymizedAt != null
+    )
+      throw new InvalidCounterpartyError('Counterparty cannot be restored.');
+    const instant = validDate(at);
+    if (
+      instant.getTime() >=
+      this.state.eliminatedAt.getTime() + 30 * 24 * 60 * 60 * 1000
+    )
+      throw new InvalidCounterpartyError(
+        'Counterparty restore window expired.',
+      );
+    this.change(
+      { ...this.state, status: 'inactive', eliminatedAt: null },
+      instant,
+    );
+  }
+
+  public anonymize(at: Date): void {
+    if (
+      this.state.status !== 'eliminated' ||
+      this.state.eliminatedAt == null ||
+      this.state.anonymizedAt != null ||
+      this.state.legalHold
+    )
+      throw new InvalidCounterpartyError('Counterparty cannot be anonymized.');
+    const instant = validDate(at);
+    if (
+      instant.getTime() <
+      this.state.eliminatedAt.getTime() + 30 * 24 * 60 * 60 * 1000
+    )
+      throw new InvalidCounterpartyError(
+        'Counterparty retention window has not expired.',
+      );
+    this.change(
+      {
+        ...this.state,
+        name: 'Entidade eliminada',
+        email: null,
+        phone: null,
+        document: null,
+        notes: null,
+        anonymizedAt: instant,
+      },
+      instant,
+    );
+  }
+
   public toSnapshot(): CounterpartySnapshot {
     return {
       ...this.state,
       createdAt: new Date(this.state.createdAt),
       updatedAt: new Date(this.state.updatedAt),
+      eliminatedAt:
+        this.state.eliminatedAt == null
+          ? null
+          : new Date(this.state.eliminatedAt),
+      anonymizedAt:
+        this.state.anonymizedAt == null
+          ? null
+          : new Date(this.state.anonymizedAt),
     };
   }
 
-  private assertNotMerged(): void {
-    if (this.state.status === 'merged')
+  private assertEditable(): void {
+    if (this.state.status === 'merged' || this.state.status === 'eliminated')
       throw new InvalidCounterpartyError(
-        'Merged counterparties cannot be modified.',
+        'Merged or eliminated counterparties cannot be modified.',
       );
   }
 

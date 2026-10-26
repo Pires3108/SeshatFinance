@@ -8,7 +8,7 @@ export interface CounterpartyRepository {
   findByIdForOwner(id: string, ownerId: string): Promise<Counterparty | null>;
   listForOwner(
     ownerId: string,
-    status?: 'active' | 'inactive' | 'merged',
+    status?: 'active' | 'inactive' | 'merged' | 'eliminated',
   ): Promise<readonly Counterparty[]>;
   save(counterparty: Counterparty, expectedVersion: number): Promise<boolean>;
   merge(
@@ -16,7 +16,20 @@ export interface CounterpartyRepository {
     expectedVersion: number,
     targetId: string,
   ): Promise<'merged' | 'invalid-target' | 'conflict'>;
+  impact(id: string, ownerId: string): Promise<CounterpartyImpact>;
+  eliminate(
+    item: Counterparty,
+    expectedVersion: number,
+  ): Promise<'eliminated' | 'linked' | 'held' | 'conflict'>;
+  anonymizeDue(at: Date): Promise<number>;
 }
+
+export type CounterpartyImpact = Readonly<{
+  transactionCount: number;
+  mergedSourceCount: number;
+  legalHold: boolean;
+  canEliminate: boolean;
+}>;
 
 export class OwnedCounterpartyNotFoundError extends Error {
   public constructor() {
@@ -36,6 +49,13 @@ export class InvalidMergeTargetError extends Error {
   public constructor() {
     super('Merge target must be another active owned counterparty.');
     this.name = 'InvalidMergeTargetError';
+  }
+}
+
+export class CounterpartyEliminationBlockedError extends Error {
+  public constructor() {
+    super('Counterparty has financial links, merged sources, or a legal hold.');
+    this.name = 'CounterpartyEliminationBlockedError';
   }
 }
 
@@ -63,7 +83,7 @@ export class ListOwnedCounterpartiesUseCase {
   public constructor(private readonly repository: CounterpartyRepository) {}
   public execute(
     actorId: string,
-    status?: 'active' | 'inactive' | 'merged',
+    status?: 'active' | 'inactive' | 'merged' | 'eliminated',
   ): Promise<readonly Counterparty[]> {
     return this.repository.listForOwner(actorId, status);
   }
@@ -141,5 +161,64 @@ export class MergeOwnedCounterpartiesUseCase {
     if (result === 'invalid-target') throw new InvalidMergeTargetError();
     if (result === 'conflict') throw new CounterpartyConflictError();
     return item;
+  }
+}
+
+export class PreviewOwnedCounterpartyImpactUseCase {
+  public constructor(private readonly repository: CounterpartyRepository) {}
+  public async execute(
+    actorId: string,
+    id: string,
+  ): Promise<CounterpartyImpact> {
+    await new GetOwnedCounterpartyUseCase(this.repository).execute(actorId, id);
+    return this.repository.impact(id, actorId);
+  }
+}
+
+export class EliminateOwnedCounterpartyUseCase {
+  public constructor(
+    private readonly repository: CounterpartyRepository,
+    private readonly clock: Clock,
+  ) {}
+  public async execute(actorId: string, id: string): Promise<Counterparty> {
+    const item = await new GetOwnedCounterpartyUseCase(this.repository).execute(
+      actorId,
+      id,
+    );
+    const version = item.toSnapshot().version;
+    item.eliminate(this.clock.now());
+    const outcome = await this.repository.eliminate(item, version);
+    if (outcome === 'linked' || outcome === 'held')
+      throw new CounterpartyEliminationBlockedError();
+    if (outcome === 'conflict') throw new CounterpartyConflictError();
+    return item;
+  }
+}
+
+export class RestoreOwnedCounterpartyUseCase {
+  public constructor(
+    private readonly repository: CounterpartyRepository,
+    private readonly clock: Clock,
+  ) {}
+  public async execute(actorId: string, id: string): Promise<Counterparty> {
+    const item = await new GetOwnedCounterpartyUseCase(this.repository).execute(
+      actorId,
+      id,
+    );
+    const version = item.toSnapshot().version;
+    item.restoreEliminated(this.clock.now());
+    if (!(await this.repository.save(item, version)))
+      throw new CounterpartyConflictError();
+    return item;
+  }
+}
+
+export class AnonymizeDueCounterpartiesUseCase {
+  public constructor(
+    private readonly repository: CounterpartyRepository,
+    private readonly clock: Clock,
+  ) {}
+  public execute(): Promise<number> {
+    return this.repository.anonymizeDue(this.clock.now());
   }
 }

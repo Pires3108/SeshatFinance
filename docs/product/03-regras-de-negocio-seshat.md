@@ -18,7 +18,7 @@
 - **RN-011:** reembolso vinculado reduz o gasto líquido da despesa original, sem apagar lançamentos.
 - **RN-012:** movimentações mantêm histórico de criação, alteração, arquivamento, restauração e exclusão lógica.
 - **RN-013:** uma movimentação aceita uma categoria, uma subcategoria pertencente à categoria, um centro de custo e várias etiquetas.
-- **RN-014:** entidade é opcional e alterações posteriores não reescrevem silenciosamente o histórico.
+- **RN-014:** entidade é opcional e alterações posteriores não reescrevem silenciosamente o histórico. Desativação impede vínculos novos, mesclagem mantém a origem dos vínculos antigos e direciona apenas vínculos futuros à principal ativa; texto livre não cria cadastro implícito. Eliminação exige consulta de impacto e ausência de vínculos impeditivos, com restauração por 30 dias antes da anonimização dos dados identificadores.
 
 ## 3. Cartões, faturas e parcelas
 

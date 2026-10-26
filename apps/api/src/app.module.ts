@@ -23,6 +23,9 @@ import {
   UpdateOwnedCounterpartyUseCase,
   ChangeOwnedCounterpartyStatusUseCase,
   MergeOwnedCounterpartiesUseCase,
+  PreviewOwnedCounterpartyImpactUseCase,
+  EliminateOwnedCounterpartyUseCase,
+  RestoreOwnedCounterpartyUseCase,
   DeleteOwnedCategoryUseCase,
   GetOwnedCategoryUseCase,
   CreateCostCenterUseCase,
@@ -267,6 +270,30 @@ import { UserProfileController } from './users/user-profile.controller.js';
         repository: CounterpartyRepository,
       ): MergeOwnedCounterpartiesUseCase =>
         new MergeOwnedCounterpartiesUseCase(repository, new SystemClock()),
+    },
+    {
+      inject: [LazyCounterpartyRepository],
+      provide: PreviewOwnedCounterpartyImpactUseCase,
+      useFactory: (
+        repository: CounterpartyRepository,
+      ): PreviewOwnedCounterpartyImpactUseCase =>
+        new PreviewOwnedCounterpartyImpactUseCase(repository),
+    },
+    {
+      inject: [LazyCounterpartyRepository],
+      provide: EliminateOwnedCounterpartyUseCase,
+      useFactory: (
+        repository: CounterpartyRepository,
+      ): EliminateOwnedCounterpartyUseCase =>
+        new EliminateOwnedCounterpartyUseCase(repository, new SystemClock()),
+    },
+    {
+      inject: [LazyCounterpartyRepository],
+      provide: RestoreOwnedCounterpartyUseCase,
+      useFactory: (
+        repository: CounterpartyRepository,
+      ): RestoreOwnedCounterpartyUseCase =>
+        new RestoreOwnedCounterpartyUseCase(repository, new SystemClock()),
     },
     {
       inject: [LazyManualExchangeQuoteRepository],

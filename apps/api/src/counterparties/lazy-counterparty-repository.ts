@@ -1,4 +1,7 @@
-import type { CounterpartyRepository } from '@seshat/application';
+import type {
+  CounterpartyImpact,
+  CounterpartyRepository,
+} from '@seshat/application';
 import type { Counterparty } from '@seshat/domain';
 import { PrismaCounterpartyRepository } from '@seshat/database';
 import { Injectable } from '@nestjs/common';
@@ -20,7 +23,7 @@ export class LazyCounterpartyRepository implements CounterpartyRepository {
   }
   public listForOwner(
     ownerId: string,
-    status?: 'active' | 'inactive' | 'merged',
+    status?: 'active' | 'inactive' | 'merged' | 'eliminated',
   ): Promise<readonly Counterparty[]> {
     return this.getRepository().listForOwner(ownerId, status);
   }
@@ -33,6 +36,18 @@ export class LazyCounterpartyRepository implements CounterpartyRepository {
     targetId: string,
   ): Promise<'merged' | 'invalid-target' | 'conflict'> {
     return this.getRepository().merge(item, expectedVersion, targetId);
+  }
+  public impact(id: string, ownerId: string): Promise<CounterpartyImpact> {
+    return this.getRepository().impact(id, ownerId);
+  }
+  public eliminate(
+    item: Counterparty,
+    expectedVersion: number,
+  ): Promise<'eliminated' | 'linked' | 'held' | 'conflict'> {
+    return this.getRepository().eliminate(item, expectedVersion);
+  }
+  public anonymizeDue(at: Date): Promise<number> {
+    return this.getRepository().anonymizeDue(at);
   }
   private getRepository(): PrismaCounterpartyRepository {
     this.repository ??= new PrismaCounterpartyRepository(this.prisma.get());

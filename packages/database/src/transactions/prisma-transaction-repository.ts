@@ -6,6 +6,7 @@ import type {
 } from '@seshat/application';
 import {
   Currency,
+  InvalidTransactionError,
   Money,
   Transaction,
   type FinancialAuditEvent,
@@ -27,29 +28,39 @@ export class PrismaTransactionRepository
     auditEvent: FinancialAuditEvent,
   ): Promise<void> {
     const snapshot = transaction.toSnapshot();
-    await this.client.$transaction(async (client) => {
-      await client.transaction.create({
-        data: {
-          accountId: snapshot.accountId,
-          amountMinorUnits: transaction.amount.toMinorUnits().toString(),
-          archivedAt: snapshot.archivedAt,
-          createdAt: snapshot.createdAt,
-          currencyCode: snapshot.amount.currency.code,
-          currencyMinorUnitScale: snapshot.amount.currency.minorUnitScale,
-          description: snapshot.description,
-          id: snapshot.id,
-          kind: snapshot.kind,
-          lifecycle: snapshot.lifecycle,
-          observations: snapshot.observations,
-          occurredAt: snapshot.occurredAt,
-          ownerId: snapshot.ownerId,
-          trashedAt: snapshot.trashedAt,
-          updatedAt: snapshot.updatedAt,
-          version: snapshot.version,
-        },
+    try {
+      await this.client.$transaction(async (client) => {
+        await client.transaction.create({
+          data: {
+            accountId: snapshot.accountId,
+            amountMinorUnits: transaction.amount.toMinorUnits().toString(),
+            archivedAt: snapshot.archivedAt,
+            createdAt: snapshot.createdAt,
+            counterpartyId: snapshot.counterpartyId ?? null,
+            counterpartyName: snapshot.counterpartyName ?? null,
+            currencyCode: snapshot.amount.currency.code,
+            currencyMinorUnitScale: snapshot.amount.currency.minorUnitScale,
+            description: snapshot.description,
+            id: snapshot.id,
+            kind: snapshot.kind,
+            lifecycle: snapshot.lifecycle,
+            observations: snapshot.observations,
+            occurredAt: snapshot.occurredAt,
+            ownerId: snapshot.ownerId,
+            trashedAt: snapshot.trashedAt,
+            updatedAt: snapshot.updatedAt,
+            version: snapshot.version,
+          },
+        });
+        await insertFinancialAuditEvent(client, auditEvent);
       });
-      await insertFinancialAuditEvent(client, auditEvent);
-    });
+    } catch (error) {
+      if (isCounterpartyConstraintError(error))
+        throw new InvalidTransactionError(
+          'Counterparty unavailable for new link.',
+        );
+      throw error;
+    }
   }
 
   public async findByIdForOwner(
@@ -140,30 +151,40 @@ export class PrismaTransactionRepository
     auditEvent: FinancialAuditEvent,
   ): Promise<boolean> {
     const snapshot = transaction.toSnapshot();
-    return this.client.$transaction(async (client) => {
-      const result = await client.transaction.updateMany({
-        data: {
-          amountMinorUnits: transaction.amount.toMinorUnits().toString(),
-          archivedAt: snapshot.archivedAt,
-          description: snapshot.description,
-          kind: snapshot.kind,
-          lifecycle: snapshot.lifecycle,
-          observations: snapshot.observations,
-          occurredAt: snapshot.occurredAt,
-          trashedAt: snapshot.trashedAt,
-          updatedAt: snapshot.updatedAt,
-          version: snapshot.version,
-        },
-        where: {
-          id: snapshot.id,
-          ownerId: snapshot.ownerId,
-          version: expectedVersion,
-        },
+    try {
+      return await this.client.$transaction(async (client) => {
+        const result = await client.transaction.updateMany({
+          data: {
+            amountMinorUnits: transaction.amount.toMinorUnits().toString(),
+            archivedAt: snapshot.archivedAt,
+            description: snapshot.description,
+            counterpartyId: snapshot.counterpartyId ?? null,
+            counterpartyName: snapshot.counterpartyName ?? null,
+            kind: snapshot.kind,
+            lifecycle: snapshot.lifecycle,
+            observations: snapshot.observations,
+            occurredAt: snapshot.occurredAt,
+            trashedAt: snapshot.trashedAt,
+            updatedAt: snapshot.updatedAt,
+            version: snapshot.version,
+          },
+          where: {
+            id: snapshot.id,
+            ownerId: snapshot.ownerId,
+            version: expectedVersion,
+          },
+        });
+        if (result.count !== 1) return false;
+        await insertFinancialAuditEvent(client, auditEvent);
+        return true;
       });
-      if (result.count !== 1) return false;
-      await insertFinancialAuditEvent(client, auditEvent);
-      return true;
-    });
+    } catch (error) {
+      if (isCounterpartyConstraintError(error))
+        throw new InvalidTransactionError(
+          'Counterparty unavailable for new link.',
+        );
+      throw error;
+    }
   }
 
   public async findTransferIdByEntryForOwner(
@@ -182,6 +203,14 @@ export class PrismaTransactionRepository
     });
     return transfer?.id ?? null;
   }
+}
+
+function isCounterpartyConstraintError(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null || !('code' in error))
+    return false;
+  return (
+    error.code === 'P2003' || error.code === 'P2004' || error.code === 'P2010'
+  );
 }
 
 type PersistedTransaction = Exclude<
@@ -204,6 +233,8 @@ function restoreTransaction(row: PersistedTransaction): Transaction {
     },
     archivedAt: row.archivedAt,
     createdAt: row.createdAt,
+    counterpartyId: row.counterpartyId,
+    counterpartyName: row.counterpartyName,
     description: row.description,
     id: row.id,
     kind: row.kind,

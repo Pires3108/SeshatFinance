@@ -60,8 +60,8 @@ A primeira versão será uma aplicação web responsiva e instalável como PWA, 
 - **RF-021 — Categorias:** fornecer categorias iniciais e CRUD completo de categorias e subcategorias.
 - **RF-022 — Etiquetas:** permitir várias etiquetas por movimentação e criação, consulta, edição, arquivamento, restauração e exclusão das etiquetas do titular. Vínculos repetidos são idempotentes; a exclusão só é permitida sem vínculos, e o arquivamento preserva os históricos sem permitir novas associações.
 - **RF-023 — Centros de custo:** permitir um centro de custo próprio por movimentação e criação, consulta, edição, arquivamento, restauração e exclusão dos centros do titular. Centros arquivados permanecem em vínculos históricos, mas não recebem novos; a exclusão só é permitida sem vínculos.
-- **RF-024 — Entidades:** permitir cadastrar pessoas, empresas e instituições com nome, tipo, documento opcional, e-mail opcional, telefone opcional, observações e status.
-- **RF-025 — Vínculos:** vincular uma entidade a movimentações, empréstimos e instituições sem exigir seu cadastro.
+- **RF-024 — Entidades:** permitir cadastrar pessoas, empresas e instituições do titular com nome, tipo, documento opcional, e-mail opcional, telefone opcional, observações e estados Ativa, Desativada, Mesclada e Eliminada. Consultar o impacto antes da eliminação; quando não houver impedimentos, aplicar retenção reversível de 30 dias antes da anonimização.
+- **RF-025 — Vínculos:** permitir em movimentações uma referência opcional a entidade própria ou texto livre sem cadastro implícito. Desativação preserva referências antigas e bloqueia novas; mesclagem preserva a origem histórica e direciona novos vínculos à principal. Vínculos de empréstimos serão tratados pela história que criar esse modelo.
 
 ### 4.5 Movimentações
 

@@ -19,6 +19,7 @@ enum CounterpartyStatus {
   active
   inactive
   merged
+  eliminated
 
   @@map("counterparty_status")
 }
@@ -36,6 +37,10 @@ model Counterparty {
   mergedIntoId  String?            @map("merged_into_id") @db.Uuid
   mergedInto    Counterparty?      @relation("counterparty_merges", fields: [mergedIntoId, ownerId], references: [id, ownerId], onDelete: Restrict)
   mergedSources Counterparty[]     @relation("counterparty_merges")
+  eliminatedAt  DateTime?          @map("eliminated_at") @db.Timestamptz(6)
+  anonymizedAt  DateTime?          @map("anonymized_at") @db.Timestamptz(6)
+  legalHold     Boolean            @default(false) @map("legal_hold")
+  transactions  Transaction[]
   createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt     DateTime           @map("updated_at") @db.Timestamptz(6)
   version       Int                @default(1)
@@ -191,6 +196,9 @@ model Transaction {
   currencyMinorUnitScale Int                  @map("currency_minor_unit_scale") @db.SmallInt
   description            String?
   observations           String?
+  counterpartyId         String?              @map("counterparty_id") @db.Uuid
+  counterparty           Counterparty?        @relation(fields: [counterpartyId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  counterpartyName       String?              @map("counterparty_name") @db.VarChar(200)
   occurredAt             DateTime             @map("occurred_at") @db.Timestamptz(6)
   lifecycle              TransactionLifecycle @default(active)
   archivedAt             DateTime?            @map("archived_at") @db.Timestamptz(6)
@@ -211,6 +219,7 @@ model Transaction {
 
   @@unique([id, ownerId])
   @@index([ownerId, accountId, occurredAt])
+  @@index([ownerId, counterpartyId])
   @@map("transactions")
 }
 
