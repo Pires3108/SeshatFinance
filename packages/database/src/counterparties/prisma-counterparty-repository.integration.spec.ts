@@ -46,6 +46,9 @@ describe('PrismaCounterpartyRepository', () => {
     for (const path of [
       '../../prisma/migrations/20260920040000_create_accounts/migration.sql',
       '../../prisma/migrations/20260920133000_create_transactions/migration.sql',
+      '../../prisma/migrations/20260920180000_create_categories/migration.sql',
+      '../../prisma/migrations/20260920210000_create_cost_centers/migration.sql',
+      '../../prisma/migrations/20260921010000_assign_transaction_classifications/migration.sql',
       '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
       '../../prisma/migrations/20261005180000_create_counterparties/migration.sql',
     ]) {
