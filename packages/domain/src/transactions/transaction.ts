@@ -8,6 +8,8 @@ export type TransactionSnapshot = Readonly<{
   amount: MoneySnapshot;
   archivedAt: Date | null;
   createdAt: Date;
+  counterpartyId?: string | null;
+  counterpartyName?: string | null;
   description: string | null;
   id: string;
   kind: TransactionKind;
@@ -24,6 +26,8 @@ export type CreateTransactionProperties = Readonly<{
   accountId: string;
   amount: Money;
   createdAt: Date;
+  counterpartyId?: string | null;
+  counterpartyName?: string | null;
   description: string | null;
   id: string;
   kind: TransactionKind;
@@ -34,6 +38,8 @@ export type CreateTransactionProperties = Readonly<{
 
 export type UpdateTransactionDetails = Readonly<{
   amount: Money;
+  counterpartyId?: string | null;
+  counterpartyName?: string | null;
   description: string | null;
   kind: TransactionKind;
   observations?: string | null;
@@ -64,11 +70,17 @@ export class Transaction {
     assertValidInstant(properties.createdAt, 'Transaction creation instant');
     assertValidInstant(properties.occurredAt, 'Transaction occurrence instant');
     assertPositiveAmount(properties.amount);
+    assertCounterpartyReference(
+      properties.counterpartyId,
+      properties.counterpartyName,
+    );
     return new Transaction({
       accountId: properties.accountId,
       amount: properties.amount.toSnapshot(),
       archivedAt: null,
       createdAt: new Date(properties.createdAt),
+      counterpartyId: properties.counterpartyId ?? null,
+      counterpartyName: normalizeOptionalText(properties.counterpartyName),
       description: normalizeOptionalText(properties.description),
       id: properties.id,
       kind: properties.kind,
@@ -138,8 +150,23 @@ export class Transaction {
     if (!details.amount.currency.equals(this.amount.currency)) {
       throw new InvalidTransactionError('Transaction currency cannot change.');
     }
+    const counterpartyId =
+      details.counterpartyId === undefined
+        ? details.counterpartyName === undefined
+          ? (this.state.counterpartyId ?? null)
+          : null
+        : details.counterpartyId;
+    const counterpartyName =
+      details.counterpartyName === undefined
+        ? details.counterpartyId === undefined
+          ? (this.state.counterpartyName ?? null)
+          : null
+        : normalizeOptionalText(details.counterpartyName);
+    assertCounterpartyReference(counterpartyId, counterpartyName);
     this.state = {
       ...this.state,
+      counterpartyId,
+      counterpartyName,
       amount: details.amount.toSnapshot(),
       description: normalizeOptionalText(details.description),
       kind: details.kind,
@@ -246,6 +273,10 @@ function validateSnapshot(snapshot: TransactionSnapshot): void {
   assertOptionalInstant(snapshot.archivedAt, 'Transaction archive instant');
   assertOptionalInstant(snapshot.trashedAt, 'Transaction trash instant');
   assertPositiveAmount(Money.restore(snapshot.amount));
+  assertCounterpartyReference(
+    snapshot.counterpartyId,
+    snapshot.counterpartyName,
+  );
   if (!['active', 'archived', 'trashed'].includes(snapshot.lifecycle)) {
     throw new InvalidTransactionError('Transaction lifecycle is invalid.');
   }
@@ -317,6 +348,20 @@ function normalizeOptionalText(
 ): string | null {
   const normalized = value?.trim() ?? '';
   return normalized.length === 0 ? null : normalized;
+}
+
+function assertCounterpartyReference(
+  id: string | null | undefined,
+  name: string | null | undefined,
+): void {
+  if (id != null && name != null)
+    throw new InvalidTransactionError(
+      'Counterparty reference and free text are exclusive.',
+    );
+  if (id?.trim().length === 0)
+    throw new InvalidTransactionError('Counterparty id is invalid.');
+  if ((name?.trim().length ?? 0) > 200)
+    throw new InvalidTransactionError('Counterparty name is too long.');
 }
 
 function copySnapshot(snapshot: TransactionSnapshot): TransactionSnapshot {

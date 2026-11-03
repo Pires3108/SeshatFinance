@@ -232,3 +232,21 @@ export {
   ListOwnFamilyGroupsUseCase,
   type FamilyGroupRepository,
 } from './family/create-family-group.js';
+export {
+  CreateCounterpartyUseCase,
+  ListOwnedCounterpartiesUseCase,
+  GetOwnedCounterpartyUseCase,
+  UpdateOwnedCounterpartyUseCase,
+  ChangeOwnedCounterpartyStatusUseCase,
+  MergeOwnedCounterpartiesUseCase,
+  PreviewOwnedCounterpartyImpactUseCase,
+  EliminateOwnedCounterpartyUseCase,
+  RestoreOwnedCounterpartyUseCase,
+  AnonymizeDueCounterpartiesUseCase,
+  CounterpartyEliminationBlockedError,
+  OwnedCounterpartyNotFoundError,
+  CounterpartyConflictError,
+  InvalidMergeTargetError,
+  type CounterpartyRepository,
+  type CounterpartyImpact,
+} from './counterparties/manage-counterparty.js';

@@ -161,6 +161,134 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/counterparties": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["CounterpartyController_list"];
+        readonly put?: never;
+        readonly post: operations["CounterpartyController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/counterparties/{id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["CounterpartyController_get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch: operations["CounterpartyController_update"];
+        readonly trace?: never;
+    };
+    readonly "/api/v1/counterparties/{id}/deactivate": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["CounterpartyController_deactivate"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/counterparties/{id}/reactivate": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["CounterpartyController_reactivate"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/counterparties/{id}/merge": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["CounterpartyController_merge"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/counterparties/{id}/impact": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["CounterpartyController_impact"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/counterparties/{id}/eliminate": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["CounterpartyController_eliminate"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/counterparties/{id}/restore": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["CounterpartyController_restore"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/family-groups": {
         readonly parameters: {
             readonly query?: never;
@@ -1491,6 +1619,176 @@ export interface operations {
             };
             /** @description Owned credit card was not found */
             readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CounterpartyController_list: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CounterpartyController_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CounterpartyController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CounterpartyController_update: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CounterpartyController_deactivate: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CounterpartyController_reactivate: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CounterpartyController_merge: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CounterpartyController_impact: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CounterpartyController_eliminate: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CounterpartyController_restore: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 201: {
                 headers: {
                     readonly [name: string]: unknown;
                 };
@@ -2999,6 +3297,9 @@ export interface operations {
                         readonly currencyMinorUnitScale: number;
                         readonly description: string | null;
                         /** Format: uuid */
+                        readonly counterpartyId: string | null;
+                        readonly counterpartyName: string | null;
+                        /** Format: uuid */
                         readonly id: string;
                         /** @enum {string} */
                         readonly kind: "income" | "expense";
@@ -3041,6 +3342,9 @@ export interface operations {
                     readonly currencyCode: "BRL" | "USD" | "EUR";
                     readonly currencyMinorUnitScale: number;
                     readonly description: string | null;
+                    /** Format: uuid */
+                    readonly counterpartyId?: string | null;
+                    readonly counterpartyName?: string | null;
                     /** @enum {string} */
                     readonly kind: "income" | "expense";
                     readonly observations: string | null;
@@ -3066,6 +3370,9 @@ export interface operations {
                         readonly currencyCode: string;
                         readonly currencyMinorUnitScale: number;
                         readonly description: string | null;
+                        /** Format: uuid */
+                        readonly counterpartyId: string | null;
+                        readonly counterpartyName: string | null;
                         /** Format: uuid */
                         readonly id: string;
                         /** @enum {string} */
@@ -3143,6 +3450,9 @@ export interface operations {
                         readonly currencyMinorUnitScale: number;
                         readonly description: string | null;
                         /** Format: uuid */
+                        readonly counterpartyId: string | null;
+                        readonly counterpartyName: string | null;
+                        /** Format: uuid */
                         readonly id: string;
                         /** @enum {string} */
                         readonly kind: "income" | "expense";
@@ -3196,6 +3506,9 @@ export interface operations {
                         readonly currencyMinorUnitScale: number;
                         readonly description: string | null;
                         /** Format: uuid */
+                        readonly counterpartyId: string | null;
+                        readonly counterpartyName: string | null;
+                        /** Format: uuid */
                         readonly id: string;
                         /** @enum {string} */
                         readonly kind: "income" | "expense";
@@ -3242,6 +3555,9 @@ export interface operations {
                 readonly "application/json": {
                     readonly amount: string;
                     readonly description: string | null;
+                    /** Format: uuid */
+                    readonly counterpartyId?: string | null;
+                    readonly counterpartyName?: string | null;
                     /** @enum {string} */
                     readonly kind: "income" | "expense";
                     readonly observations: string | null;
@@ -3267,6 +3583,9 @@ export interface operations {
                         readonly currencyCode: string;
                         readonly currencyMinorUnitScale: number;
                         readonly description: string | null;
+                        /** Format: uuid */
+                        readonly counterpartyId: string | null;
+                        readonly counterpartyName: string | null;
                         /** Format: uuid */
                         readonly id: string;
                         /** @enum {string} */
@@ -3341,6 +3660,9 @@ export interface operations {
                         readonly currencyCode: string;
                         readonly currencyMinorUnitScale: number;
                         readonly description: string | null;
+                        /** Format: uuid */
+                        readonly counterpartyId: string | null;
+                        readonly counterpartyName: string | null;
                         /** Format: uuid */
                         readonly id: string;
                         /** @enum {string} */

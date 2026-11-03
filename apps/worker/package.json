@@ -12,6 +12,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@seshat/application": "workspace:*",
+    "@seshat/database": "workspace:*",
     "@seshat/observability": "workspace:*"
   },
   "devDependencies": {

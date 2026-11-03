@@ -112,6 +112,24 @@ describe('Transaction HTTP authorization', () => {
     });
   });
 
+  it('forwards an explicit entity replacement under the authenticated actor', async () => {
+    const counterpartyId = 'e5a8aeba-2157-4503-a5f7-f66ddb82876d';
+    const response = await application.inject({
+      headers: { authorization: 'Bearer actor-b-token' },
+      method: 'PATCH',
+      payload: { ...update, counterpartyId },
+      url: `/api/v1/transactions/${transactionOwnedByAnotherActor}`,
+    });
+    expect(response.statusCode).toBe(404);
+    expect(updateTransaction.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: authenticatedActorId,
+        counterpartyId,
+        transactionId: transactionOwnedByAnotherActor,
+      }),
+    );
+  });
+
   it('does not allow changing another actor transaction lifecycle', async () => {
     const response = await application.inject({
       headers: { authorization: 'Bearer actor-b-token' },

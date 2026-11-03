@@ -44,6 +44,8 @@ describe('PrismaCreditCardRepository', () => {
       '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
       '../../prisma/migrations/20260922183000_add_credit_card_audit_resource/migration.sql',
       '../../prisma/migrations/20260922190000_create_credit_cards/migration.sql',
+      '../../prisma/migrations/20261005180000_create_counterparties/migration.sql',
+      '../../prisma/migrations/20261021180000_counterparty_lifecycle_and_transaction_reference/migration.sql',
     ]) {
       await migrationClient.query(
         await readFile(new URL(path, import.meta.url), 'utf8'),

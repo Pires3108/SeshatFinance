@@ -111,3 +111,13 @@ export {
   hasFamilyGroupCapability,
   type FamilyGroupCapability,
 } from './family/family-group-policy.js';
+export {
+  Counterparty,
+  InvalidCounterpartyError,
+  counterpartyTypes,
+  counterpartyStatuses,
+  type CounterpartyDetails,
+  type CounterpartySnapshot,
+  type CounterpartyType,
+  type CounterpartyStatus,
+} from './counterparties/counterparty.js';
