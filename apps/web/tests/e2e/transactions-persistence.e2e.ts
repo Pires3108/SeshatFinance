@@ -14,6 +14,7 @@ import { Client } from 'pg';
 let apiUrl = '';
 const token = randomBytes(32).toString('base64url');
 const cookie = `__Host-seshat_session=${token}`;
+const ownerId = randomUUID();
 const selectedDate = '2026-11-03';
 let container: StartedPostgreSqlContainer | undefined;
 let api: ChildProcess | undefined;
@@ -62,12 +63,12 @@ test.beforeAll(async (): Promise<void> => {
       }
     }
     await client.query(
+      'INSERT INTO user_profiles (id, created_at, updated_at) VALUES ($1, now(), now())',
+      [ownerId],
+    );
+    await client.query(
       'INSERT INTO user_sessions (id, user_id, token_hash, created_at, last_seen_at) VALUES ($1, $2, $3, now(), now())',
-      [
-        randomUUID(),
-        randomUUID(),
-        createHash('sha256').update(token).digest('hex'),
-      ],
+      [randomUUID(), ownerId, createHash('sha256').update(token).digest('hex')],
     );
   } finally {
     await client.end();
