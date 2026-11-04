@@ -1,8 +1,8 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
-import { readFile, readdir } from 'node:fs/promises';
+import { access, cp, readFile, readdir } from 'node:fs/promises';
 import { createServer } from 'node:net';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 
 import { expect, test } from '@playwright/test';
 import {
@@ -12,12 +12,14 @@ import {
 import { Client } from 'pg';
 
 let apiUrl = '';
+let webUrl = '';
 const token = randomBytes(32).toString('base64url');
 const cookie = `__Host-seshat_session=${token}`;
 const ownerId = randomUUID();
 const selectedDate = '2026-11-03';
 let container: StartedPostgreSqlContainer | undefined;
 let api: ChildProcess | undefined;
+let web: ChildProcess | undefined;
 
 test.use({ timezoneId: 'America/Sao_Paulo' });
 
@@ -38,6 +40,24 @@ async function availablePort(): Promise<number> {
     });
   });
   return address.port;
+}
+
+async function standaloneServer(): Promise<string> {
+  const candidates = [
+    resolve(process.cwd(), '.next/standalone/apps/web/server.js'),
+    resolve(process.cwd(), '.next/standalone/server.js'),
+  ];
+  for (const candidate of candidates) {
+    try {
+      await access(candidate);
+      return candidate;
+    } catch {
+      // Try the other standalone layout.
+    }
+  }
+  throw new Error(
+    'Build the web standalone output before this Playwright test',
+  );
 }
 
 test.beforeAll(async (): Promise<void> => {
@@ -98,9 +118,54 @@ test.beforeAll(async (): Promise<void> => {
       { timeout: 60_000 },
     )
     .toBe(true);
+
+  const serverPath = await standaloneServer();
+  const serverDirectory = dirname(serverPath);
+  await cp(
+    resolve(process.cwd(), '.next/static'),
+    resolve(serverDirectory, '.next/static'),
+    { recursive: true },
+  );
+  try {
+    await cp(
+      resolve(process.cwd(), 'public'),
+      resolve(serverDirectory, 'public'),
+      {
+        recursive: true,
+      },
+    );
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+  }
+  const webPort = await availablePort();
+  webUrl = `http://localhost:${String(webPort)}`;
+  web = spawn(process.execPath, [serverPath], {
+    cwd: serverDirectory,
+    env: {
+      ...process.env,
+      HOSTNAME: 'localhost',
+      PORT: String(webPort),
+      SESHAT_API_URL: apiUrl,
+    },
+    stdio: 'ignore',
+    windowsHide: true,
+  });
+  await expect
+    .poll(
+      async () => {
+        if (web?.exitCode !== null || web.signalCode !== null)
+          throw new Error('Web server exited before readiness');
+        return fetch(`${webUrl}/entrar`)
+          .then((response) => response.ok)
+          .catch(() => false);
+      },
+      { timeout: 60_000 },
+    )
+    .toBe(true);
 });
 
 test.afterAll(async (): Promise<void> => {
+  web?.kill();
   api?.kill();
   await container?.stop();
 });
@@ -110,15 +175,6 @@ test('income and expense persist with exact balance and temporal totals', async 
   context,
   request,
 }) => {
-  await page.route('**/api/**', async (route) => {
-    const original = new URL(route.request().url());
-    const upstream = new URL(
-      `/api/v1${original.pathname.slice(4)}${original.search}`,
-      apiUrl,
-    );
-    const response = await route.fetch({ url: upstream.toString() });
-    await route.fulfill({ response });
-  });
   const headers = { Cookie: cookie };
   const created = await request.post(`${apiUrl}/api/v1/accounts`, {
     headers,
@@ -148,7 +204,7 @@ test('income and expense persist with exact balance and temporal totals', async 
     },
   ]);
 
-  await page.goto(`/contas/${account.id}/movimentacoes`);
+  await page.goto(`${webUrl}/contas/${account.id}/movimentacoes`);
   await expect(page.getByRole('status')).toContainText(
     'Nenhuma movimentação nesta conta.',
   );
@@ -210,10 +266,10 @@ test('income and expense persist with exact balance and temporal totals', async 
   await page.reload();
   await expect(page.getByText('Receita de teste')).toBeVisible();
   await expect(page.getByText('Despesa de teste')).toBeVisible();
-  await page.goto(`/contas/${account.id}`);
+  await page.goto(`${webUrl}/contas/${account.id}`);
   await expect(page.getByText('1.234,50 BRL')).toBeVisible();
 
-  await page.goto('/movimentacoes');
+  await page.goto(`${webUrl}/movimentacoes`);
   await page.getByLabel('Selecionar dia').fill(selectedDate);
   for (const period of ['Dia', 'Semana', 'Mês']) {
     await page.getByRole('button', { name: period, exact: true }).click();
