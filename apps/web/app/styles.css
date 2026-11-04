@@ -348,9 +348,15 @@ button:focus-visible {
   background: #fff;
   color: #10534d;
 }
-.temporal-navigation label { font-weight: 650; }
-.temporal-navigation button { cursor: pointer; }
-.temporal-navigation button:disabled { opacity: 0.6; }
+.temporal-navigation label {
+  font-weight: 650;
+}
+.temporal-navigation button {
+  cursor: pointer;
+}
+.temporal-navigation button:disabled {
+  opacity: 0.6;
+}
 .temporal-totals,
 .temporal-days section {
   border: 1px solid #b8ceca;
@@ -359,8 +365,22 @@ button:focus-visible {
   margin: 1rem 0;
 }
 .temporal-totals h2,
-.temporal-days h2 { margin-top: 0; }
+.temporal-days h2 {
+  margin-top: 0;
+}
 .temporal-totals ul,
-.temporal-days ol { margin-bottom: 0; padding-left: 1.4rem; }
-.temporal-totals li { display: grid; gap: 0.25rem; margin: 0.5rem 0; }
-.temporal-days li { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; padding: 0.5rem 0; }
+.temporal-days ol {
+  margin-bottom: 0;
+  padding-left: 1.4rem;
+}
+.temporal-totals li {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0.5rem 0;
+}
+.temporal-days li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding: 0.5rem 0;
+}

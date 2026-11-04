@@ -22,15 +22,31 @@ describe('TemporalTransactionController', () => {
       occurredAt: new Date('2026-11-02T12:00:00Z'),
       ownerId: 'verified-owner',
     });
-    const total = { currencyCode: 'BRL', currencyMinorUnitScale: 2, income: '10.25', expense: '0.00' };
+    const total = {
+      currencyCode: 'BRL',
+      currencyMinorUnitScale: 2,
+      income: '10.25',
+      expense: '0.00',
+    };
     const execute = vi.fn().mockResolvedValue({
-      period: 'day', selectedDate: '2026-11-02', timeZone: 'America/Sao_Paulo',
-      from: new Date('2026-11-02T03:00:00Z'), to: new Date('2026-11-03T03:00:00Z'),
-      days: [{ date: '2026-11-02', transactions: [transaction], totals: [total] }],
+      period: 'day',
+      selectedDate: '2026-11-02',
+      timeZone: 'America/Sao_Paulo',
+      from: new Date('2026-11-02T03:00:00Z'),
+      to: new Date('2026-11-03T03:00:00Z'),
+      days: [
+        { date: '2026-11-02', transactions: [transaction], totals: [total] },
+      ],
       totals: [total],
     });
-    const controller = new TemporalTransactionController({ execute } as unknown as ListTemporalTransactionsUseCase, actors);
-    const response = await controller.list(request, { period: 'day', date: '2026-11-02' });
+    const controller = new TemporalTransactionController(
+      { execute } as unknown as ListTemporalTransactionsUseCase,
+      actors,
+    );
+    const response = await controller.list(request, {
+      period: 'day',
+      date: '2026-11-02',
+    });
     expect(execute).toHaveBeenCalledWith('verified-owner', 'day', '2026-11-02');
     expect(response.from).toBe('2026-11-02T03:00:00.000Z');
     expect(response.days[0]?.transactions[0]?.amount).toBe('10.25');
@@ -39,8 +55,16 @@ describe('TemporalTransactionController', () => {
 
   it('rejects a request without an authenticated actor', async () => {
     const execute = vi.fn();
-    const controller = new TemporalTransactionController({ execute } as unknown as ListTemporalTransactionsUseCase, new AuthenticatedActorContext());
-    await expect(controller.list({} as FastifyRequest, { period: 'week', date: '2026-11-02' })).rejects.toBeInstanceOf(UnauthorizedException);
+    const controller = new TemporalTransactionController(
+      { execute } as unknown as ListTemporalTransactionsUseCase,
+      new AuthenticatedActorContext(),
+    );
+    await expect(
+      controller.list({} as FastifyRequest, {
+        period: 'week',
+        date: '2026-11-02',
+      }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
     expect(execute).not.toHaveBeenCalled();
   });
 });

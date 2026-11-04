@@ -45,33 +45,55 @@ export class ListTemporalTransactionsUseCase {
     private readonly profiles: UserProfileRepository,
   ) {}
 
-  public async execute(actorId: string, period: TemporalPeriod, selectedDate: string): Promise<TemporalView> {
+  public async execute(
+    actorId: string,
+    period: TemporalPeriod,
+    selectedDate: string,
+  ): Promise<TemporalView> {
     const selected = parseDate(selectedDate);
     if (selected === null || !['day', 'week', 'month'].includes(period))
       throw new InvalidTemporalSelectionError();
     const profile = await this.profiles.findById(actorId);
     if (profile === null) throw new TemporalProfileUnavailableError();
     const timeZone = profile.timeZone;
-    const start = period === 'week'
-      ? addDays(selected, -((selected.getUTCDay() + 6) % 7))
-      : period === 'month'
-        ? new Date(Date.UTC(selected.getUTCFullYear(), selected.getUTCMonth(), 1))
-        : selected;
-    const end = period === 'month'
-      ? new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 1))
-      : addDays(start, period === 'week' ? 7 : 1);
+    const start =
+      period === 'week'
+        ? addDays(selected, -((selected.getUTCDay() + 6) % 7))
+        : period === 'month'
+          ? new Date(
+              Date.UTC(selected.getUTCFullYear(), selected.getUTCMonth(), 1),
+            )
+          : selected;
+    const end =
+      period === 'month'
+        ? new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 1))
+        : addDays(start, period === 'week' ? 7 : 1);
     const from = civilMidnight(start, timeZone);
     const to = civilMidnight(end, timeZone);
-    const transactions = await this.transactions.listForOwnerBetween(actorId, from, to, 'active');
+    const transactions = await this.transactions.listForOwnerBetween(
+      actorId,
+      from,
+      to,
+      'active',
+    );
     const days: TemporalDay[] = [];
     for (let day = start; day < end; day = addDays(day, 1)) {
       const date = formatDate(day);
-      const items = transactions.filter((transaction) =>
-        civilDate(transaction.toSnapshot().occurredAt, timeZone) === date,
+      const items = transactions.filter(
+        (transaction) =>
+          civilDate(transaction.toSnapshot().occurredAt, timeZone) === date,
       );
       days.push({ date, transactions: items, totals: sumTotals(items) });
     }
-    return { period, selectedDate, timeZone, from, to, days, totals: sumTotals(transactions) };
+    return {
+      period,
+      selectedDate,
+      timeZone,
+      from,
+      to,
+      days,
+      totals: sumTotals(transactions),
+    };
   }
 }
 
@@ -80,7 +102,9 @@ function parseDate(value: string): Date | null {
   const year = Number(value.slice(0, 4));
   if (year < 100 || year > 9998) return null;
   const date = new Date(`${value}T00:00:00.000Z`);
-  return Number.isNaN(date.getTime()) || formatDate(date) !== value ? null : date;
+  return Number.isNaN(date.getTime()) || formatDate(date) !== value
+    ? null
+    : date;
 }
 
 function formatDate(date: Date): string {
@@ -93,9 +117,13 @@ function addDays(date: Date, count: number): Date {
 
 function civilDate(instant: Date, timeZone: string): string {
   const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
   }).formatToParts(instant);
-  const value = (type: string): string => parts.find((part) => part.type === type)?.value ?? '';
+  const value = (type: string): string =>
+    parts.find((part) => part.type === type)?.value ?? '';
   return `${value('year').padStart(4, '0')}-${value('month')}-${value('day')}`;
 }
 
@@ -111,23 +139,30 @@ function civilMidnight(date: Date, timeZone: string): Date {
   return new Date(low);
 }
 
-function sumTotals(transactions: readonly Transaction[]): readonly TemporalTotal[] {
+function sumTotals(
+  transactions: readonly Transaction[],
+): readonly TemporalTotal[] {
   const totals = new Map<string, { income: Money; expense: Money }>();
   for (const transaction of transactions) {
     const amount = transaction.amount;
-    const key = `${amount.currency.code}:${amount.currency.minorUnitScale}`;
+    const key = `${amount.currency.code}:${String(amount.currency.minorUnitScale)}`;
     const current = totals.get(key) ?? {
       income: Money.fromMinorUnits(0n, amount.currency),
       expense: Money.fromMinorUnits(0n, amount.currency),
     };
-    totals.set(key, transaction.toSnapshot().kind === 'income'
-      ? { ...current, income: current.income.add(amount) }
-      : { ...current, expense: current.expense.add(amount) });
+    totals.set(
+      key,
+      transaction.toSnapshot().kind === 'income'
+        ? { ...current, income: current.income.add(amount) }
+        : { ...current, expense: current.expense.add(amount) },
+    );
   }
-  return [...totals.values()].map(({ income, expense }) => ({
-    currencyCode: income.currency.code,
-    currencyMinorUnitScale: income.currency.minorUnitScale,
-    income: income.toDecimal(),
-    expense: expense.toDecimal(),
-  })).sort((left, right) => left.currencyCode.localeCompare(right.currencyCode));
+  return [...totals.values()]
+    .map(({ income, expense }) => ({
+      currencyCode: income.currency.code,
+      currencyMinorUnitScale: income.currency.minorUnitScale,
+      income: income.toDecimal(),
+      expense: expense.toDecimal(),
+    }))
+    .sort((left, right) => left.currencyCode.localeCompare(right.currencyCode));
 }
