@@ -15,8 +15,20 @@ export interface TransactionRepository {
   insert(
     transaction: Transaction,
     auditEvent: FinancialAuditEvent,
+    idempotency?: Readonly<{ key: string; fingerprint: string }>,
   ): Promise<void>;
+  findByIdempotencyKey?(
+    ownerId: string,
+    key: string,
+  ): Promise<Readonly<{
+    transaction: Transaction;
+    fingerprint: string;
+  }> | null>;
   findByIdForOwner(id: string, ownerId: string): Promise<Transaction | null>;
+  listRevisionsForOwner?(
+    transactionId: string,
+    ownerId: string,
+  ): Promise<readonly TransactionRevision[]>;
   listForAccountOwner(
     accountId: string,
     ownerId: string,
@@ -29,6 +41,15 @@ export interface TransactionRepository {
   ): Promise<boolean>;
 }
 
+export type TransactionRevision = Readonly<{
+  id: string;
+  previousVersion: number;
+  newVersion: number;
+  before: unknown;
+  after: unknown;
+  occurredAt: Date;
+}>;
+
 export interface TransactionFinancialLinkRepository {
   findTransferIdByEntryForOwner(
     transactionId: string,
@@ -38,6 +59,11 @@ export interface TransactionFinancialLinkRepository {
 
 export type CreateTransactionCommand = Readonly<{
   accountId: string;
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+  costCenterId?: string | null;
+  tagIds?: readonly string[];
+  idempotencyKey?: string;
   actorId: string;
   amount: string;
   currencyCode: string;
@@ -96,6 +122,25 @@ export class CreateTransactionUseCase {
   public async execute(
     command: CreateTransactionCommand,
   ): Promise<Transaction> {
+    const fingerprint = JSON.stringify({
+      ...command,
+      idempotencyKey: undefined,
+      occurredAt: command.occurredAt.toISOString(),
+      tagIds: [...new Set(command.tagIds ?? [])].sort(),
+    });
+    if (command.idempotencyKey !== undefined) {
+      if (this.transactions.findByIdempotencyKey === undefined)
+        throw new Error('Idempotency repository is unavailable.');
+      const previous = await this.transactions.findByIdempotencyKey(
+        command.actorId,
+        command.idempotencyKey,
+      );
+      if (previous !== null) {
+        if (previous.fingerprint !== fingerprint)
+          throw new TransactionIdempotencyConflictError();
+        return previous.transaction;
+      }
+    }
     const account = await this.accounts.findByIdForOwner(
       command.accountId,
       command.actorId,
@@ -113,6 +158,16 @@ export class CreateTransactionUseCase {
     const at = this.clock.now();
     const transaction = Transaction.create({
       accountId: account.id,
+      ...(command.categoryId === undefined
+        ? {}
+        : { categoryId: command.categoryId }),
+      ...(command.subcategoryId === undefined
+        ? {}
+        : { subcategoryId: command.subcategoryId }),
+      ...(command.costCenterId === undefined
+        ? {}
+        : { costCenterId: command.costCenterId }),
+      ...(command.tagIds === undefined ? {} : { tagIds: command.tagIds }),
       amount: Money.fromDecimal(command.amount, currency),
       createdAt: at,
       description: command.description,
@@ -133,7 +188,26 @@ export class CreateTransactionUseCase {
       resourceId: transaction.id,
       resourceType: 'transaction',
     });
-    await this.transactions.insert(transaction, auditEvent);
+    try {
+      await this.transactions.insert(
+        transaction,
+        auditEvent,
+        command.idempotencyKey === undefined
+          ? undefined
+          : { key: command.idempotencyKey, fingerprint },
+      );
+    } catch (error) {
+      if (command.idempotencyKey === undefined) throw error;
+      if (this.transactions.findByIdempotencyKey === undefined) throw error;
+      const previous = await this.transactions.findByIdempotencyKey(
+        command.actorId,
+        command.idempotencyKey,
+      );
+      if (previous === null) throw error;
+      if (previous.fingerprint !== fingerprint)
+        throw new TransactionIdempotencyConflictError();
+      return previous.transaction;
+    }
     return (
       (await this.transactions.findByIdForOwner(
         transaction.id,
@@ -143,8 +217,32 @@ export class CreateTransactionUseCase {
   }
 }
 
+export class TransactionIdempotencyConflictError extends Error {
+  public constructor() {
+    super('Idempotency key was used for different transaction details.');
+    this.name = 'TransactionIdempotencyConflictError';
+  }
+}
+
 export class GetOwnedTransactionUseCase {
   public constructor(private readonly transactions: TransactionRepository) {}
+
+  public async revisions(
+    transactionId: string,
+    actorId: string,
+  ): Promise<readonly TransactionRevision[]> {
+    if (
+      (await this.transactions.findByIdForOwner(transactionId, actorId)) ===
+      null
+    )
+      throw new OwnedTransactionNotFoundError();
+    return (
+      (await this.transactions.listRevisionsForOwner?.(
+        transactionId,
+        actorId,
+      )) ?? []
+    );
+  }
 
   public execute(
     transactionId: string,
@@ -221,6 +319,11 @@ export class ListOwnedTransactionsBetweenUseCase {
 
 export type UpdateOwnedTransactionCommand = Readonly<{
   actorId: string;
+  expectedVersion?: number;
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+  costCenterId?: string | null;
+  tagIds?: readonly string[];
   amount: string;
   counterpartyId?: string | null;
   counterpartyName?: string | null;
@@ -254,9 +357,24 @@ export class UpdateOwnedTransactionUseCase {
     );
     if (account === null) throw new TransactionAccountUnavailableError();
     const expectedVersion = transaction.toSnapshot().version;
+    if (
+      command.expectedVersion !== undefined &&
+      command.expectedVersion !== expectedVersion
+    )
+      throw new TransactionVersionConflictError();
     const at = this.clock.now();
     transaction.updateDetails(
       {
+        ...(command.categoryId === undefined
+          ? {}
+          : { categoryId: command.categoryId }),
+        ...(command.subcategoryId === undefined
+          ? {}
+          : { subcategoryId: command.subcategoryId }),
+        ...(command.costCenterId === undefined
+          ? {}
+          : { costCenterId: command.costCenterId }),
+        ...(command.tagIds === undefined ? {} : { tagIds: command.tagIds }),
         amount: Money.fromDecimal(
           command.amount,
           account.initialBalance.currency,

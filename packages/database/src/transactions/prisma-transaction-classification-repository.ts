@@ -38,6 +38,7 @@ export class PrismaTransactionClassificationRepository implements TransactionCla
           categoryId: true,
           costCenterId: true,
           id: true,
+          version: true,
           subcategoryId: true,
         },
         where: { id: transactionId, ownerId },
@@ -100,10 +101,36 @@ export class PrismaTransactionClassificationRepository implements TransactionCla
         return 'unchanged';
       }
       await client.transaction.update({
-        data: selection,
+        data: {
+          ...selection,
+          version: { increment: 1 },
+          updatedAt: auditEvent.toSnapshot().occurredAt,
+        },
         where: { id_ownerId: { id: transactionId, ownerId } },
       });
       await insertFinancialAuditEvent(client, auditEvent);
+      const event = auditEvent.toSnapshot();
+      await client.transactionRevision.create({
+        data: {
+          id: event.id,
+          ownerId,
+          transactionId,
+          actorId: event.actorId,
+          previousVersion: transaction.version,
+          newVersion: transaction.version + 1,
+          before: {
+            categoryId: transaction.categoryId,
+            subcategoryId: transaction.subcategoryId,
+            costCenterId: transaction.costCenterId,
+          },
+          after: {
+            categoryId: selection.categoryId,
+            subcategoryId: selection.subcategoryId,
+            costCenterId: selection.costCenterId,
+          },
+          occurredAt: event.occurredAt,
+        },
+      });
       return 'updated';
     });
   }

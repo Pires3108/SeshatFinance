@@ -158,6 +158,8 @@ export {
   ListOwnedTransactionsBetweenUseCase,
   OwnedTransactionNotFoundError,
   TransactionVersionConflictError,
+  TransactionIdempotencyConflictError,
+  type TransactionRevision,
   TransactionRequiresTransferMutationError,
   UpdateOwnedTransactionUseCase,
   TransactionAccountUnavailableError,

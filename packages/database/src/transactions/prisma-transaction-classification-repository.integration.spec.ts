@@ -50,14 +50,18 @@ describe('PrismaTransactionClassificationRepository', () => {
       '../../prisma/migrations/20261015120000_add_account_agency/migration.sql',
       '../../prisma/migrations/20260920133000_create_transactions/migration.sql',
       '../../prisma/migrations/20260920180000_create_categories/migration.sql',
+      '../../prisma/migrations/20260920190000_create_tags/migration.sql',
+      '../../prisma/migrations/20260920200000_assign_transaction_tags/migration.sql',
       '../../prisma/migrations/20260920210000_create_cost_centers/migration.sql',
       '../../prisma/migrations/20260921010000_assign_transaction_classifications/migration.sql',
       '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
       '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
       '../../prisma/migrations/20261020120000_category_catalog_lifecycle/migration.sql',
+      '../../prisma/migrations/20261020130000_tag_lifecycle/migration.sql',
       '../../prisma/migrations/20261021120000_cost_center_lifecycle/migration.sql',
       '../../prisma/migrations/20261005180000_create_counterparties/migration.sql',
       '../../prisma/migrations/20261021180000_counterparty_lifecycle_and_transaction_reference/migration.sql',
+      '../../prisma/migrations/20261103010000_transaction_idempotency/migration.sql',
     ];
     const migrationClient = new Client({
       connectionString: container.getConnectionUri(),
@@ -165,6 +169,16 @@ describe('PrismaTransactionClassificationRepository', () => {
     await expect(
       repository.getForOwner(transaction.id, ownerId),
     ).resolves.toEqual(selection);
+    const afterClassification = await client.transaction.findUnique({
+      where: { id: transaction.id },
+      select: { version: true },
+    });
+    expect(afterClassification?.version).toBe(2);
+    await expect(
+      client.transactionRevision.count({
+        where: { transactionId: transaction.id },
+      }),
+    ).resolves.toBe(1);
     await expect(client.financialAuditEvent.count()).resolves.toBe(3);
     await expect(
       new PrismaCostCenterRepository(client).deleteUnlinked(

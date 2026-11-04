@@ -216,11 +216,41 @@ model Transaction {
   outgoingTransfer       Transfer?            @relation("transfer_source")
   incomingTransfer       Transfer?            @relation("transfer_destination")
   balanceAdjustment      BalanceAdjustment?
+  idempotencyRecords     TransactionIdempotency[]
+  revisions              TransactionRevision[]
 
   @@unique([id, ownerId])
   @@index([ownerId, accountId, occurredAt])
   @@index([ownerId, counterpartyId])
   @@map("transactions")
+}
+
+model TransactionIdempotency {
+  ownerId       String @map("owner_id") @db.Uuid
+  key           String @db.VarChar(128)
+  fingerprint   String
+  transactionId String @map("transaction_id") @db.Uuid
+  transaction   Transaction @relation(fields: [transactionId, ownerId], references: [id, ownerId], onDelete: Restrict)
+
+  @@id([ownerId, key])
+  @@map("transaction_idempotency")
+}
+
+model TransactionRevision {
+  id            String @id @db.Uuid
+  ownerId       String @map("owner_id") @db.Uuid
+  transactionId String @map("transaction_id") @db.Uuid
+  transaction   Transaction @relation(fields: [transactionId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  actorId       String @map("actor_id") @db.Uuid
+  previousVersion Int @map("previous_version")
+  newVersion Int @map("new_version")
+  before        Json
+  after         Json
+  occurredAt    DateTime @map("occurred_at") @db.Timestamptz(6)
+
+  @@unique([transactionId, newVersion])
+  @@index([ownerId, transactionId, newVersion])
+  @@map("transaction_revisions")
 }
 
 model Transfer {

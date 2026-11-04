@@ -5,6 +5,10 @@ export type TransactionLifecycle = 'active' | 'archived' | 'trashed';
 
 export type TransactionSnapshot = Readonly<{
   accountId: string;
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+  costCenterId?: string | null;
+  tagIds?: readonly string[];
   amount: MoneySnapshot;
   archivedAt: Date | null;
   createdAt: Date;
@@ -24,6 +28,10 @@ export type TransactionSnapshot = Readonly<{
 
 export type CreateTransactionProperties = Readonly<{
   accountId: string;
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+  costCenterId?: string | null;
+  tagIds?: readonly string[];
   amount: Money;
   createdAt: Date;
   counterpartyId?: string | null;
@@ -38,6 +46,10 @@ export type CreateTransactionProperties = Readonly<{
 
 export type UpdateTransactionDetails = Readonly<{
   amount: Money;
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+  costCenterId?: string | null;
+  tagIds?: readonly string[];
   counterpartyId?: string | null;
   counterpartyName?: string | null;
   description: string | null;
@@ -76,6 +88,10 @@ export class Transaction {
     );
     return new Transaction({
       accountId: properties.accountId,
+      categoryId: properties.categoryId ?? null,
+      subcategoryId: properties.subcategoryId ?? null,
+      costCenterId: properties.costCenterId ?? null,
+      tagIds: [...new Set(properties.tagIds ?? [])],
       amount: properties.amount.toSnapshot(),
       archivedAt: null,
       createdAt: new Date(properties.createdAt),
@@ -165,6 +181,22 @@ export class Transaction {
     assertCounterpartyReference(counterpartyId, counterpartyName);
     this.state = {
       ...this.state,
+      categoryId:
+        details.categoryId === undefined
+          ? (this.state.categoryId ?? null)
+          : details.categoryId,
+      subcategoryId:
+        details.subcategoryId === undefined
+          ? (this.state.subcategoryId ?? null)
+          : details.subcategoryId,
+      costCenterId:
+        details.costCenterId === undefined
+          ? (this.state.costCenterId ?? null)
+          : details.costCenterId,
+      tagIds:
+        details.tagIds === undefined
+          ? [...(this.state.tagIds ?? [])]
+          : [...new Set(details.tagIds)],
       counterpartyId,
       counterpartyName,
       amount: details.amount.toSnapshot(),
@@ -367,6 +399,7 @@ function assertCounterpartyReference(
 function copySnapshot(snapshot: TransactionSnapshot): TransactionSnapshot {
   return {
     ...snapshot,
+    tagIds: [...(snapshot.tagIds ?? [])],
     amount: {
       amount: snapshot.amount.amount,
       currency: { ...snapshot.amount.currency },

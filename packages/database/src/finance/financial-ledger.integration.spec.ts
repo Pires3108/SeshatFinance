@@ -68,6 +68,10 @@ describe('financial ledger across accounts, transfers, and adjustments', () => {
       '../../prisma/migrations/20261001010000_create_manual_exchange_quotes/migration.sql',
       '../../prisma/migrations/20261005180000_create_counterparties/migration.sql',
       '../../prisma/migrations/20261021180000_counterparty_lifecycle_and_transaction_reference/migration.sql',
+      '../../prisma/migrations/20261020120000_category_catalog_lifecycle/migration.sql',
+      '../../prisma/migrations/20261020130000_tag_lifecycle/migration.sql',
+      '../../prisma/migrations/20261021120000_cost_center_lifecycle/migration.sql',
+      '../../prisma/migrations/20261103010000_transaction_idempotency/migration.sql',
     ]) {
       await migrationClient.query(
         await readFile(new URL(path, import.meta.url), 'utf8'),

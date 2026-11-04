@@ -51,6 +51,7 @@ describe('PrismaTransactionTagRepository', () => {
       '../../prisma/migrations/20261020130000_tag_lifecycle/migration.sql',
       '../../prisma/migrations/20261005180000_create_counterparties/migration.sql',
       '../../prisma/migrations/20261021180000_counterparty_lifecycle_and_transaction_reference/migration.sql',
+      '../../prisma/migrations/20261103010000_transaction_idempotency/migration.sql',
     ];
     const migrationClient = new Client({
       connectionString: container.getConnectionUri(),
@@ -148,6 +149,17 @@ describe('PrismaTransactionTagRepository', () => {
       assignments.listTagIdsForOwner(transaction.id, ownerId),
     ).resolves.toEqual([second.id]);
     await expect(client.financialAuditEvent.count()).resolves.toBe(4);
+    await expect(
+      client.transaction.findUnique({
+        where: { id: transaction.id },
+        select: { version: true },
+      }),
+    ).resolves.toMatchObject({ version: 3 });
+    await expect(
+      client.transactionRevision.count({
+        where: { transactionId: transaction.id },
+      }),
+    ).resolves.toBe(2);
 
     const foreignTag = Tag.create({
       createdAt: new Date('2026-09-20T12:03:00.000Z'),

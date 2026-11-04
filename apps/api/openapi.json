@@ -4214,6 +4214,28 @@
               "schema": {
                 "additionalProperties": false,
                 "properties": {
+                  "categoryId": {
+                    "format": "uuid",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "subcategoryId": {
+                    "format": "uuid",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "costCenterId": {
+                    "format": "uuid",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "tagIds": {
+                    "type": "array",
+                    "items": {
+                      "format": "uuid",
+                      "type": "string"
+                    }
+                  },
                   "amount": {
                     "maxLength": 1002,
                     "pattern": "^\\d+(?:\\.\\d+)?$",
@@ -4279,6 +4301,28 @@
                     "accountId": {
                       "format": "uuid",
                       "type": "string"
+                    },
+                    "categoryId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "subcategoryId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "costCenterId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "tagIds": {
+                      "type": "array",
+                      "items": {
+                        "format": "uuid",
+                        "type": "string"
+                      }
                     },
                     "amount": {
                       "pattern": "^\\d+(?:\\.\\d+)?$",
@@ -4351,6 +4395,10 @@
                   },
                   "required": [
                     "accountId",
+                    "categoryId",
+                    "subcategoryId",
+                    "costCenterId",
+                    "tagIds",
                     "amount",
                     "archivedAt",
                     "createdAt",
@@ -4450,6 +4498,28 @@
                         "format": "uuid",
                         "type": "string"
                       },
+                      "categoryId": {
+                        "format": "uuid",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "subcategoryId": {
+                        "format": "uuid",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "costCenterId": {
+                        "format": "uuid",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "tagIds": {
+                        "type": "array",
+                        "items": {
+                          "format": "uuid",
+                          "type": "string"
+                        }
+                      },
                       "amount": {
                         "pattern": "^\\d+(?:\\.\\d+)?$",
                         "type": "string"
@@ -4521,6 +4591,10 @@
                     },
                     "required": [
                       "accountId",
+                      "categoryId",
+                      "subcategoryId",
+                      "costCenterId",
+                      "tagIds",
                       "amount",
                       "archivedAt",
                       "createdAt",
@@ -4644,6 +4718,28 @@
                         "format": "uuid",
                         "type": "string"
                       },
+                      "categoryId": {
+                        "format": "uuid",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "subcategoryId": {
+                        "format": "uuid",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "costCenterId": {
+                        "format": "uuid",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "tagIds": {
+                        "type": "array",
+                        "items": {
+                          "format": "uuid",
+                          "type": "string"
+                        }
+                      },
                       "amount": {
                         "pattern": "^\\d+(?:\\.\\d+)?$",
                         "type": "string"
@@ -4715,6 +4811,10 @@
                     },
                     "required": [
                       "accountId",
+                      "categoryId",
+                      "subcategoryId",
+                      "costCenterId",
+                      "tagIds",
                       "amount",
                       "archivedAt",
                       "createdAt",
@@ -4777,6 +4877,28 @@
                       "format": "uuid",
                       "type": "string"
                     },
+                    "categoryId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "subcategoryId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "costCenterId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "tagIds": {
+                      "type": "array",
+                      "items": {
+                        "format": "uuid",
+                        "type": "string"
+                      }
+                    },
                     "amount": {
                       "pattern": "^\\d+(?:\\.\\d+)?$",
                       "type": "string"
@@ -4848,6 +4970,10 @@
                   },
                   "required": [
                     "accountId",
+                    "categoryId",
+                    "subcategoryId",
+                    "costCenterId",
+                    "tagIds",
                     "amount",
                     "archivedAt",
                     "createdAt",
@@ -4905,6 +5031,28 @@
               "schema": {
                 "additionalProperties": false,
                 "properties": {
+                  "categoryId": {
+                    "format": "uuid",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "subcategoryId": {
+                    "format": "uuid",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "costCenterId": {
+                    "format": "uuid",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "tagIds": {
+                    "type": "array",
+                    "items": {
+                      "format": "uuid",
+                      "type": "string"
+                    }
+                  },
                   "amount": {
                     "maxLength": 1002,
                     "pattern": "^\\d+(?:\\.\\d+)?$",
@@ -4935,6 +5083,10 @@
                   "occurredAt": {
                     "format": "date-time",
                     "type": "string"
+                  },
+                  "expectedVersion": {
+                    "minimum": 1,
+                    "type": "integer"
                   }
                 },
                 "required": [
@@ -4959,6 +5111,28 @@
                     "accountId": {
                       "format": "uuid",
                       "type": "string"
+                    },
+                    "categoryId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "subcategoryId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "costCenterId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "tagIds": {
+                      "type": "array",
+                      "items": {
+                        "format": "uuid",
+                        "type": "string"
+                      }
                     },
                     "amount": {
                       "pattern": "^\\d+(?:\\.\\d+)?$",
@@ -5031,6 +5205,10 @@
                   },
                   "required": [
                     "accountId",
+                    "categoryId",
+                    "subcategoryId",
+                    "costCenterId",
+                    "tagIds",
                     "amount",
                     "archivedAt",
                     "createdAt",
@@ -5069,6 +5247,37 @@
           }
         ],
         "summary": "Update an owned transaction",
+        "tags": ["transactions"]
+      }
+    },
+    "/api/v1/transactions/{transactionId}/revisions": {
+      "get": {
+        "operationId": "TransactionController_revisions",
+        "parameters": [
+          {
+            "name": "transactionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List private edit history for an owned transaction",
         "tags": ["transactions"]
       }
     },
@@ -5120,6 +5329,28 @@
                       "format": "uuid",
                       "type": "string"
                     },
+                    "categoryId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "subcategoryId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "costCenterId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "tagIds": {
+                      "type": "array",
+                      "items": {
+                        "format": "uuid",
+                        "type": "string"
+                      }
+                    },
                     "amount": {
                       "pattern": "^\\d+(?:\\.\\d+)?$",
                       "type": "string"
@@ -5191,6 +5422,10 @@
                   },
                   "required": [
                     "accountId",
+                    "categoryId",
+                    "subcategoryId",
+                    "costCenterId",
+                    "tagIds",
                     "amount",
                     "archivedAt",
                     "createdAt",

@@ -69,8 +69,8 @@ A primeira versão será uma aplicação web responsiva e instalável como PWA, 
 - **RF-027 — Despesa:** registrar despesas essenciais ou fixas, variáveis ou de estilo de vida, envio informal e concessão de empréstimo.
 - **RF-028 — Registro de transferência:** representar uma transferência já realizada ou planejada fora da Seshat Finance por lançamentos pareados, sem iniciar a operação externa nem alterar o patrimônio líquido consolidado.
 - **RF-029 — Ajuste:** registrar ajuste de saldo positivo ou negativo, sempre com justificativa.
-- **RF-030 — Campos:** toda movimentação deve conter conta, tipo, valor, moeda, data e hora; pode conter entidade, descrição, categoria, subcategoria, etiquetas, centro de custo e observações.
-- **RF-031 — Edição:** permitir editar movimentações, recalcular os saldos afetados e manter histórico de valores anteriores e novos.
+- **RF-030 — Campos:** toda movimentação deve conter conta, tipo, valor, moeda, data e hora; pode conter entidade, descrição, categoria, subcategoria, etiquetas, centro de custo e observações. Criação e edição gravam os campos opcionais autorizados junto do lançamento e de seu efeito contábil em uma operação atômica; repetição da mesma criação com chave idempotente não duplica o saldo.
+- **RF-031 — Edição:** permitir editar movimentações com versão esperada para impedir perda de atualização, recalcular somente a diferença nos saldos afetados e manter histórico privado de valores anteriores e novos, separado da auditoria mínima sem dados sensíveis.
 - **RF-032 — Exclusão lógica:** enviar movimentação para a lixeira, removendo seu efeito dos saldos e permitindo restauração.
 - **RF-033 — Anexos:** anexar comprovantes em PDF, JPG, PNG ou WebP, com pré-visualização e remoção controlada.
 - **RF-034 — Reembolso:** vincular reembolso ou estorno à despesa original e apresentar o valor líquido.
