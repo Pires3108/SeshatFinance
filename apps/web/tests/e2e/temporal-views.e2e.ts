@@ -123,6 +123,9 @@ test('expired session clears the view', async ({ page }) => {
     await route.fulfill({ status: 401, json: { error: 'unauthorized' } });
   });
   await page.goto('/movimentacoes');
-  await expect(page.getByRole('alert')).toContainText('Sua sessão expirou.');
-  await expect(page.getByRole('alert')).toBeFocused();
+  const sessionAlert = page
+    .getByRole('alert')
+    .filter({ hasText: 'Sua sessão expirou.' });
+  await expect(sessionAlert).toBeVisible();
+  await expect(sessionAlert).toBeFocused();
 });
