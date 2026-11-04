@@ -1,5 +1,5 @@
 import { Currency, Money, Transaction } from '@seshat/domain';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import {
   InvalidTemporalSelectionError,
@@ -29,7 +29,10 @@ function transaction(
 function createUseCase(
   items: readonly Transaction[],
   timeZone = 'America/New_York',
-) {
+): {
+  useCase: ListTemporalTransactionsUseCase;
+  list: Mock<(_owner: string, from: Date, to: Date) => Promise<Transaction[]>>;
+} {
   const list = vi.fn((_owner: string, from: Date, to: Date) =>
     Promise.resolve(
       items.filter(
