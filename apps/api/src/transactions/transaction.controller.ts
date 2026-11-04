@@ -9,6 +9,7 @@ import {
   TransactionAccountUnavailableError,
   TransactionRequiresTransferMutationError,
   TransactionVersionConflictError,
+  TransactionIdempotencyConflictError,
   UpdateOwnedTransactionUseCase,
 } from '@seshat/application';
 import {
@@ -19,12 +20,14 @@ import {
   type Transaction,
   type TransactionSnapshot,
 } from '@seshat/domain';
+import type { TransactionRevision } from '@seshat/application';
 import {
   BadRequestException,
   Body,
   ConflictException,
   Controller,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
   Inject,
@@ -65,6 +68,10 @@ import {
 
 const idSchema = z.uuid();
 const createSchema = z.object({
+  categoryId: idSchema.nullable().optional(),
+  subcategoryId: idSchema.nullable().optional(),
+  costCenterId: idSchema.nullable().optional(),
+  tagIds: z.array(idSchema).max(100).optional(),
   amount: z
     .string()
     .max(1002)
@@ -78,10 +85,12 @@ const createSchema = z.object({
   observations: z.string().trim().min(1).nullable(),
   occurredAt: z.iso.datetime({ offset: true }),
 });
-const updateSchema = createSchema.omit({
-  currencyCode: true,
-  currencyMinorUnitScale: true,
-});
+const updateSchema = createSchema
+  .omit({
+    currencyCode: true,
+    currencyMinorUnitScale: true,
+  })
+  .extend({ expectedVersion: z.number().int().positive().optional() });
 const lifecycleSchema = z.object({
   action: z.enum([
     'archive',
@@ -107,6 +116,10 @@ type LifecycleRequest = z.infer<typeof lifecycleSchema>;
 type InstantRangeRequest = z.infer<typeof instantRangeSchema>;
 type Response = Readonly<{
   accountId: string;
+  categoryId: string | null;
+  subcategoryId: string | null;
+  costCenterId: string | null;
+  tagIds: readonly string[];
   amount: string;
   archivedAt: string | null;
   createdAt: string;
@@ -128,6 +141,10 @@ type Response = Readonly<{
 const responseSchema: SchemaObject = {
   properties: {
     accountId: { format: 'uuid', type: 'string' },
+    categoryId: { format: 'uuid', nullable: true, type: 'string' },
+    subcategoryId: { format: 'uuid', nullable: true, type: 'string' },
+    costCenterId: { format: 'uuid', nullable: true, type: 'string' },
+    tagIds: { type: 'array', items: { format: 'uuid', type: 'string' } },
     amount: { pattern: '^\\d+(?:\\.\\d+)?$', type: 'string' },
     archivedAt: { format: 'date-time', nullable: true, type: 'string' },
     createdAt: { format: 'date-time', type: 'string' },
@@ -147,6 +164,10 @@ const responseSchema: SchemaObject = {
   },
   required: [
     'accountId',
+    'categoryId',
+    'subcategoryId',
+    'costCenterId',
+    'tagIds',
     'amount',
     'archivedAt',
     'createdAt',
@@ -221,18 +242,37 @@ export class TransactionController {
     @Req() request: FastifyRequest,
     @Param('accountId', new ZodValidationPipe(idSchema)) accountId: string,
     @Body(new ZodValidationPipe(createSchema)) body: CreateRequest,
+    @Headers('idempotency-key') idempotencyKey?: string,
   ): Promise<Response> {
     try {
       if (body.counterpartyId != null && body.counterpartyName != null)
         throw new BadRequestException(
           'Informe entidade ou texto livre, não ambos.',
         );
-      const { counterpartyId, counterpartyName, ...details } = body;
+      const {
+        counterpartyId,
+        counterpartyName,
+        categoryId,
+        subcategoryId,
+        costCenterId,
+        tagIds,
+        ...details
+      } = body;
+      if (
+        idempotencyKey !== undefined &&
+        (idempotencyKey.length < 1 || idempotencyKey.length > 128)
+      )
+        throw new BadRequestException('Invalid idempotency key.');
       return mapTransaction(
         await this.createTransaction.execute({
           accountId,
           actorId: this.actorId(request),
           ...details,
+          ...(categoryId === undefined ? {} : { categoryId }),
+          ...(subcategoryId === undefined ? {} : { subcategoryId }),
+          ...(costCenterId === undefined ? {} : { costCenterId }),
+          ...(tagIds === undefined ? {} : { tagIds }),
+          ...(idempotencyKey === undefined ? {} : { idempotencyKey }),
           ...(counterpartyId === undefined ? {} : { counterpartyId }),
           ...(counterpartyName === undefined ? {} : { counterpartyName }),
           occurredAt: new Date(body.occurredAt),
@@ -346,6 +386,26 @@ export class TransactionController {
     return mapTransaction(transaction);
   }
 
+  @Get('transactions/:transactionId/revisions')
+  @ApiOperation({
+    summary: 'List private edit history for an owned transaction',
+  })
+  @ApiParam({ format: 'uuid', name: 'transactionId', type: 'string' })
+  public async revisions(
+    @Req() request: FastifyRequest,
+    @Param('transactionId', new ZodValidationPipe(idSchema))
+    transactionId: string,
+  ): Promise<readonly TransactionRevision[]> {
+    try {
+      return await this.getTransaction.revisions(
+        transactionId,
+        this.actorId(request),
+      );
+    } catch (error) {
+      throw mapError(error);
+    }
+  }
+
   @Patch('transactions/:transactionId')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update an owned transaction' })
@@ -367,11 +427,25 @@ export class TransactionController {
         throw new BadRequestException(
           'Informe entidade ou texto livre, não ambos.',
         );
-      const { counterpartyId, counterpartyName, ...details } = body;
+      const {
+        counterpartyId,
+        counterpartyName,
+        categoryId,
+        subcategoryId,
+        costCenterId,
+        tagIds,
+        expectedVersion,
+        ...details
+      } = body;
       return mapTransaction(
         await this.updateTransaction.execute({
           actorId: this.actorId(request),
           ...details,
+          ...(categoryId === undefined ? {} : { categoryId }),
+          ...(subcategoryId === undefined ? {} : { subcategoryId }),
+          ...(costCenterId === undefined ? {} : { costCenterId }),
+          ...(tagIds === undefined ? {} : { tagIds }),
+          ...(expectedVersion === undefined ? {} : { expectedVersion }),
           ...(counterpartyId === undefined ? {} : { counterpartyId }),
           ...(counterpartyName === undefined ? {} : { counterpartyName }),
           occurredAt: new Date(body.occurredAt),
@@ -435,6 +509,10 @@ function mapTransaction(transaction: Transaction): Response {
   const value = transaction.toSnapshot();
   return {
     accountId: value.accountId,
+    categoryId: value.categoryId ?? null,
+    subcategoryId: value.subcategoryId ?? null,
+    costCenterId: value.costCenterId ?? null,
+    tagIds: value.tagIds ?? [],
     amount: value.amount.amount,
     archivedAt: value.archivedAt?.toISOString() ?? null,
     createdAt: value.createdAt.toISOString(),
@@ -461,6 +539,10 @@ function mapError(error: unknown): Error {
     return new NotFoundException('Account not found.');
   if (error instanceof TransactionVersionConflictError)
     return new ConflictException('Transaction was modified concurrently.');
+  if (error instanceof TransactionIdempotencyConflictError)
+    return new ConflictException(
+      'Idempotency key was used for a different transaction.',
+    );
   if (error instanceof TransactionRequiresTransferMutationError)
     return new ConflictException(
       'Transfer entries must be changed through the transfer endpoint.',
@@ -480,7 +562,10 @@ function mapError(error: unknown): Error {
 
 function updateBodySchema(): SchemaObject {
   const schema = createBodySchema();
-  const properties = { ...schema.properties };
+  const properties: Record<string, SchemaObject> = {
+    ...schema.properties,
+    expectedVersion: { minimum: 1, type: 'integer' },
+  };
   delete properties.currencyCode;
   delete properties.currencyMinorUnitScale;
   return {
@@ -494,6 +579,10 @@ function createBodySchema(): SchemaObject {
   return {
     additionalProperties: false,
     properties: {
+      categoryId: { format: 'uuid', nullable: true, type: 'string' },
+      subcategoryId: { format: 'uuid', nullable: true, type: 'string' },
+      costCenterId: { format: 'uuid', nullable: true, type: 'string' },
+      tagIds: { type: 'array', items: { format: 'uuid', type: 'string' } },
       amount: {
         maxLength: 1002,
         pattern: '^\\d+(?:\\.\\d+)?$',

@@ -33,6 +33,9 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 ### CA-004 — Receita e despesa
 
 **Dado** uma conta ativa, **quando** registrar receita e despesa, **então** o saldo será aumentado e reduzido, respectivamente, e os registros aparecerão nas visões temporais.  
+**Dado** um comando de receita ou despesa com classificações e contraparte opcionais próprias, **quando** o titular o registrar pela API ou pela interface, **então** os campos, o lançamento, seu efeito no saldo e a auditoria mínima serão persistidos atomicamente. Uma seleção alheia, arquivada ou inválida recusará a escrita inteira.
+**Dado** a mesma chave de idempotência e o mesmo comando, **quando** a criação for repetida, **então** haverá um único lançamento e um único efeito no saldo; a mesma chave com comando diferente será recusada.
+**Dado** um lançamento próprio com versão atual, **quando** o titular editar valor, tipo ou campos opcionais, **então** o saldo mudará apenas pela diferença contábil, o histórico privado guardará os valores anteriores e novos, e a auditoria genérica não incluirá dados sensíveis. Versão obsoleta ou titular diferente impedirá a edição.
 **Dado** uma categoria ou subcategoria própria usada em lançamentos, **quando** ela for arquivada, **então** os vínculos históricos permanecerão consultáveis e ela não poderá ser aplicada a novos lançamentos; arquivar a raiz também bloqueia suas subcategorias.
 
 **Dado** uma classificação vinculada a lançamento, **quando** sua exclusão for solicitada, **então** a exclusão será recusada sem modificar o histórico.

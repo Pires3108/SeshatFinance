@@ -781,6 +781,23 @@ export type paths = {
         readonly patch: operations["TransactionController_update"];
         readonly trace?: never;
     };
+    readonly "/api/v1/transactions/{transactionId}/revisions": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List private edit history for an owned transaction */
+        readonly get: operations["TransactionController_revisions"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/transactions/{transactionId}/lifecycle": {
         readonly parameters: {
             readonly query?: never;
@@ -3288,6 +3305,13 @@ export interface operations {
                     readonly "application/json": readonly {
                         /** Format: uuid */
                         readonly accountId: string;
+                        /** Format: uuid */
+                        readonly categoryId: string | null;
+                        /** Format: uuid */
+                        readonly subcategoryId: string | null;
+                        /** Format: uuid */
+                        readonly costCenterId: string | null;
+                        readonly tagIds: readonly string[];
                         readonly amount: string;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
@@ -3337,6 +3361,13 @@ export interface operations {
         readonly requestBody: {
             readonly content: {
                 readonly "application/json": {
+                    /** Format: uuid */
+                    readonly categoryId?: string | null;
+                    /** Format: uuid */
+                    readonly subcategoryId?: string | null;
+                    /** Format: uuid */
+                    readonly costCenterId?: string | null;
+                    readonly tagIds?: readonly string[];
                     readonly amount: string;
                     /** @enum {string} */
                     readonly currencyCode: "BRL" | "USD" | "EUR";
@@ -3362,6 +3393,13 @@ export interface operations {
                     readonly "application/json": {
                         /** Format: uuid */
                         readonly accountId: string;
+                        /** Format: uuid */
+                        readonly categoryId: string | null;
+                        /** Format: uuid */
+                        readonly subcategoryId: string | null;
+                        /** Format: uuid */
+                        readonly costCenterId: string | null;
+                        readonly tagIds: readonly string[];
                         readonly amount: string;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
@@ -3441,6 +3479,13 @@ export interface operations {
                     readonly "application/json": readonly {
                         /** Format: uuid */
                         readonly accountId: string;
+                        /** Format: uuid */
+                        readonly categoryId: string | null;
+                        /** Format: uuid */
+                        readonly subcategoryId: string | null;
+                        /** Format: uuid */
+                        readonly costCenterId: string | null;
+                        readonly tagIds: readonly string[];
                         readonly amount: string;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
@@ -3497,6 +3542,13 @@ export interface operations {
                     readonly "application/json": {
                         /** Format: uuid */
                         readonly accountId: string;
+                        /** Format: uuid */
+                        readonly categoryId: string | null;
+                        /** Format: uuid */
+                        readonly subcategoryId: string | null;
+                        /** Format: uuid */
+                        readonly costCenterId: string | null;
+                        readonly tagIds: readonly string[];
                         readonly amount: string;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
@@ -3553,6 +3605,13 @@ export interface operations {
         readonly requestBody: {
             readonly content: {
                 readonly "application/json": {
+                    /** Format: uuid */
+                    readonly categoryId?: string | null;
+                    /** Format: uuid */
+                    readonly subcategoryId?: string | null;
+                    /** Format: uuid */
+                    readonly costCenterId?: string | null;
+                    readonly tagIds?: readonly string[];
                     readonly amount: string;
                     readonly description: string | null;
                     /** Format: uuid */
@@ -3563,6 +3622,7 @@ export interface operations {
                     readonly observations: string | null;
                     /** Format: date-time */
                     readonly occurredAt: string;
+                    readonly expectedVersion?: number;
                 };
             };
         };
@@ -3575,6 +3635,13 @@ export interface operations {
                     readonly "application/json": {
                         /** Format: uuid */
                         readonly accountId: string;
+                        /** Format: uuid */
+                        readonly categoryId: string | null;
+                        /** Format: uuid */
+                        readonly subcategoryId: string | null;
+                        /** Format: uuid */
+                        readonly costCenterId: string | null;
+                        readonly tagIds: readonly string[];
                         readonly amount: string;
                         /** Format: date-time */
                         readonly archivedAt: string | null;
@@ -3626,6 +3693,32 @@ export interface operations {
             };
         };
     };
+    readonly TransactionController_revisions: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly transactionId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly TransactionController_lifecycle: {
         readonly parameters: {
             readonly query?: never;
@@ -3652,6 +3745,13 @@ export interface operations {
                     readonly "application/json": {
                         /** Format: uuid */
                         readonly accountId: string;
+                        /** Format: uuid */
+                        readonly categoryId: string | null;
+                        /** Format: uuid */
+                        readonly subcategoryId: string | null;
+                        /** Format: uuid */
+                        readonly costCenterId: string | null;
+                        readonly tagIds: readonly string[];
                         readonly amount: string;
                         /** Format: date-time */
                         readonly archivedAt: string | null;

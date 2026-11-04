@@ -58,6 +58,7 @@ describe('PrismaTransactionClassificationRepository', () => {
       '../../prisma/migrations/20261021120000_cost_center_lifecycle/migration.sql',
       '../../prisma/migrations/20261005180000_create_counterparties/migration.sql',
       '../../prisma/migrations/20261021180000_counterparty_lifecycle_and_transaction_reference/migration.sql',
+      '../../prisma/migrations/20261103010000_transaction_idempotency/migration.sql',
     ];
     const migrationClient = new Client({
       connectionString: container.getConnectionUri(),
@@ -165,6 +166,16 @@ describe('PrismaTransactionClassificationRepository', () => {
     await expect(
       repository.getForOwner(transaction.id, ownerId),
     ).resolves.toEqual(selection);
+    const afterClassification = await client.transaction.findUnique({
+      where: { id: transaction.id },
+      select: { version: true },
+    });
+    expect(afterClassification?.version).toBe(2);
+    await expect(
+      client.transactionRevision.count({
+        where: { transactionId: transaction.id },
+      }),
+    ).resolves.toBe(1);
     await expect(client.financialAuditEvent.count()).resolves.toBe(3);
     await expect(
       new PrismaCostCenterRepository(client).deleteUnlinked(

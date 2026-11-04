@@ -240,6 +240,11 @@ export function AccountDetail({ accountId }: { accountId: string }): ReactNode {
                 O saldo contábil vem da API e inclui o histórico da conta.
                 Arquivar preserva esse histórico.
               </p>
+              <p>
+                <Link href={`/contas/${accountId}/movimentacoes`}>
+                  Consultar receitas e despesas
+                </Link>
+              </p>
               <div className="account-actions">
                 {item.account.lifecycle === 'active' && (
                   <button

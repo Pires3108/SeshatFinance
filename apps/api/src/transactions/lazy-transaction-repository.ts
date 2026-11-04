@@ -3,6 +3,7 @@ import type {
   TransactionFinancialLinkRepository,
   TransactionRepository,
   TransactionTimelineFilters,
+  TransactionRevision,
 } from '@seshat/application';
 import type {
   FinancialAuditEvent,
@@ -27,8 +28,24 @@ export class LazyTransactionRepository
   public insert(
     transaction: Transaction,
     auditEvent: FinancialAuditEvent,
+    idempotency?: Readonly<{ key: string; fingerprint: string }>,
   ): Promise<void> {
-    return this.getRepository().insert(transaction, auditEvent);
+    return this.getRepository().insert(transaction, auditEvent, idempotency);
+  }
+  public findByIdempotencyKey(
+    ownerId: string,
+    key: string,
+  ): Promise<Readonly<{
+    transaction: Transaction;
+    fingerprint: string;
+  }> | null> {
+    return this.getRepository().findByIdempotencyKey(ownerId, key);
+  }
+  public listRevisionsForOwner(
+    transactionId: string,
+    ownerId: string,
+  ): Promise<readonly TransactionRevision[]> {
+    return this.getRepository().listRevisionsForOwner(transactionId, ownerId);
   }
   public findByIdForOwner(
     id: string,

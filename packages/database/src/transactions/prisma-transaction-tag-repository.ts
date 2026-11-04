@@ -34,7 +34,7 @@ export class PrismaTransactionTagRepository implements TransactionTagRepository 
         WHERE id = ${transactionId}::uuid AND owner_id = ${ownerId}::uuid
         FOR UPDATE`;
       const transaction = await client.transaction.findFirst({
-        select: { id: true },
+        select: { id: true, version: true },
         where: { id: transactionId, ownerId },
       });
       if (transaction === null) return 'transaction-not-found';
@@ -72,7 +72,25 @@ export class PrismaTransactionTagRepository implements TransactionTagRepository 
           data: added.map((tagId) => ({ ownerId, tagId, transactionId })),
         });
       }
+      const event = auditEvent.toSnapshot();
+      await client.transaction.update({
+        data: { version: { increment: 1 }, updatedAt: event.occurredAt },
+        where: { id_ownerId: { id: transactionId, ownerId } },
+      });
       await insertFinancialAuditEvent(client, auditEvent);
+      await client.transactionRevision.create({
+        data: {
+          id: event.id,
+          ownerId,
+          transactionId,
+          actorId: event.actorId,
+          previousVersion: transaction.version,
+          newVersion: transaction.version + 1,
+          before: { tagIds: current.map(({ tagId }) => tagId) },
+          after: { tagIds: next },
+          occurredAt: event.occurredAt,
+        },
+      });
       return 'updated';
     });
   }

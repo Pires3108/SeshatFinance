@@ -45,6 +45,7 @@ describe('PrismaTransactionRepository', () => {
       repository.listForOwnerBetween('owner-id', from, to),
     ).resolves.toEqual([]);
     expect(findMany).toHaveBeenCalledWith({
+      include: { tagAssignments: { select: { tagId: true } } },
       orderBy: [{ occurredAt: 'asc' }, { id: 'asc' }],
       where: {
         occurredAt: { gte: from, lt: to },
@@ -58,6 +59,7 @@ describe('PrismaTransactionRepository', () => {
       occurredAtOrder: 'desc',
     });
     expect(findMany).toHaveBeenLastCalledWith({
+      include: { tagAssignments: { select: { tagId: true } } },
       orderBy: [{ occurredAt: 'desc' }, { id: 'asc' }],
       where: {
         accountId: 'account-id',
@@ -69,14 +71,18 @@ describe('PrismaTransactionRepository', () => {
     });
   });
 
-  it('persists edited amount and kind with the optimistic version', async () => {
-    const updateMany = vi.fn().mockResolvedValue({ count: 1 });
+  it('does not write an edit or audit event when the expected version is stale', async () => {
+    const updateMany = vi.fn();
     const createAuditEvent = vi.fn().mockResolvedValue({});
     const client = {
       $transaction: (operation: (transaction: unknown) => unknown) =>
         operation({
+          $queryRaw: vi.fn().mockResolvedValue([]),
           financialAuditEvent: { create: createAuditEvent },
-          transaction: { updateMany },
+          transaction: {
+            findFirst: vi.fn().mockResolvedValue(null),
+            updateMany,
+          },
         }),
     } as unknown as PrismaClient;
     const repository = new PrismaTransactionRepository(client);
@@ -90,41 +96,11 @@ describe('PrismaTransactionRepository', () => {
       occurredAt: new Date('2026-09-20T11:00:00.000Z'),
       ownerId: 'b36bfe2a-f319-49a8-aade-2a536ea3af38',
     });
-    transaction.updateDetails(
-      {
-        amount: Money.fromDecimal('42.375', Currency.create('BHD', 3)),
-        description: 'Updated transaction',
-        kind: 'expense',
-        occurredAt: new Date('2026-09-21T10:30:00.000Z'),
-      },
-      new Date('2026-09-21T12:00:00.000Z'),
-    );
-
     await expect(
       repository.save(transaction, 1, auditEvent(transaction)),
-    ).resolves.toBe(true);
-    expect(updateMany).toHaveBeenCalledWith({
-      data: {
-        amountMinorUnits: '42375',
-        archivedAt: null,
-        counterpartyId: null,
-        counterpartyName: null,
-        description: 'Updated transaction',
-        kind: 'expense',
-        lifecycle: 'active',
-        observations: null,
-        occurredAt: new Date('2026-09-21T10:30:00.000Z'),
-        trashedAt: null,
-        updatedAt: new Date('2026-09-21T12:00:00.000Z'),
-        version: 2,
-      },
-      where: {
-        id: '86684068-45d9-4e14-b454-f7e556b867e7',
-        ownerId: 'b36bfe2a-f319-49a8-aade-2a536ea3af38',
-        version: 1,
-      },
-    });
-    expect(createAuditEvent).toHaveBeenCalledOnce();
+    ).resolves.toBe(false);
+    expect(updateMany).not.toHaveBeenCalled();
+    expect(createAuditEvent).not.toHaveBeenCalled();
   });
 });
 

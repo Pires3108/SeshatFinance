@@ -304,3 +304,30 @@ button:focus-visible {
   font-weight: 700;
   overflow-wrap: anywhere;
 }
+.transaction-form {
+  display: grid;
+  gap: 1rem;
+}
+.transaction-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 650;
+}
+.transaction-form input,
+.transaction-form select,
+.transaction-form textarea {
+  min-height: 2.75rem;
+  padding: 0.65rem;
+  border: 1px solid #789b97;
+  font: inherit;
+}
+.transaction-form button,
+.account-card > button {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid #176a61;
+  background: #fff;
+  color: #10534d;
+  font-weight: 650;
+  cursor: pointer;
+}

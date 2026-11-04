@@ -37,6 +37,9 @@ class RecordingTransactions
     this.auditEvents.push(auditEvent);
     return Promise.resolve();
   }
+  public findByIdempotencyKey(): Promise<null> {
+    return Promise.resolve(null);
+  }
   public findByIdForOwner(
     id: string,
     ownerId: string,

@@ -25,6 +25,35 @@ function transaction(kind: 'income' | 'expense'): Transaction {
 }
 
 describe('Transaction', () => {
+  it('keeps optional classifications and distinct tags through a versioned amount edit', () => {
+    const value = Transaction.create({
+      accountId: 'account-id',
+      amount: Money.fromDecimal('10.00', currency),
+      categoryId: 'category-id',
+      tagIds: ['tag-a', 'tag-a', 'tag-b'],
+      createdAt: new Date('2026-09-20T12:00:00.000Z'),
+      description: null,
+      id: 'transaction-id',
+      kind: 'expense',
+      occurredAt: new Date('2026-09-20T11:00:00.000Z'),
+      ownerId: 'owner-id',
+    });
+    value.updateDetails(
+      {
+        amount: Money.fromDecimal('12.50', currency),
+        description: null,
+        kind: 'expense',
+        occurredAt: new Date('2026-09-20T11:00:00.000Z'),
+      },
+      new Date('2026-09-20T12:01:00.000Z'),
+    );
+    expect(value.toSnapshot()).toMatchObject({
+      categoryId: 'category-id',
+      tagIds: ['tag-a', 'tag-b'],
+      version: 2,
+    });
+    expect(value.balanceEffect().toDecimal()).toBe('-12.50');
+  });
   it('requires a positive amount with explicit currency', () => {
     expect(() =>
       Transaction.create({
