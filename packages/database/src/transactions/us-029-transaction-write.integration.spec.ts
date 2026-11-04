@@ -56,6 +56,9 @@ describe('US-029 PostgreSQL transaction write invariants', () => {
       '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
       '../../prisma/migrations/20261005180000_create_counterparties/migration.sql',
       '../../prisma/migrations/20261021180000_counterparty_lifecycle_and_transaction_reference/migration.sql',
+      '../../prisma/migrations/20261020120000_category_catalog_lifecycle/migration.sql',
+      '../../prisma/migrations/20261020130000_tag_lifecycle/migration.sql',
+      '../../prisma/migrations/20261021120000_cost_center_lifecycle/migration.sql',
       '../../prisma/migrations/20261103010000_transaction_idempotency/migration.sql',
     ])
       await client.query(
