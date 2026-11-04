@@ -4193,6 +4193,113 @@
         "tags": ["tags"]
       }
     },
+    "/api/v1/transactions/temporal": {
+      "get": {
+        "operationId": "TemporalTransactionController_list",
+        "parameters": [
+          {
+            "name": "date",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "name": "period",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "enum": ["day", "week", "month"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "period",
+                    "selectedDate",
+                    "timeZone",
+                    "from",
+                    "to",
+                    "days",
+                    "totals"
+                  ],
+                  "properties": {
+                    "period": {
+                      "type": "string",
+                      "enum": ["day", "week", "month"]
+                    },
+                    "selectedDate": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "timeZone": {
+                      "type": "string"
+                    },
+                    "from": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "to": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "days": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "transactions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object"
+                            }
+                          },
+                          "totals": {
+                            "type": "array",
+                            "items": {
+                              "type": "object"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "totals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List owned transactions by day, Monday-start week, or month in profile time zone",
+        "tags": ["transactions"]
+      }
+    },
     "/api/v1/accounts/{accountId}/transactions": {
       "post": {
         "operationId": "TransactionController_create",

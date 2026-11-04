@@ -44,6 +44,7 @@ import {
   GetOwnedTransactionClassificationUseCase,
   ListOwnedTransactionTagsUseCase,
   ListOwnedTransactionsBetweenUseCase,
+  ListTemporalTransactionsUseCase,
   ListOwnedCategoriesUseCase,
   ListOwnedCostCentersUseCase,
   ListOwnedTagsUseCase,
@@ -152,6 +153,7 @@ import { LazyTransactionRepository } from './transactions/lazy-transaction-repos
 import { LazyTransactionClassificationRepository } from './transactions/lazy-transaction-classification-repository.js';
 import { LazyTransactionTagRepository } from './transactions/lazy-transaction-tag-repository.js';
 import { TransactionController } from './transactions/transaction.controller.js';
+import { TemporalTransactionController } from './transactions/temporal-transaction.controller.js';
 import { TransactionTagController } from './transactions/transaction-tag.controller.js';
 import { TransactionClassificationController } from './transactions/transaction-classification.controller.js';
 import { LazyTransferRepository } from './transfers/lazy-transfer-repository.js';
@@ -177,6 +179,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     PasswordRecoveryController,
     SessionController,
     TagController,
+    TemporalTransactionController,
     TransactionController,
     TransactionClassificationController,
     TransactionTagController,
@@ -653,6 +656,15 @@ import { UserProfileController } from './users/user-profile.controller.js';
         transactions: TransactionTimelineRepository,
       ): ListOwnedTransactionsBetweenUseCase =>
         new ListOwnedTransactionsBetweenUseCase(transactions),
+    },
+    {
+      inject: [LazyTransactionRepository, LazyUserProfileRepository],
+      provide: ListTemporalTransactionsUseCase,
+      useFactory: (
+        transactions: TransactionTimelineRepository,
+        profiles: UserProfileRepository,
+      ): ListTemporalTransactionsUseCase =>
+        new ListTemporalTransactionsUseCase(transactions, profiles),
     },
     {
       inject: [

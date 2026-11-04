@@ -728,6 +728,23 @@ export type paths = {
         readonly patch: operations["TagController_restore"];
         readonly trace?: never;
     };
+    readonly "/api/v1/transactions/temporal": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List owned transactions by day, Monday-start week, or month in profile time zone */
+        readonly get: operations["TemporalTransactionController_list"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/accounts/{accountId}/transactions": {
         readonly parameters: {
             readonly query?: never;
@@ -3272,6 +3289,52 @@ export interface operations {
                         /** Format: date-time */
                         readonly updatedAt: string;
                         readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly TemporalTransactionController_list: {
+        readonly parameters: {
+            readonly query: {
+                readonly date: string;
+                readonly period: "day" | "week" | "month";
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** @enum {string} */
+                        readonly period: "day" | "week" | "month";
+                        /** Format: date */
+                        readonly selectedDate: string;
+                        readonly timeZone: string;
+                        /** Format: date-time */
+                        readonly from: string;
+                        /** Format: date-time */
+                        readonly to: string;
+                        readonly days: readonly {
+                            /** Format: date */
+                            readonly date?: string;
+                            readonly transactions?: readonly Record<string, never>[];
+                            readonly totals?: readonly Record<string, never>[];
+                        }[];
+                        readonly totals: readonly Record<string, never>[];
                     };
                 };
             };
