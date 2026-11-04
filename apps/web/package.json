@@ -8,7 +8,7 @@
     "lint": "eslint .",
     "start": "next start",
     "test": "vitest run --passWithNoTests",
-    "test:e2e": "pnpm exec turbo run build --filter=@seshat/api && playwright test",
+    "test:e2e": "pnpm exec turbo run build --filter=@seshat/api --filter=@seshat/web && playwright test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
