@@ -149,6 +149,24 @@ describe('PrismaTransactionRepository', () => {
         new Date('2026-09-20T11:00:00.000Z'),
       ),
     ).resolves.toEqual([]);
+    expect(
+      (
+        await transactions.listForOwnerBetween(
+          ownerId,
+          new Date('2026-09-20T11:00:00.000Z'),
+          new Date('2026-09-20T11:00:00.001Z'),
+          'active',
+        )
+      ).map((item) => item.id),
+    ).toEqual([transaction.id]);
+    await expect(
+      transactions.listForOwnerBetween(
+        'e89b6ad0-7838-4a2c-9a21-c775ea78e22a',
+        new Date('2026-09-20T11:00:00.000Z'),
+        new Date('2026-09-20T11:00:00.001Z'),
+        'active',
+      ),
+    ).resolves.toEqual([]);
 
     transaction.updateDetails(
       {

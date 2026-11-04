@@ -91,11 +91,11 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-012 — Limites calendáricos das visões temporais
 
-- **Estado:** aberto.
+- **Estado:** resolvido para US-030.
 - **Referências:** RF-067 a RF-069; CA-004; US-030.
 - **Risco:** as visões diária, semanal e mensal não definem qual fuso converte o instante da movimentação em data civil, qual dia inicia a semana nem a convenção dos limites do período. Inferir esses pontos pode omitir ou duplicar movimentações próximas à meia-noite, à mudança de mês ou a transições de horário de verão.
-- **Decisão necessária:** definir o fuso autoritativo por usuário ou contexto compartilhado, o primeiro dia da semana e intervalos calendáricos semiabertos canônicos, incluindo o comportamento quando o fuso for alterado.
-- **Limite atual:** consultas internas podem evoluir com intervalos explícitos de instantes `[from, to)`, ownership e ordenação determinística; endpoints ou rótulos que afirmem representar dia, semana ou mês não devem ser publicados antes da decisão.
+- **Decisão:** usar o fuso IANA atual do perfil do titular para converter instantes em datas civis. A semana começa na segunda-feira. Cada período é convertido em intervalo semiaberto de instantes `[início, fim)`, com o fim calculado como o início civil do período seguinte no mesmo fuso. Mudanças no fuso reagrupam consultas futuras sem modificar o instante armazenado em cada lançamento. Totais permanecem separados por moeda e usam aritmética Decimal. Decisão aprovada no plano da S04.
+- **Verificação:** cobrir períodos adjacentes, viradas de mês, transições de horário de verão, mudança de fuso e ausência de soma entre moedas.
 
 ### RII-013 — Conteúdo sensível e expiração da auditoria
 

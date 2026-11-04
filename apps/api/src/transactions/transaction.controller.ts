@@ -114,7 +114,7 @@ type CreateRequest = z.infer<typeof createSchema>;
 type UpdateRequest = z.infer<typeof updateSchema>;
 type LifecycleRequest = z.infer<typeof lifecycleSchema>;
 type InstantRangeRequest = z.infer<typeof instantRangeSchema>;
-type Response = Readonly<{
+export type TransactionResponse = Readonly<{
   accountId: string;
   categoryId: string | null;
   subcategoryId: string | null;
@@ -137,6 +137,7 @@ type Response = Readonly<{
   updatedAt: string;
   version: number;
 }>;
+type Response = TransactionResponse;
 
 const responseSchema: SchemaObject = {
   properties: {
@@ -505,7 +506,7 @@ export class TransactionController {
   }
 }
 
-function mapTransaction(transaction: Transaction): Response {
+export function mapTransaction(transaction: Transaction): Response {
   const value = transaction.toSnapshot();
   return {
     accountId: value.accountId,

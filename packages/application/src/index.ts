@@ -1,5 +1,14 @@
 export type { Clock } from './ports/clock.js';
 export {
+  InvalidTemporalSelectionError,
+  ListTemporalTransactionsUseCase,
+  TemporalProfileUnavailableError,
+  type TemporalDay,
+  type TemporalPeriod,
+  type TemporalTotal,
+  type TemporalView,
+} from './transactions/list-temporal-transactions.js';
+export {
   PasswordRejectedError,
   PasswordCheckUnavailableError,
   type PasswordSafetyChecker,
