@@ -1,4 +1,5 @@
 import {
+  ChangeFamilyGroupRoleUseCase,
   ListOwnFamilyGroupsUseCase,
   ResolveAuthenticatedActorUseCase,
 } from '@seshat/application';
@@ -31,10 +32,16 @@ describe('Family group HTTP authorization', () => {
       },
     ]),
   };
+  const changeRole = {
+    execute: vi
+      .fn<ChangeFamilyGroupRoleUseCase['execute']>()
+      .mockResolvedValue('member'),
+  };
 
   beforeEach(async (): Promise<void> => {
     resolveActor.execute.mockClear();
     listFamilyGroups.execute.mockClear();
+    changeRole.execute.mockClear();
     const testingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
@@ -42,6 +49,8 @@ describe('Family group HTTP authorization', () => {
       .useValue(resolveActor)
       .overrideProvider(ListOwnFamilyGroupsUseCase)
       .useValue(listFamilyGroups)
+      .overrideProvider(ChangeFamilyGroupRoleUseCase)
+      .useValue(changeRole)
       .compile();
     application = testingModule.createNestApplication<NestFastifyApplication>(
       new FastifyAdapter(),
@@ -66,5 +75,39 @@ describe('Family group HTTP authorization', () => {
     expect(response.statusCode).toBe(200);
     expect(resolveActor.execute).toHaveBeenCalledWith('actor-b-token');
     expect(listFamilyGroups.execute).toHaveBeenCalledWith(authenticatedActorId);
+  });
+
+  it('requires a verified actor and validated role for changes', async () => {
+    const path =
+      '/api/v1/family-groups/70299a8b-16ba-4b45-a50e-2ef035d42f7a/members/80299a8b-16ba-4b45-a50e-2ef035d42f7a/role';
+    const unauthorized = await application.inject({
+      method: 'PATCH',
+      url: path,
+      payload: { role: 'member' },
+    });
+    expect(unauthorized.statusCode).toBe(401);
+
+    const invalid = await application.inject({
+      headers: { authorization: 'Bearer actor-b-token' },
+      method: 'PATCH',
+      url: path,
+      payload: { role: 'owner' },
+    });
+    expect(invalid.statusCode).toBe(400);
+    expect(changeRole.execute).not.toHaveBeenCalled();
+
+    const response = await application.inject({
+      headers: { authorization: 'Bearer actor-b-token' },
+      method: 'PATCH',
+      url: `${path}?actorId=actor-a`,
+      payload: { role: 'member' },
+    });
+    expect(response.statusCode).toBe(200);
+    expect(changeRole.execute).toHaveBeenCalledWith({
+      actorId: authenticatedActorId,
+      groupId: '70299a8b-16ba-4b45-a50e-2ef035d42f7a',
+      nextRole: 'member',
+      targetUserId: '80299a8b-16ba-4b45-a50e-2ef035d42f7a',
+    });
   });
 });

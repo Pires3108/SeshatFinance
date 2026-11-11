@@ -1,8 +1,12 @@
-import type { FamilyGroupRepository } from '@seshat/application';
+import type {
+  ChangeFamilyGroupRoleCommand,
+  FamilyGroupRepository,
+} from '@seshat/application';
 import type {
   FamilyGroup,
   FamilyGroupMembership,
   FamilyGroupMembershipSnapshot,
+  FamilyGroupRole,
 } from '@seshat/domain';
 import { PrismaFamilyGroupRepository } from '@seshat/database';
 import { Injectable } from '@nestjs/common';
@@ -26,6 +30,12 @@ export class LazyFamilyGroupRepository implements FamilyGroupRepository {
     userId: string,
   ): Promise<readonly FamilyGroupMembershipSnapshot[]> {
     return this.getRepository().listForMember(userId);
+  }
+
+  public changeRole(
+    command: ChangeFamilyGroupRoleCommand,
+  ): Promise<FamilyGroupRole> {
+    return this.getRepository().changeRole(command);
   }
 
   private getRepository(): PrismaFamilyGroupRepository {

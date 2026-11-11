@@ -240,7 +240,10 @@ export {
 } from './cards/create-credit-card.js';
 export {
   CreateFamilyGroupUseCase,
+  ChangeFamilyGroupRoleUseCase,
+  FamilyGroupRoleChangeDeniedError,
   ListOwnFamilyGroupsUseCase,
+  type ChangeFamilyGroupRoleCommand,
   type FamilyGroupRepository,
 } from './family/create-family-group.js';
 export {

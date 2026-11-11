@@ -109,6 +109,9 @@ export {
 } from './family/family-group.js';
 export {
   hasFamilyGroupCapability,
+  canInviteToFamilyGroup,
+  canChangeFamilyGroupRole,
+  canRemoveFamilyGroupMember,
   type FamilyGroupCapability,
 } from './family/family-group-policy.js';
 export {

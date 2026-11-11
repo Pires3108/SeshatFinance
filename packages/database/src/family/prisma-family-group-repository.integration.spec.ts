@@ -35,6 +35,15 @@ describe('PrismaFamilyGroupRepository', () => {
         'utf8',
       ),
     );
+    await migrationClient.query(
+      await readFile(
+        new URL(
+          '../../prisma/migrations/20260930140000_family_group_role_changes/migration.sql',
+          import.meta.url,
+        ),
+        'utf8',
+      ),
+    );
     await migrationClient.end();
     prisma = createPrismaClient(container.getConnectionUri());
     disconnect = async (): Promise<void> => prisma?.$disconnect();
@@ -93,6 +102,57 @@ describe('PrismaFamilyGroupRepository', () => {
           userId: otherUserId,
         },
       }),
+    ).rejects.toThrow();
+  });
+
+  it('changes roles atomically with append-only audit and enforces current actor authority', async () => {
+    if (prisma === undefined || repository === undefined) {
+      throw new Error('Family group persistence is unavailable.');
+    }
+    const groupId = '44444444-4444-4444-8444-444444444444';
+    const fixture = group(groupId, '2026-09-24T12:00:00.000Z');
+    await repository.insert(fixture.group, fixture.owner);
+    await prisma.familyGroupMembership.create({
+      data: {
+        groupId,
+        userId: otherUserId,
+        role: 'member',
+        joinedAt: new Date('2026-09-24T12:00:00.000Z'),
+      },
+    });
+    const command = {
+      actorId: ownerId,
+      groupId,
+      targetUserId: otherUserId,
+      nextRole: 'administrator' as const,
+      changedAt: new Date('2026-09-30T14:00:00.000Z'),
+      eventId: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+    };
+    await expect(repository.changeRole(command)).resolves.toBe('administrator');
+    await expect(prisma.familyGroupRoleChange.count()).resolves.toBe(1);
+    await expect(
+      repository.changeRole({ ...command, actorId: otherUserId }),
+    ).resolves.toBe('administrator');
+    await expect(prisma.familyGroupRoleChange.count()).resolves.toBe(1);
+    await expect(
+      repository.changeRole({ ...command, nextRole: 'member' }),
+    ).rejects.toThrow();
+    await expect(
+      prisma.familyGroupMembership.findUniqueOrThrow({
+        where: { groupId_userId: { groupId, userId: otherUserId } },
+      }),
+    ).resolves.toMatchObject({ role: 'administrator' });
+    await expect(
+      repository.changeRole({
+        ...command,
+        actorId: otherUserId,
+        targetUserId: ownerId,
+        nextRole: 'member',
+      }),
+    ).rejects.toThrow('not allowed');
+    await expect(prisma.familyGroupRoleChange.count()).resolves.toBe(1);
+    await expect(
+      prisma.familyGroupRoleChange.delete({ where: { id: command.eventId } }),
     ).rejects.toThrow();
   });
 });
