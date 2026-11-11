@@ -1,12 +1,17 @@
 import {
   GetOwnUserProfileUseCase,
   InvalidUserProfilePreferencesError,
+  isIanaTimeZone,
+  TimeZoneChangeScopeRequiredError,
+  timeZoneChangeScopes,
   UpdateOwnUserProfileUseCase,
+  UserProfileVersionConflictError,
   type UserProfile,
 } from '@seshat/application';
 import {
   BadRequestException,
   Body,
+  ConflictException,
   Controller,
   Get,
   Inject,
@@ -42,14 +47,8 @@ const updateProfileSchema = z.object({
     .trim()
     .min(1)
     .max(64)
-    .refine((value) => {
-      try {
-        new Intl.DateTimeFormat('en-US', { timeZone: value });
-        return true;
-      } catch {
-        return false;
-      }
-    }, 'Invalid IANA time zone.'),
+    .refine(isIanaTimeZone, 'Invalid IANA time zone.'),
+  timeZoneChangeScope: z.enum(timeZoneChangeScopes).optional(),
 });
 
 type UpdateProfileRequest = z.infer<typeof updateProfileSchema>;
@@ -135,6 +134,11 @@ export class UserProfileController {
           type: 'string',
         },
         timeZone: { maxLength: 64, minLength: 1, type: 'string' },
+        timeZoneChangeScope: {
+          description: 'Required when timeZone differs from the current one.',
+          enum: [...timeZoneChangeScopes],
+          type: 'string',
+        },
       },
       required: ['displayName', 'locale', 'presentationCurrency', 'timeZone'],
       type: 'object',
@@ -146,16 +150,24 @@ export class UserProfileController {
     @Body(new ZodValidationPipe(updateProfileSchema))
     body: UpdateProfileRequest,
   ): Promise<UserProfileResponse> {
+    const { timeZoneChangeScope, ...preferences } = body;
     try {
       return mapResponse(
         await this.updateProfile.execute({
           actorId: this.actorId(request),
-          ...body,
+          ...preferences,
+          ...(timeZoneChangeScope === undefined ? {} : { timeZoneChangeScope }),
         }),
       );
     } catch (error) {
       if (error instanceof InvalidUserProfilePreferencesError) {
         throw new BadRequestException('Invalid profile preferences.');
+      }
+      if (error instanceof TimeZoneChangeScopeRequiredError) {
+        throw new BadRequestException('Time zone change scope is required.');
+      }
+      if (error instanceof UserProfileVersionConflictError) {
+        throw new ConflictException('Profile was modified concurrently.');
       }
       throw error;
     }

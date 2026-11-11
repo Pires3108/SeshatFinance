@@ -1,4 +1,8 @@
-import type { UserProfile, UserProfileRepository } from '@seshat/application';
+import type {
+  UserProfile,
+  UserProfileRepository,
+  UserTimeZoneChange,
+} from '@seshat/application';
 
 import type { PrismaClient } from '../generated/prisma/client.js';
 
@@ -27,7 +31,6 @@ export class PrismaUserProfileRepository implements UserProfileRepository {
       update: {
         displayName: profile.displayName,
         locale: profile.locale,
-        timeZone: profile.timeZone,
         presentationCurrency: profile.presentationCurrency,
         updatedAt: profile.updatedAt,
         version: { increment: 1 },
@@ -35,6 +38,50 @@ export class PrismaUserProfileRepository implements UserProfileRepository {
     });
 
     return mapProfile(persisted);
+  }
+
+  public changeTimeZone(
+    profile: UserProfile,
+    expectedVersion: number,
+    change: UserTimeZoneChange,
+  ): Promise<UserProfile | null> {
+    return this.client.$transaction(async (client) => {
+      const updated = await client.userProfile.updateMany({
+        where: { id: profile.id, version: expectedVersion },
+        data: {
+          displayName: profile.displayName,
+          locale: profile.locale,
+          timeZone: change.newTimeZone,
+          presentationCurrency: profile.presentationCurrency,
+          updatedAt: profile.updatedAt,
+          version: { increment: 1 },
+        },
+      });
+      if (updated.count !== 1) return null;
+      const reinterpreted =
+        change.scope === 'reinterpret_existing'
+          ? await client.transaction.updateMany({
+              where: { ownerId: change.ownerId },
+              data: { timeZone: change.newTimeZone },
+            })
+          : { count: 0 };
+      await client.userTimeZoneChange.create({
+        data: {
+          id: change.id,
+          ownerId: change.ownerId,
+          previousTimeZone: change.previousTimeZone,
+          newTimeZone: change.newTimeZone,
+          scope: change.scope,
+          affectedTransactions: reinterpreted.count,
+          changedAt: change.changedAt,
+        },
+      });
+      return mapProfile(
+        await client.userProfile.findUniqueOrThrow({
+          where: { id: profile.id },
+        }),
+      );
+    });
   }
 }
 

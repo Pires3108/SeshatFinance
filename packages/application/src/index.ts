@@ -6,8 +6,11 @@ export {
   type TemporalDay,
   type TemporalPeriod,
   type TemporalTotal,
+  type TemporalTransaction,
+  type TemporalTransactionRepository,
   type TemporalView,
 } from './transactions/list-temporal-transactions.js';
+export { isIanaTimeZone } from './users/iana-time-zone.js';
 export {
   PasswordRejectedError,
   PasswordCheckUnavailableError,
@@ -153,10 +156,15 @@ export {
 export {
   GetOwnUserProfileUseCase,
   InvalidUserProfilePreferencesError,
+  TimeZoneChangeScopeRequiredError,
+  timeZoneChangeScopes,
   UpdateOwnUserProfileUseCase,
+  UserProfileVersionConflictError,
+  type TimeZoneChangeScope,
   type UpdateOwnUserProfileCommand,
   type UserProfile,
   type UserProfileRepository,
+  type UserTimeZoneChange,
 } from './users/update-own-user-profile.js';
 export {
   CreateTransactionUseCase,

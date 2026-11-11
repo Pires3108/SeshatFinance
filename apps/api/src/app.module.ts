@@ -87,6 +87,7 @@ import {
   type TagRepository,
   type TransactionRepository,
   type TransactionFinancialLinkRepository,
+  type TemporalTransactionRepository,
   type TransactionTimelineRepository,
   type TransactionTagRepository,
   type TransactionClassificationRepository,
@@ -661,7 +662,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
       inject: [LazyTransactionRepository, LazyUserProfileRepository],
       provide: ListTemporalTransactionsUseCase,
       useFactory: (
-        transactions: TransactionTimelineRepository,
+        transactions: TemporalTransactionRepository,
         profiles: UserProfileRepository,
       ): ListTemporalTransactionsUseCase =>
         new ListTemporalTransactionsUseCase(transactions, profiles),
@@ -825,7 +826,11 @@ import { UserProfileController } from './users/user-profile.controller.js';
       useFactory: (
         profiles: UserProfileRepository,
       ): UpdateOwnUserProfileUseCase =>
-        new UpdateOwnUserProfileUseCase(profiles, new SystemClock()),
+        new UpdateOwnUserProfileUseCase(
+          profiles,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
     },
     {
       inject: [AuthConfiguration, LazyPrismaClient],

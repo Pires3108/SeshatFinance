@@ -1,9 +1,22 @@
 import { Money, type Transaction } from '@seshat/domain';
 
-import type { TransactionTimelineRepository } from './create-transaction.js';
 import type { UserProfileRepository } from '../users/update-own-user-profile.js';
 
 export type TemporalPeriod = 'day' | 'week' | 'month';
+export type TemporalTransaction = Readonly<{
+  transaction: Transaction;
+  timeZone: string;
+}>;
+
+export interface TemporalTransactionRepository {
+  listWithTimeZoneForOwnerBetween(
+    ownerId: string,
+    from: Date,
+    to: Date,
+    lifecycle: 'active',
+  ): Promise<readonly TemporalTransaction[]>;
+}
+
 export type TemporalTotal = Readonly<{
   currencyCode: string;
   currencyMinorUnitScale: number;
@@ -12,7 +25,7 @@ export type TemporalTotal = Readonly<{
 }>;
 export type TemporalDay = Readonly<{
   date: string;
-  transactions: readonly Transaction[];
+  transactions: readonly TemporalTransaction[];
   totals: readonly TemporalTotal[];
 }>;
 export type TemporalView = Readonly<{
@@ -41,7 +54,7 @@ export class TemporalProfileUnavailableError extends Error {
 
 export class ListTemporalTransactionsUseCase {
   public constructor(
-    private readonly transactions: TransactionTimelineRepository,
+    private readonly transactions: TemporalTransactionRepository,
     private readonly profiles: UserProfileRepository,
   ) {}
 
@@ -58,7 +71,7 @@ export class ListTemporalTransactionsUseCase {
     const timeZone = profile.timeZone;
     const start =
       period === 'week'
-        ? addDays(selected, -((selected.getUTCDay() + 6) % 7))
+        ? addDays(selected, -selected.getUTCDay())
         : period === 'month'
           ? new Date(
               Date.UTC(selected.getUTCFullYear(), selected.getUTCMonth(), 1),
@@ -70,19 +83,26 @@ export class ListTemporalTransactionsUseCase {
         : addDays(start, period === 'week' ? 7 : 1);
     const from = civilMidnight(start, timeZone);
     const to = civilMidnight(end, timeZone);
-    const transactions = await this.transactions.listForOwnerBetween(
+    // Each transaction is bucketed by its own zone, so a candidate can sit
+    // outside the profile-zone interval; the margin covers every UTC offset.
+    const candidates = await this.transactions.listWithTimeZoneForOwnerBetween(
       actorId,
-      from,
-      to,
+      addDays(start, -1),
+      addDays(end, 1),
       'active',
     );
+    const byDate = new Map<string, TemporalTransaction[]>();
+    for (const candidate of candidates) {
+      const date = civilDate(
+        candidate.transaction.toSnapshot().occurredAt,
+        candidate.timeZone,
+      );
+      byDate.set(date, [...(byDate.get(date) ?? []), candidate]);
+    }
     const days: TemporalDay[] = [];
     for (let day = start; day < end; day = addDays(day, 1)) {
       const date = formatDate(day);
-      const items = transactions.filter(
-        (transaction) =>
-          civilDate(transaction.toSnapshot().occurredAt, timeZone) === date,
-      );
+      const items = byDate.get(date) ?? [];
       days.push({ date, transactions: items, totals: sumTotals(items) });
     }
     return {
@@ -92,7 +112,7 @@ export class ListTemporalTransactionsUseCase {
       from,
       to,
       days,
-      totals: sumTotals(transactions),
+      totals: sumTotals(days.flatMap((day) => day.transactions)),
     };
   }
 }
@@ -140,10 +160,10 @@ function civilMidnight(date: Date, timeZone: string): Date {
 }
 
 function sumTotals(
-  transactions: readonly Transaction[],
+  transactions: readonly TemporalTransaction[],
 ): readonly TemporalTotal[] {
   const totals = new Map<string, { income: Money; expense: Money }>();
-  for (const transaction of transactions) {
+  for (const { transaction } of transactions) {
     const amount = transaction.amount;
     const key = `${amount.currency.code}:${String(amount.currency.minorUnitScale)}`;
     const current = totals.get(key) ?? {

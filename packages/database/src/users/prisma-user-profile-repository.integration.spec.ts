@@ -96,9 +96,11 @@ describe('PrismaUserProfileRepository', () => {
         updatedAt: new Date('2026-10-13T12:00:00Z'),
         version: 1,
       });
-      const useCase = new UpdateOwnUserProfileUseCase(repository, {
-        now: (): Date => new Date('2026-10-13T13:00:00Z'),
-      });
+      const useCase = new UpdateOwnUserProfileUseCase(
+        repository,
+        { now: (): Date => new Date('2026-10-13T13:00:00Z') },
+        { generate: (): string => randomUUID() },
+      );
       await expect(
         useCase.execute({
           actorId: id,

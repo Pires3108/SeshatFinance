@@ -73,6 +73,19 @@ model UserProfile {
   @@map("user_profiles")
 }
 
+model UserTimeZoneChange {
+  id                   String   @id @db.Uuid
+  ownerId              String   @map("owner_id") @db.Uuid
+  previousTimeZone     String   @map("previous_time_zone") @db.VarChar(64)
+  newTimeZone          String   @map("new_time_zone") @db.VarChar(64)
+  scope                String   @db.VarChar(32)
+  affectedTransactions Int      @map("affected_transactions")
+  changedAt            DateTime @map("changed_at") @db.Timestamptz(6)
+
+  @@index([ownerId, changedAt])
+  @@map("user_time_zone_changes")
+}
+
 model UserSession {
   id         String       @id @db.Uuid
   userId     String       @map("user_id") @db.Uuid
@@ -200,6 +213,7 @@ model Transaction {
   counterparty           Counterparty?        @relation(fields: [counterpartyId, ownerId], references: [id, ownerId], onDelete: Restrict)
   counterpartyName       String?              @map("counterparty_name") @db.VarChar(200)
   occurredAt             DateTime             @map("occurred_at") @db.Timestamptz(6)
+  timeZone               String               @default("America/Sao_Paulo") @map("time_zone") @db.VarChar(64)
   lifecycle              TransactionLifecycle @default(active)
   archivedAt             DateTime?            @map("archived_at") @db.Timestamptz(6)
   trashedAt              DateTime?            @map("trashed_at") @db.Timestamptz(6)

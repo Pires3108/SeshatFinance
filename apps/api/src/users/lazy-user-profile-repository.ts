@@ -1,4 +1,8 @@
-import type { UserProfile, UserProfileRepository } from '@seshat/application';
+import type {
+  UserProfile,
+  UserProfileRepository,
+  UserTimeZoneChange,
+} from '@seshat/application';
 import { PrismaUserProfileRepository } from '@seshat/database';
 import { Injectable } from '@nestjs/common';
 
@@ -16,6 +20,18 @@ export class LazyUserProfileRepository implements UserProfileRepository {
 
   public upsert(profile: UserProfile): Promise<UserProfile> {
     return this.getRepository().upsert(profile);
+  }
+
+  public changeTimeZone(
+    profile: UserProfile,
+    expectedVersion: number,
+    change: UserTimeZoneChange,
+  ): Promise<UserProfile | null> {
+    return this.getRepository().changeTimeZone(
+      profile,
+      expectedVersion,
+      change,
+    );
   }
 
   private getRepository(): PrismaUserProfileRepository {

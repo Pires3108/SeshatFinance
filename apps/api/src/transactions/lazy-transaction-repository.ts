@@ -1,5 +1,6 @@
 import type {
   AccountTransactionBalanceRepository,
+  TemporalTransaction,
   TransactionFinancialLinkRepository,
   TransactionRepository,
   TransactionTimelineFilters,
@@ -90,6 +91,21 @@ export class LazyTransactionRepository
       filters,
     );
   }
+
+  public listWithTimeZoneForOwnerBetween(
+    ownerId: string,
+    from: Date,
+    to: Date,
+    lifecycle: 'active',
+  ): Promise<readonly TemporalTransaction[]> {
+    return this.getRepository().listWithTimeZoneForOwnerBetween(
+      ownerId,
+      from,
+      to,
+      lifecycle,
+    );
+  }
+
   public save(
     transaction: Transaction,
     expectedVersion: number,
