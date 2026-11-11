@@ -35,7 +35,11 @@ describe('TemporalTransactionController', () => {
       from: new Date('2026-11-02T03:00:00Z'),
       to: new Date('2026-11-03T03:00:00Z'),
       days: [
-        { date: '2026-11-02', transactions: [transaction], totals: [total] },
+        {
+          date: '2026-11-02',
+          transactions: [{ transaction, timeZone: 'Asia/Tokyo' }],
+          totals: [total],
+        },
       ],
       totals: [total],
     });
@@ -50,6 +54,7 @@ describe('TemporalTransactionController', () => {
     expect(execute).toHaveBeenCalledWith('verified-owner', 'day', '2026-11-02');
     expect(response.from).toBe('2026-11-02T03:00:00.000Z');
     expect(response.days[0]?.transactions[0]?.amount).toBe('10.25');
+    expect(response.days[0]?.transactions[0]?.timeZone).toBe('Asia/Tokyo');
     expect(response.totals).toEqual([total]);
   });
 

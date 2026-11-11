@@ -37,6 +37,7 @@ Esta matriz relaciona áreas funcionais, requisitos, regras e critérios de acei
 | Monitoramento sem dados financeiros                    | Mede disponibilidade sem acesso de suporte                                             | RNF-013, RNF-019, RNF-040                               |
 | Câmbio manual e consulta multimoeda no MVP             | Preserva origem e versões; totaliza por moeda e informa indisponibilidade de conversão | RF-020; RN-002; CA-003; INV-029; US-022                 |
 | Retenção de entidade sem vínculos por 30 dias          | Permite restauração antes da anonimização irreversível                                 | RF-024; RN-014, RN-046, RN-047; CA-004; RII-011; US-028 |
+| Semana inicia no domingo e fuso por movimentação       | Mantém períodos civis estáveis e torna auditável a escolha ao mudar de fuso            | RF-067 a RF-069; CA-004; RII-012; ADR-034; US-030       |
 | Baselines mensuráveis                                  | Substitui itens indefinidos                                                            | RNF-006 a RNF-012                                       |
 
 ## 3. Gestão de mudanças

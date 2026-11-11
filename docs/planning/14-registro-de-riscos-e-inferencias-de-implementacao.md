@@ -91,11 +91,10 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-012 — Limites calendáricos das visões temporais
 
-- **Estado:** decidido; implementação divergente pendente em US-030.
+- **Estado:** resolvido para US-030; persistência em ADR-034.
 - **Referências:** RF-067 a RF-069; CA-004; US-030.
 - **Risco:** as visões diária, semanal e mensal não definem qual fuso converte o instante da movimentação em data civil, qual dia inicia a semana nem a convenção dos limites do período. Inferir esses pontos pode omitir ou duplicar movimentações próximas à meia-noite, à mudança de mês ou a transições de horário de verão.
 - **Decisão:** usar o fuso IANA configurado no perfil do titular, com padrão `America/Sao_Paulo`, para converter instantes em datas civis. A semana começa no domingo. Cada período é convertido em intervalo semiaberto de instantes `[início, fim)`, com o fim calculado como o início civil do período seguinte no mesmo fuso. Ao mudar de fuso, o titular escolhe explicitamente entre reinterpretar os itens existentes no novo fuso ou aplicar o novo fuso somente aos novos itens; a escolha é persistida e auditável. Instantes permanecem em UTC e datas civis preservam sua natureza. Totais permanecem separados por moeda e usam aritmética Decimal. Decisão registrada em 27/09/2026 em SESHAT-46 e confirmada pelo usuário em 04/11/2026; substitui a regra provisória de semana iniciada na segunda-feira e de reagrupamento sem escolha aplicada na integração do PR #172.
-- **Pendência:** o incremento já integrado entrega consultas e telas com fuso do perfil, intervalos semiabertos e totais por moeda, mas ainda inicia a semana na segunda-feira e não oferece a escolha de escopo na mudança de fuso. US-030 permanece aberta até essa correção.
 - **Verificação:** cobrir períodos adjacentes, início de semana no domingo, viradas de mês, transições de horário de verão, validação IANA, as duas opções de mudança de fuso com persistência e auditoria, e ausência de soma entre moedas.
 
 ### RII-013 — Conteúdo sensível e expiração da auditoria

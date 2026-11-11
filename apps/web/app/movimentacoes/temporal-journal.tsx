@@ -263,7 +263,8 @@ export function TemporalJournal(): ReactNode {
         {state === 'ready' && view !== null && (
           <>
             <p className="account-note">
-              Datas e horários no fuso {view.timeZone}.
+              Datas e horários no fuso {view.timeZone}.{' '}
+              <Link href="/preferencias">Alterar fuso</Link>
             </p>
             <section aria-label="Totais do período" className="temporal-totals">
               <h2>Totais do período</h2>
@@ -308,7 +309,12 @@ export function TemporalJournal(): ReactNode {
                         {day.transactions.map((transaction) => (
                           <li key={transaction.id}>
                             <span>
-                              {timeLabel(transaction.occurredAt, view.timeZone)}
+                              {timeLabel(
+                                transaction.occurredAt,
+                                transaction.timeZone,
+                              )}
+                              {transaction.timeZone !== view.timeZone &&
+                                ` (${transaction.timeZone})`}
                             </span>
                             <span>
                               {transaction.description?.trim() ??

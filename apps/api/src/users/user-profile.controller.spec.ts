@@ -3,8 +3,16 @@ import type {
   UpdateOwnUserProfileUseCase,
   UserProfile,
 } from '@seshat/application';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { InvalidUserProfilePreferencesError } from '@seshat/application';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  InvalidUserProfilePreferencesError,
+  TimeZoneChangeScopeRequiredError,
+  UserProfileVersionConflictError,
+} from '@seshat/application';
 import type { FastifyRequest } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -88,5 +96,27 @@ describe('UserProfileController', () => {
         timeZone: 'America/Sao_Paulo',
       }),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it.each([
+    [new TimeZoneChangeScopeRequiredError(), BadRequestException],
+    [new UserProfileVersionConflictError(), ConflictException],
+  ])('maps %s to its client error', async (failure, expected) => {
+    const actors = new AuthenticatedActorContext();
+    const controller = new UserProfileController(
+      { execute: vi.fn() } as unknown as GetOwnUserProfileUseCase,
+      {
+        execute: vi.fn().mockRejectedValue(failure),
+      } as unknown as UpdateOwnUserProfileUseCase,
+      actors,
+    );
+    await expect(
+      controller.update(requestWithActor(actors), {
+        displayName: null,
+        locale: 'pt-BR',
+        presentationCurrency: 'BRL',
+        timeZone: 'Asia/Tokyo',
+      }),
+    ).rejects.toBeInstanceOf(expected);
   });
 });

@@ -735,7 +735,7 @@ export type paths = {
             readonly path?: never;
             readonly cookie?: never;
         };
-        /** List owned transactions by day, Monday-start week, or month in profile time zone */
+        /** List owned transactions by day, Sunday-start week, or month, bucketed by each transaction time zone */
         readonly get: operations["TemporalTransactionController_list"];
         readonly put?: never;
         readonly post?: never;
@@ -4395,6 +4395,11 @@ export interface operations {
                     /** @enum {string} */
                     readonly presentationCurrency: "BRL";
                     readonly timeZone: string;
+                    /**
+                     * @description Required when timeZone differs from the current one.
+                     * @enum {string}
+                     */
+                    readonly timeZoneChangeScope?: "reinterpret_existing" | "new_items_only";
                 };
             };
         };

@@ -62,6 +62,8 @@ describe('PrismaTransactionClassificationRepository', () => {
       '../../prisma/migrations/20261005180000_create_counterparties/migration.sql',
       '../../prisma/migrations/20261021180000_counterparty_lifecycle_and_transaction_reference/migration.sql',
       '../../prisma/migrations/20261103010000_transaction_idempotency/migration.sql',
+      '../../prisma/migrations/20260919210000_create_user_profiles/migration.sql',
+      '../../prisma/migrations/20261109120000_transaction_time_zone/migration.sql',
     ];
     const migrationClient = new Client({
       connectionString: container.getConnectionUri(),

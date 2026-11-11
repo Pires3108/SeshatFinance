@@ -53,7 +53,8 @@ type TemporalResponse = Readonly<{
   to: string;
   days: readonly Readonly<{
     date: string;
-    transactions: readonly TransactionResponse[];
+    transactions: readonly (TransactionResponse &
+      Readonly<{ timeZone: string }>)[];
     totals: readonly TotalResponse[];
   }>[];
   totals: readonly TotalResponse[];
@@ -75,7 +76,7 @@ export class TemporalTransactionController {
   @Get()
   @ApiOperation({
     summary:
-      'List owned transactions by day, Monday-start week, or month in profile time zone',
+      'List owned transactions by day, Sunday-start week, or month, bucketed by each transaction time zone',
   })
   @ApiQuery({ name: 'period', enum: ['day', 'week', 'month'], required: true })
   @ApiQuery({ name: 'date', format: 'date', type: 'string', required: true })
@@ -132,7 +133,10 @@ export class TemporalTransactionController {
         to: view.to.toISOString(),
         days: view.days.map((day) => ({
           date: day.date,
-          transactions: day.transactions.map(mapTransaction),
+          transactions: day.transactions.map(({ transaction, timeZone }) => ({
+            ...mapTransaction(transaction),
+            timeZone,
+          })),
           totals: day.totals,
         })),
         totals: view.totals,

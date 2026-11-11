@@ -4296,7 +4296,7 @@
             "bearer": []
           }
         ],
-        "summary": "List owned transactions by day, Monday-start week, or month in profile time zone",
+        "summary": "List owned transactions by day, Sunday-start week, or month, bucketed by each transaction time zone",
         "tags": ["transactions"]
       }
     },
@@ -6523,6 +6523,11 @@
                   "timeZone": {
                     "maxLength": 64,
                     "minLength": 1,
+                    "type": "string"
+                  },
+                  "timeZoneChangeScope": {
+                    "description": "Required when timeZone differs from the current one.",
+                    "enum": ["reinterpret_existing", "new_items_only"],
                     "type": "string"
                   }
                 },

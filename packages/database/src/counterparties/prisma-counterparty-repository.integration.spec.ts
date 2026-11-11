@@ -51,20 +51,14 @@ describe('PrismaCounterpartyRepository', () => {
       '../../prisma/migrations/20260921010000_assign_transaction_classifications/migration.sql',
       '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
       '../../prisma/migrations/20261005180000_create_counterparties/migration.sql',
+      '../../prisma/migrations/20261021180000_counterparty_lifecycle_and_transaction_reference/migration.sql',
+      '../../prisma/migrations/20260919210000_create_user_profiles/migration.sql',
+      '../../prisma/migrations/20261109120000_transaction_time_zone/migration.sql',
     ]) {
       await client.query(
         await readFile(new URL(path, import.meta.url), 'utf8'),
       );
     }
-    await client.query(
-      await readFile(
-        new URL(
-          '../../prisma/migrations/20261021180000_counterparty_lifecycle_and_transaction_reference/migration.sql',
-          import.meta.url,
-        ),
-        'utf8',
-      ),
-    );
     await client.end();
     prisma = createPrismaClient(container.getConnectionUri());
     disconnect = async (): Promise<void> => prisma.$disconnect();

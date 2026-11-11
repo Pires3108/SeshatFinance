@@ -1,5 +1,6 @@
 import type {
   AccountTransactionBalanceRepository,
+  TemporalTransaction,
   TransactionFinancialLinkRepository,
   TransactionRepository,
   TransactionTimelineFilters,
@@ -219,6 +220,23 @@ export class PrismaTransactionRepository
       },
     });
     return rows.map(restoreTransaction);
+  }
+
+  public async listWithTimeZoneForOwnerBetween(
+    ownerId: string,
+    from: Date,
+    to: Date,
+    lifecycle: 'active',
+  ): Promise<readonly TemporalTransaction[]> {
+    const rows = await this.client.transaction.findMany({
+      include: { tagAssignments: { select: { tagId: true } } },
+      orderBy: [{ occurredAt: 'asc' }, { id: 'asc' }],
+      where: { occurredAt: { gte: from, lt: to }, ownerId, lifecycle },
+    });
+    return rows.map((row) => ({
+      transaction: restoreTransaction(row),
+      timeZone: row.timeZone,
+    }));
   }
 
   public async save(

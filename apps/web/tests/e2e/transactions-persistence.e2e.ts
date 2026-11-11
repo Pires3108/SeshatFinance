@@ -269,7 +269,12 @@ test('income and expense persist with exact balance and temporal totals', async 
   await page.goto(`${webUrl}/contas/${account.id}`);
   await expect(page.getByText('1.234,50 BRL')).toBeVisible();
 
+  // Wait for the profile-driven initial load so the picked date is kept.
+  const zoneNote = page.getByText(
+    'Datas e horários no fuso America/Sao_Paulo.',
+  );
   await page.goto(`${webUrl}/movimentacoes`);
+  await expect(zoneNote).toBeVisible();
   await page.getByLabel('Selecionar dia').fill(selectedDate);
   for (const period of ['Dia', 'Semana', 'Mês']) {
     await page.getByRole('button', { name: period, exact: true }).click();
@@ -280,6 +285,7 @@ test('income and expense persist with exact balance and temporal totals', async 
     await expect(totals).toContainText('65,60 BRL');
   }
   await page.reload();
+  await expect(zoneNote).toBeVisible();
   await page.getByLabel('Selecionar dia').fill(selectedDate);
   await expect(page.getByText('Receita de teste')).toBeVisible();
   await expect(page.getByText('Despesa de teste')).toBeVisible();
