@@ -140,13 +140,17 @@ h1 {
 .field label {
   font-weight: 650;
 }
-.field input {
+.field input,
+.field select {
   width: 100%;
   border: 1px solid #789b97;
   border-radius: 0;
   padding: 0.8rem 0.9rem;
   color: #173a3b;
   background: #fff;
+}
+.field input[type='radio'] {
+  width: auto;
 }
 .field input::placeholder {
   color: #526d6a;

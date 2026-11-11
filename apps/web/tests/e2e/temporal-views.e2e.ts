@@ -5,7 +5,7 @@ type Period = 'day' | 'week' | 'month';
 function bounds(date: string, period: Period): { from: string; to: string } {
   const start = new Date(`${date}T03:00:00.000Z`);
   if (period === 'week')
-    start.setUTCDate(start.getUTCDate() - ((start.getUTCDay() + 6) % 7));
+    start.setUTCDate(start.getUTCDate() - start.getUTCDay());
   if (period === 'month') start.setUTCDate(1);
   const end = new Date(start);
   if (period === 'day') end.setUTCDate(end.getUTCDate() + 1);
@@ -60,6 +60,7 @@ test('navigates day, week, and month with chronological entries and separate cur
                 description: 'Primeira receita',
                 kind: 'income',
                 occurredAt: `${date}T12:00:00.000Z`,
+                timeZone: 'America/Sao_Paulo',
               },
               {
                 id: 'second',
@@ -70,6 +71,7 @@ test('navigates day, week, and month with chronological entries and separate cur
                 description: 'Segunda receita',
                 kind: 'income',
                 occurredAt: `${date}T13:00:00.000Z`,
+                timeZone: 'Asia/Tokyo',
               },
             ],
           },
@@ -84,7 +86,7 @@ test('navigates day, week, and month with chronological entries and separate cur
     page.getByText('Datas e horários no fuso America/Sao_Paulo.'),
   ).toBeVisible();
   await expect(page.getByText('09:00')).toBeVisible();
-  await expect(page.getByText('10:00')).toBeVisible();
+  await expect(page.getByText('22:00 (Asia/Tokyo)')).toBeVisible();
   await expect(page.locator('.temporal-days li')).toContainText([
     'Primeira receita',
     'Segunda receita',

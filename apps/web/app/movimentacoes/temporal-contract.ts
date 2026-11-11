@@ -14,6 +14,7 @@ export type TemporalTransaction = Readonly<{
   description: string | null;
   kind: 'income' | 'expense';
   occurredAt: string;
+  timeZone: string;
 }>;
 export type TemporalView = Readonly<{
   period: Period;
@@ -82,8 +83,19 @@ function isTransaction(value: unknown): value is TemporalTransaction {
     (value.description === null || typeof value.description === 'string') &&
     (value.kind === 'income' || value.kind === 'expense') &&
     typeof value.occurredAt === 'string' &&
-    !Number.isNaN(Date.parse(value.occurredAt))
+    !Number.isNaN(Date.parse(value.occurredAt)) &&
+    isTimeZone(value.timeZone)
   );
+}
+
+function isTimeZone(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  try {
+    new Intl.DateTimeFormat('pt-BR', { timeZone: value });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function isTemporalView(value: unknown): value is TemporalView {
@@ -93,7 +105,7 @@ export function isTemporalView(value: unknown): value is TemporalView {
     !isPeriod(value.period) ||
     typeof value.selectedDate !== 'string' ||
     !isCivilDate(value.selectedDate) ||
-    typeof value.timeZone !== 'string' ||
+    !isTimeZone(value.timeZone) ||
     typeof value.from !== 'string' ||
     Number.isNaN(Date.parse(value.from)) ||
     typeof value.to !== 'string' ||
@@ -103,11 +115,6 @@ export function isTemporalView(value: unknown): value is TemporalView {
     !value.totals.every(isTotal)
   )
     return false;
-  try {
-    new Intl.DateTimeFormat('pt-BR', { timeZone: value.timeZone });
-  } catch {
-    return false;
-  }
   return value.days.every(
     (day: unknown) =>
       isRecord(day) &&
