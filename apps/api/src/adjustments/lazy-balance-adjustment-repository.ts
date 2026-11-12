@@ -2,6 +2,8 @@ import type {
   BalanceAdjustmentHistoryItem,
   BalanceAdjustmentHistoryRepository,
   BalanceAdjustmentRepository,
+  IdempotencyRequest,
+  IdempotentBalanceAdjustmentRecord,
 } from '@seshat/application';
 import type { BalanceAdjustment, FinancialAuditEvent } from '@seshat/domain';
 import { PrismaBalanceAdjustmentRepository } from '@seshat/database';
@@ -17,11 +19,22 @@ export class LazyBalanceAdjustmentRepository
 
   public constructor(private readonly prisma: LazyPrismaClient) {}
 
+  public findIdempotentResponse(
+    request: IdempotencyRequest,
+  ): Promise<string | null> {
+    return this.getRepository().findIdempotentResponse(request);
+  }
+
   public insertAtomically(
     adjustment: BalanceAdjustment,
     auditEvent: FinancialAuditEvent,
-  ): Promise<boolean> {
-    return this.getRepository().insertAtomically(adjustment, auditEvent);
+    idempotency: IdempotentBalanceAdjustmentRecord,
+  ): Promise<string | null> {
+    return this.getRepository().insertAtomically(
+      adjustment,
+      auditEvent,
+      idempotency,
+    );
   }
 
   public listForAccountOwner(
