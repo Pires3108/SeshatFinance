@@ -37,6 +37,7 @@ describe('Reference account use case across HTTP and PostgreSQL', () => {
       '20260920040000_create_accounts',
       '20261015120000_add_account_agency',
       '20260921210000_create_financial_audit_events',
+      '20261112120000_financial_audit_hash_chain',
     ]) {
       const source = await readFile(
         new URL(

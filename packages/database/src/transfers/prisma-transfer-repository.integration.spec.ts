@@ -54,6 +54,7 @@ describe('PrismaTransferRepository', () => {
       '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
       '../../prisma/migrations/20260921150000_create_transfers/migration.sql',
       '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
+      '../../prisma/migrations/20261112120000_financial_audit_hash_chain/migration.sql',
       '../../prisma/migrations/20261005180000_create_counterparties/migration.sql',
       '../../prisma/migrations/20261021180000_counterparty_lifecycle_and_transaction_reference/migration.sql',
       '../../prisma/migrations/20260919210000_create_user_profiles/migration.sql',

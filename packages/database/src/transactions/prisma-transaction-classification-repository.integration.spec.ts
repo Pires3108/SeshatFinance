@@ -56,6 +56,7 @@ describe('PrismaTransactionClassificationRepository', () => {
       '../../prisma/migrations/20260921010000_assign_transaction_classifications/migration.sql',
       '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
       '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
+      '../../prisma/migrations/20261112120000_financial_audit_hash_chain/migration.sql',
       '../../prisma/migrations/20261020120000_category_catalog_lifecycle/migration.sql',
       '../../prisma/migrations/20261020130000_tag_lifecycle/migration.sql',
       '../../prisma/migrations/20261021120000_cost_center_lifecycle/migration.sql',

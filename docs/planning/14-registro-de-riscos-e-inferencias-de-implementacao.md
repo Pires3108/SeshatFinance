@@ -103,7 +103,12 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 - **Referências:** RF-088; RF-089; RNF-023; RNF-032; INV-041; US-035; US-101; US-112.
 - **Risco:** “valores relevantes” não define quais estados anteriores e posteriores podem ser armazenados, mascarados ou exibidos. Um payload genérico pode duplicar descrições, valores financeiros ou outros dados sensíveis e ampliar indevidamente o acesso. RNF-058 fixa retenção por 12 meses ou até a eliminação da conta, mas a exceção por investigação de segurança ainda exige uma autorização documentada e um processo operacional verificável.
 - **Decisão necessária:** aprovar uma lista permitida por ação e recurso, regras de mascaramento, visibilidade por papel em contextos compartilhados e o processo de expiração ou anonimização, inclusive para a exceção de investigação de segurança.
-- **Limite atual:** eventos financeiros registram somente identificador, proprietário, ator, ação, tipo e identificador do recurso e instante. Não armazenar snapshots, descrições ou valores em payload de auditoria até a decisão; implementar a expiração em US-101 e manter a consulta pública reservada para US-112.
+- **Decisão parcial (27/09/2026, SESHAT-51):** a lista permitida é ator, titular ou contexto, instante UTC, ação, tipo e id do recurso, resultado, código de erro e correlação. São proibidos valores, descrições, números de conta, e-mails, tokens, anexos e snapshots. A trilha é append-only com detecção de adulteração.
+- **Aplicação na US-035 ([ADR-036](../decisions/0036-cadeia-de-hash-da-auditoria-financeira.md)):**
+  - cadeia SHA-256 por titular;
+  - campos `result`, `error_code` e `correlation_id`;
+  - consulta e verificação somente pelo próprio titular, em `GET /api/v1/audit-events` e `GET /api/v1/audit-events/verification`, limitadas aos campos permitidos.
+- **Limite atual:** não armazenar snapshots, descrições ou valores. A visibilidade por papel em contextos compartilhados continua reservada para US-112, e a expiração e anonimização para US-101. Tentativas que falharam não são registradas, porque a transação é desfeita.
 
 ### RII-014 — Semântica do reembolso vinculado
 

@@ -54,6 +54,7 @@ describe('US-029 PostgreSQL transaction write invariants', () => {
       '../../prisma/migrations/20260921010000_assign_transaction_classifications/migration.sql',
       '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
       '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
+      '../../prisma/migrations/20261112120000_financial_audit_hash_chain/migration.sql',
       '../../prisma/migrations/20261005180000_create_counterparties/migration.sql',
       '../../prisma/migrations/20261021180000_counterparty_lifecycle_and_transaction_reference/migration.sql',
       '../../prisma/migrations/20261020120000_category_catalog_lifecycle/migration.sql',
@@ -492,8 +493,11 @@ describe('US-029 PostgreSQL transaction write invariants', () => {
       'updated',
     ]);
     for (const event of events) {
-      expect(JSON.stringify(event)).not.toContain('Private synthetic');
-      expect(JSON.stringify(event)).not.toContain('7.50');
+      const serialized = JSON.stringify(event, (_key, value: unknown) =>
+        typeof value === 'bigint' ? value.toString() : value,
+      );
+      expect(serialized).not.toContain('Private synthetic');
+      expect(serialized).not.toContain('7.50');
     }
   });
 

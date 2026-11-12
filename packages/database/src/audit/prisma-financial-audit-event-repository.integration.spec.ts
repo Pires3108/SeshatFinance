@@ -31,15 +31,14 @@ describe('PrismaFinancialAuditEventRepository', () => {
       connectionString: container.getConnectionUri(),
     });
     await migrationClient.connect();
-    await migrationClient.query(
-      await readFile(
-        new URL(
-          '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
-          import.meta.url,
-        ),
-        'utf8',
-      ),
-    );
+    for (const path of [
+      '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
+      '../../prisma/migrations/20261112120000_financial_audit_hash_chain/migration.sql',
+    ]) {
+      await migrationClient.query(
+        await readFile(new URL(path, import.meta.url), 'utf8'),
+      );
+    }
     await migrationClient.end();
     const prisma = createPrismaClient(container.getConnectionUri());
     client = prisma;
@@ -63,19 +62,30 @@ describe('PrismaFinancialAuditEventRepository', () => {
     expect(Object.keys(record).sort()).toEqual([
       'action',
       'actorId',
+      'correlationId',
+      'errorCode',
+      'hash',
       'id',
       'occurredAt',
       'ownerId',
+      'ownerSequence',
+      'previousHash',
       'resourceId',
       'resourceType',
+      'result',
     ]);
     expect(record).toMatchObject({
       action: 'moved_to_trash',
       actorId,
+      errorCode: null,
       ownerId,
+      ownerSequence: 1n,
+      previousHash: '0'.repeat(64),
       resourceId,
       resourceType: 'transaction',
+      result: 'succeeded',
     });
+    expect(record.hash).toMatch(/^[0-9a-f]{64}$/u);
   });
 
   it('rejects update, deletion, and truncation at the database boundary', async () => {

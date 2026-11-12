@@ -44,6 +44,7 @@ describe('US-016 actor resolution and ownership across HTTP and PostgreSQL', () 
       '20260920040000_create_accounts',
       '20261015120000_add_account_agency',
       '20260921210000_create_financial_audit_events',
+      '20261112120000_financial_audit_hash_chain',
       '20260929120000_create_user_sessions',
     ]) {
       const source = await readFile(
