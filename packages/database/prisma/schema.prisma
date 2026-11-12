@@ -382,10 +382,29 @@ model FinancialAuditEvent {
   resourceType FinancialAuditResourceType @map("resource_type")
   resourceId   String                     @map("resource_id") @db.Uuid
   occurredAt   DateTime                   @map("occurred_at") @db.Timestamptz(6)
+  /// Assigned by the link_financial_audit_event trigger (ADR-036).
+  ownerSequence BigInt                    @default(0) @map("owner_sequence")
+  /// Assigned by the link_financial_audit_event trigger (ADR-036).
+  previousHash String                     @default(dbgenerated("repeat('0'::text, 64)")) @map("previous_hash") @db.Char(64)
+  /// Assigned by the link_financial_audit_event trigger (ADR-036).
+  hash         String                     @default(dbgenerated("repeat('0'::text, 64)")) @db.Char(64)
+  result       String                     @default("succeeded") @db.VarChar(16)
+  errorCode    String?                    @map("error_code") @db.VarChar(64)
+  correlationId String?                   @map("correlation_id") @db.Uuid
 
+  @@unique([ownerId, ownerSequence])
   @@index([ownerId, occurredAt, id])
   @@index([ownerId, resourceType, resourceId, occurredAt])
   @@map("financial_audit_events")
+}
+
+/// Last link of each owner's audit chain; maintained by a trigger.
+model FinancialAuditChainHead {
+  ownerId      String @id @map("owner_id") @db.Uuid
+  lastSequence BigInt @map("last_sequence")
+  lastHash     String @map("last_hash") @db.Char(64)
+
+  @@map("financial_audit_chain_heads")
 }
 
 model ManualExchangeQuoteVersion {

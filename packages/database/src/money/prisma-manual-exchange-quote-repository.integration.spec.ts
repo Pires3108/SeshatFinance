@@ -59,6 +59,7 @@ describe('PrismaManualExchangeQuoteRepository', () => {
     try {
       for (const path of [
         '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
+        '../../prisma/migrations/20261112120000_financial_audit_hash_chain/migration.sql',
         '../../prisma/migrations/20261001010000_create_manual_exchange_quotes/migration.sql',
       ])
         await migration.query(

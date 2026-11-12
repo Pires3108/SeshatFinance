@@ -267,6 +267,15 @@ export {
   type CreateFinancialAuditEventCommand,
 } from './audit/create-financial-audit-event.js';
 export {
+  FINANCIAL_AUDIT_TRAIL_MAX_PAGE,
+  ListOwnedFinancialAuditTrailUseCase,
+  VerifyOwnedFinancialAuditChainUseCase,
+  type FinancialAuditChainVerification,
+  type FinancialAuditTrailEntry,
+  type FinancialAuditTrailQuery,
+  type FinancialAuditTrailRepository,
+} from './audit/financial-audit-trail.js';
+export {
   CreateCreditCardUseCase,
   GetOwnedCreditCardUseCase,
   ListOwnedCreditCardsUseCase,

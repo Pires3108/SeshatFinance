@@ -54,6 +54,7 @@ describe('US-031 initial ledger and audit proof', () => {
         '../../prisma/migrations/20260921010000_assign_transaction_classifications/migration.sql',
         '../../prisma/migrations/20260921110000_add_transaction_observations/migration.sql',
         '../../prisma/migrations/20260921210000_create_financial_audit_events/migration.sql',
+        '../../prisma/migrations/20261112120000_financial_audit_hash_chain/migration.sql',
         '../../prisma/migrations/20261005180000_create_counterparties/migration.sql',
         '../../prisma/migrations/20261021180000_counterparty_lifecycle_and_transaction_reference/migration.sql',
         '../../prisma/migrations/20261020120000_category_catalog_lifecycle/migration.sql',
@@ -187,6 +188,13 @@ describe('US-031 initial ledger and audit proof', () => {
         'ownerId',
         'resourceId',
         'resourceType',
+        // Allowlisted chain and outcome fields (ADR-036); no amounts or text.
+        'correlationId',
+        'errorCode',
+        'hash',
+        'ownerSequence',
+        'previousHash',
+        'result',
       ].sort(),
     );
     expect(events[0]).toMatchObject({
@@ -196,10 +204,11 @@ describe('US-031 initial ledger and audit proof', () => {
       resourceId: id,
       resourceType: 'transaction',
     });
-    expect(JSON.stringify(events)).not.toContain('17.83');
-    expect(JSON.stringify(events)).not.toContain(
-      'Synthetic private description',
+    const serialized = JSON.stringify(events, (_key, value: unknown) =>
+      typeof value === 'bigint' ? value.toString() : value,
     );
+    expect(serialized).not.toContain('17.83');
+    expect(serialized).not.toContain('Synthetic private description');
   });
 
   it('rolls back the written transaction and balance effect when audit insertion fails', async () => {

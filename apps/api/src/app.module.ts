@@ -1,4 +1,7 @@
 import {
+  ListOwnedFinancialAuditTrailUseCase,
+  VerifyOwnedFinancialAuditChainUseCase,
+  type FinancialAuditTrailRepository,
   ChangeOwnedTransactionLifecycleUseCase,
   AuthenticateUserUseCase,
   ChangeOwnedTransferLifecycleUseCase,
@@ -162,6 +165,9 @@ import { TransactionController } from './transactions/transaction.controller.js'
 import { TemporalTransactionController } from './transactions/temporal-transaction.controller.js';
 import { TransactionTagController } from './transactions/transaction-tag.controller.js';
 import { TransactionClassificationController } from './transactions/transaction-classification.controller.js';
+import { FinancialAuditController } from './audit/financial-audit.controller.js';
+import { FinancialAuditCorrelationBinding } from './audit/financial-audit-correlation.js';
+import { LazyFinancialAuditTrailRepository } from './audit/lazy-financial-audit-trail-repository.js';
 import { LazyTransferRepository } from './transfers/lazy-transfer-repository.js';
 import { TransferController } from './transfers/transfer.controller.js';
 import { LazyUserProfileRepository } from './users/lazy-user-profile-repository.js';
@@ -192,8 +198,27 @@ import { UserProfileController } from './users/user-profile.controller.js';
     TransactionTagController,
     TransferController,
     UserProfileController,
+    FinancialAuditController,
   ],
   providers: [
+    FinancialAuditCorrelationBinding,
+    LazyFinancialAuditTrailRepository,
+    {
+      inject: [LazyFinancialAuditTrailRepository],
+      provide: ListOwnedFinancialAuditTrailUseCase,
+      useFactory: (
+        trail: FinancialAuditTrailRepository,
+      ): ListOwnedFinancialAuditTrailUseCase =>
+        new ListOwnedFinancialAuditTrailUseCase(trail),
+    },
+    {
+      inject: [LazyFinancialAuditTrailRepository],
+      provide: VerifyOwnedFinancialAuditChainUseCase,
+      useFactory: (
+        trail: FinancialAuditTrailRepository,
+      ): VerifyOwnedFinancialAuditChainUseCase =>
+        new VerifyOwnedFinancialAuditChainUseCase(trail),
+    },
     RegistrationIntentPruner,
     RecoveryRequestAttemptPruner,
     {
