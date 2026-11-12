@@ -56,7 +56,9 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 ### CA-006 — Ajuste
 
 **Dado** divergência de saldo, **quando** justificar e confirmar a conciliação, **então** será criado ajuste pela diferença e o histórico guardará ambos os saldos.  
-**Referências:** RF-019, RF-029; RN-010.
+**Dado** saldo informado igual ao saldo atual, **quando** confirmar a conciliação, **então** nenhum ajuste nem lançamento será criado e a operação será recusada como inválida.  
+**Dado** um ajuste gravado com uma `Idempotency-Key` UUID v4, **quando** o titular repetir o mesmo comando com a mesma chave em até 24 horas, **então** receberá o mesmo ajuste sem novo lançamento nem nova auditoria, mesmo que o saldo da conta já tenha mudado. A mesma chave com conteúdo diferente ou em execução concorrente retornará 409 sem escrita; chave ausente ou inválida retornará 400.  
+**Referências:** RF-019, RF-029; RN-010; RNF-049; RII-017; ADR-035.
 
 ### CA-007 — Exclusão e restauração
 

@@ -1,6 +1,6 @@
 # ADR-035 — Idempotência de comandos financeiros compostos
 
-**Status:** aceita para US-032 em 12/11/2026; a US-033 reutiliza o mesmo mecanismo.
+**Status:** aceita para US-032 em 12/11/2026; estendida à US-033 em 12/11/2026.
 
 **Referências:** RII-017; RNF-049; RF-028; INV-007, INV-008; US-032, US-033, US-037; decisão registrada em SESHAT-48 e SESHAT-49 em 28/09/2026.
 
@@ -18,7 +18,8 @@ Lançamentos (`transaction_idempotency`), reembolsos e cotações manuais já po
 - O repositório financeiro, dentro da mesma transação do `PrismaTransactionRunner`, executa `pg_try_advisory_xact_lock` sobre `(titular, operação, chave)`. Lock ocupado retorna 409 imediatamente. Em seguida reconsulta o registro: hash igual devolve a resposta gravada sem escrita; hash diferente retorna 409. Sem registro vigente, grava a escrita financeira, a auditoria e o registro de idempotência, substituindo um registro expirado da mesma chave.
 - Qualquer falha antes do commit desfaz tudo e libera a chave. Depois do commit, a repetição é segura.
 - A resposta gravada é o snapshot do recurso no momento do registro; a API deriva o corpo HTTP dele deterministicamente.
-- A API exige o cabeçalho em `POST /api/v1/transfers`: ausente ou fora de UUID v4 retorna 400; conflito retorna 409.
+- A API exige o cabeçalho em `POST /api/v1/transfers` e em `POST /api/v1/accounts/:accountId/balance-adjustments`: ausente ou fora de UUID v4 retorna 400; conflito retorna 409.
+- Ajuste (US-033): operação `balance-adjustment.create`; o conteúdo normalizado é conta, justificativa sem espaços nas bordas, instante ISO e saldo informado em decimal canônico (sem zeros à esquerda nem à direita, pois a escala da moeda só é conhecida depois de ler a conta). O repositório mantém sua transação própria em isolamento Serializable, porque a verificação do saldo anterior depende dela; a reserva da chave é a primeira instrução dessa transação. Falha de serialização continua retornando 409 de saldo alterado. A resposta gravada é o item de histórico do ajuste.
 
 ## Consequências
 

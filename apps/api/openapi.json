@@ -1143,6 +1143,16 @@
         "operationId": "BalanceAdjustmentController_create",
         "parameters": [
           {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "accountId",
             "required": true,
             "in": "path",
@@ -1254,6 +1264,9 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid request, idempotency key, or a reported balance equal to the current balance"
+          },
           "401": {
             "description": "Bearer token missing or invalid"
           },
@@ -1261,7 +1274,7 @@
             "description": "Owned active account was not found"
           },
           "409": {
-            "description": "Account balance changed concurrently"
+            "description": "Account balance changed concurrently, or the idempotency key was reused with a different payload or is still in progress"
           }
         },
         "security": [

@@ -1461,7 +1461,10 @@ export interface operations {
     readonly BalanceAdjustmentController_create: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header: {
+                /** @description UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409. */
+                readonly "Idempotency-Key": string;
+            };
             readonly path: {
                 readonly accountId: string;
             };
@@ -1505,6 +1508,13 @@ export interface operations {
                     };
                 };
             };
+            /** @description Invalid request, idempotency key, or a reported balance equal to the current balance */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Bearer token missing or invalid */
             readonly 401: {
                 headers: {
@@ -1519,7 +1529,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Account balance changed concurrently */
+            /** @description Account balance changed concurrently, or the idempotency key was reused with a different payload or is still in progress */
             readonly 409: {
                 headers: {
                     readonly [name: string]: unknown;

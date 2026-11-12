@@ -249,9 +249,13 @@ export {
 export {
   BalanceAdjustmentAccountUnavailableError,
   BalanceAdjustmentBalanceConflictError,
+  CREATE_BALANCE_ADJUSTMENT_OPERATION,
   CreateBalanceAdjustmentUseCase,
+  parseBalanceAdjustmentResponse,
+  serializeBalanceAdjustmentResponse,
   type BalanceAdjustmentRepository,
   type CreateBalanceAdjustmentCommand,
+  type IdempotentBalanceAdjustmentRecord,
 } from './adjustments/create-balance-adjustment.js';
 export {
   ListOwnedBalanceAdjustmentsUseCase,

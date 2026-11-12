@@ -1,5 +1,8 @@
 import {
   OwnedAccountNotFoundError,
+  parseBalanceAdjustmentResponse,
+  serializeBalanceAdjustmentResponse,
+  type BalanceAdjustmentHistoryItem,
   type CreateBalanceAdjustmentUseCase,
   type ListOwnedBalanceAdjustmentsUseCase,
 } from '@seshat/application';
@@ -16,9 +19,9 @@ function request(actors: AuthenticatedActorContext): FastifyRequest {
   return value;
 }
 
-function adjustment(): BalanceAdjustment {
+function adjustment(): BalanceAdjustmentHistoryItem {
   const currency = Currency.create('BRL', 2);
-  return BalanceAdjustment.create({
+  const created = BalanceAdjustment.create({
     accountId: '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
     createdAt: new Date('2026-09-21T12:00:00.000Z'),
     id: 'c722103a-e28a-482c-b6e9-e3320d8a44e3',
@@ -29,6 +32,9 @@ function adjustment(): BalanceAdjustment {
     reportedBalance: Money.fromDecimal('95.50', currency),
     transactionId: '86684068-45d9-4e14-b454-f7e556b867e7',
   });
+  return parseBalanceAdjustmentResponse(
+    serializeBalanceAdjustmentResponse(created),
+  );
 }
 
 describe('BalanceAdjustmentController', () => {
@@ -44,6 +50,7 @@ describe('BalanceAdjustmentController', () => {
     const response = await controller.create(
       request(actors),
       '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
+      '0f8fad5b-d9cb-469f-a165-70867728950e',
       {
         justification: 'Conferência do extrato',
         occurredAt: '2026-09-21T11:00:00.000Z',
@@ -52,7 +59,10 @@ describe('BalanceAdjustmentController', () => {
     );
 
     expect(execute).toHaveBeenCalledWith(
-      expect.objectContaining({ actorId: 'actor-id' }),
+      expect.objectContaining({
+        actorId: 'actor-id',
+        idempotencyKey: '0f8fad5b-d9cb-469f-a165-70867728950e',
+      }),
     );
     expect(response).toMatchObject({
       difference: '-4.50',

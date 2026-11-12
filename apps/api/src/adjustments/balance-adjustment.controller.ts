@@ -10,7 +10,6 @@ import {
   CurrencyMismatchError,
   InvalidBalanceAdjustmentError,
   InvalidMoneyAmountError,
-  type BalanceAdjustment,
 } from '@seshat/domain';
 import {
   BadRequestException,
@@ -18,6 +17,7 @@ import {
   ConflictException,
   Controller,
   Get,
+  Headers,
   Inject,
   NotFoundException,
   Param,
@@ -27,10 +27,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiBody,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiHeader,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -44,6 +46,11 @@ import { z } from 'zod';
 
 import { AuthenticatedActorContext } from '../auth/authenticated-actor-context.js';
 import { BearerAuthGuard } from '../auth/bearer-auth.guard.js';
+import {
+  idempotencyKeyHeader,
+  mapIdempotencyError,
+  parseIdempotencyKeyHeader,
+} from '../platform/idempotency-key.js';
 import { ZodValidationPipe } from '../platform/zod-validation.pipe.js';
 
 const idSchema = z.uuid();
@@ -146,19 +153,30 @@ export class BalanceAdjustmentController {
   })
   @ApiParam({ format: 'uuid', name: 'accountId', type: 'string' })
   @ApiBody({ schema: createBodySchema() })
+  @ApiHeader(idempotencyKeyHeader)
   @ApiCreatedResponse({ schema: responseSchema })
+  @ApiBadRequestResponse({
+    description:
+      'Invalid request, idempotency key, or a reported balance equal to the current balance',
+  })
   @ApiNotFoundResponse({ description: 'Owned active account was not found' })
-  @ApiConflictResponse({ description: 'Account balance changed concurrently' })
+  @ApiConflictResponse({
+    description:
+      'Account balance changed concurrently, or the idempotency key was reused with a different payload or is still in progress',
+  })
   public async create(
     @Req() request: FastifyRequest,
     @Param('accountId', new ZodValidationPipe(idSchema)) accountId: string,
+    @Headers('idempotency-key') idempotencyKey: string | undefined,
     @Body(new ZodValidationPipe(createSchema)) body: CreateRequest,
   ): Promise<Response> {
+    const key = parseIdempotencyKeyHeader(idempotencyKey);
     try {
-      return mapAdjustment(
+      return mapHistoryItem(
         await this.createAdjustment.execute({
           accountId,
           actorId: this.actorId(request),
+          idempotencyKey: key,
           justification: body.justification,
           occurredAt: new Date(body.occurredAt),
           reportedBalance: body.reportedBalance,
@@ -174,24 +192,6 @@ export class BalanceAdjustmentController {
     if (actor === undefined) throw new UnauthorizedException();
     return actor.id;
   }
-}
-
-function mapAdjustment(adjustment: BalanceAdjustment): Response {
-  const value = adjustment.toSnapshot();
-  return {
-    accountId: value.transaction.accountId,
-    createdAt: value.transaction.createdAt.toISOString(),
-    currencyCode: value.difference.currency.code,
-    currencyMinorUnitScale: value.difference.currency.minorUnitScale,
-    difference: value.difference.amount,
-    id: value.id,
-    justification: value.justification,
-    occurredAt: value.transaction.occurredAt.toISOString(),
-    previousBalance: value.previousBalance.amount,
-    reportedBalance: value.reportedBalance.amount,
-    transactionId: value.transaction.id,
-    transactionKind: value.transaction.kind,
-  };
 }
 
 function mapHistoryItem(item: BalanceAdjustmentHistoryItem): Response {
@@ -212,6 +212,8 @@ function mapHistoryItem(item: BalanceAdjustmentHistoryItem): Response {
 }
 
 function mapError(error: unknown): Error {
+  const idempotencyError = mapIdempotencyError(error);
+  if (idempotencyError !== undefined) return idempotencyError;
   if (error instanceof BalanceAdjustmentAccountUnavailableError) {
     return new NotFoundException('Account not found.');
   }
