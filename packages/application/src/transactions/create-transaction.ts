@@ -484,6 +484,7 @@ export class ChangeOwnedTransactionLifecycleUseCase {
     }
     const expectedVersion = transaction.toSnapshot().version;
     const at = this.clock.now();
+    let changed = true;
     switch (command.action) {
       case 'archive':
         transaction.archive(at);
@@ -492,12 +493,14 @@ export class ChangeOwnedTransactionLifecycleUseCase {
         transaction.unarchive(at);
         break;
       case 'move-to-trash':
-        transaction.moveToTrash(at);
+        changed = transaction.moveToTrash(at);
         break;
       case 'restore-from-trash':
-        transaction.restoreFromTrash(at);
+        changed = transaction.restoreFromTrash(at);
         break;
     }
+    // Repeating trash or restore is a no-op: no write, version or audit.
+    if (!changed) return transaction;
     const auditEvent = FinancialAuditEvent.create({
       action: lifecycleAuditAction(command.action),
       actorId: command.actorId,

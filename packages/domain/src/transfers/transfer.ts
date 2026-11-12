@@ -102,16 +102,22 @@ export class Transfer {
     });
   }
 
-  public moveToTrash(at: Date): void {
+  /** Idempotent: returns false without changes when the pair is trashed. */
+  public moveToTrash(at: Date): boolean {
+    if (this.source.lifecycle === 'trashed') return false;
     this.changePairLifecycle((transaction) => {
       transaction.moveToTrash(at);
     });
+    return true;
   }
 
-  public restoreFromTrash(at: Date): void {
+  /** Idempotent: returns false without changes when the pair is not trashed. */
+  public restoreFromTrash(at: Date): boolean {
+    if (this.source.lifecycle !== 'trashed') return false;
     this.changePairLifecycle((transaction) => {
       transaction.restoreFromTrash(at);
     });
+    return true;
   }
 
   public toSnapshot(): TransferSnapshot {

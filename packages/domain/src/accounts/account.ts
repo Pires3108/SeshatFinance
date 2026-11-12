@@ -123,24 +123,32 @@ export class Account {
     this.transition('active', at, { archivedAt: null, trashedAt: null });
   }
 
-  public moveToTrash(at: Date): void {
-    if (this.state.lifecycle === 'trashed') {
-      throw new AccountLifecycleError('Account is already in the trash.');
-    }
+  /**
+   * Moves the account to the trash, preserving whether it was archived.
+   * Idempotent: returns false without changes when it is already trashed.
+   */
+  public moveToTrash(at: Date): boolean {
+    if (this.state.lifecycle === 'trashed') return false;
     this.transition('trashed', at, {
       archivedAt: this.state.archivedAt,
       trashedAt: at,
     });
+    return true;
   }
 
-  public restoreFromTrash(at: Date): void {
-    this.requireLifecycle('trashed', 'Only a trashed account can be restored.');
+  /**
+   * Restores the prior state (active or archived). Idempotent: returns false
+   * without changes when the account is not in the trash.
+   */
+  public restoreFromTrash(at: Date): boolean {
+    if (this.state.lifecycle !== 'trashed') return false;
     const lifecycle: AccountLifecycle =
       this.state.archivedAt === null ? 'active' : 'archived';
     this.transition(lifecycle, at, {
       archivedAt: this.state.archivedAt,
       trashedAt: null,
     });
+    return true;
   }
 
   public rename(name: string, at: Date): void {

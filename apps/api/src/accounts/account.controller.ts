@@ -52,6 +52,7 @@ import { z } from 'zod';
 
 import { AuthenticatedActorContext } from '../auth/authenticated-actor-context.js';
 import { BearerAuthGuard } from '../auth/bearer-auth.guard.js';
+import { withoutTrashUnlessRequested } from '../platform/lifecycle-filter.js';
 import { ZodValidationPipe } from '../platform/zod-validation.pipe.js';
 import {
   supportedCurrencyCodeSchema,
@@ -209,6 +210,7 @@ export class AccountController {
   @Get()
   @ApiOperation({ summary: 'List accounts owned by the authenticated user' })
   @ApiQuery({
+    description: 'Omitted: active and archived only; trashed lists the trash.',
     enum: ['active', 'archived', 'trashed'],
     name: 'lifecycle',
     required: false,
@@ -223,7 +225,10 @@ export class AccountController {
       this.actorId(request),
       query.lifecycle,
     );
-    return accounts.map(mapAccount);
+    // Ordinary views omit the trash; it is reachable with lifecycle=trashed.
+    return withoutTrashUnlessRequested(accounts, query.lifecycle).map(
+      mapAccount,
+    );
   }
 
   @Get(':accountId')

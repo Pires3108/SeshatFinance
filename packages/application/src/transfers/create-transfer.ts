@@ -227,6 +227,7 @@ export class ChangeOwnedTransferLifecycleUseCase {
     if (transfer === null) throw new OwnedTransferNotFoundError();
     const before = transfer.toSnapshot();
     const at = this.clock.now();
+    let changed = true;
     switch (command.action) {
       case 'archive':
         transfer.archive(at);
@@ -235,12 +236,14 @@ export class ChangeOwnedTransferLifecycleUseCase {
         transfer.unarchive(at);
         break;
       case 'move-to-trash':
-        transfer.moveToTrash(at);
+        changed = transfer.moveToTrash(at);
         break;
       case 'restore-from-trash':
-        transfer.restoreFromTrash(at);
+        changed = transfer.restoreFromTrash(at);
         break;
     }
+    // Repeating trash or restore is a no-op: no write, version or audit.
+    if (!changed) return transfer;
     const saved = await this.transfers.saveAtomically(
       transfer,
       before.source.version,

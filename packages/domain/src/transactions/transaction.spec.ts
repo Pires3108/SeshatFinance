@@ -78,6 +78,37 @@ describe('Transaction', () => {
     expect(balance.toDecimal()).toBe('100.00');
   });
 
+  it('walks active, archived, trashed, restored and unarchived with the exact balance at each step (US-034)', () => {
+    const opening = Money.fromDecimal('100.00', currency);
+    const expense = transaction('expense');
+    const balance = (): string =>
+      calculateAccountBalance(opening, [expense]).toDecimal();
+    expect(balance()).toBe('74.90');
+
+    expense.archive(new Date('2026-09-20T13:00:00.000Z'));
+    expect(balance()).toBe('74.90');
+    expect(expense.moveToTrash(new Date('2026-09-20T14:00:00.000Z'))).toBe(
+      true,
+    );
+    expect(balance()).toBe('100.00');
+    expect(expense.moveToTrash(new Date('2026-09-20T15:00:00.000Z'))).toBe(
+      false,
+    );
+    expect(balance()).toBe('100.00');
+    expect(expense.restoreFromTrash(new Date('2026-09-20T16:00:00.000Z'))).toBe(
+      true,
+    );
+    expect(expense.lifecycle).toBe('archived');
+    expect(balance()).toBe('74.90');
+    expect(expense.restoreFromTrash(new Date('2026-09-20T17:00:00.000Z'))).toBe(
+      false,
+    );
+    expense.unarchive(new Date('2026-09-20T18:00:00.000Z'));
+    expect(expense.lifecycle).toBe('active');
+    expect(balance()).toBe('74.90');
+    expect(expense.toSnapshot().version).toBe(5);
+  });
+
   it('preserves archived effects and removes trashed effects exactly once', () => {
     const income = transaction('income');
     income.archive(new Date('2026-09-20T13:00:00.000Z'));

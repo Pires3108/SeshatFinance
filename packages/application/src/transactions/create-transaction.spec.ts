@@ -397,6 +397,44 @@ describe('owned transaction changes', () => {
     });
   });
 
+  it('repeats trash and restore without a new write or audit event (US-034)', async () => {
+    const repository = new RecordingTransactions();
+    await new CreateTransactionUseCase(
+      repository,
+      accounts(),
+      { now: (): Date => new Date('2026-09-20T13:00:00.000Z') },
+      { generate: (): string => 'transaction-id' },
+    ).execute({
+      accountId: 'account-id',
+      actorId: 'owner-id',
+      amount: '12.34',
+      currencyCode: 'BRL',
+      currencyMinorUnitScale: 2,
+      description: null,
+      kind: 'expense',
+      occurredAt: new Date('2026-09-20T11:00:00.000Z'),
+    });
+    const change = new ChangeOwnedTransactionLifecycleUseCase(
+      repository,
+      repository,
+      { now: (): Date => new Date('2026-09-20T14:00:00.000Z') },
+      { generate: (): string => 'lifecycle-audit-id' },
+    );
+    const command = { actorId: 'owner-id', transactionId: 'transaction-id' };
+
+    await change.execute({ ...command, action: 'restore-from-trash' });
+    expect(repository.auditEvents).toHaveLength(1);
+    await change.execute({ ...command, action: 'move-to-trash' });
+    const repeated = await change.execute({
+      ...command,
+      action: 'move-to-trash',
+    });
+
+    expect(repository.auditEvents).toHaveLength(2);
+    expect(repeated.lifecycle).toBe('trashed');
+    expect(repeated.toSnapshot().version).toBe(2);
+  });
+
   it('rejects isolated changes to an entry linked to a transfer', async () => {
     const repository = new RecordingTransactions();
     await new CreateTransactionUseCase(
