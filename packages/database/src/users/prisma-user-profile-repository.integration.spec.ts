@@ -29,6 +29,7 @@ describe('PrismaUserProfileRepository', () => {
     for (const name of [
       '20260919210000_create_user_profiles',
       '20261009120000_registration_pending',
+      '20261112110000_add_refund_presentation',
     ]) {
       const migration = await readFile(
         new URL(
@@ -62,6 +63,7 @@ describe('PrismaUserProfileRepository', () => {
       id: '7c2c7a54-73fe-49a3-b0ea-19034bf22baf',
       locale: 'pt-BR',
       presentationCurrency: 'BRL',
+      refundPresentation: 'separate-income',
       timeZone: 'America/Sao_Paulo',
       updatedAt: createdAt,
       version: 1,
@@ -91,6 +93,7 @@ describe('PrismaUserProfileRepository', () => {
         displayName: 'Pessoa fictícia',
         locale: 'pt-BR',
         presentationCurrency: 'BRL',
+        refundPresentation: 'separate-income',
         timeZone: 'America/Sao_Paulo',
         createdAt: new Date('2026-10-13T12:00:00Z'),
         updatedAt: new Date('2026-10-13T12:00:00Z'),

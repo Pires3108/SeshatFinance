@@ -20,6 +20,7 @@ const profile: UserProfile = {
   id: authenticatedActorId,
   locale: 'pt-BR',
   presentationCurrency: 'BRL',
+  refundPresentation: 'separate-income',
   timeZone: 'America/Sao_Paulo',
   updatedAt: new Date('2026-09-25T12:00:00.000Z'),
   version: 1,
@@ -108,4 +109,27 @@ describe('User profile HTTP principal binding', () => {
       expect(updateProfile.execute).not.toHaveBeenCalled();
     },
   );
+
+  it('accepts the refund presentation preference for the authenticated actor', async () => {
+    const response = await application.inject({
+      headers: { authorization: 'Bearer actor-b-token' },
+      method: 'PATCH',
+      payload: {
+        displayName: 'Actor B',
+        locale: 'pt-BR',
+        presentationCurrency: 'BRL',
+        refundPresentation: 'expense-offset',
+        timeZone: 'America/Sao_Paulo',
+      },
+      url: '/api/v1/users/me/profile',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(updateProfile.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actorId: authenticatedActorId,
+        refundPresentation: 'expense-offset',
+      }),
+    );
+  });
 });

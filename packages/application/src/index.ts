@@ -59,6 +59,18 @@ export {
   type ManualExchangeQuoteRepository,
 } from './money/manage-manual-exchange-quote.js';
 export {
+  GetOwnedLinkedRefundsUseCase,
+  InvalidLinkedRefundCommandError,
+  LinkedRefundConflictError,
+  LinkedRefundUnavailableError,
+  RecordLinkedRefundUseCase,
+  type LinkedRefundDetails,
+  type LinkedRefundKind,
+  type LinkedRefundRecord,
+  type LinkedRefundRepository,
+  type RecordLinkedRefundCommand,
+} from './refunds/record-linked-refund.js';
+export {
   AccountVersionConflictError,
   ChangeOwnedAccountLifecycleUseCase,
   CreateAccountUseCase,

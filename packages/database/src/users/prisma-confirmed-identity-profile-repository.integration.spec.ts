@@ -27,6 +27,7 @@ describe('confirmed registration profile persistence', () => {
     for (const name of [
       '20260919210000_create_user_profiles',
       '20261009120000_registration_pending',
+      '20261112110000_add_refund_presentation',
     ]) {
       const migration = await readFile(
         new URL(

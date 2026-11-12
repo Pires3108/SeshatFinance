@@ -71,3 +71,11 @@ Manter web, API e worker portáveis e escolher provedor após verificar camadas 
 **Status:** aceita.
 
 Executar parsing, OCR e exportações no worker para proteger a API. Jobs exigem idempotência, retry e dead-letter.
+
+## ADR-014 — Livro de reembolsos vinculados
+
+**Status:** aceita conforme a decisão de 27/09/2026 na US-036 (SESHAT-53).
+
+Persistir cada reembolso e compensação como movimentação própria e um vínculo imutável com a despesa original. A API é a única fronteira de escrita. O domínio calcula o valor líquido com unidades monetárias exatas; a infraestrutura cria movimentação, vínculo e auditoria na mesma transação PostgreSQL. A gravação bloqueia a linha da despesa, valida os vínculos já existentes e usa chave de idempotência por proprietário. Edições e transições de ciclo de vida dos lançamentos vinculados validam o livro sob o mesmo bloqueio. A preferência de apresentação pertence ao perfil do usuário e afeta somente a resposta de leitura, sem alterar os registros financeiros.
+
+**Consequências:** lançamentos vinculados não aceitam edição destrutiva de valor ou natureza; correções usam compensação auditada. Purga física deve resolver vínculos antes de apagar registros.

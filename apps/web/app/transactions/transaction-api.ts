@@ -14,7 +14,10 @@ export async function proxyTransaction(
       .filter(Boolean)
       .every(
         (part) =>
-          part === 'accounts' || part === 'transactions' || uuid.test(part),
+          part === 'accounts' ||
+          part === 'transactions' ||
+          part === 'refunds' ||
+          uuid.test(part),
       )
   ) {
     return NextResponse.json({ error: 'invalid_id' }, { status: 400 });

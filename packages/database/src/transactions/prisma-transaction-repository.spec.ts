@@ -74,11 +74,16 @@ describe('PrismaTransactionRepository', () => {
   it('does not write an edit or audit event when the expected version is stale', async () => {
     const updateMany = vi.fn();
     const createAuditEvent = vi.fn().mockResolvedValue({});
+    const queryRaw = vi.fn().mockResolvedValue([]);
     const client = {
       $transaction: (operation: (transaction: unknown) => unknown) =>
         operation({
-          $queryRaw: vi.fn().mockResolvedValue([]),
+          $queryRaw: queryRaw,
           financialAuditEvent: { create: createAuditEvent },
+          refundLink: {
+            findFirst: vi.fn().mockResolvedValue(null),
+            findMany: vi.fn().mockResolvedValue([]),
+          },
           transaction: {
             findFirst: vi.fn().mockResolvedValue(null),
             updateMany,

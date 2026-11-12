@@ -2,6 +2,14 @@ import { NextResponse } from 'next/server';
 
 const noStore = { 'Cache-Control': 'no-store' };
 const changeScopes = new Set(['reinterpret_existing', 'new_items_only']);
+const refundPresentations = new Set(['separate-income', 'expense-offset']);
+
+function refundPresentationOf(profile: Record<string, unknown>): string {
+  return typeof profile.refundPresentation === 'string' &&
+    refundPresentations.has(profile.refundPresentation)
+    ? profile.refundPresentation
+    : 'separate-income';
+}
 
 type ProfileError =
   'unauthorized' | 'forbidden' | 'unavailable' | 'invalid_input' | 'conflict';
@@ -71,7 +79,10 @@ export async function GET(request: Request): Promise<NextResponse> {
     if (!isRecord(profile) || !isValidTimeZone(profile.timeZone))
       return errorResponse('unavailable');
     return NextResponse.json(
-      { timeZone: profile.timeZone },
+      {
+        timeZone: profile.timeZone,
+        refundPresentation: refundPresentationOf(profile),
+      },
       { headers: noStore },
     );
   } catch {
@@ -88,11 +99,16 @@ export async function PATCH(request: Request): Promise<NextResponse> {
   } catch {
     return errorResponse('invalid_input');
   }
+  if (!isRecord(input)) return errorResponse('invalid_input');
+  const refundOnly =
+    input.timeZone === undefined &&
+    typeof input.refundPresentation === 'string' &&
+    refundPresentations.has(input.refundPresentation);
   if (
-    !isRecord(input) ||
-    !isValidTimeZone(input.timeZone) ||
-    typeof input.timeZoneChangeScope !== 'string' ||
-    !changeScopes.has(input.timeZoneChangeScope)
+    !refundOnly &&
+    (!isValidTimeZone(input.timeZone) ||
+      typeof input.timeZoneChangeScope !== 'string' ||
+      !changeScopes.has(input.timeZoneChangeScope))
   )
     return errorResponse('invalid_input');
   try {
@@ -111,13 +127,22 @@ export async function PATCH(request: Request): Promise<NextResponse> {
         displayName: profile.displayName,
         locale: profile.locale,
         presentationCurrency: profile.presentationCurrency,
-        timeZone: input.timeZone,
-        timeZoneChangeScope: input.timeZoneChangeScope,
+        ...(refundOnly
+          ? {
+              timeZone: profile.timeZone,
+              refundPresentation: input.refundPresentation,
+            }
+          : {
+              timeZone: input.timeZone,
+              timeZoneChangeScope: input.timeZoneChangeScope,
+            }),
       }),
     });
     if (!response.ok) return errorResponse(upstreamError(response.status));
     return NextResponse.json(
-      { timeZone: input.timeZone },
+      refundOnly
+        ? { refundPresentation: input.refundPresentation }
+        : { timeZone: input.timeZone },
       { headers: noStore },
     );
   } catch {

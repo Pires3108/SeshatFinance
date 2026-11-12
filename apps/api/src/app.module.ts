@@ -37,6 +37,8 @@ import {
   CreateAccountUseCase,
   CreateTransactionUseCase,
   CreateTransferUseCase,
+  GetOwnedLinkedRefundsUseCase,
+  RecordLinkedRefundUseCase,
   GetOwnedAccountUseCase,
   GetOwnedAccountBalanceUseCase,
   GetOwnedBalanceSummaryUseCase,
@@ -94,6 +96,7 @@ import {
   type TransferRepository,
   type TransferLifecycleRepository,
   type TransferReadRepository,
+  type LinkedRefundRepository,
 } from '@seshat/application';
 import { Module } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
@@ -151,6 +154,8 @@ import { LazyPrismaClient } from './platform/lazy-prisma-client.js';
 import { SystemClock } from './platform/system-clock.js';
 import { SystemIdentifierGenerator } from './platform/system-identifier-generator.js';
 import { LazyTransactionRepository } from './transactions/lazy-transaction-repository.js';
+import { LazyLinkedRefundRepository } from './refunds/lazy-linked-refund-repository.js';
+import { LinkedRefundController } from './refunds/linked-refund.controller.js';
 import { LazyTransactionClassificationRepository } from './transactions/lazy-transaction-classification-repository.js';
 import { LazyTransactionTagRepository } from './transactions/lazy-transaction-tag-repository.js';
 import { TransactionController } from './transactions/transaction.controller.js';
@@ -175,6 +180,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     CategoryController,
     CostCenterController,
     HealthController,
+    LinkedRefundController,
     InvestmentTypeController,
     ManualExchangeQuoteController,
     PasswordRecoveryController,
@@ -219,6 +225,27 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyCostCenterRepository,
     LazyTagRepository,
     LazyTransactionRepository,
+    LazyLinkedRefundRepository,
+    {
+      inject: [LazyLinkedRefundRepository],
+      provide: RecordLinkedRefundUseCase,
+      useFactory: (
+        refunds: LinkedRefundRepository,
+      ): RecordLinkedRefundUseCase =>
+        new RecordLinkedRefundUseCase(
+          refunds,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyLinkedRefundRepository],
+      provide: GetOwnedLinkedRefundsUseCase,
+      useFactory: (
+        refunds: LinkedRefundRepository,
+      ): GetOwnedLinkedRefundsUseCase =>
+        new GetOwnedLinkedRefundsUseCase(refunds),
+    },
     LazyTransactionClassificationRepository,
     LazyTransactionTagRepository,
     LazyTransferRepository,
