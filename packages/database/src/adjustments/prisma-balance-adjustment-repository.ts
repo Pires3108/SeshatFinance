@@ -2,6 +2,8 @@ import type {
   BalanceAdjustmentHistoryItem,
   BalanceAdjustmentHistoryRepository,
   BalanceAdjustmentRepository,
+  IdempotencyRequest,
+  IdempotentBalanceAdjustmentRecord,
 } from '@seshat/application';
 import {
   Currency,
@@ -13,6 +15,11 @@ import {
 
 import { insertFinancialAuditEvent } from '../audit/index.js';
 import { Prisma, type PrismaClient } from '../generated/prisma/client.js';
+import {
+  claimIdempotencyKey,
+  findActiveIdempotentResponse,
+  storeIdempotentResponse,
+} from '../idempotency/idempotency-records.js';
 
 type CurrentBalanceRow = Readonly<{
   current_balance_minor_units: string;
@@ -23,14 +30,26 @@ export class PrismaBalanceAdjustmentRepository
 {
   public constructor(private readonly client: PrismaClient) {}
 
+  public findIdempotentResponse(
+    request: IdempotencyRequest,
+  ): Promise<string | null> {
+    return findActiveIdempotentResponse(this.client, request);
+  }
+
   public async insertAtomically(
     adjustment: BalanceAdjustment,
     auditEvent: FinancialAuditEvent,
-  ): Promise<boolean> {
+    idempotency: IdempotentBalanceAdjustmentRecord,
+  ): Promise<string | null> {
     const snapshot = adjustment.toSnapshot();
     try {
       return await this.client.$transaction(
         async (client) => {
+          const replayed = await claimIdempotencyKey(
+            client,
+            idempotency.request,
+          );
+          if (replayed !== null) return replayed;
           const rows = await client.$queryRaw<CurrentBalanceRow[]>`
             SELECT (
               a.initial_balance_minor_units + COALESCE(SUM(
@@ -57,7 +76,7 @@ export class PrismaBalanceAdjustmentRepository
             currentBalance === undefined ||
             currentBalance !== expectedBalance
           ) {
-            return false;
+            return null;
           }
           await client.transaction.create({
             data: transactionCreateData(snapshot.transaction),
@@ -85,7 +104,12 @@ export class PrismaBalanceAdjustmentRepository
             },
           });
           await insertFinancialAuditEvent(client, auditEvent);
-          return true;
+          await storeIdempotentResponse(
+            client,
+            idempotency.request,
+            idempotency.response,
+          );
+          return idempotency.response;
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
       );
@@ -94,7 +118,7 @@ export class PrismaBalanceAdjustmentRepository
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === 'P2034'
       ) {
-        return false;
+        return null;
       }
       throw error;
     }

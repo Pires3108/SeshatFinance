@@ -1,9 +1,11 @@
 import { readFile } from 'node:fs/promises';
 
 import {
+  CREATE_BALANCE_ADJUSTMENT_OPERATION,
   CREATE_TRANSFER_OPERATION,
   GetOwnedAccountBalanceUseCase,
   OwnedAccountNotFoundError,
+  serializeBalanceAdjustmentResponse,
   serializeTransferResponse,
 } from '@seshat/application';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
@@ -244,8 +246,18 @@ describe('financial ledger across accounts, transfers, and adjustments', () => {
           'created',
           '2026-09-23T15:00:00.000Z',
         ),
+        {
+          request: {
+            key: 'cdcdcdcd-cdcd-4cdc-8cdc-cdcdcdcdcdcd',
+            operation: CREATE_BALANCE_ADJUSTMENT_OPERATION,
+            ownerId,
+            payload: { accountId: sourceAccountId, reportedBalance: '75' },
+            requestedAt: new Date('2026-09-23T15:00:00.000Z'),
+          },
+          response: serializeBalanceAdjustmentResponse(adjustment),
+        },
       ),
-    ).resolves.toBe(true);
+    ).resolves.toBeTypeOf('string');
     await expectBalances(balances, '75.00', '70.00', '145.00');
     expect(
       (
