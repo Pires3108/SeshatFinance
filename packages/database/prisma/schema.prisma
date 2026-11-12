@@ -250,6 +250,20 @@ model TransactionIdempotency {
   @@map("transaction_idempotency")
 }
 
+model IdempotencyRecord {
+  ownerId     String   @map("owner_id") @db.Uuid
+  operation   String   @db.VarChar(64)
+  key         String   @db.Uuid
+  payloadHash String   @map("payload_hash") @db.Char(64)
+  response    String
+  createdAt   DateTime @map("created_at") @db.Timestamptz(6)
+  expiresAt   DateTime @map("expires_at") @db.Timestamptz(6)
+
+  @@id([ownerId, operation, key])
+  @@index([expiresAt])
+  @@map("idempotency_records")
+}
+
 model TransactionRevision {
   id            String @id @db.Uuid
   ownerId       String @map("owner_id") @db.Uuid

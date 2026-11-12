@@ -38,6 +38,15 @@ export { readCivilDate } from './ports/civil-date.js';
 export type { IdentifierGenerator } from './ports/identifier-generator.js';
 export type { TransactionRunner } from './ports/transaction-runner.js';
 export {
+  IDEMPOTENCY_RETENTION_MILLISECONDS,
+  IdempotencyConflictError,
+  InvalidIdempotencyKeyError,
+  idempotencyExpiresAt,
+  normalizeIdempotencyKey,
+  type IdempotencyPayloadValue,
+  type IdempotencyRequest,
+} from './ports/idempotency.js';
+export {
   CorrectOwnedManualExchangeQuoteUseCase,
   CreateManualExchangeQuoteUseCase,
   GetOwnedManualExchangeQuoteUseCase,
@@ -206,7 +215,11 @@ export {
 } from './transactions/set-transaction-classification.js';
 export {
   ChangeOwnedTransferLifecycleUseCase,
+  CREATE_TRANSFER_OPERATION,
   CreateTransferUseCase,
+  parseTransferResponse,
+  serializeTransferResponse,
+  type IdempotentTransferRecord,
   OwnedTransferNotFoundError,
   TransferAccountUnavailableError,
   TransferCurrencyMismatchError,

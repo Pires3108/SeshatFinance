@@ -5985,7 +5985,18 @@
       },
       "post": {
         "operationId": "TransferController_create",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6136,11 +6147,17 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid request or idempotency key"
+          },
           "401": {
             "description": "Bearer token missing or invalid"
           },
           "404": {
             "description": "An owned active account was not found"
+          },
+          "409": {
+            "description": "Idempotency key reused with a different payload or still in progress"
           }
         },
         "security": [

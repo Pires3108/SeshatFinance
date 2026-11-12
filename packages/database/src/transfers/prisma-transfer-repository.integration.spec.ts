@@ -9,6 +9,12 @@ import {
   Money,
   Transfer,
 } from '@seshat/domain';
+import {
+  CREATE_TRANSFER_OPERATION,
+  IdempotencyConflictError,
+  serializeTransferResponse,
+  type IdempotentTransferRecord,
+} from '@seshat/application';
 import { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -52,6 +58,7 @@ describe('PrismaTransferRepository', () => {
       '../../prisma/migrations/20261021180000_counterparty_lifecycle_and_transaction_reference/migration.sql',
       '../../prisma/migrations/20260919210000_create_user_profiles/migration.sql',
       '../../prisma/migrations/20261109120000_transaction_time_zone/migration.sql',
+      '../../prisma/migrations/20261112090000_idempotency_records/migration.sql',
     ]) {
       await migrationClient.query(
         await readFile(new URL(path, import.meta.url), 'utf8'),
@@ -118,7 +125,8 @@ describe('PrismaTransferRepository', () => {
       'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
       'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
     );
-    await repository.insertAtomically(
+    await insertTransfer(
+      repository,
       created,
       auditEvent(created, 'created', '10101010-1010-4010-8010-101010101010'),
     );
@@ -150,7 +158,8 @@ describe('PrismaTransferRepository', () => {
       'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
     );
     await expect(
-      repository.insertAtomically(
+      insertTransfer(
+        repository,
         duplicate,
         auditEvent(
           duplicate,
@@ -174,7 +183,8 @@ describe('PrismaTransferRepository', () => {
       '12121212-1212-4212-8212-121212121212',
       '34343434-3434-4434-8434-343434343434',
     );
-    await repository.insertAtomically(
+    await insertTransfer(
+      repository,
       created,
       auditEvent(created, 'created', '30303030-3030-4030-8030-303030303030'),
     );
@@ -274,7 +284,8 @@ describe('PrismaTransferRepository', () => {
     );
 
     const outcomes = await Promise.allSettled([
-      repository.insertAtomically(
+      insertTransfer(
+        repository,
         concurrent,
         auditEvent(
           concurrent,
@@ -282,7 +293,8 @@ describe('PrismaTransferRepository', () => {
           '63636363-6363-4363-8363-636363636363',
         ),
       ),
-      repository.insertAtomically(
+      insertTransfer(
+        repository,
         concurrent,
         auditEvent(
           concurrent,
@@ -314,7 +326,8 @@ describe('PrismaTransferRepository', () => {
       '71717171-7171-4171-8171-717171717171',
       '72727272-7272-4272-8272-727272727272',
     );
-    await repository.insertAtomically(
+    await insertTransfer(
+      repository,
       concurrent,
       auditEvent(concurrent, 'created', '73737373-7373-4373-8373-737373737373'),
     );
@@ -375,7 +388,270 @@ describe('PrismaTransferRepository', () => {
       beforeAuditEvents + 1,
     );
   });
+
+  describe('idempotency (US-032, RII-017)', () => {
+    async function counts(): Promise<readonly number[]> {
+      if (client === undefined) throw new Error('Client unavailable.');
+      return Promise.all([
+        client.transfer.count(),
+        client.transaction.count(),
+        client.financialAuditEvent.count(),
+        client.idempotencyRecord.count(),
+      ]);
+    }
+
+    it('replays the stored response for an identical committed request', async () => {
+      if (repository === undefined) throw new Error('Repository unavailable.');
+      const key = 'a1a1a1a1-a1a1-4a1a-8a1a-a1a1a1a1a1a1';
+      const original = transfer(
+        'a2a2a2a2-a2a2-4a2a-8a2a-a2a2a2a2a2a2',
+        'a3a3a3a3-a3a3-4a3a-8a3a-a3a3a3a3a3a3',
+        'a4a4a4a4-a4a4-4a4a-8a4a-a4a4a4a4a4a4',
+      );
+      const stored = await insertTransfer(
+        repository,
+        original,
+        auditEvent(original, 'created', crypto.randomUUID()),
+        idempotencyFor(original, key),
+      );
+      const before = await counts();
+      const retry = transfer(
+        'a5a5a5a5-a5a5-4a5a-8a5a-a5a5a5a5a5a5',
+        'a6a6a6a6-a6a6-4a6a-8a6a-a6a6a6a6a6a6',
+        'a7a7a7a7-a7a7-4a7a-8a7a-a7a7a7a7a7a7',
+      );
+      const retryRecord = idempotencyFor(
+        retry,
+        key,
+        new Date('2026-09-22T11:59:59.999Z'),
+      );
+
+      await expect(
+        repository.findIdempotentResponse(retryRecord.request),
+      ).resolves.toBe(stored);
+      await expect(
+        insertTransfer(
+          repository,
+          retry,
+          auditEvent(retry, 'created', crypto.randomUUID()),
+          retryRecord,
+        ),
+      ).resolves.toBe(stored);
+      await expect(counts()).resolves.toEqual(before);
+    });
+
+    it('rejects the same key with a different payload without writing', async () => {
+      if (repository === undefined) throw new Error('Repository unavailable.');
+      const key = 'b1b1b1b1-b1b1-4b1b-8b1b-b1b1b1b1b1b1';
+      const original = transfer(
+        'b2b2b2b2-b2b2-4b2b-8b2b-b2b2b2b2b2b2',
+        'b3b3b3b3-b3b3-4b3b-8b3b-b3b3b3b3b3b3',
+        'b4b4b4b4-b4b4-4b4b-8b4b-b4b4b4b4b4b4',
+      );
+      await insertTransfer(
+        repository,
+        original,
+        auditEvent(original, 'created', crypto.randomUUID()),
+        idempotencyFor(original, key),
+      );
+      const before = await counts();
+      const divergent = transfer(
+        'b5b5b5b5-b5b5-4b5b-8b5b-b5b5b5b5b5b5',
+        'b6b6b6b6-b6b6-4b6b-8b6b-b6b6b6b6b6b6',
+        'b7b7b7b7-b7b7-4b7b-8b7b-b7b7b7b7b7b7',
+      );
+      const divergentRecord = idempotencyFor(
+        divergent,
+        key,
+        undefined,
+        '99.99',
+      );
+
+      await expect(
+        repository.findIdempotentResponse(divergentRecord.request),
+      ).rejects.toBeInstanceOf(IdempotencyConflictError);
+      await expect(
+        insertTransfer(
+          repository,
+          divergent,
+          auditEvent(divergent, 'created', crypto.randomUUID()),
+          divergentRecord,
+        ),
+      ).rejects.toBeInstanceOf(IdempotencyConflictError);
+      await expect(counts()).resolves.toEqual(before);
+    });
+
+    it('writes a single pair when the same key is submitted concurrently', async () => {
+      if (repository === undefined) throw new Error('Repository unavailable.');
+      const repo = repository;
+      const key = 'c1c1c1c1-c1c1-4c1c-8c1c-c1c1c1c1c1c1';
+      const before = await counts();
+      const attempts = [1, 2, 3, 4].map((index) => {
+        const candidate = transfer(
+          crypto.randomUUID(),
+          crypto.randomUUID(),
+          crypto.randomUUID(),
+        );
+        return insertTransfer(
+          repo,
+          candidate,
+          auditEvent(candidate, 'created', crypto.randomUUID()),
+          idempotencyFor(
+            candidate,
+            key,
+            new Date(Date.UTC(2026, 8, 21, 12, 0, index)),
+          ),
+        );
+      });
+
+      const outcomes = await Promise.allSettled(attempts);
+
+      const fulfilled = outcomes.flatMap((outcome) =>
+        outcome.status === 'fulfilled' ? [outcome.value] : [],
+      );
+      const rejected = outcomes.flatMap((outcome) =>
+        outcome.status === 'rejected' ? [outcome.reason as unknown] : [],
+      );
+      expect(fulfilled.length).toBeGreaterThanOrEqual(1);
+      expect(new Set(fulfilled).size).toBe(1);
+      expect(
+        rejected.every((reason) => reason instanceof IdempotencyConflictError),
+      ).toBe(true);
+      const after = await counts();
+      expect(after).toEqual([
+        (before[0] ?? 0) + 1,
+        (before[1] ?? 0) + 2,
+        (before[2] ?? 0) + 1,
+        (before[3] ?? 0) + 1,
+      ]);
+    });
+
+    it('releases the key when the write fails before commit', async () => {
+      if (repository === undefined) throw new Error('Repository unavailable.');
+      const key = 'd1d1d1d1-d1d1-4d1d-8d1d-d1d1d1d1d1d1';
+      const existing = transfer(
+        'd2d2d2d2-d2d2-4d2d-8d2d-d2d2d2d2d2d2',
+        'd3d3d3d3-d3d3-4d3d-8d3d-d3d3d3d3d3d3',
+        'd4d4d4d4-d4d4-4d4d-8d4d-d4d4d4d4d4d4',
+      );
+      await insertTransfer(
+        repository,
+        existing,
+        auditEvent(existing, 'created', crypto.randomUUID()),
+      );
+      const before = await counts();
+      const failing = transfer(
+        existing.id,
+        'd5d5d5d5-d5d5-4d5d-8d5d-d5d5d5d5d5d5',
+        'd6d6d6d6-d6d6-4d6d-8d6d-d6d6d6d6d6d6',
+      );
+
+      await expect(
+        insertTransfer(
+          repository,
+          failing,
+          auditEvent(failing, 'created', crypto.randomUUID()),
+          idempotencyFor(failing, key),
+        ),
+      ).rejects.toThrow();
+      await expect(counts()).resolves.toEqual(before);
+
+      const retry = transfer(
+        'd7d7d7d7-d7d7-4d7d-8d7d-d7d7d7d7d7d7',
+        'd8d8d8d8-d8d8-4d8d-8d8d-d8d8d8d8d8d8',
+        'd9d9d9d9-d9d9-4d9d-8d9d-d9d9d9d9d9d9',
+      );
+      await expect(
+        insertTransfer(
+          repository,
+          retry,
+          auditEvent(retry, 'created', crypto.randomUUID()),
+          idempotencyFor(retry, key),
+        ),
+      ).resolves.toBe(serializeTransferResponse(retry));
+    });
+
+    it('treats a key as new after the 24 hour replay window', async () => {
+      if (repository === undefined) throw new Error('Repository unavailable.');
+      const key = 'e1e1e1e1-e1e1-4e1e-8e1e-e1e1e1e1e1e1';
+      const first = transfer(
+        'e2e2e2e2-e2e2-4e2e-8e2e-e2e2e2e2e2e2',
+        'e3e3e3e3-e3e3-4e3e-8e3e-e3e3e3e3e3e3',
+        'e4e4e4e4-e4e4-4e4e-8e4e-e4e4e4e4e4e4',
+      );
+      await insertTransfer(
+        repository,
+        first,
+        auditEvent(first, 'created', crypto.randomUUID()),
+        idempotencyFor(first, key, new Date('2026-09-21T12:00:00.000Z')),
+      );
+      const before = await counts();
+      const later = transfer(
+        'e5e5e5e5-e5e5-4e5e-8e5e-e5e5e5e5e5e5',
+        'e6e6e6e6-e6e6-4e6e-8e6e-e6e6e6e6e6e6',
+        'e7e7e7e7-e7e7-4e7e-8e7e-e7e7e7e7e7e7',
+      );
+      const laterRecord = idempotencyFor(
+        later,
+        key,
+        new Date('2026-09-22T12:00:00.000Z'),
+        '1.00',
+      );
+
+      await expect(
+        repository.findIdempotentResponse(laterRecord.request),
+      ).resolves.toBeNull();
+      await expect(
+        insertTransfer(
+          repository,
+          later,
+          auditEvent(later, 'created', crypto.randomUUID()),
+          laterRecord,
+        ),
+      ).resolves.toBe(serializeTransferResponse(later));
+      expect(await counts()).toEqual([
+        (before[0] ?? 0) + 1,
+        (before[1] ?? 0) + 2,
+        (before[2] ?? 0) + 1,
+        before[3],
+      ]);
+    });
+  });
 });
+
+const ownerId = '99999999-9999-4999-8999-999999999999';
+
+function idempotencyFor(
+  transferValue: Transfer,
+  key: string = crypto.randomUUID(),
+  requestedAt = new Date('2026-09-21T12:00:00.000Z'),
+  amount = transferValue.toSnapshot().source.amount.amount,
+): IdempotentTransferRecord {
+  return {
+    request: {
+      key,
+      operation: CREATE_TRANSFER_OPERATION,
+      ownerId,
+      payload: {
+        amount,
+        currencyCode: 'BRL',
+        destinationAccountId: '22222222-2222-4222-8222-222222222222',
+        sourceAccountId: '11111111-1111-4111-8111-111111111111',
+      },
+      requestedAt,
+    },
+    response: serializeTransferResponse(transferValue),
+  };
+}
+
+function insertTransfer(
+  repositoryValue: PrismaTransferRepository,
+  transferValue: Transfer,
+  event: FinancialAuditEvent,
+  idempotency: IdempotentTransferRecord = idempotencyFor(transferValue),
+): Promise<string> {
+  return repositoryValue.insertAtomically(transferValue, event, idempotency);
+}
 
 function account(id: string): Account {
   return Account.create({

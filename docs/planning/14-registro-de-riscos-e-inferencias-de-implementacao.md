@@ -131,11 +131,12 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-017 — Idempotência de comandos financeiros compostos
 
-- **Estado:** aberto; prioridade alta para US-032, US-033 e US-037.
+- **Estado:** decidido em 28/09/2026 (SESHAT-48/49) e registrado no [ADR-035](../decisions/0035-idempotencia-de-comandos-financeiros.md). Implementado para transferências na US-032; ajustes (US-033) e a suíte de invariantes (US-037) seguem pendentes.
 - **Referências:** RNF-049; INV-007 a INV-011; US-032, US-033, US-037.
 - **Risco:** transferências e ajustes são persistidos atomicamente, mas os casos de uso geram novos identificadores em cada requisição. Se a gravação tiver sucesso e a resposta se perder, repetir o mesmo `POST` pode criar outro par ou outro ajuste. A restrição de unicidade dos identificadores internos e o teste de duas inserções com o mesmo identificador não comprovam idempotência de tentativas HTTP distintas.
 - **Decisão necessária:** definir chave de idempotência fornecida pelo cliente, escopo por proprietário e operação, prazo de retenção, comparação do conteúdo da requisição, resposta para a mesma chave com conteúdo diferente, comportamento durante execução concorrente e resposta a uma repetição depois de alterações no ciclo de vida do registro. A reserva da chave, os registros financeiros e a auditoria devem ser gravados na mesma transação.
-- **Limite atual:** não afirmar que `POST /api/v1/transfers` ou `POST /api/v1/accounts/:accountId/balance-adjustments` é idempotente por requisição. Preservar a atomicidade existente e não adicionar política de repetição implícita, baseada apenas em valores ou intervalo de tempo, pois dois eventos legítimos podem ter dados iguais.
+- **Decisão:** `Idempotency-Key` UUID v4 obrigatória, única por titular e operação; hash SHA-256 do conteúdo normalizado e resposta gravados na mesma transação da escrita e da auditoria; repetição idêntica por 24 horas devolve a resposta original, inclusive após mudança de ciclo de vida; conteúdo divergente ou execução concorrente retorna 409 sem escrita; falha antes do commit libera a chave.
+- **Limite atual:** `POST /api/v1/transfers` é idempotente por requisição desde a US-032. Até a US-033, não afirmar que `POST /api/v1/accounts/:accountId/balance-adjustments` é idempotente por requisição. Preservar a atomicidade existente e não adicionar política de repetição implícita, baseada apenas em valores ou intervalo de tempo, pois dois eventos legítimos podem ter dados iguais.
 - **Delimitação de contrato:** a US-009 verifica REST v1, validação e OpenAPI sem anunciar `Idempotency-Key` como implementado. O contrato HTTP de chave e repetição para transferências será definido e implementado na US-032 (SESHAT-48). A idempotência de outros comandos permanece sob seus próprios requisitos e decisões.
 
 ### RII-018 — Semântica de metas e reservas
