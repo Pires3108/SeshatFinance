@@ -1,4 +1,6 @@
 import type {
+  IdempotencyRequest,
+  IdempotentTransferRecord,
   TransferLifecycleRepository,
   TransferReadRepository,
   TransferRepository,
@@ -11,6 +13,11 @@ import {
 } from '@seshat/domain';
 
 import { insertFinancialAuditEvent } from '../audit/index.js';
+import {
+  claimIdempotencyKey,
+  findActiveIdempotentResponse,
+  storeIdempotentResponse,
+} from '../idempotency/idempotency-records.js';
 import type { Prisma, PrismaClient } from '../generated/prisma/client.js';
 import { PrismaTransactionRunner } from '../prisma/prisma-transaction-runner.js';
 
@@ -29,13 +36,22 @@ export class PrismaTransferRepository
     this.transactions = transactions ?? new PrismaTransactionRunner(client);
   }
 
+  public findIdempotentResponse(
+    request: IdempotencyRequest,
+  ): Promise<string | null> {
+    return findActiveIdempotentResponse(this.client, request);
+  }
+
   public async insertAtomically(
     transfer: Transfer,
     auditEvent: FinancialAuditEvent,
-  ): Promise<void> {
+    idempotency: IdempotentTransferRecord,
+  ): Promise<string> {
     const snapshot = transfer.toSnapshot();
-    await this.transactions.run(async () => {
+    return this.transactions.run(async () => {
       const client = this.transactions.transactionClient;
+      const replayed = await claimIdempotencyKey(client, idempotency.request);
+      if (replayed !== null) return replayed;
       await client.transaction.create({
         data: transactionCreateData(snapshot.source),
       });
@@ -52,6 +68,12 @@ export class PrismaTransferRepository
         },
       });
       await insertFinancialAuditEvent(client, auditEvent);
+      await storeIdempotentResponse(
+        client,
+        idempotency.request,
+        idempotency.response,
+      );
+      return idempotency.response;
     });
   }
 

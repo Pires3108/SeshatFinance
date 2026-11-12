@@ -1,8 +1,18 @@
-import { Currency, FinancialAuditEvent, Money, Transfer } from '@seshat/domain';
+import {
+  Currency,
+  FinancialAuditEvent,
+  Money,
+  Transfer,
+  type TransferSnapshot,
+} from '@seshat/domain';
 
 import type { AccountRepository } from '../accounts/create-account.js';
 import type { Clock } from '../ports/clock.js';
 import type { IdentifierGenerator } from '../ports/identifier-generator.js';
+import {
+  normalizeIdempotencyKey,
+  type IdempotencyRequest,
+} from '../ports/idempotency.js';
 
 export type CreateTransferCommand = Readonly<{
   actorId: string;
@@ -11,16 +21,38 @@ export type CreateTransferCommand = Readonly<{
   currencyMinorUnitScale: number;
   description: string | null;
   destinationAccountId: string;
+  idempotencyKey: string;
   observations: string | null;
   occurredAt: Date;
   sourceAccountId: string;
 }>;
 
+export const CREATE_TRANSFER_OPERATION = 'transfer.create';
+
+/** Stored idempotent response: the transfer snapshot as originally recorded. */
+export type IdempotentTransferRecord = Readonly<{
+  request: IdempotencyRequest;
+  response: string;
+}>;
+
 export interface TransferRepository {
+  /**
+   * Returns the stored response for an unexpired key with the same payload,
+   * null when the key is unused or expired, and throws
+   * IdempotencyConflictError when the payload differs.
+   */
+  findIdempotentResponse(request: IdempotencyRequest): Promise<string | null>;
+  /**
+   * Records both legs, the audit event and the idempotency record in one
+   * database transaction. Returns the stored response instead of writing when
+   * an identical request committed first; throws IdempotencyConflictError
+   * when the payload differs or the key is being processed concurrently.
+   */
   insertAtomically(
     transfer: Transfer,
     auditEvent: FinancialAuditEvent,
-  ): Promise<void>;
+    idempotency: IdempotentTransferRecord,
+  ): Promise<string>;
 }
 
 export interface TransferLifecycleRepository {
@@ -70,6 +102,31 @@ export class CreateTransferUseCase {
   ) {}
 
   public async execute(command: CreateTransferCommand): Promise<Transfer> {
+    const key = normalizeIdempotencyKey(command.idempotencyKey);
+    const currency = Currency.create(
+      command.currencyCode,
+      command.currencyMinorUnitScale,
+    );
+    const amount = Money.fromDecimal(command.amount, currency);
+    const at = this.clock.now();
+    const request: IdempotencyRequest = {
+      key,
+      operation: CREATE_TRANSFER_OPERATION,
+      ownerId: command.actorId,
+      payload: {
+        amount: amount.toDecimal(),
+        currencyCode: currency.code,
+        currencyMinorUnitScale: currency.minorUnitScale,
+        description: command.description?.trim() ?? null,
+        destinationAccountId: command.destinationAccountId.toLowerCase(),
+        observations: command.observations?.trim() ?? null,
+        occurredAt: command.occurredAt.toISOString(),
+        sourceAccountId: command.sourceAccountId.toLowerCase(),
+      },
+      requestedAt: at,
+    };
+    const replayed = await this.transfers.findIdempotentResponse(request);
+    if (replayed !== null) return parseTransferResponse(replayed);
     if (command.sourceAccountId === command.destinationAccountId) {
       throw new TransferAccountUnavailableError();
     }
@@ -90,19 +147,14 @@ export class CreateTransferUseCase {
     ) {
       throw new TransferCurrencyMismatchError();
     }
-    const currency = Currency.create(
-      command.currencyCode,
-      command.currencyMinorUnitScale,
-    );
     if (!currency.equals(source.initialBalance.currency)) {
       throw new TransferCurrencyMismatchError();
     }
     const transferId = this.identifiers.generate();
     const sourceTransactionId = this.identifiers.generate();
     const destinationTransactionId = this.identifiers.generate();
-    const at = this.clock.now();
     const transfer = Transfer.create({
-      amount: Money.fromDecimal(command.amount, currency),
+      amount,
       createdAt: at,
       description: command.description,
       destinationAccountId: destination.id,
@@ -114,7 +166,7 @@ export class CreateTransferUseCase {
       sourceAccountId: source.id,
       sourceTransactionId,
     });
-    await this.transfers.insertAtomically(
+    const stored = await this.transfers.insertAtomically(
       transfer,
       FinancialAuditEvent.create({
         action: 'created',
@@ -125,9 +177,32 @@ export class CreateTransferUseCase {
         resourceId: transfer.id,
         resourceType: 'transfer',
       }),
+      { request, response: serializeTransferResponse(transfer) },
     );
-    return transfer;
+    return parseTransferResponse(stored);
   }
+}
+
+const snapshotDateFields = new Set([
+  'archivedAt',
+  'createdAt',
+  'occurredAt',
+  'trashedAt',
+  'updatedAt',
+]);
+
+/** Serializes the transfer exactly as recorded, for idempotent replay. */
+export function serializeTransferResponse(transfer: Transfer): string {
+  return JSON.stringify(transfer.toSnapshot());
+}
+
+export function parseTransferResponse(response: string): Transfer {
+  const snapshot = JSON.parse(response, (key: string, value: unknown) =>
+    snapshotDateFields.has(key) && typeof value === 'string'
+      ? new Date(value)
+      : value,
+  ) as TransferSnapshot;
+  return Transfer.restore(snapshot);
 }
 
 export type TransferLifecycleAction =

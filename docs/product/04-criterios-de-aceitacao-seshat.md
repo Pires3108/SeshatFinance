@@ -50,7 +50,8 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 
 **Dado** duas contas do usuário, **quando** ele registrar uma transferência ocorrida fora da Seshat Finance, **então** origem e destino organizacionais serão atualizados atomicamente, o patrimônio permanecerá igual e nenhuma ordem será enviada a terceiros.  
 **Dado** uma transferência registrada, **quando** seu proprietário consultar a lista ou o detalhe, **então** verá o par de lançamentos e seu estado; outro usuário não terá acesso.
-**Referências:** RF-028; RN-003, RN-008, RN-009; RNF-049.
+**Dado** uma transferência gravada com uma `Idempotency-Key` UUID v4, **quando** o titular repetir o mesmo comando com a mesma chave em até 24 horas, **então** receberá a mesma transferência sem novo efeito nos saldos nem nova auditoria, mesmo que o par tenha mudado de ciclo de vida. A mesma chave com conteúdo diferente ou em execução concorrente retornará 409 sem escrita; chave ausente ou inválida retornará 400.
+**Referências:** RF-028; RN-003, RN-008, RN-009; RNF-049; RII-017; ADR-035.
 
 ### CA-006 — Ajuste
 

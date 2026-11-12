@@ -1,4 +1,6 @@
 import type {
+  IdempotencyRequest,
+  IdempotentTransferRecord,
   TransferLifecycleRepository,
   TransferReadRepository,
   TransferRepository,
@@ -24,11 +26,22 @@ export class LazyTransferRepository
 
   public constructor(private readonly prisma: LazyPrismaClient) {}
 
+  public findIdempotentResponse(
+    request: IdempotencyRequest,
+  ): Promise<string | null> {
+    return this.getRepository().findIdempotentResponse(request);
+  }
+
   public insertAtomically(
     transfer: Transfer,
     auditEvent: FinancialAuditEvent,
-  ): Promise<void> {
-    return this.getRepository().insertAtomically(transfer, auditEvent);
+    idempotency: IdempotentTransferRecord,
+  ): Promise<string> {
+    return this.getRepository().insertAtomically(
+      transfer,
+      auditEvent,
+      idempotency,
+    );
   }
 
   public findByIdForOwner(

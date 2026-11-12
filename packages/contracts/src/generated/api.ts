@@ -4126,7 +4126,10 @@ export interface operations {
     readonly TransferController_create: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header: {
+                /** @description UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409. */
+                readonly "Idempotency-Key": string;
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
@@ -4183,6 +4186,13 @@ export interface operations {
                     };
                 };
             };
+            /** @description Invalid request or idempotency key */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Bearer token missing or invalid */
             readonly 401: {
                 headers: {
@@ -4192,6 +4202,13 @@ export interface operations {
             };
             /** @description An owned active account was not found */
             readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency key reused with a different payload or still in progress */
+            readonly 409: {
                 headers: {
                     readonly [name: string]: unknown;
                 };

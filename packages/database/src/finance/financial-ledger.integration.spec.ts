@@ -1,8 +1,10 @@
 import { readFile } from 'node:fs/promises';
 
 import {
+  CREATE_TRANSFER_OPERATION,
   GetOwnedAccountBalanceUseCase,
   OwnedAccountNotFoundError,
+  serializeTransferResponse,
 } from '@seshat/application';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import {
@@ -74,6 +76,7 @@ describe('financial ledger across accounts, transfers, and adjustments', () => {
       '../../prisma/migrations/20261103010000_transaction_idempotency/migration.sql',
       '../../prisma/migrations/20260919210000_create_user_profiles/migration.sql',
       '../../prisma/migrations/20261109120000_transaction_time_zone/migration.sql',
+      '../../prisma/migrations/20261112090000_idempotency_records/migration.sql',
     ]) {
       await migrationClient.query(
         await readFile(new URL(path, import.meta.url), 'utf8'),
@@ -151,6 +154,16 @@ describe('financial ledger across accounts, transfers, and adjustments', () => {
         'created',
         '2026-09-23T11:00:00.000Z',
       ),
+      {
+        request: {
+          key: 'abababab-abab-4bab-8bab-abababababab',
+          operation: CREATE_TRANSFER_OPERATION,
+          ownerId,
+          payload: { amount: '20.00', destinationAccountId, sourceAccountId },
+          requestedAt: new Date('2026-09-23T11:00:00.000Z'),
+        },
+        response: serializeTransferResponse(transfer),
+      },
     );
     await expectBalances(balances, '80.00', '70.00', '150.00');
 

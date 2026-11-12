@@ -21,6 +21,7 @@ import {
   Controller,
   ConflictException,
   Get,
+  Headers,
   Inject,
   NotFoundException,
   Param,
@@ -33,10 +34,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiBody,
   ApiCreatedResponse,
   ApiConflictResponse,
+  ApiHeader,
   ApiNotFoundResponse,
   ApiOperation,
   ApiOkResponse,
@@ -51,6 +54,11 @@ import { z } from 'zod';
 
 import { AuthenticatedActorContext } from '../auth/authenticated-actor-context.js';
 import { BearerAuthGuard } from '../auth/bearer-auth.guard.js';
+import {
+  idempotencyKeyHeader,
+  mapIdempotencyError,
+  parseIdempotencyKeyHeader,
+} from '../platform/idempotency-key.js';
 import { ZodValidationPipe } from '../platform/zod-validation.pipe.js';
 import {
   supportedCurrencyCodeSchema,
@@ -197,17 +205,26 @@ export class TransferController {
     summary: 'Record a transfer declared by the authenticated user',
   })
   @ApiBody({ schema: createBodySchema() })
+  @ApiHeader(idempotencyKeyHeader)
   @ApiCreatedResponse({ schema: responseSchema })
+  @ApiBadRequestResponse({ description: 'Invalid request or idempotency key' })
   @ApiNotFoundResponse({ description: 'An owned active account was not found' })
+  @ApiConflictResponse({
+    description:
+      'Idempotency key reused with a different payload or still in progress',
+  })
   public async create(
     @Req() request: FastifyRequest,
+    @Headers('idempotency-key') idempotencyKey: string | undefined,
     @Body(new ZodValidationPipe(createSchema)) body: CreateRequest,
   ): Promise<Response> {
+    const key = parseIdempotencyKeyHeader(idempotencyKey);
     try {
       return mapTransfer(
         await this.createTransfer.execute({
           actorId: this.actorId(request),
           ...body,
+          idempotencyKey: key,
           occurredAt: new Date(body.occurredAt),
         }),
       );
@@ -283,6 +300,8 @@ function mapTransfer(transfer: Transfer): Response {
 }
 
 function mapError(error: unknown): Error {
+  const idempotencyError = mapIdempotencyError(error);
+  if (idempotencyError !== undefined) return idempotencyError;
   if (error instanceof OwnedTransferNotFoundError) {
     return new NotFoundException('Transfer not found.');
   }
