@@ -61,6 +61,7 @@ import { z } from 'zod';
 
 import { AuthenticatedActorContext } from '../auth/authenticated-actor-context.js';
 import { BearerAuthGuard } from '../auth/bearer-auth.guard.js';
+import { withoutTrashUnlessRequested } from '../platform/lifecycle-filter.js';
 import { ZodValidationPipe } from '../platform/zod-validation.pipe.js';
 import {
   supportedCurrencyCodeSchema,
@@ -301,12 +302,13 @@ export class TransactionController {
     lifecycle?: z.infer<typeof lifecycleFilterSchema>,
   ): Promise<readonly Response[]> {
     try {
-      return (
+      return withoutTrashUnlessRequested(
         await this.listTransactions.execute(
           accountId,
           this.actorId(request),
           lifecycle,
-        )
+        ),
+        lifecycle,
       ).map(mapTransaction);
     } catch (error) {
       throw mapError(error);
@@ -341,7 +343,7 @@ export class TransactionController {
     query: InstantRangeRequest,
   ): Promise<readonly Response[]> {
     try {
-      return (
+      return withoutTrashUnlessRequested(
         await this.listTransactionsBetween.execute(
           this.actorId(request),
           new Date(query.from),
@@ -360,7 +362,8 @@ export class TransactionController {
               ? {}
               : { occurredAtOrder: query.occurredAtOrder }),
           },
-        )
+        ),
+        query.lifecycle,
       ).map(mapTransaction);
     } catch (error) {
       throw mapError(error);

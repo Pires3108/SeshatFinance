@@ -212,23 +212,25 @@ export class Transaction {
     };
   }
 
-  public moveToTrash(at: Date): void {
-    if (this.state.lifecycle === 'trashed') {
-      throw new TransactionLifecycleError(
-        'Transaction is already in the trash.',
-      );
-    }
+  /**
+   * Moves the transaction to the trash, preserving whether it was archived.
+   * Idempotent: returns false without changes when it is already trashed.
+   */
+  public moveToTrash(at: Date): boolean {
+    if (this.state.lifecycle === 'trashed') return false;
     this.transition('trashed', at, {
       archivedAt: this.state.archivedAt,
       trashedAt: at,
     });
+    return true;
   }
 
-  public restoreFromTrash(at: Date): void {
-    this.requireLifecycle(
-      'trashed',
-      'Only a trashed transaction can be restored.',
-    );
+  /**
+   * Restores the prior state (active or archived). Idempotent: returns false
+   * without changes when the transaction is not in the trash.
+   */
+  public restoreFromTrash(at: Date): boolean {
+    if (this.state.lifecycle !== 'trashed') return false;
     this.transition(
       this.state.archivedAt === null ? 'active' : 'archived',
       at,
@@ -237,6 +239,7 @@ export class Transaction {
         trashedAt: null,
       },
     );
+    return true;
   }
 
   public toSnapshot(): TransactionSnapshot {

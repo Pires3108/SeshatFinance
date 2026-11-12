@@ -71,6 +71,36 @@ function fromTransaction(item: Transaction): Form {
   };
 }
 
+type LifecycleAction =
+  'archive' | 'unarchive' | 'move-to-trash' | 'restore-from-trash';
+
+const lifecycleLabels: Readonly<Record<LifecycleAction, string>> = {
+  archive: 'Arquivar',
+  unarchive: 'Desarquivar',
+  'move-to-trash': 'Mover para a lixeira',
+  'restore-from-trash': 'Restaurar da lixeira',
+};
+
+const lifecycleMessages: Readonly<Record<LifecycleAction, string>> = {
+  archive: 'Movimentação arquivada. Ela continua nos saldos.',
+  unarchive: 'Movimentação desarquivada.',
+  'move-to-trash':
+    'Movimentação movida para a lixeira. Ela deixou de afetar os saldos.',
+  'restore-from-trash':
+    'Movimentação restaurada ao estado anterior. Ela voltou a afetar os saldos.',
+};
+
+function lifecycleActions(item: Transaction): readonly LifecycleAction[] {
+  switch (item.lifecycle) {
+    case 'active':
+      return ['archive', 'move-to-trash'];
+    case 'archived':
+      return ['unarchive', 'move-to-trash'];
+    case 'trashed':
+      return ['restore-from-trash'];
+  }
+}
+
 function money(item: Transaction): string {
   const [whole, fraction = ''] = item.amount.split('.');
   return `${whole?.replace(/\B(?=(\d{3})+(?!\d))/gu, '.') ?? '0'}${fraction ? `,${fraction}` : ''} ${item.currencyCode}`;
@@ -94,13 +124,20 @@ export function TransactionJournal({
   const [openDetails, setOpenDetails] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  const [view, setView] = useState<'ordinary' | 'trashed'>('ordinary');
+  const [lifecycleBusyId, setLifecycleBusyId] = useState<string | null>(null);
 
   const load = useCallback(async (): Promise<void> => {
     setState('loading');
     try {
       const [accountResponse, transactionResponse] = await Promise.all([
         fetch(`/api/accounts/${accountId}`, { cache: 'no-store' }),
-        fetch(`/api/accounts/${accountId}/transactions`, { cache: 'no-store' }),
+        fetch(
+          `/api/accounts/${accountId}/transactions${
+            view === 'trashed' ? '?lifecycle=trashed' : ''
+          }`,
+          { cache: 'no-store' },
+        ),
       ]);
       if (
         accountResponse.status === 401 ||
@@ -136,7 +173,40 @@ export function TransactionJournal({
     } catch {
       setState('error');
     }
-  }, [accountId]);
+  }, [accountId, view]);
+
+  async function changeLifecycle(
+    item: Transaction,
+    action: LifecycleAction,
+  ): Promise<void> {
+    setLifecycleBusyId(item.id);
+    setMessage('');
+    try {
+      const response = await fetch(`/api/transactions/${item.id}/lifecycle`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      if (response.status === 401) {
+        setState('unauthorized');
+        return;
+      }
+      if (!response.ok) {
+        setMessage(
+          response.status === 409
+            ? 'Não foi possível alterar: a movimentação mudou, faz parte de uma transferência ou tem reembolsos vinculados. Recarregue e tente novamente.'
+            : 'Não foi possível alterar a movimentação. Tente novamente.',
+        );
+        return;
+      }
+      setMessage(lifecycleMessages[action]);
+      await load();
+    } catch {
+      setMessage('Não foi possível alterar a movimentação. Tente novamente.');
+    } finally {
+      setLifecycleBusyId(null);
+    }
+  }
 
   useEffect(() => {
     void load();
@@ -427,6 +497,21 @@ export function TransactionJournal({
               )}
             </form>
             <h2>Histórico</h2>
+            <label>
+              Mostrar
+              <select
+                value={view}
+                onChange={(event) => {
+                  setView(
+                    event.target.value === 'trashed' ? 'trashed' : 'ordinary',
+                  );
+                  setMessage('');
+                }}
+              >
+                <option value="ordinary">Ativas e arquivadas</option>
+                <option value="trashed">Lixeira</option>
+              </select>
+            </label>
             <p role="status">
               {items.length === 0
                 ? 'Nenhuma movimentação nesta conta.'
@@ -442,6 +527,8 @@ export function TransactionJournal({
                   <p>
                     {new Date(item.occurredAt).toLocaleString('pt-BR')} ·{' '}
                     {item.description ?? 'Sem descrição'}
+                    {item.lifecycle === 'archived' && ' · Arquivada'}
+                    {item.lifecycle === 'trashed' && ' · Na lixeira'}
                   </p>
                   <details
                     onToggle={(event) => {
@@ -500,6 +587,16 @@ export function TransactionJournal({
                       Editar
                     </button>
                   )}
+                  {lifecycleActions(item).map((action) => (
+                    <button
+                      key={action}
+                      type="button"
+                      disabled={lifecycleBusyId !== null}
+                      onClick={() => void changeLifecycle(item, action)}
+                    >
+                      {lifecycleLabels[action]}
+                    </button>
+                  ))}
                 </li>
               ))}
             </ul>

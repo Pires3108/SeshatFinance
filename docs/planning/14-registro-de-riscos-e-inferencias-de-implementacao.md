@@ -58,11 +58,22 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-008 — Semântica pública de restauração de conta
 
-- **Estado:** aberto.
-- **Referências:** RF-017; RN-005; INV-009; INV-010.
+- **Estado:** decidido em 27/09/2026 (SESHAT-50) e aplicado na US-034.
+- **Referências:** RF-017; RF-032; RF-090; RN-005; INV-009; INV-010; US-034.
 - **Risco:** “restaurar” não distingue reativação de conta arquivada de recuperação da lixeira, o que pode alterar indevidamente sua participação nas listas e indicadores.
-- **Decisão necessária:** definir os rótulos e fluxos públicos para desarquivar e restaurar da lixeira.
-- **Limite atual:** o domínio mantém comandos distintos e, ao restaurar da lixeira, recupera o estado ativo ou arquivado preservado antes da remoção lógica.
+- **Decisão:** desarquivar e restaurar da lixeira são ações públicas distintas, com rótulos “Desarquivar” e “Restaurar da lixeira”. Restaurar da lixeira devolve o estado anterior (ativo ou arquivado). Vale para contas, lançamentos e transferências.
+- **Aplicação na US-034:**
+  - Enviar à lixeira um item que já está na lixeira, ou restaurar um item fora dela, é uma operação sem efeito: devolve o estado atual, sem nova versão, sem gravação e sem evento de auditoria. As demais transições inválidas continuam rejeitadas.
+  - As listagens ordinárias de contas, lançamentos e transferências omitem a lixeira; ela é consultada pelo filtro explícito `lifecycle=trashed`.
+  - Conta na lixeira: seus lançamentos permanecem intactos e no próprio estado; a conta sai das listagens ordinárias, e o saldo dela deixa de compor os totais exibidos, conforme o comportamento já existente. Restaurar a conta devolve sua participação sem alterar os lançamentos.
+
+### RII-026 — Purga definitiva da lixeira após 30 dias
+
+- **Estado:** aberto.
+- **Referências:** RF-090; RNF-056; RF-088; INV-007 a INV-011; US-034, US-035.
+- **Risco:** a purga física de itens na lixeira há mais de 30 dias conflita com a trilha de auditoria append-only e com as revisões de lançamento, que referenciam o lançamento com `ON DELETE RESTRICT`. Apagar o lançamento exigiria apagar ou desligar revisões, vínculos de reembolso, chaves de idempotência e pares de transferência, perdendo rastreabilidade exigida por RF-088.
+- **Decisão necessária:** escolher entre (a) remoção física com anonimização prévia das revisões e manutenção apenas dos eventos de auditoria, (b) estado terminal “eliminado” sem remoção física, ocultando o item da lixeira, ou (c) remoção física completa, revendo a retenção da auditoria. Definir também a regra para itens com vínculos (transferência, reembolso, ajuste).
+- **Limite atual:** a US-034 entrega restauração e lixeira idempotentes, listagens sem lixeira e a interface de ciclo de vida de lançamentos. A purga automática e a eliminação definitiva manual de RF-090 não são implementadas até essa decisão.
 
 ### RII-009 — Captura e armazenamento de número de conta mascarado
 

@@ -1,4 +1,7 @@
-import { proxyTransaction } from '../../../../transactions/transaction-api';
+import {
+  lifecycleFilter,
+  proxyTransaction,
+} from '../../../../transactions/transaction-api';
 import { uuid } from '../../../../transactions/transaction-contract';
 
 interface Context {
@@ -12,7 +15,14 @@ export async function GET(
   const { accountId } = await context.params;
   if (!uuid.test(accountId))
     return Response.json({ error: 'invalid_id' }, { status: 400 });
-  return proxyTransaction(request, `accounts/${accountId}/transactions`);
+  const lifecycle = lifecycleFilter(request);
+  if (lifecycle === null)
+    return Response.json({ error: 'invalid_filter' }, { status: 400 });
+  return proxyTransaction(
+    request,
+    `accounts/${accountId}/transactions`,
+    lifecycle,
+  );
 }
 
 export async function POST(

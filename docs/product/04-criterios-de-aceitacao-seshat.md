@@ -63,8 +63,11 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 ### CA-007 — Exclusão e restauração
 
 **Dado** movimentação válida, **quando** for à lixeira, **então** deixará de afetar saldos; **quando** restaurada, voltará a afetá-los uma única vez.  
-**Dado** o filtro explícito de lixeira, **quando** consultar movimentações, **então** apenas registros do usuário naquele estado serão retornados, sem alterar a consulta sem filtro.
-**Referências:** RF-032, RF-090; RN-005, RN-046, RN-047.
+**Dado** o filtro explícito de lixeira, **quando** consultar movimentações, **então** apenas registros do usuário naquele estado serão retornados.  
+**Dado** uma consulta ordinária sem filtro de estado, **quando** listar contas, movimentações ou transferências, **então** os itens na lixeira não aparecerão; ativos e arquivados continuarão listados.  
+**Dado** um item já na lixeira, **quando** for enviado à lixeira novamente, ou um item fora da lixeira **quando** for restaurado, **então** a operação devolverá o estado atual sem nova versão, sem alteração de saldo e sem novo evento de auditoria.  
+**Dado** um item arquivado enviado à lixeira, **quando** restaurado, **então** voltará ao estado arquivado; desarquivar é uma ação distinta.  
+**Referências:** RF-032, RF-090; RN-005, RN-046, RN-047; RNF-056; RII-008; RII-026.
 
 ### CA-008 — Cartão e fatura
 

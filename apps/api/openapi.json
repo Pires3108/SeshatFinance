@@ -398,6 +398,7 @@
             "name": "lifecycle",
             "required": false,
             "in": "query",
+            "description": "Omitted: active and archived only; trashed lists the trash.",
             "schema": {
               "enum": ["active", "archived", "trashed"],
               "type": "string"
