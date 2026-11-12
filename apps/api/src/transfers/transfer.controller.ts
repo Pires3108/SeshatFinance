@@ -177,8 +177,17 @@ export class TransferController {
     @Query('lifecycle', new ZodValidationPipe(lifecycleFilterSchema.optional()))
     lifecycle?: z.infer<typeof lifecycleFilterSchema>,
   ): Promise<readonly Response[]> {
+    const transfers = await this.listTransfers.execute(
+      this.actorId(request),
+      lifecycle,
+    );
+    // Ordinary views omit the trash; it is reachable with lifecycle=trashed.
     return (
-      await this.listTransfers.execute(this.actorId(request), lifecycle)
+      lifecycle === undefined
+        ? transfers.filter(
+            (transfer) => transfer.toSnapshot().source.lifecycle !== 'trashed',
+          )
+        : transfers
     ).map(mapTransfer);
   }
 

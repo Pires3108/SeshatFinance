@@ -4,9 +4,19 @@ import { NextResponse } from 'next/server';
 
 import { uuid } from './transaction-contract';
 
+const lifecycles = new Set(['active', 'archived', 'trashed']);
+
+/** Reads an optional lifecycle filter; null when the value is not allowed. */
+export function lifecycleFilter(request: Request): string | null | undefined {
+  const value = new URL(request.url).searchParams.get('lifecycle');
+  if (value === null) return undefined;
+  return lifecycles.has(value) ? value : null;
+}
+
 export async function proxyTransaction(
   request: Request,
   path: string,
+  lifecycle?: string,
 ): Promise<NextResponse> {
   if (
     !path
@@ -17,11 +27,17 @@ export async function proxyTransaction(
           part === 'accounts' ||
           part === 'transactions' ||
           part === 'refunds' ||
+          part === 'lifecycle' ||
           uuid.test(part),
-      )
+      ) ||
+    (lifecycle !== undefined && !lifecycles.has(lifecycle))
   ) {
     return NextResponse.json({ error: 'invalid_id' }, { status: 400 });
   }
+  const query =
+    lifecycle === undefined
+      ? ''
+      : `?lifecycle=${encodeURIComponent(lifecycle)}`;
   const session =
     /(?:^|;\s*)(__Host-seshat_session=[A-Za-z0-9_-]{43})(?:;|$)/u.exec(
       request.headers.get('cookie') ?? '',
@@ -33,7 +49,7 @@ export async function proxyTransaction(
   try {
     const response = await fetch(
       new URL(
-        `/api/v1/${path}`,
+        `/api/v1/${path}${query}`,
         process.env.SESHAT_API_URL ?? 'http://localhost:3001',
       ),
       {

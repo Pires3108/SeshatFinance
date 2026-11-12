@@ -1097,6 +1097,7 @@ export interface operations {
     readonly AccountController_list: {
         readonly parameters: {
             readonly query?: {
+                /** @description Omitted: active and archived only; trashed lists the trash. */
                 readonly lifecycle?: "active" | "archived" | "trashed";
             };
             readonly header?: never;

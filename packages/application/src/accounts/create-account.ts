@@ -196,6 +196,7 @@ export class ChangeOwnedAccountLifecycleUseCase {
     if (account === null) throw new OwnedAccountNotFoundError();
     const expectedVersion = account.toSnapshot().version;
     const at = this.clock.now();
+    let changed = true;
     switch (command.action) {
       case 'archive':
         account.archive(at);
@@ -204,12 +205,14 @@ export class ChangeOwnedAccountLifecycleUseCase {
         account.unarchive(at);
         break;
       case 'move-to-trash':
-        account.moveToTrash(at);
+        changed = account.moveToTrash(at);
         break;
       case 'restore-from-trash':
-        account.restoreFromTrash(at);
+        changed = account.restoreFromTrash(at);
         break;
     }
+    // Repeating trash or restore is a no-op: no write, version or audit.
+    if (!changed) return account;
     if (
       !(await this.accounts.save(
         account,

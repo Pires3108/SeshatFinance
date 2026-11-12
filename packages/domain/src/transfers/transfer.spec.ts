@@ -62,6 +62,28 @@ describe('Transfer', () => {
     });
   });
 
+  it('treats a repeated trash or restore of the pair as a no-op (US-034)', () => {
+    const transfer = Transfer.create(base);
+    expect(
+      transfer.restoreFromTrash(new Date('2026-09-21T15:00:00.000Z')),
+    ).toBe(false);
+    expect(transfer.moveToTrash(new Date('2026-09-21T16:00:00.000Z'))).toBe(
+      true,
+    );
+    const trashed = transfer.toSnapshot();
+    expect(transfer.moveToTrash(new Date('2026-09-21T17:00:00.000Z'))).toBe(
+      false,
+    );
+    expect(transfer.toSnapshot()).toEqual(trashed);
+    expect(
+      transfer.restoreFromTrash(new Date('2026-09-21T18:00:00.000Z')),
+    ).toBe(true);
+    expect(transfer.toSnapshot()).toMatchObject({
+      destination: { lifecycle: 'active', version: 3 },
+      source: { lifecycle: 'active', version: 3 },
+    });
+  });
+
   it.each([
     ['archive', 'archived'],
     ['moveToTrash', 'trashed'],

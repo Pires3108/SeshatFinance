@@ -63,6 +63,43 @@ describe('Account', () => {
     });
   });
 
+  it('treats a repeated trash or restore as a no-op without a new version (US-034)', () => {
+    const account = createAccount();
+    expect(account.restoreFromTrash(new Date('2026-09-20T13:00:00.000Z'))).toBe(
+      false,
+    );
+    expect(account.moveToTrash(new Date('2026-09-20T14:00:00.000Z'))).toBe(
+      true,
+    );
+    const trashed = account.toSnapshot();
+
+    expect(account.moveToTrash(new Date('2026-09-20T15:00:00.000Z'))).toBe(
+      false,
+    );
+    expect(account.toSnapshot()).toEqual(trashed);
+    expect(account.restoreFromTrash(new Date('2026-09-20T16:00:00.000Z'))).toBe(
+      true,
+    );
+    expect(account.restoreFromTrash(new Date('2026-09-20T17:00:00.000Z'))).toBe(
+      false,
+    );
+    expect(account.toSnapshot()).toMatchObject({
+      lifecycle: 'active',
+      version: 3,
+    });
+  });
+
+  it('keeps rejecting the other invalid lifecycle transitions', () => {
+    const account = createAccount();
+    expect(() => {
+      account.unarchive(new Date('2026-09-20T13:00:00.000Z'));
+    }).toThrow(AccountLifecycleError);
+    account.moveToTrash(new Date('2026-09-20T14:00:00.000Z'));
+    expect(() => {
+      account.archive(new Date('2026-09-20T15:00:00.000Z'));
+    }).toThrow(AccountLifecycleError);
+  });
+
   it('rejects edits while the account is in the trash', () => {
     const account = createAccount();
     account.moveToTrash(new Date('2026-09-20T13:00:00.000Z'));
