@@ -24,7 +24,11 @@ function timeZoneOptions(current: string): readonly string[] {
   return [...new Set([current, ...Intl.supportedValuesOf('timeZone')])].sort();
 }
 
-export function TimeZoneForm(): ReactNode {
+export function TimeZoneForm({
+  children,
+}: {
+  children?: ReactNode;
+}): ReactNode {
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [current, setCurrent] = useState('');
   const [selected, setSelected] = useState('');
@@ -218,6 +222,7 @@ export function TimeZoneForm(): ReactNode {
             )}
           </form>
         )}
+        {loadState === 'ready' && children}
       </main>
     </div>
   );

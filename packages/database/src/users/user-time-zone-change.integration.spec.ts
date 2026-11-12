@@ -69,6 +69,7 @@ describe('user time zone change', () => {
       displayName: 'Pessoa fictícia',
       locale: 'pt-BR',
       presentationCurrency: 'BRL',
+      refundPresentation: 'separate-income',
       timeZone,
       createdAt: now,
       updatedAt: now,

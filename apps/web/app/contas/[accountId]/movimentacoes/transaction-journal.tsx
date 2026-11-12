@@ -19,6 +19,7 @@ import {
   uuid,
   type Transaction,
 } from '../../../transactions/transaction-contract';
+import { RefundPanel } from './refund-panel';
 
 interface Form {
   kind: 'income' | 'expense';
@@ -90,6 +91,9 @@ export function TransactionJournal({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [retryKey, setRetryKey] = useState<string | null>(null);
+  const [openDetails, setOpenDetails] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
 
   const load = useCallback(async (): Promise<void> => {
     setState('loading');
@@ -439,7 +443,17 @@ export function TransactionJournal({
                     {new Date(item.occurredAt).toLocaleString('pt-BR')} ·{' '}
                     {item.description ?? 'Sem descrição'}
                   </p>
-                  <details>
+                  <details
+                    onToggle={(event) => {
+                      const open = event.currentTarget.open;
+                      setOpenDetails((current) => {
+                        const next = new Set(current);
+                        if (open) next.add(item.id);
+                        else next.delete(item.id);
+                        return next;
+                      });
+                    }}
+                  >
                     <summary>Detalhes</summary>
                     <dl>
                       <div>
@@ -469,6 +483,9 @@ export function TransactionJournal({
                         <dd>{item.tagIds.join(', ') || '—'}</dd>
                       </div>
                     </dl>
+                    {item.kind === 'expense' && openDetails.has(item.id) && (
+                      <RefundPanel expense={item} />
+                    )}
                   </details>
                   {item.lifecycle === 'active' && (
                     <button

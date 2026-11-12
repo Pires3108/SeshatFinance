@@ -42,6 +42,7 @@ const updateProfileSchema = z.object({
   displayName: z.string().trim().min(1).max(120).nullable(),
   locale: z.literal('pt-BR'),
   presentationCurrency: z.literal('BRL'),
+  refundPresentation: z.enum(['separate-income', 'expense-offset']).optional(),
   timeZone: z
     .string()
     .trim()
@@ -58,6 +59,7 @@ type UserProfileResponse = Readonly<{
   id: string;
   locale: string;
   presentationCurrency: string;
+  refundPresentation: 'separate-income' | 'expense-offset';
   timeZone: string;
   updatedAt: string;
   version: number;
@@ -70,6 +72,10 @@ const profileResponseSchema: SchemaObject = {
     id: { type: 'string' },
     locale: { type: 'string' },
     presentationCurrency: { maxLength: 3, minLength: 3, type: 'string' },
+    refundPresentation: {
+      enum: ['separate-income', 'expense-offset'],
+      type: 'string',
+    },
     timeZone: { type: 'string' },
     updatedAt: { format: 'date-time', type: 'string' },
     version: { minimum: 1, type: 'integer' },
@@ -80,6 +86,7 @@ const profileResponseSchema: SchemaObject = {
     'id',
     'locale',
     'presentationCurrency',
+    'refundPresentation',
     'timeZone',
     'updatedAt',
     'version',
@@ -133,6 +140,10 @@ export class UserProfileController {
           enum: ['BRL'],
           type: 'string',
         },
+        refundPresentation: {
+          enum: ['separate-income', 'expense-offset'],
+          type: 'string',
+        },
         timeZone: { maxLength: 64, minLength: 1, type: 'string' },
         timeZoneChangeScope: {
           description: 'Required when timeZone differs from the current one.',
@@ -150,12 +161,13 @@ export class UserProfileController {
     @Body(new ZodValidationPipe(updateProfileSchema))
     body: UpdateProfileRequest,
   ): Promise<UserProfileResponse> {
-    const { timeZoneChangeScope, ...preferences } = body;
+    const { refundPresentation, timeZoneChangeScope, ...preferences } = body;
     try {
       return mapResponse(
         await this.updateProfile.execute({
           actorId: this.actorId(request),
           ...preferences,
+          ...(refundPresentation === undefined ? {} : { refundPresentation }),
           ...(timeZoneChangeScope === undefined ? {} : { timeZoneChangeScope }),
         }),
       );

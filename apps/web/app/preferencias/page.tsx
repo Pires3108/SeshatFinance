@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
+import { RefundPresentationForm } from './refund-presentation-form';
 import { TimeZoneForm } from './time-zone-form';
 
 export const metadata: Metadata = {
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function PreferencesPage(): ReactNode {
-  return <TimeZoneForm />;
+  return (
+    <TimeZoneForm>
+      <RefundPresentationForm />
+    </TimeZoneForm>
+  );
 }

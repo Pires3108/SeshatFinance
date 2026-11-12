@@ -8,6 +8,7 @@ export type UserProfile = Readonly<{
   locale: string;
   timeZone: string;
   presentationCurrency: string;
+  refundPresentation: 'separate-income' | 'expense-offset';
   createdAt: Date;
   updatedAt: Date;
   version: number;
@@ -35,6 +36,7 @@ export type UpdateOwnUserProfileCommand = Readonly<{
   timeZone: string;
   presentationCurrency: string;
   timeZoneChangeScope?: TimeZoneChangeScope;
+  refundPresentation?: 'separate-income' | 'expense-offset';
 }>;
 
 export interface UserProfileRepository {
@@ -108,6 +110,10 @@ export class UpdateOwnUserProfileUseCase {
       locale: command.locale,
       timeZone: command.timeZone,
       presentationCurrency: command.presentationCurrency,
+      refundPresentation:
+        command.refundPresentation ??
+        current?.refundPresentation ??
+        'separate-income',
       createdAt: current?.createdAt ?? instant,
       updatedAt: instant,
       version: current?.version ?? 1,
