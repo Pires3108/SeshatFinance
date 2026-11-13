@@ -151,15 +151,15 @@ describe('PrismaCardPurchaseRepository', () => {
     if (client === undefined || repository === undefined) throw unavailable();
     const key = randomUUID();
     const before = await client.cardPurchase.count();
+    const target = repository;
 
     const results = await Promise.allSettled(
       Array.from({ length: 5 }, () => {
         const item = purchase('5.00');
-        return repository?.insertAtomically(
-          item,
-          audit(item.id, 'card-purchase'),
-          { request: idempotency(key, '5.00'), response: 'concurrent' },
-        );
+        return target.insertAtomically(item, audit(item.id, 'card-purchase'), {
+          request: idempotency(key, '5.00'),
+          response: 'concurrent',
+        });
       }),
     );
 
