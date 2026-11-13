@@ -15,6 +15,7 @@ export type ForwardError =
   | 'not_found'
   | 'invalid_input'
   | 'conflict'
+  | 'unprocessable'
   | 'unavailable';
 
 const errorStatus: Readonly<Record<ForwardError, number>> = {
@@ -23,6 +24,7 @@ const errorStatus: Readonly<Record<ForwardError, number>> = {
   invalid_input: 400,
   not_found: 404,
   unauthorized: 401,
+  unprocessable: 422,
   unavailable: 503,
 };
 
@@ -47,7 +49,8 @@ function upstreamError(status: number): ForwardError {
   if (status === 401) return 'unauthorized';
   if (status === 403) return 'forbidden';
   if (status === 404) return 'not_found';
-  if (status === 400 || status === 422) return 'invalid_input';
+  if (status === 400) return 'invalid_input';
+  if (status === 422) return 'unprocessable';
   if (status === 409) return 'conflict';
   return 'unavailable';
 }

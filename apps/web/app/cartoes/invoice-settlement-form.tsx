@@ -109,9 +109,9 @@ export function InvoiceSettlementForm({
       }
       if (!response.ok) {
         setError(
-          response.status === 503
-            ? 'Serviço indisponível. Tente novamente com os mesmos dados.'
-            : 'O valor é maior que o restante da fatura ou a conta não é compatível.',
+          response.status === 422
+            ? 'O valor é maior que o restante da fatura ou a conta não é compatível.'
+            : 'Serviço indisponível. Tente novamente com os mesmos dados.',
         );
         return;
       }
