@@ -70,6 +70,7 @@ function publicErrorCode(status: number): string {
   if (status === 403) return 'FORBIDDEN';
   if (status === 404) return 'NOT_FOUND';
   if (status === 409) return 'CONFLICT';
+  if (status === 422) return 'UNPROCESSABLE_REQUEST';
   if (status === 429) return 'RATE_LIMITED';
   if (status === 503) return 'SERVICE_UNAVAILABLE';
   return 'INTERNAL_ERROR';
@@ -81,6 +82,8 @@ function publicErrorMessage(status: number): string {
   if (status === 403) return 'Acesso não autorizado.';
   if (status === 404) return 'Recurso não encontrado.';
   if (status === 409) return 'A solicitação está em conflito.';
+  if (status === 422)
+    return 'A solicitação é válida, mas não pode ser aplicada.';
   if (status === 429) {
     return 'Muitas solicitações. Tente novamente mais tarde.';
   }

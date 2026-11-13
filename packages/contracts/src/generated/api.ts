@@ -179,6 +179,24 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/credit-cards/{cardId}/purchases": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List purchases of an owned credit card */
+        readonly get: operations["CardPurchaseController_list"];
+        readonly put?: never;
+        /** Record a purchase already made with an owned credit card */
+        readonly post: operations["CardPurchaseController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/counterparties": {
         readonly parameters: {
             readonly query?: never;
@@ -1999,6 +2017,159 @@ export interface operations {
             };
             /** @description Owned credit card was not found */
             readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CardPurchaseController_list: {
+        readonly parameters: {
+            readonly query?: {
+                /** @description Only purchases of the cycle closing on this date */
+                readonly cycleClosesOn?: string;
+            };
+            readonly header?: never;
+            readonly path: {
+                readonly cardId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        readonly amount: string;
+                        /** Format: uuid */
+                        readonly cardId: string;
+                        /** Format: uuid */
+                        readonly categoryId: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        /**
+                         * Format: date
+                         * @description Closing date of the single cycle the purchase belongs to.
+                         */
+                        readonly cycleClosesOn: string;
+                        readonly description: string;
+                        readonly externalId: string | null;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                    }[];
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned card not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CardPurchaseController_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                /** @description UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409. */
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly cardId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly amount: string;
+                    /** Format: uuid */
+                    readonly categoryId?: string | null;
+                    readonly currencyCode: string;
+                    readonly currencyMinorUnitScale: number;
+                    readonly description: string;
+                    readonly externalId?: string | null;
+                    /** Format: date-time */
+                    readonly occurredAt: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly amount: string;
+                        /** Format: uuid */
+                        readonly cardId: string;
+                        /** Format: uuid */
+                        readonly categoryId: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        /**
+                         * Format: date
+                         * @description Closing date of the single cycle the purchase belongs to.
+                         */
+                        readonly cycleClosesOn: string;
+                        readonly description: string;
+                        readonly externalId: string | null;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                    };
+                };
+            };
+            /** @description Invalid request or idempotency key */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned card or category not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency key reused with a different payload or still in progress */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Purchase currency differs from the card currency */
+            readonly 422: {
                 headers: {
                     readonly [name: string]: unknown;
                 };
@@ -5120,7 +5291,7 @@ export interface operations {
         readonly parameters: {
             readonly query?: {
                 readonly resourceId?: unknown;
-                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "manual-exchange-quote";
+                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "manual-exchange-quote";
                 readonly limit?: number;
                 readonly afterSequence?: string;
             };
@@ -5145,7 +5316,7 @@ export interface operations {
                         readonly actorId: string;
                         readonly action: string;
                         /** @enum {string} */
-                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "manual-exchange-quote";
+                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "manual-exchange-quote";
                         /** Format: uuid */
                         readonly resourceId: string;
                         /** @enum {string} */

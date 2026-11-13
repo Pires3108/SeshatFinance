@@ -296,6 +296,7 @@ export {
   type CreditCardRepository,
 } from './cards/create-credit-card.js';
 export {
+  CardCycleResolver,
   CreditCardNotFoundError,
   CreditCardVersionConflictError,
   GetCreditCardCycleUseCase,
