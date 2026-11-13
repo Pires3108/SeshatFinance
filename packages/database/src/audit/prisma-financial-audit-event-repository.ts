@@ -156,6 +156,8 @@ function toPersistedResourceType(
       return 'card_purchase';
     case 'card-invoice':
       return 'card_invoice';
+    case 'invoice-settlement':
+      return 'invoice_settlement';
     case 'manual-exchange-quote':
       return 'manual_exchange_quote';
     default:
@@ -175,6 +177,8 @@ function fromPersistedResourceType(
       return 'card-purchase';
     case 'card_invoice':
       return 'card-invoice';
+    case 'invoice_settlement':
+      return 'invoice-settlement';
     case 'manual_exchange_quote':
       return 'manual-exchange-quote';
     default:

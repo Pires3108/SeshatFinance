@@ -71,7 +71,8 @@ export class PrismaCardInvoiceRepository implements CardInvoiceRepository {
       where: { cardId, ownerId },
     });
     const sums = await purchaseSums(this.client, cardId, ownerId);
-    return rows.map((row) => view(row, sums));
+    const settled = await settlementSums(this.client, cardId, ownerId);
+    return rows.map((row) => view(row, sums, settled));
   }
 
   public async findForCard(
@@ -86,6 +87,7 @@ export class PrismaCardInvoiceRepository implements CardInvoiceRepository {
     return view(
       row,
       await purchaseSums(this.client, cardId, ownerId, closesOn),
+      await settlementSums(this.client, cardId, ownerId, closesOn),
     );
   }
 
@@ -112,11 +114,13 @@ export class PrismaCardInvoiceRepository implements CardInvoiceRepository {
         where: { id: locked.id },
       });
       const sums = await purchaseSums(client, cardId, ownerId, closesOn);
+      const settled = await settlementSums(client, cardId, ownerId, closesOn);
       const current = restoreInvoice(row);
       const total =
         sums.get(closesOn)?.total ?? Money.fromMinorUnits(0n, current.currency);
       const result = close(current, total);
-      if (result.invoice.version === current.version) return view(row, sums);
+      if (result.invoice.version === current.version)
+        return view(row, sums, settled);
       const next = result.invoice.toSnapshot();
       const updated = await client.cardInvoice.update({
         data: {
@@ -131,7 +135,7 @@ export class PrismaCardInvoiceRepository implements CardInvoiceRepository {
         where: { id: row.id },
       });
       await insertFinancialAuditEvent(client, result.auditEvent);
-      return view(updated, sums);
+      return view(updated, sums, settled);
     });
   }
 }
@@ -170,9 +174,35 @@ async function purchaseSums(
   );
 }
 
+async function settlementSums(
+  client: QueryClient,
+  cardId: string,
+  ownerId: string,
+  closesOn?: string,
+): Promise<ReadonlyMap<string, bigint>> {
+  const groups = await client.invoiceSettlement.groupBy({
+    _sum: { amountMinorUnits: true },
+    by: ['invoiceClosesOn'],
+    where: {
+      cardId,
+      ownerId,
+      ...(closesOn === undefined
+        ? {}
+        : { invoiceClosesOn: civilDateToDate(closesOn) }),
+    },
+  });
+  return new Map(
+    groups.map((group) => [
+      dateToCivilDate(group.invoiceClosesOn),
+      BigInt((group._sum.amountMinorUnits ?? 0).toFixed(0)),
+    ]),
+  );
+}
+
 function view(
   row: PersistedInvoice,
   sums: ReadonlyMap<string, PurchaseSum>,
+  settled: ReadonlyMap<string, bigint>,
 ): CardInvoiceView {
   const invoice = restoreInvoice(row);
   const zero = Money.fromMinorUnits(0n, invoice.currency);
@@ -181,7 +211,10 @@ function view(
     invoice,
     purchaseCount: sum?.count ?? 0,
     purchasesTotal: sum?.total ?? zero,
-    settledTotal: zero,
+    settledTotal: Money.fromMinorUnits(
+      settled.get(dateToCivilDate(row.closesOn)) ?? 0n,
+      invoice.currency,
+    ),
   };
 }
 
