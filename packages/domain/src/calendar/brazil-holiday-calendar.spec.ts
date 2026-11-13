@@ -34,6 +34,7 @@ describe('brazilHolidaysIn', () => {
       '2026-04-21',
       '2026-11-20',
       '2026-12-25',
+      '2026-12-31',
     ]) {
       expect(dates.has(date)).toBe(true);
     }

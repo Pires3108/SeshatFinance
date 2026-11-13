@@ -2,7 +2,7 @@
  * Versioned Brazilian holiday dataset used to shift card due dates (RII-015).
  *
  * Scope decided on 13/11/2026: national legal holidays, Carnival Monday and
- * Tuesday (bank calendar), state holidays by UF and municipal holidays of the
+ * Tuesday and 31 December (bank calendar), state holidays by UF and municipal holidays of the
  * 27 state capitals. Every entry cites its source. Entries whose source could
  * not be confirmed are listed in `EXCLUDED_PENDING_REVIEW` and never applied.
  * Holders may declare missing municipal holidays for their own location.
@@ -11,7 +11,7 @@
  * survey of court calendars (sijur.com.br/feriados-forenses-2026, read on
  * 13/11/2026), which cites each law or court act. Bump the version on change.
  */
-export const BRAZIL_HOLIDAY_DATASET_VERSION = '2026.11.13-1';
+export const BRAZIL_HOLIDAY_DATASET_VERSION = '2026.11.13-2';
 
 export type HolidayRule =
   | Readonly<{ kind: 'fixed'; month: number; day: number }>
@@ -87,6 +87,12 @@ export const NATIONAL_HOLIDAYS: readonly HolidayDefinition[] = [
     validFrom: 2024,
   },
   { name: 'Natal', rule: fixed(12, 25), source: 'Lei 662/1949' },
+  {
+    name: 'Último dia do ano (sem expediente bancário)',
+    rule: fixed(12, 31),
+    source:
+      'Calendário bancário Febraban; decisão do titular do produto em 13/11/2026',
+  },
 ];
 
 export const STATE_HOLIDAYS: Readonly<
