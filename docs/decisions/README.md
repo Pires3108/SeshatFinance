@@ -20,3 +20,4 @@ O status de uma decisão não comprova a conclusão da implementação. As evid�
 - [ADR-037 — Ciclo do cartão e calendário de feriados](0037-ciclo-do-cartao-e-calendario-de-feriados.md)
 - [ADR-038 — Compra no cartão como fato financeiro próprio](0038-compra-no-cartao-como-fato-proprio.md)
 - [ADR-039 — Formação e fechamento manual da fatura](0039-formacao-e-fechamento-da-fatura.md)
+- [ADR-040 — Quitação declarada da fatura](0040-quitacao-declarada-da-fatura.md)
