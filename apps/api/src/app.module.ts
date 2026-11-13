@@ -1,4 +1,7 @@
 import {
+  EliminateOwnedTrashItemUseCase,
+  TrashEliminator,
+  type TrashEliminationRepository,
   ListOwnedFinancialAuditTrailUseCase,
   VerifyOwnedFinancialAuditChainUseCase,
   type FinancialAuditTrailRepository,
@@ -169,6 +172,8 @@ import { FinancialAuditController } from './audit/financial-audit.controller.js'
 import { FinancialAuditCorrelationBinding } from './audit/financial-audit-correlation.js';
 import { LazyFinancialAuditTrailRepository } from './audit/lazy-financial-audit-trail-repository.js';
 import { LazyTransferRepository } from './transfers/lazy-transfer-repository.js';
+import { LazyTrashEliminationRepository } from './trash/lazy-trash-elimination-repository.js';
+import { TrashEliminationController } from './trash/trash-elimination.controller.js';
 import { TransferController } from './transfers/transfer.controller.js';
 import { LazyUserProfileRepository } from './users/lazy-user-profile-repository.js';
 import { UserProfileController } from './users/user-profile.controller.js';
@@ -199,8 +204,40 @@ import { UserProfileController } from './users/user-profile.controller.js';
     TransferController,
     UserProfileController,
     FinancialAuditController,
+    TrashEliminationController,
   ],
   providers: [
+    LazyTrashEliminationRepository,
+    {
+      inject: [
+        LazyTransactionRepository,
+        LazyTransferRepository,
+        LazyTrashEliminationRepository,
+      ],
+      provide: TrashEliminator,
+      useFactory: (
+        transactions: TransactionRepository &
+          TransactionFinancialLinkRepository,
+        transfers: TransferLifecycleRepository,
+        trash: TrashEliminationRepository,
+      ): TrashEliminator =>
+        new TrashEliminator(
+          transactions,
+          transactions,
+          transfers,
+          trash,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [TrashEliminator],
+      provide: EliminateOwnedTrashItemUseCase,
+      useFactory: (
+        eliminator: TrashEliminator,
+      ): EliminateOwnedTrashItemUseCase =>
+        new EliminateOwnedTrashItemUseCase(eliminator),
+    },
     FinancialAuditCorrelationBinding,
     LazyFinancialAuditTrailRepository,
     {

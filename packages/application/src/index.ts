@@ -267,6 +267,17 @@ export {
   type CreateFinancialAuditEventCommand,
 } from './audit/create-financial-audit-event.js';
 export {
+  EliminateExpiredTrashUseCase,
+  EliminateOwnedTrashItemUseCase,
+  TRASH_RETENTION_DAYS,
+  TrashEliminationBlockedError,
+  TrashEliminationConfirmationError,
+  TrashEliminator,
+  type TrashEliminationRepository,
+  type TrashEliminationTarget,
+  type TrashRetentionResult,
+} from './trash/eliminate-from-trash.js';
+export {
   FINANCIAL_AUDIT_TRAIL_MAX_PAGE,
   ListOwnedFinancialAuditTrailUseCase,
   VerifyOwnedFinancialAuditChainUseCase,

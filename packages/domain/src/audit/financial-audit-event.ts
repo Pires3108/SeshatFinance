@@ -5,7 +5,11 @@ export const financialAuditActions = [
   'unarchived',
   'moved-to-trash',
   'restored-from-trash',
+  'eliminated',
 ] as const;
+
+/** Actor recorded for automatic, system-initiated changes (retention). */
+export const SYSTEM_AUDIT_ACTOR_ID = '00000000-0000-0000-0000-000000000000';
 
 export type FinancialAuditAction = (typeof financialAuditActions)[number];
 

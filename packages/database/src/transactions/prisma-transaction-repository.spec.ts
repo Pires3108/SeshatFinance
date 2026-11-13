@@ -48,6 +48,7 @@ describe('PrismaTransactionRepository', () => {
       include: { tagAssignments: { select: { tagId: true } } },
       orderBy: [{ occurredAt: 'asc' }, { id: 'asc' }],
       where: {
+        eliminatedAt: null,
         occurredAt: { gte: from, lt: to },
         ownerId: 'owner-id',
       },
@@ -65,6 +66,7 @@ describe('PrismaTransactionRepository', () => {
         accountId: 'account-id',
         kind: 'expense',
         lifecycle: 'active',
+        eliminatedAt: null,
         occurredAt: { gte: from, lt: to },
         ownerId: 'owner-id',
       },

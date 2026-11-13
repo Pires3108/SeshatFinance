@@ -1,8 +1,16 @@
-import { AnonymizeDueCounterpartiesUseCase } from '@seshat/application';
+import {
+  AnonymizeDueCounterpartiesUseCase,
+  EliminateExpiredTrashUseCase,
+  TrashEliminator,
+} from '@seshat/application';
 import {
   PrismaCounterpartyRepository,
+  PrismaTransactionRepository,
+  PrismaTransferRepository,
+  PrismaTrashEliminationRepository,
   createPrismaClient,
 } from '@seshat/database';
+import { randomUUID } from 'node:crypto';
 
 import { createHealthServer } from './health-server.js';
 
@@ -22,9 +30,25 @@ export async function bootstrap(): Promise<void> {
   });
 
   const prisma = createPrismaClient(databaseUrl);
+  const clock = { now: (): Date => new Date() };
   const retention = new AnonymizeDueCounterpartiesUseCase(
     new PrismaCounterpartyRepository(prisma),
-    { now: (): Date => new Date() },
+    clock,
+  );
+  const transactions = new PrismaTransactionRepository(prisma);
+  const trash = new PrismaTrashEliminationRepository(prisma);
+  // RNF-056: eliminate eligible items kept in the trash for over 30 days.
+  const trashRetention = new EliminateExpiredTrashUseCase(
+    trash,
+    new TrashEliminator(
+      transactions,
+      transactions,
+      new PrismaTransferRepository(prisma),
+      trash,
+      clock,
+      { generate: (): string => randomUUID() },
+    ),
+    clock,
   );
   let running = false;
   const checkRetention = async (): Promise<void> => {
@@ -34,6 +58,11 @@ export async function bootstrap(): Promise<void> {
       await retention.execute();
     } catch {
       process.stderr.write('Counterparty retention check failed.\n');
+    }
+    try {
+      await trashRetention.execute();
+    } catch {
+      process.stderr.write('Trash retention check failed.\n');
     } finally {
       running = false;
     }

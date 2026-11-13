@@ -19,6 +19,7 @@ import {
   uuid,
   type Transaction,
 } from '../../../transactions/transaction-contract';
+import { EliminationControl } from './elimination-control';
 import { RefundPanel } from './refund-panel';
 
 interface Form {
@@ -597,6 +598,17 @@ export function TransactionJournal({
                       {lifecycleLabels[action]}
                     </button>
                   ))}
+                  {item.lifecycle === 'trashed' && (
+                    <EliminationControl
+                      item={item}
+                      onEliminated={async () => {
+                        setMessage(
+                          'Movimentação eliminada definitivamente. Ela não aparece mais na lixeira.',
+                        );
+                        await load();
+                      }}
+                    />
+                  )}
                 </li>
               ))}
             </ul>

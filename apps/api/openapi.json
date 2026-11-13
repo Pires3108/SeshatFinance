@@ -7177,6 +7177,122 @@
         "summary": "Recompute the authenticated owner audit hash chain",
         "tags": ["audit"]
       }
+    },
+    "/api/v1/transactions/{transactionId}/elimination": {
+      "post": {
+        "operationId": "TrashEliminationController_eliminateTransaction",
+        "parameters": [
+          {
+            "name": "transactionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "confirmation": {
+                    "description": "Reinforced confirmation: the identifier of the item being eliminated.",
+                    "type": "string"
+                  }
+                },
+                "required": ["confirmation"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Eliminated"
+          },
+          "400": {
+            "description": "Confirmation does not match"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned transaction not found"
+          },
+          "409": {
+            "description": "Not in the trash, part of a transfer, linked to a refund or adjustment, or changed concurrently"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Permanently eliminate a transaction in the trash",
+        "tags": ["trash"]
+      }
+    },
+    "/api/v1/transfers/{transferId}/elimination": {
+      "post": {
+        "operationId": "TrashEliminationController_eliminateTransfer",
+        "parameters": [
+          {
+            "name": "transferId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "confirmation": {
+                    "description": "Reinforced confirmation: the identifier of the item being eliminated.",
+                    "type": "string"
+                  }
+                },
+                "required": ["confirmation"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Eliminated"
+          },
+          "400": {
+            "description": "Confirmation does not match"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned transfer not found"
+          },
+          "409": {
+            "description": "Not in the trash or changed concurrently"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Permanently eliminate a transfer pair in the trash",
+        "tags": ["trash"]
+      }
     }
   },
   "info": {

@@ -80,6 +80,7 @@ export {
   InvalidFinancialAuditEventError,
   financialAuditActions,
   financialAuditResourceTypes,
+  SYSTEM_AUDIT_ACTOR_ID,
   type CreateFinancialAuditEventProperties,
   type FinancialAuditAction,
   type FinancialAuditEventSnapshot,

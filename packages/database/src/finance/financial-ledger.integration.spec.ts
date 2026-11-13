@@ -81,6 +81,7 @@ describe('financial ledger across accounts, transfers, and adjustments', () => {
       '../../prisma/migrations/20261109120000_transaction_time_zone/migration.sql',
       '../../prisma/migrations/20261112090000_idempotency_records/migration.sql',
       '../../prisma/migrations/20261112100000_create_refund_links/migration.sql',
+      '../../prisma/migrations/20261112130000_trash_elimination/migration.sql',
     ]) {
       await migrationClient.query(
         await readFile(new URL(path, import.meta.url), 'utf8'),

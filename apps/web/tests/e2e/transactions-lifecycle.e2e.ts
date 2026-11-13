@@ -118,3 +118,82 @@ test('archives, trashes and restores a transaction to its prior state', async ({
     'unarchive',
   ]);
 });
+
+test('eliminates a trashed transaction only after typing its identifier', async ({
+  page,
+}) => {
+  let eliminated = false;
+  const confirmations: unknown[] = [];
+  const trashedTransaction = {
+    id: transactionId,
+    accountId,
+    amount: '25.00',
+    currencyCode: 'BRL',
+    currencyMinorUnitScale: 2,
+    kind: 'expense',
+    occurredAt: '2026-11-03T15:30:00.000Z',
+    description: 'Mercado',
+    observations: null,
+    counterpartyId: null,
+    counterpartyName: null,
+    categoryId: null,
+    subcategoryId: null,
+    costCenterId: null,
+    tagIds: [],
+    version: 3,
+    lifecycle: 'trashed',
+  };
+  await page.route(`**/api/accounts/${accountId}`, async (route) =>
+    route.fulfill({
+      json: {
+        account,
+        balance: {
+          amount: '100.00',
+          currencyCode: 'BRL',
+          currencyMinorUnitScale: 2,
+        },
+      },
+    }),
+  );
+  await page.route(
+    `**/api/accounts/${accountId}/transactions**`,
+    async (route) => {
+      const filter = new URL(route.request().url()).searchParams.get(
+        'lifecycle',
+      );
+      return route.fulfill({
+        json: filter === 'trashed' && !eliminated ? [trashedTransaction] : [],
+      });
+    },
+  );
+  await page.route(
+    `**/api/transactions/${transactionId}/elimination`,
+    async (route) => {
+      confirmations.push(route.request().postDataJSON());
+      eliminated = true;
+      return route.fulfill({ status: 204, body: '' });
+    },
+  );
+
+  await page.goto(`/contas/${accountId}/movimentacoes`);
+  await page.getByLabel('Mostrar').selectOption('trashed');
+  await page.getByRole('button', { name: 'Eliminar definitivamente' }).click();
+  const confirm = page.getByRole('button', { name: 'Confirmar eliminação' });
+  await expect(confirm).toBeDisabled();
+  await page
+    .getByLabel(`Digite o identificador ${transactionId} para confirmar`)
+    .fill('outro-valor');
+  await expect(confirm).toBeDisabled();
+  await page
+    .getByLabel(`Digite o identificador ${transactionId} para confirmar`)
+    .fill(transactionId);
+  await confirm.click();
+
+  await expect(
+    page.getByText('Movimentação eliminada definitivamente.', { exact: false }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Nenhuma movimentação nesta conta.'),
+  ).toBeVisible();
+  expect(confirmations).toEqual([{ confirmation: transactionId }]);
+});

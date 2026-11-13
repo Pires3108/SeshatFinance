@@ -109,6 +109,32 @@ describe('Transaction', () => {
     expect(expense.toSnapshot().version).toBe(5);
   });
 
+  it('eliminates only from the trash, as a terminal state (RII-026 option b)', () => {
+    const expense = transaction('expense');
+    expect(() => {
+      expense.eliminate(new Date('2026-09-20T13:00:00.000Z'));
+    }).toThrow('Only a transaction in the trash can be eliminated.');
+
+    expense.moveToTrash(new Date('2026-09-20T13:00:00.000Z'));
+    expense.eliminate(new Date('2026-09-20T14:00:00.000Z'));
+
+    expect(expense.eliminatedAt).toEqual(new Date('2026-09-20T14:00:00.000Z'));
+    expect(expense.toSnapshot()).toMatchObject({
+      lifecycle: 'trashed',
+      version: 3,
+    });
+    expect(expense.balanceEffect().isZero()).toBe(true);
+    expect(() => {
+      expense.restoreFromTrash(new Date('2026-09-20T15:00:00.000Z'));
+    }).toThrow('An eliminated transaction cannot change.');
+    expect(() => {
+      expense.eliminate(new Date('2026-09-20T15:00:00.000Z'));
+    }).toThrow('Transaction is already eliminated.');
+    expect(Transaction.restore(expense.toSnapshot()).eliminatedAt).toEqual(
+      new Date('2026-09-20T14:00:00.000Z'),
+    );
+  });
+
   it('preserves archived effects and removes trashed effects exactly once', () => {
     const income = transaction('income');
     income.archive(new Date('2026-09-20T13:00:00.000Z'));
