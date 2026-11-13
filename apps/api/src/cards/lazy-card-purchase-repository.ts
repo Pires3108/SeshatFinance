@@ -1,9 +1,9 @@
 import type {
   CardPurchaseRepository,
+  CardPurchaseWrite,
   IdempotencyRequest,
-  IdempotentCardPurchaseRecord,
 } from '@seshat/application';
-import type { CardPurchase, FinancialAuditEvent } from '@seshat/domain';
+import type { CardInvoice, CardPurchase } from '@seshat/domain';
 import { PrismaCardPurchaseRepository } from '@seshat/database';
 import { Injectable } from '@nestjs/common';
 
@@ -22,15 +22,14 @@ export class LazyCardPurchaseRepository implements CardPurchaseRepository {
   }
 
   public insertAtomically(
-    purchase: CardPurchase,
-    auditEvent: FinancialAuditEvent,
-    idempotency: IdempotentCardPurchaseRecord,
+    request: IdempotencyRequest,
+    candidates: readonly CardInvoice[],
+    build: (
+      invoice: CardInvoice,
+      postedAfterClose: boolean,
+    ) => CardPurchaseWrite,
   ): Promise<string> {
-    return this.getRepository().insertAtomically(
-      purchase,
-      auditEvent,
-      idempotency,
-    );
+    return this.getRepository().insertAtomically(request, candidates, build);
   }
 
   public listForCard(

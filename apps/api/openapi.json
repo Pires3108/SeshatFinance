@@ -2047,6 +2047,10 @@
                     "occurredAt": {
                       "format": "date-time",
                       "type": "string"
+                    },
+                    "postedAfterClose": {
+                      "description": "True when its own cycle was already closed and it joined the next open invoice.",
+                      "type": "boolean"
                     }
                   },
                   "required": [
@@ -2060,7 +2064,8 @@
                     "description",
                     "externalId",
                     "id",
-                    "occurredAt"
+                    "occurredAt",
+                    "postedAfterClose"
                   ],
                   "type": "object"
                 }
@@ -2168,6 +2173,10 @@
                       "occurredAt": {
                         "format": "date-time",
                         "type": "string"
+                      },
+                      "postedAfterClose": {
+                        "description": "True when its own cycle was already closed and it joined the next open invoice.",
+                        "type": "boolean"
                       }
                     },
                     "required": [
@@ -2181,7 +2190,8 @@
                       "description",
                       "externalId",
                       "id",
-                      "occurredAt"
+                      "occurredAt",
+                      "postedAfterClose"
                     ],
                     "type": "object"
                   },
@@ -2203,6 +2213,545 @@
           }
         ],
         "summary": "List purchases of an owned credit card",
+        "tags": ["credit-cards"]
+      }
+    },
+    "/api/v1/credit-cards/{cardId}/invoices": {
+      "get": {
+        "operationId": "CardInvoiceController_list",
+        "parameters": [
+          {
+            "name": "cardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "properties": {
+                      "closedAt": {
+                        "format": "date-time",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "closedTotal": {
+                        "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                        "type": "string",
+                        "description": "Purchases total frozen at manual closing.",
+                        "nullable": true
+                      },
+                      "closesOn": {
+                        "format": "date",
+                        "type": "string"
+                      },
+                      "closingBoundary": {
+                        "enum": ["next-cycle", "closing-cycle"],
+                        "type": "string"
+                      },
+                      "configurationPending": {
+                        "type": "boolean"
+                      },
+                      "currencyCode": {
+                        "pattern": "^[A-Z]{3}$",
+                        "type": "string"
+                      },
+                      "currencyMinorUnitScale": {
+                        "maximum": 18,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "dueOn": {
+                        "format": "date",
+                        "type": "string",
+                        "description": "Effective due date after weekends and holidays."
+                      },
+                      "firstPurchaseDate": {
+                        "format": "date",
+                        "type": "string"
+                      },
+                      "holidayDatasetVersion": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "lastPurchaseDate": {
+                        "format": "date",
+                        "type": "string"
+                      },
+                      "purchaseCount": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "purchasesTotal": {
+                        "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "remaining": {
+                        "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                        "type": "string",
+                        "description": "Purchases total minus declared settlements."
+                      },
+                      "scheduledDueOn": {
+                        "format": "date",
+                        "type": "string"
+                      },
+                      "settledTotal": {
+                        "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "status": {
+                        "enum": ["open", "closed"],
+                        "type": "string"
+                      },
+                      "timeZone": {
+                        "type": "string"
+                      },
+                      "version": {
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "closedAt",
+                      "closedTotal",
+                      "closesOn",
+                      "closingBoundary",
+                      "configurationPending",
+                      "currencyCode",
+                      "currencyMinorUnitScale",
+                      "dueOn",
+                      "firstPurchaseDate",
+                      "holidayDatasetVersion",
+                      "id",
+                      "lastPurchaseDate",
+                      "purchaseCount",
+                      "purchasesTotal",
+                      "remaining",
+                      "scheduledDueOn",
+                      "settledTotal",
+                      "status",
+                      "timeZone",
+                      "version"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned card not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List invoices of an owned credit card",
+        "tags": ["credit-cards"]
+      }
+    },
+    "/api/v1/credit-cards/{cardId}/invoices/{closesOn}": {
+      "get": {
+        "operationId": "CardInvoiceController_get",
+        "parameters": [
+          {
+            "name": "closesOn",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "closedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "closedTotal": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Purchases total frozen at manual closing.",
+                      "nullable": true
+                    },
+                    "closesOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "closingBoundary": {
+                      "enum": ["next-cycle", "closing-cycle"],
+                      "type": "string"
+                    },
+                    "configurationPending": {
+                      "type": "boolean"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "dueOn": {
+                      "format": "date",
+                      "type": "string",
+                      "description": "Effective due date after weekends and holidays."
+                    },
+                    "firstPurchaseDate": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "holidayDatasetVersion": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "lastPurchaseDate": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "purchaseCount": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "purchasesTotal": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "remaining": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Purchases total minus declared settlements."
+                    },
+                    "scheduledDueOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "settledTotal": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "status": {
+                      "enum": ["open", "closed"],
+                      "type": "string"
+                    },
+                    "timeZone": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "purchases": {
+                      "items": {
+                        "description": "A purchase already made outside Seshat Finance: one expense and the same card obligation. It never changes the paying account balance.",
+                        "properties": {
+                          "amount": {
+                            "pattern": "^\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "cardId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "categoryId": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "currencyCode": {
+                            "pattern": "^[A-Z]{3}$",
+                            "type": "string"
+                          },
+                          "currencyMinorUnitScale": {
+                            "maximum": 18,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "cycleClosesOn": {
+                            "description": "Closing date of the single cycle the purchase belongs to.",
+                            "format": "date",
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "externalId": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "occurredAt": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "postedAfterClose": {
+                            "description": "True when its own cycle was already closed and it joined the next open invoice.",
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "amount",
+                          "cardId",
+                          "categoryId",
+                          "createdAt",
+                          "currencyCode",
+                          "currencyMinorUnitScale",
+                          "cycleClosesOn",
+                          "description",
+                          "externalId",
+                          "id",
+                          "occurredAt",
+                          "postedAfterClose"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "closedAt",
+                    "closedTotal",
+                    "closesOn",
+                    "closingBoundary",
+                    "configurationPending",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "dueOn",
+                    "firstPurchaseDate",
+                    "holidayDatasetVersion",
+                    "id",
+                    "lastPurchaseDate",
+                    "purchaseCount",
+                    "purchasesTotal",
+                    "remaining",
+                    "scheduledDueOn",
+                    "settledTotal",
+                    "status",
+                    "timeZone",
+                    "version",
+                    "purchases"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned card or invoice not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get an invoice with its purchases (memory of calculation)",
+        "tags": ["credit-cards"]
+      }
+    },
+    "/api/v1/credit-cards/{cardId}/invoices/{closesOn}/close": {
+      "post": {
+        "operationId": "CardInvoiceController_close",
+        "parameters": [
+          {
+            "name": "closesOn",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "closedAt": {
+                      "format": "date-time",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "closedTotal": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Purchases total frozen at manual closing.",
+                      "nullable": true
+                    },
+                    "closesOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "closingBoundary": {
+                      "enum": ["next-cycle", "closing-cycle"],
+                      "type": "string"
+                    },
+                    "configurationPending": {
+                      "type": "boolean"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "dueOn": {
+                      "format": "date",
+                      "type": "string",
+                      "description": "Effective due date after weekends and holidays."
+                    },
+                    "firstPurchaseDate": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "holidayDatasetVersion": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "lastPurchaseDate": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "purchaseCount": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "purchasesTotal": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "remaining": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Purchases total minus declared settlements."
+                    },
+                    "scheduledDueOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "settledTotal": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "status": {
+                      "enum": ["open", "closed"],
+                      "type": "string"
+                    },
+                    "timeZone": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "closedAt",
+                    "closedTotal",
+                    "closesOn",
+                    "closingBoundary",
+                    "configurationPending",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "dueOn",
+                    "firstPurchaseDate",
+                    "holidayDatasetVersion",
+                    "id",
+                    "lastPurchaseDate",
+                    "purchaseCount",
+                    "purchasesTotal",
+                    "remaining",
+                    "scheduledDueOn",
+                    "settledTotal",
+                    "status",
+                    "timeZone",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned card or invoice not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Close an invoice manually; closing again returns the same closed invoice",
         "tags": ["credit-cards"]
       }
     },
@@ -7930,6 +8479,7 @@
                 "balance-adjustment",
                 "credit-card",
                 "card-purchase",
+                "card-invoice",
                 "manual-exchange-quote"
               ],
               "type": "string"
@@ -7990,6 +8540,7 @@
                           "balance-adjustment",
                           "credit-card",
                           "card-purchase",
+                          "card-invoice",
                           "manual-exchange-quote"
                         ]
                       },

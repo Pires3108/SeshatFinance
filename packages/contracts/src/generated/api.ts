@@ -197,6 +197,57 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/credit-cards/{cardId}/invoices": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List invoices of an owned credit card */
+        readonly get: operations["CardInvoiceController_list"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/credit-cards/{cardId}/invoices/{closesOn}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get an invoice with its purchases (memory of calculation) */
+        readonly get: operations["CardInvoiceController_get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/credit-cards/{cardId}/invoices/{closesOn}/close": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Close an invoice manually; closing again returns the same closed invoice */
+        readonly post: operations["CardInvoiceController_close"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/counterparties": {
         readonly parameters: {
             readonly query?: never;
@@ -2064,6 +2115,8 @@ export interface operations {
                         readonly id: string;
                         /** Format: date-time */
                         readonly occurredAt: string;
+                        /** @description True when its own cycle was already closed and it joined the next open invoice. */
+                        readonly postedAfterClose: boolean;
                     }[];
                 };
             };
@@ -2137,6 +2190,8 @@ export interface operations {
                         readonly id: string;
                         /** Format: date-time */
                         readonly occurredAt: string;
+                        /** @description True when its own cycle was already closed and it joined the next open invoice. */
+                        readonly postedAfterClose: boolean;
                     };
                 };
             };
@@ -2170,6 +2225,242 @@ export interface operations {
             };
             /** @description Purchase currency differs from the card currency */
             readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CardInvoiceController_list: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly cardId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        /** Format: date-time */
+                        readonly closedAt: string | null;
+                        /** @description Purchases total frozen at manual closing. */
+                        readonly closedTotal: string | null;
+                        /** Format: date */
+                        readonly closesOn: string;
+                        /** @enum {string} */
+                        readonly closingBoundary: "next-cycle" | "closing-cycle";
+                        readonly configurationPending: boolean;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        /**
+                         * Format: date
+                         * @description Effective due date after weekends and holidays.
+                         */
+                        readonly dueOn: string;
+                        /** Format: date */
+                        readonly firstPurchaseDate: string;
+                        readonly holidayDatasetVersion: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** Format: date */
+                        readonly lastPurchaseDate: string;
+                        readonly purchaseCount: number;
+                        readonly purchasesTotal: string;
+                        /** @description Purchases total minus declared settlements. */
+                        readonly remaining: string;
+                        /** Format: date */
+                        readonly scheduledDueOn: string;
+                        readonly settledTotal: string;
+                        /** @enum {string} */
+                        readonly status: "open" | "closed";
+                        readonly timeZone: string;
+                        readonly version: number;
+                    }[];
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned card not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CardInvoiceController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly closesOn: string;
+                readonly cardId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly closedAt: string | null;
+                        /** @description Purchases total frozen at manual closing. */
+                        readonly closedTotal: string | null;
+                        /** Format: date */
+                        readonly closesOn: string;
+                        /** @enum {string} */
+                        readonly closingBoundary: "next-cycle" | "closing-cycle";
+                        readonly configurationPending: boolean;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        /**
+                         * Format: date
+                         * @description Effective due date after weekends and holidays.
+                         */
+                        readonly dueOn: string;
+                        /** Format: date */
+                        readonly firstPurchaseDate: string;
+                        readonly holidayDatasetVersion: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** Format: date */
+                        readonly lastPurchaseDate: string;
+                        readonly purchaseCount: number;
+                        readonly purchasesTotal: string;
+                        /** @description Purchases total minus declared settlements. */
+                        readonly remaining: string;
+                        /** Format: date */
+                        readonly scheduledDueOn: string;
+                        readonly settledTotal: string;
+                        /** @enum {string} */
+                        readonly status: "open" | "closed";
+                        readonly timeZone: string;
+                        readonly version: number;
+                        readonly purchases: readonly {
+                            readonly amount: string;
+                            /** Format: uuid */
+                            readonly cardId: string;
+                            /** Format: uuid */
+                            readonly categoryId: string | null;
+                            /** Format: date-time */
+                            readonly createdAt: string;
+                            readonly currencyCode: string;
+                            readonly currencyMinorUnitScale: number;
+                            /**
+                             * Format: date
+                             * @description Closing date of the single cycle the purchase belongs to.
+                             */
+                            readonly cycleClosesOn: string;
+                            readonly description: string;
+                            readonly externalId: string | null;
+                            /** Format: uuid */
+                            readonly id: string;
+                            /** Format: date-time */
+                            readonly occurredAt: string;
+                            /** @description True when its own cycle was already closed and it joined the next open invoice. */
+                            readonly postedAfterClose: boolean;
+                        }[];
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned card or invoice not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CardInvoiceController_close: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly closesOn: string;
+                readonly cardId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: date-time */
+                        readonly closedAt: string | null;
+                        /** @description Purchases total frozen at manual closing. */
+                        readonly closedTotal: string | null;
+                        /** Format: date */
+                        readonly closesOn: string;
+                        /** @enum {string} */
+                        readonly closingBoundary: "next-cycle" | "closing-cycle";
+                        readonly configurationPending: boolean;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        /**
+                         * Format: date
+                         * @description Effective due date after weekends and holidays.
+                         */
+                        readonly dueOn: string;
+                        /** Format: date */
+                        readonly firstPurchaseDate: string;
+                        readonly holidayDatasetVersion: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** Format: date */
+                        readonly lastPurchaseDate: string;
+                        readonly purchaseCount: number;
+                        readonly purchasesTotal: string;
+                        /** @description Purchases total minus declared settlements. */
+                        readonly remaining: string;
+                        /** Format: date */
+                        readonly scheduledDueOn: string;
+                        readonly settledTotal: string;
+                        /** @enum {string} */
+                        readonly status: "open" | "closed";
+                        readonly timeZone: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned card or invoice not found */
+            readonly 404: {
                 headers: {
                     readonly [name: string]: unknown;
                 };
@@ -5291,7 +5582,7 @@ export interface operations {
         readonly parameters: {
             readonly query?: {
                 readonly resourceId?: unknown;
-                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "manual-exchange-quote";
+                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-invoice" | "manual-exchange-quote";
                 readonly limit?: number;
                 readonly afterSequence?: string;
             };
@@ -5316,7 +5607,7 @@ export interface operations {
                         readonly actorId: string;
                         readonly action: string;
                         /** @enum {string} */
-                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "manual-exchange-quote";
+                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-invoice" | "manual-exchange-quote";
                         /** Format: uuid */
                         readonly resourceId: string;
                         /** @enum {string} */
