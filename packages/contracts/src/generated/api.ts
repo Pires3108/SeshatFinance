@@ -248,6 +248,23 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/credit-cards/{cardId}/invoices/{closesOn}/settlements": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Record a payment of the invoice already made outside Seshat Finance */
+        readonly post: operations["InvoiceSettlementController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/counterparties": {
         readonly parameters: {
             readonly query?: never;
@@ -2378,6 +2395,28 @@ export interface operations {
                             /** @description True when its own cycle was already closed and it joined the next open invoice. */
                             readonly postedAfterClose: boolean;
                         }[];
+                        readonly settlements: readonly {
+                            /** Format: uuid */
+                            readonly accountId: string;
+                            readonly amount: string;
+                            /** Format: uuid */
+                            readonly cardId: string;
+                            /** Format: date-time */
+                            readonly createdAt: string;
+                            readonly currencyCode: string;
+                            readonly currencyMinorUnitScale: number;
+                            /** Format: uuid */
+                            readonly id: string;
+                            /** Format: date */
+                            readonly invoiceClosesOn: string;
+                            /** Format: date-time */
+                            readonly paidAt: string;
+                            /**
+                             * Format: uuid
+                             * @description Account movement that carries the balance effect.
+                             */
+                            readonly transactionId: string;
+                        }[];
                     };
                 };
             };
@@ -2461,6 +2500,99 @@ export interface operations {
             };
             /** @description Owned card or invoice not found */
             readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly InvoiceSettlementController_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                /** @description UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409. */
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly closesOn: string;
+                readonly cardId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Format: uuid */
+                    readonly accountId: string;
+                    readonly amount: string;
+                    readonly currencyCode: string;
+                    readonly currencyMinorUnitScale: number;
+                    /** Format: date-time */
+                    readonly paidAt: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly accountId: string;
+                        readonly amount: string;
+                        /** Format: uuid */
+                        readonly cardId: string;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** Format: date */
+                        readonly invoiceClosesOn: string;
+                        /** Format: date-time */
+                        readonly paidAt: string;
+                        /**
+                         * Format: uuid
+                         * @description Account movement that carries the balance effect.
+                         */
+                        readonly transactionId: string;
+                    };
+                };
+            };
+            /** @description Invalid request or idempotency key */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned card, account or invoice not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency key reused with a different payload or still in progress */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Currency differs from the card or account, or the amount is above the remaining obligation */
+            readonly 422: {
                 headers: {
                     readonly [name: string]: unknown;
                 };
@@ -5582,7 +5714,7 @@ export interface operations {
         readonly parameters: {
             readonly query?: {
                 readonly resourceId?: unknown;
-                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-invoice" | "manual-exchange-quote";
+                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote";
                 readonly limit?: number;
                 readonly afterSequence?: string;
             };
@@ -5607,7 +5739,7 @@ export interface operations {
                         readonly actorId: string;
                         readonly action: string;
                         /** @enum {string} */
-                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-invoice" | "manual-exchange-quote";
+                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote";
                         /** Format: uuid */
                         readonly resourceId: string;
                         /** @enum {string} */

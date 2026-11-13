@@ -42,6 +42,11 @@ import {
   purchaseSchema,
   type PurchaseResponse,
 } from './card-purchase.controller.js';
+import {
+  mapSettlement,
+  settlementSchema,
+  type SettlementResponse,
+} from './invoice-settlement.controller.js';
 
 const cardIdSchema = z.uuid();
 const closesOnSchema = z.iso.date();
@@ -69,7 +74,10 @@ type InvoiceResponse = Readonly<{
   version: number;
 }>;
 type InvoiceDetailResponse = InvoiceResponse &
-  Readonly<{ purchases: readonly PurchaseResponse[] }>;
+  Readonly<{
+    purchases: readonly PurchaseResponse[];
+    settlements: readonly SettlementResponse[];
+  }>;
 
 const civilDate = { format: 'date', type: 'string' } as const;
 const decimal = { pattern: '^-?\\d+(?:\\.\\d+)?$', type: 'string' } as const;
@@ -114,8 +122,9 @@ const invoiceDetailSchema: SchemaObject = {
   properties: {
     ...invoiceProperties,
     purchases: { items: purchaseSchema, type: 'array' },
+    settlements: { items: settlementSchema, type: 'array' },
   },
-  required: [...Object.keys(invoiceProperties), 'purchases'],
+  required: [...Object.keys(invoiceProperties), 'purchases', 'settlements'],
   type: 'object',
 };
 
@@ -178,6 +187,7 @@ export class CardInvoiceController {
       return {
         ...mapInvoice(detail),
         purchases: detail.purchases.map(mapPurchase),
+        settlements: detail.settlements.map(mapSettlement),
       };
     } catch (error) {
       throw mapError(error);

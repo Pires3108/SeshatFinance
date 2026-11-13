@@ -2552,6 +2552,69 @@
                         "type": "object"
                       },
                       "type": "array"
+                    },
+                    "settlements": {
+                      "items": {
+                        "description": "A payment the holder declares to have made outside Seshat Finance. It reduces the paying account and the invoice obligation by the same amount and creates no expense.",
+                        "properties": {
+                          "accountId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "amount": {
+                            "pattern": "^\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "cardId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "createdAt": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "currencyCode": {
+                            "pattern": "^[A-Z]{3}$",
+                            "type": "string"
+                          },
+                          "currencyMinorUnitScale": {
+                            "maximum": 18,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "invoiceClosesOn": {
+                            "format": "date",
+                            "type": "string"
+                          },
+                          "paidAt": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "transactionId": {
+                            "description": "Account movement that carries the balance effect.",
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "accountId",
+                          "amount",
+                          "cardId",
+                          "createdAt",
+                          "currencyCode",
+                          "currencyMinorUnitScale",
+                          "id",
+                          "invoiceClosesOn",
+                          "paidAt",
+                          "transactionId"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
                     }
                   },
                   "required": [
@@ -2575,7 +2638,8 @@
                     "status",
                     "timeZone",
                     "version",
-                    "purchases"
+                    "purchases",
+                    "settlements"
                   ],
                   "type": "object"
                 }
@@ -2752,6 +2816,173 @@
           }
         ],
         "summary": "Close an invoice manually; closing again returns the same closed invoice",
+        "tags": ["credit-cards"]
+      }
+    },
+    "/api/v1/credit-cards/{cardId}/invoices/{closesOn}/settlements": {
+      "post": {
+        "operationId": "InvoiceSettlementController_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "closesOn",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "accountId": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "amount": {
+                    "pattern": "^\\d+(?:\\.\\d+)?$",
+                    "type": "string"
+                  },
+                  "currencyCode": {
+                    "pattern": "^[A-Z]{3}$",
+                    "type": "string"
+                  },
+                  "currencyMinorUnitScale": {
+                    "maximum": 18,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "paidAt": {
+                    "format": "date-time",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "amount",
+                  "currencyCode",
+                  "currencyMinorUnitScale",
+                  "paidAt"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "A payment the holder declares to have made outside Seshat Finance. It reduces the paying account and the invoice obligation by the same amount and creates no expense.",
+                  "properties": {
+                    "accountId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "amount": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "cardId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "invoiceClosesOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "paidAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "transactionId": {
+                      "description": "Account movement that carries the balance effect.",
+                      "format": "uuid",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "accountId",
+                    "amount",
+                    "cardId",
+                    "createdAt",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "id",
+                    "invoiceClosesOn",
+                    "paidAt",
+                    "transactionId"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or idempotency key"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned card, account or invoice not found"
+          },
+          "409": {
+            "description": "Idempotency key reused with a different payload or still in progress"
+          },
+          "422": {
+            "description": "Currency differs from the card or account, or the amount is above the remaining obligation"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a payment of the invoice already made outside Seshat Finance",
         "tags": ["credit-cards"]
       }
     },
@@ -8480,6 +8711,7 @@
                 "credit-card",
                 "card-purchase",
                 "card-invoice",
+                "invoice-settlement",
                 "manual-exchange-quote"
               ],
               "type": "string"
@@ -8541,6 +8773,7 @@
                           "credit-card",
                           "card-purchase",
                           "card-invoice",
+                          "invoice-settlement",
                           "manual-exchange-quote"
                         ]
                       },

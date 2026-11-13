@@ -3,6 +3,7 @@ import {
   OwnedTransactionNotFoundError,
   OwnedTransferNotFoundError,
   TransactionRequiresTransferMutationError,
+  TransactionRequiresCardSettlementMutationError,
   TransactionVersionConflictError,
   TransferVersionConflictError,
   TrashEliminationBlockedError,
@@ -154,6 +155,10 @@ function mapError(error: unknown): Error {
   if (error instanceof TrashEliminationBlockedError)
     return new ConflictException(
       'Linked refunds or adjustments keep this entry in history.',
+    );
+  if (error instanceof TransactionRequiresCardSettlementMutationError)
+    return new ConflictException(
+      'Card settlement entries cannot be changed on their own.',
     );
   if (error instanceof TransactionRequiresTransferMutationError)
     return new ConflictException(

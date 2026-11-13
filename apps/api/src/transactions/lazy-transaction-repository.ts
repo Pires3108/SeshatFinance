@@ -123,6 +123,16 @@ export class LazyTransactionRepository
       ownerId,
     );
   }
+  public findCardSettlementIdByEntryForOwner(
+    transactionId: string,
+    ownerId: string,
+  ): Promise<string | null> {
+    return this.getRepository().findCardSettlementIdByEntryForOwner(
+      transactionId,
+      ownerId,
+    );
+  }
+
   private getRepository(): PrismaTransactionRepository {
     this.repository ??= new PrismaTransactionRepository(this.prisma.get());
     return this.repository;

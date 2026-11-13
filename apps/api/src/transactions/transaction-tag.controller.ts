@@ -4,6 +4,7 @@ import {
   OwnedTransactionNotFoundError,
   SetOwnedTransactionTagsUseCase,
   TransactionRequiresTransferMutationError,
+  TransactionRequiresCardSettlementMutationError,
 } from '@seshat/application';
 import {
   BadRequestException,
@@ -153,6 +154,10 @@ function mapError(error: unknown): Error {
   if (error instanceof InvalidOwnedTagSelectionError)
     return new BadRequestException(
       'Every selected tag must belong to the actor.',
+    );
+  if (error instanceof TransactionRequiresCardSettlementMutationError)
+    return new ConflictException(
+      'Card settlement entries cannot be changed on their own.',
     );
   if (error instanceof TransactionRequiresTransferMutationError)
     return new ConflictException(
