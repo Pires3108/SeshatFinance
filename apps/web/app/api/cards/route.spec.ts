@@ -130,3 +130,19 @@ describe('card purchase browser proxy', () => {
     });
   });
 });
+
+describe('proxy error mapping', () => {
+  it('keeps a 422 from the API distinct from invalid input', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(Response.json({}, { status: 422 })),
+    );
+
+    const response = await POST(
+      browserRequest('/api/cards', { body: '{}', method: 'POST' }),
+    );
+
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toEqual({ error: 'unprocessable' });
+  });
+});
