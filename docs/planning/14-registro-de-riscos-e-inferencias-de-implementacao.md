@@ -142,11 +142,11 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-015 — Materialização do ciclo do cartão
 
-- **Estado:** aberto.
-- **Referências:** RF-038; RF-043; RN-022; RN-024; US-038; US-040; US-042.
+- **Estado:** decidido; aplicado em US-038 (ADR-037).
+- **Referências:** RF-038; RF-043; RN-022; RN-024; US-038; US-039; US-040; US-042.
 - **Risco:** os requisitos pedem dias de fechamento e vencimento, mas não definem como materializá-los em meses que não possuem o dia configurado, se fins de semana ou feriados deslocam datas, nem como determinar o mês de vencimento quando o fechamento é posterior ao vencimento no calendário civil. Inferir essas regras pode associar compras à fatura errada, antecipar obrigações ou classificar uma fatura como vencida indevidamente.
-- **Decisão necessária:** definir a regra canônica para meses curtos, a existência ou não de ajuste por dia útil, a relação mensal entre fechamento e vencimento, o fuso autoritativo e os limites inclusivos ou exclusivos usados para associar compras ao ciclo.
-- **Limite atual:** o cadastro pode persistir dias civis válidos de 1 a 31 como configuração declarada pelo usuário, sem prometer uma data efetiva. Não materializar ciclos, atribuir compras a faturas, emitir alertas ou calcular atraso antes da decisão.
+- **Decisão aplicada:** sem fechamento ou vencimento configurado, usar o último dia do mês e avisar que a configuração está pendente; dia configurado inexistente no mês vale o último dia. Fechamento segue o dia configurado no cartão. Se o vencimento for igual ou anterior ao fechamento, pertence ao mês seguinte. Vencimento em fim de semana ou feriado é postergado ao primeiro dia útil, considerando feriados nacionais, segunda e terça de Carnaval, 31/12 e feriados estaduais e municipais do local configurado pelo titular, a partir de fonte versionada (28/09/2026 e 13/11/2026). O ciclo é semiaberto na data civil do fuso do titular; por padrão, compra no dia de fechamento entra na próxima fatura, mas o titular pode configurar o cartão para incluí-la na fatura que fecha.
+- **Limite atual:** o dataset cobre UFs e capitais; demais municípios dependem de feriados declarados pelo titular. AL 30/11, PE 24/06 e as transferências do Acre aguardam confirmação de fonte. Atribuir compras e formar faturas seguem em US-039 e US-040, que devem gravar as datas de cada fatura.
 
 ### RII-016 — Semântica dos dados de posição de investimento
 

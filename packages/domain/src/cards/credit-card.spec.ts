@@ -39,6 +39,55 @@ describe('CreditCard', () => {
     );
   });
 
+  it('defaults to the next-cycle closing boundary at version 1', () => {
+    expect(CreditCard.create(base).toSnapshot()).toMatchObject({
+      closingBoundary: 'next-cycle',
+      version: 1,
+    });
+  });
+
+  it('updates organizational settings and bumps the version', () => {
+    const card = CreditCard.create(base);
+    const updated = card.update({
+      brand: 'Master',
+      closingBoundary: 'closing-cycle',
+      closingDay: 5,
+      dueDay: 15,
+      limit: Money.fromDecimal('5000.00', Currency.create('BRL', 2)),
+      name: ' Cartão viagem ',
+    });
+
+    expect(updated.toSnapshot()).toMatchObject({
+      brand: 'Master',
+      closingBoundary: 'closing-cycle',
+      closingDay: 5,
+      createdAt: base.createdAt,
+      dueDay: 15,
+      id: 'card-id',
+      name: 'Cartão viagem',
+      paymentAccountId: 'account-id',
+      version: 2,
+    });
+    expect(
+      updated.cycleSchedule
+        .cycleClosingIn(2026, 11, () => false)
+        .closesOn.toString(),
+    ).toBe('2026-11-05');
+  });
+
+  it('keeps the card currency when the limit changes', () => {
+    expect(() =>
+      CreditCard.create(base).update({
+        brand: 'Visa',
+        closingBoundary: 'next-cycle',
+        closingDay: 28,
+        dueDay: 7,
+        limit: Money.fromDecimal('10.00', Currency.create('USD', 2)),
+        name: 'Cartão principal',
+      }),
+    ).toThrow(InvalidCreditCardError);
+  });
+
   it('rejects a negative organizational limit', () => {
     expect(() =>
       CreditCard.create({

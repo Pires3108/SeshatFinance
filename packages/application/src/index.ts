@@ -296,6 +296,27 @@ export {
   type CreditCardRepository,
 } from './cards/create-credit-card.js';
 export {
+  CreditCardNotFoundError,
+  CreditCardVersionConflictError,
+  GetCreditCardCycleUseCase,
+  UpdateCreditCardUseCase,
+  type CreditCardCycleView,
+  type UpdateCreditCardCommand,
+} from './cards/manage-credit-card.js';
+export {
+  DeclareHolidayUseCase,
+  EMPTY_HOLIDAY_SETTINGS,
+  GetHolidaySettingsUseCase,
+  InvalidDeclaredHolidayError,
+  RemoveDeclaredHolidayUseCase,
+  resolveHolidayPredicate,
+  UpdateHolidayLocationUseCase,
+  type DeclareHolidayCommand,
+  type DeclaredHolidayRecord,
+  type HolidaySettings,
+  type HolidaySettingsRepository,
+} from './calendar/holiday-settings.js';
+export {
   CreateFamilyGroupUseCase,
   ListOwnFamilyGroupsUseCase,
   type FamilyGroupRepository,

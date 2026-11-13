@@ -21,6 +21,13 @@ import {
   GetOwnedTransferUseCase,
   ListOwnedTransfersUseCase,
   ListOwnedCreditCardsUseCase,
+  UpdateCreditCardUseCase,
+  GetCreditCardCycleUseCase,
+  GetHolidaySettingsUseCase,
+  UpdateHolidayLocationUseCase,
+  DeclareHolidayUseCase,
+  RemoveDeclaredHolidayUseCase,
+  type HolidaySettingsRepository,
   ListOwnFamilyGroupsUseCase,
   CreateCategoryUseCase,
   CreateCounterpartyUseCase,
@@ -177,6 +184,8 @@ import { TrashEliminationController } from './trash/trash-elimination.controller
 import { TransferController } from './transfers/transfer.controller.js';
 import { LazyUserProfileRepository } from './users/lazy-user-profile-repository.js';
 import { UserProfileController } from './users/user-profile.controller.js';
+import { HolidaySettingsController } from './users/holiday-settings.controller.js';
+import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-repository.js';
 
 @Module({
   controllers: [
@@ -203,6 +212,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     TransactionTagController,
     TransferController,
     UserProfileController,
+    HolidaySettingsController,
     FinancialAuditController,
     TrashEliminationController,
   ],
@@ -312,6 +322,7 @@ import { UserProfileController } from './users/user-profile.controller.js';
     LazyTransactionTagRepository,
     LazyTransferRepository,
     LazyUserProfileRepository,
+    LazyHolidaySettingsRepository,
     {
       inject: [LazyCounterpartyRepository],
       provide: CreateCounterpartyUseCase,
@@ -480,6 +491,70 @@ import { UserProfileController } from './users/user-profile.controller.js';
       provide: ListOwnedCreditCardsUseCase,
       useFactory: (cards: CreditCardRepository): ListOwnedCreditCardsUseCase =>
         new ListOwnedCreditCardsUseCase(cards),
+    },
+    {
+      inject: [LazyCreditCardRepository],
+      provide: UpdateCreditCardUseCase,
+      useFactory: (cards: CreditCardRepository): UpdateCreditCardUseCase =>
+        new UpdateCreditCardUseCase(
+          cards,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [
+        LazyCreditCardRepository,
+        LazyUserProfileRepository,
+        LazyHolidaySettingsRepository,
+      ],
+      provide: GetCreditCardCycleUseCase,
+      useFactory: (
+        cards: CreditCardRepository,
+        profiles: UserProfileRepository,
+        holidays: HolidaySettingsRepository,
+      ): GetCreditCardCycleUseCase =>
+        new GetCreditCardCycleUseCase(
+          cards,
+          profiles,
+          holidays,
+          new SystemClock(),
+        ),
+    },
+    {
+      inject: [LazyHolidaySettingsRepository],
+      provide: GetHolidaySettingsUseCase,
+      useFactory: (
+        settings: HolidaySettingsRepository,
+      ): GetHolidaySettingsUseCase => new GetHolidaySettingsUseCase(settings),
+    },
+    {
+      inject: [LazyHolidaySettingsRepository],
+      provide: UpdateHolidayLocationUseCase,
+      useFactory: (
+        settings: HolidaySettingsRepository,
+      ): UpdateHolidayLocationUseCase =>
+        new UpdateHolidayLocationUseCase(settings, new SystemClock()),
+    },
+    {
+      inject: [LazyHolidaySettingsRepository],
+      provide: DeclareHolidayUseCase,
+      useFactory: (
+        settings: HolidaySettingsRepository,
+      ): DeclareHolidayUseCase =>
+        new DeclareHolidayUseCase(
+          settings,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyHolidaySettingsRepository],
+      provide: RemoveDeclaredHolidayUseCase,
+      useFactory: (
+        settings: HolidaySettingsRepository,
+      ): RemoveDeclaredHolidayUseCase =>
+        new RemoveDeclaredHolidayUseCase(settings),
     },
     {
       inject: [

@@ -17,3 +17,4 @@ O status de uma decisão não comprova a conclusão da implementação. As evid�
 - [ADR-034 — Fuso registrado por movimentação](0034-fuso-por-movimentacao.md)
 - [ADR-035 — Idempotência de comandos financeiros compostos](0035-idempotencia-de-comandos-financeiros.md)
 - [ADR-036 — Cadeia de hash da auditoria financeira](0036-cadeia-de-hash-da-auditoria-financeira.md)
+- [ADR-037 — Ciclo do cartão e calendário de feriados](0037-ciclo-do-cartao-e-calendario-de-feriados.md)

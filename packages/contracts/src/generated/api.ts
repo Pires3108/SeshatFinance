@@ -158,6 +158,24 @@ export type paths = {
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
+        /** Change organizational settings of an owned credit card */
+        readonly patch: operations["CreditCardController_update"];
+        readonly trace?: never;
+    };
+    readonly "/api/v1/credit-cards/{cardId}/cycle": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get the billing cycle that contains a purchase made at an instant (default: now) */
+        readonly get: operations["CreditCardController_cycle"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
         readonly patch?: never;
         readonly trace?: never;
     };
@@ -956,6 +974,74 @@ export type paths = {
         readonly patch: operations["UserProfileController_update"];
         readonly trace?: never;
     };
+    readonly "/api/v1/users/me/holiday-settings": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get the holiday location and declared holidays */
+        readonly get: operations["HolidaySettingsController_get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/users/me/holiday-settings/location": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        /** Set the UF and IBGE municipality used for holidays */
+        readonly put: operations["HolidaySettingsController_putLocation"];
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/users/me/holiday-settings/declared": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Declare a local holiday missing from the dataset */
+        readonly post: operations["HolidaySettingsController_declare"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/users/me/holiday-settings/declared/{holidayId}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post?: never;
+        /** Remove a declared holiday */
+        readonly delete: operations["HolidaySettingsController_remove"];
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/audit-events": {
         readonly parameters: {
             readonly query?: never;
@@ -1623,6 +1709,11 @@ export interface operations {
                 content: {
                     readonly "application/json": readonly {
                         readonly brand: string;
+                        /**
+                         * @description next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.
+                         * @enum {string}
+                         */
+                        readonly closingBoundary: "next-cycle" | "closing-cycle";
                         readonly closingDay: number;
                         /** Format: date-time */
                         readonly createdAt: string;
@@ -1631,10 +1722,12 @@ export interface operations {
                         readonly dueDay: number;
                         /** Format: uuid */
                         readonly id: string;
+                        /** @description Organizational estimate only; it never blocks or releases a real card limit. */
                         readonly limit: string;
                         readonly name: string;
                         /** Format: uuid */
                         readonly paymentAccountId: string;
+                        readonly version: number;
                     }[];
                 };
             };
@@ -1658,12 +1751,17 @@ export interface operations {
             readonly content: {
                 readonly "application/json": {
                     readonly brand: string;
+                    /**
+                     * @description next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.
+                     * @enum {string}
+                     */
+                    readonly closingBoundary?: "next-cycle" | "closing-cycle";
                     readonly closingDay: number;
-                    readonly currencyCode: string;
-                    readonly currencyMinorUnitScale: number;
                     readonly dueDay: number;
                     readonly limit: string;
                     readonly name: string;
+                    readonly currencyCode: string;
+                    readonly currencyMinorUnitScale: number;
                     /** Format: uuid */
                     readonly paymentAccountId: string;
                 };
@@ -1677,6 +1775,11 @@ export interface operations {
                 content: {
                     readonly "application/json": {
                         readonly brand: string;
+                        /**
+                         * @description next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.
+                         * @enum {string}
+                         */
+                        readonly closingBoundary: "next-cycle" | "closing-cycle";
                         readonly closingDay: number;
                         /** Format: date-time */
                         readonly createdAt: string;
@@ -1685,10 +1788,12 @@ export interface operations {
                         readonly dueDay: number;
                         /** Format: uuid */
                         readonly id: string;
+                        /** @description Organizational estimate only; it never blocks or releases a real card limit. */
                         readonly limit: string;
                         readonly name: string;
                         /** Format: uuid */
                         readonly paymentAccountId: string;
+                        readonly version: number;
                     };
                 };
             };
@@ -1726,6 +1831,11 @@ export interface operations {
                 content: {
                     readonly "application/json": {
                         readonly brand: string;
+                        /**
+                         * @description next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.
+                         * @enum {string}
+                         */
+                        readonly closingBoundary: "next-cycle" | "closing-cycle";
                         readonly closingDay: number;
                         /** Format: date-time */
                         readonly createdAt: string;
@@ -1734,10 +1844,149 @@ export interface operations {
                         readonly dueDay: number;
                         /** Format: uuid */
                         readonly id: string;
+                        /** @description Organizational estimate only; it never blocks or releases a real card limit. */
                         readonly limit: string;
                         readonly name: string;
                         /** Format: uuid */
                         readonly paymentAccountId: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned credit card was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CreditCardController_update: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly cardId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly brand: string;
+                    /**
+                     * @description next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.
+                     * @enum {string}
+                     */
+                    readonly closingBoundary: "next-cycle" | "closing-cycle";
+                    readonly closingDay: number;
+                    readonly dueDay: number;
+                    readonly limit: string;
+                    readonly name: string;
+                    readonly expectedVersion: number;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly brand: string;
+                        /**
+                         * @description next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.
+                         * @enum {string}
+                         */
+                        readonly closingBoundary: "next-cycle" | "closing-cycle";
+                        readonly closingDay: number;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly dueDay: number;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @description Organizational estimate only; it never blocks or releases a real card limit. */
+                        readonly limit: string;
+                        readonly name: string;
+                        /** Format: uuid */
+                        readonly paymentAccountId: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned credit card was not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Card was modified concurrently */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CreditCardController_cycle: {
+        readonly parameters: {
+            readonly query?: {
+                readonly at?: string;
+            };
+            readonly header?: never;
+            readonly path: {
+                readonly cardId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly cardId: string;
+                        /** Format: date */
+                        readonly closesOn: string;
+                        readonly configurationPending: boolean;
+                        /**
+                         * Format: date
+                         * @description Due date after skipping weekends and holidays.
+                         */
+                        readonly dueOn: string;
+                        /** Format: date */
+                        readonly firstPurchaseDate: string;
+                        readonly holidayDatasetVersion: string;
+                        /** Format: date */
+                        readonly lastPurchaseDate: string;
+                        /** Format: date */
+                        readonly purchaseDate: string;
+                        /** Format: date */
+                        readonly scheduledDueOn: string;
+                        readonly timeZone: string;
                     };
                 };
             };
@@ -4697,6 +4946,169 @@ export interface operations {
             };
             /** @description Bearer token missing or invalid */
             readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly HolidaySettingsController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly datasetVersion: string;
+                        readonly declared: readonly {
+                            readonly day: number;
+                            readonly month: number;
+                            readonly name: string;
+                            /** @description null repeats every year. */
+                            readonly year: number | null;
+                            /** Format: uuid */
+                            readonly id: string;
+                        }[];
+                        readonly municipalityCode: string | null;
+                        readonly stateCode: string | null;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly HolidaySettingsController_putLocation: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly municipalityCode: string | null;
+                    readonly stateCode: string | null;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly datasetVersion: string;
+                        readonly declared: readonly {
+                            readonly day: number;
+                            readonly month: number;
+                            readonly name: string;
+                            /** @description null repeats every year. */
+                            readonly year: number | null;
+                            /** Format: uuid */
+                            readonly id: string;
+                        }[];
+                        readonly municipalityCode: string | null;
+                        readonly stateCode: string | null;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly HolidaySettingsController_declare: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly day: number;
+                    readonly month: number;
+                    readonly name: string;
+                    /** @description null repeats every year. */
+                    readonly year: number | null;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly day: number;
+                        readonly month: number;
+                        readonly name: string;
+                        /** @description null repeats every year. */
+                        readonly year: number | null;
+                        /** Format: uuid */
+                        readonly id: string;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly HolidaySettingsController_remove: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly holidayId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Declared holiday removed */
+            readonly 204: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Declared holiday was not found */
+            readonly 404: {
                 headers: {
                     readonly [name: string]: unknown;
                 };

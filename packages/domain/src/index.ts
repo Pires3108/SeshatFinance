@@ -93,6 +93,29 @@ export {
   type CreditCardSnapshot,
 } from './cards/credit-card.js';
 export {
+  CardCycleSchedule,
+  CARD_CLOSING_BOUNDARIES,
+  DEFAULT_CARD_CLOSING_BOUNDARY,
+  InvalidCardCycleScheduleError,
+  nextBusinessDay,
+  type CardClosingBoundary,
+  type CardCycle,
+  type CardCycleScheduleProperties,
+  type HolidayPredicate,
+} from './cards/card-cycle-schedule.js';
+export { CivilDate, InvalidCivilDateError } from './calendar/civil-date.js';
+export {
+  assertHolidayLocation,
+  BRAZIL_HOLIDAY_DATASET_VERSION,
+  brazilHolidayPredicate,
+  brazilHolidaysIn,
+  easterSunday,
+  InvalidHolidayLocationError,
+  isSupportedStateCode,
+  type DeclaredHoliday,
+  type HolidayLocation,
+} from './calendar/brazil-holiday-calendar.js';
+export {
   InvestmentType,
   InvalidInvestmentTypeError,
   investmentTypeKeys,

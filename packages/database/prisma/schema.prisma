@@ -176,6 +176,8 @@ model CreditCard {
   currencyMinorUnitScale Int      @map("currency_minor_unit_scale") @db.SmallInt
   closingDay             Int      @map("closing_day") @db.SmallInt
   dueDay                 Int      @map("due_day") @db.SmallInt
+  closingBoundary        String   @default("next-cycle") @map("closing_boundary") @db.VarChar(16)
+  version                Int      @default(1)
   createdAt              DateTime @map("created_at") @db.Timestamptz(6)
 
   @@unique([id, ownerId])
@@ -499,4 +501,27 @@ model TransactionTag {
   @@id([transactionId, tagId])
   @@index([ownerId, tagId])
   @@map("transaction_tags")
+}
+
+model UserHolidaySettings {
+  ownerId          String   @id @map("owner_id") @db.Uuid
+  stateCode        String?  @map("state_code") @db.Char(2)
+  municipalityCode String?  @map("municipality_code") @db.Char(7)
+  updatedAt        DateTime @map("updated_at") @db.Timestamptz(6)
+
+  @@map("user_holiday_settings")
+}
+
+model UserDeclaredHoliday {
+  id        String   @id @db.Uuid
+  ownerId   String   @map("owner_id") @db.Uuid
+  name      String   @db.VarChar(120)
+  month     Int      @db.SmallInt
+  day       Int      @db.SmallInt
+  year      Int?     @db.SmallInt
+  createdAt DateTime @map("created_at") @db.Timestamptz(6)
+
+  @@unique([id, ownerId])
+  @@index([ownerId, month, day])
+  @@map("user_declared_holidays")
 }
