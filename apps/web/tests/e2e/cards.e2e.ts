@@ -470,3 +470,103 @@ test('a declared settlement reduces account and invoice once without a new expen
       .some((item) => item.cardSettlement),
   ).toBe(true);
 });
+
+test('invoice states read as text: overdue, on time and paid after settlement', async ({
+  page,
+  context,
+  request,
+}) => {
+  const headers = { Cookie: cookie };
+  const account = (await (
+    await request.post(`${apiUrl}/api/v1/accounts`, {
+      headers,
+      data: {
+        name: 'Conta dos estados',
+        typeKey: 'checking-account',
+        initialBalance: '500.00',
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        color: null,
+        description: null,
+        icon: null,
+        institution: null,
+      },
+    })
+  ).json()) as { id: string };
+  const card = (await (
+    await request.post(`${apiUrl}/api/v1/credit-cards`, {
+      headers,
+      data: {
+        attentionDays: 5,
+        brand: 'Visa',
+        closingDay: 28,
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        dueDay: 7,
+        limit: '1000.00',
+        name: 'Cartão dos estados',
+        paymentAccountId: account.id,
+      },
+    })
+  ).json()) as { id: string };
+  for (const occurredAt of ['2025-01-10T15:00:00Z', '2031-01-10T15:00:00Z']) {
+    const response = await request.post(
+      `${apiUrl}/api/v1/credit-cards/${card.id}/purchases`,
+      {
+        headers: { ...headers, 'Idempotency-Key': randomUUID() },
+        data: {
+          amount: '50.00',
+          currencyCode: 'BRL',
+          currencyMinorUnitScale: 2,
+          description: `Compra ${occurredAt.slice(0, 4)}`,
+          occurredAt,
+        },
+      },
+    );
+    expect(response.status()).toBe(201);
+  }
+  await context.addCookies([
+    {
+      name: '__Host-seshat_session',
+      value: token,
+      domain: 'localhost',
+      path: '/',
+      secure: true,
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ]);
+
+  await page.goto('/cartoes');
+  const invoices = page.getByRole('region', {
+    name: 'Faturas do Cartão dos estados',
+  });
+  const overdue = invoices
+    .getByRole('listitem')
+    .filter({ hasText: 'Fatura de 28/01/2025' });
+  await expect(overdue.locator('.invoice-state')).toContainText('Vencida há');
+  await expect(
+    invoices
+      .getByRole('listitem')
+      .filter({ hasText: 'Fatura de 28/01/2031' })
+      .locator('.invoice-state'),
+  ).toHaveText('Em dia');
+
+  const settled = await request.post(
+    `${apiUrl}/api/v1/credit-cards/${card.id}/invoices/2025-01-28/settlements`,
+    {
+      headers: { ...headers, 'Idempotency-Key': randomUUID() },
+      data: {
+        accountId: account.id,
+        amount: '50.00',
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        paidAt: '2025-02-06T10:00:00Z',
+      },
+    },
+  );
+  expect(settled.status()).toBe(201);
+  await page.reload();
+  await expect(overdue.locator('.invoice-state')).toHaveText('Quitada');
+  await expect(overdue).not.toContainText('Vencida');
+});
