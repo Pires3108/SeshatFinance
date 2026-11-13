@@ -1302,18 +1302,14 @@
                     "minLength": 1,
                     "type": "string"
                   },
+                  "closingBoundary": {
+                    "description": "next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.",
+                    "enum": ["next-cycle", "closing-cycle"],
+                    "type": "string"
+                  },
                   "closingDay": {
                     "maximum": 31,
                     "minimum": 1,
-                    "type": "integer"
-                  },
-                  "currencyCode": {
-                    "pattern": "^[A-Z]{3}$",
-                    "type": "string"
-                  },
-                  "currencyMinorUnitScale": {
-                    "maximum": 18,
-                    "minimum": 0,
                     "type": "integer"
                   },
                   "dueDay": {
@@ -1329,6 +1325,15 @@
                   "name": {
                     "minLength": 1,
                     "type": "string"
+                  },
+                  "currencyCode": {
+                    "pattern": "^[A-Z]{3}$",
+                    "type": "string"
+                  },
+                  "currencyMinorUnitScale": {
+                    "maximum": 18,
+                    "minimum": 0,
+                    "type": "integer"
                   },
                   "paymentAccountId": {
                     "format": "uuid",
@@ -1360,6 +1365,11 @@
                     "brand": {
                       "type": "string"
                     },
+                    "closingBoundary": {
+                      "description": "next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.",
+                      "enum": ["next-cycle", "closing-cycle"],
+                      "type": "string"
+                    },
                     "closingDay": {
                       "maximum": 31,
                       "minimum": 1,
@@ -1388,6 +1398,7 @@
                       "type": "string"
                     },
                     "limit": {
+                      "description": "Organizational estimate only; it never blocks or releases a real card limit.",
                       "pattern": "^\\d+(?:\\.\\d+)?$",
                       "type": "string"
                     },
@@ -1397,10 +1408,15 @@
                     "paymentAccountId": {
                       "format": "uuid",
                       "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
                     }
                   },
                   "required": [
                     "brand",
+                    "closingBoundary",
                     "closingDay",
                     "createdAt",
                     "currencyCode",
@@ -1409,7 +1425,8 @@
                     "id",
                     "limit",
                     "name",
-                    "paymentAccountId"
+                    "paymentAccountId",
+                    "version"
                   ],
                   "type": "object"
                 }
@@ -1445,6 +1462,11 @@
                       "brand": {
                         "type": "string"
                       },
+                      "closingBoundary": {
+                        "description": "next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.",
+                        "enum": ["next-cycle", "closing-cycle"],
+                        "type": "string"
+                      },
                       "closingDay": {
                         "maximum": 31,
                         "minimum": 1,
@@ -1473,6 +1495,7 @@
                         "type": "string"
                       },
                       "limit": {
+                        "description": "Organizational estimate only; it never blocks or releases a real card limit.",
                         "pattern": "^\\d+(?:\\.\\d+)?$",
                         "type": "string"
                       },
@@ -1482,10 +1505,15 @@
                       "paymentAccountId": {
                         "format": "uuid",
                         "type": "string"
+                      },
+                      "version": {
+                        "minimum": 1,
+                        "type": "integer"
                       }
                     },
                     "required": [
                       "brand",
+                      "closingBoundary",
                       "closingDay",
                       "createdAt",
                       "currencyCode",
@@ -1494,7 +1522,8 @@
                       "id",
                       "limit",
                       "name",
-                      "paymentAccountId"
+                      "paymentAccountId",
+                      "version"
                     ],
                     "type": "object"
                   },
@@ -1540,6 +1569,11 @@
                     "brand": {
                       "type": "string"
                     },
+                    "closingBoundary": {
+                      "description": "next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.",
+                      "enum": ["next-cycle", "closing-cycle"],
+                      "type": "string"
+                    },
                     "closingDay": {
                       "maximum": 31,
                       "minimum": 1,
@@ -1568,6 +1602,7 @@
                       "type": "string"
                     },
                     "limit": {
+                      "description": "Organizational estimate only; it never blocks or releases a real card limit.",
                       "pattern": "^\\d+(?:\\.\\d+)?$",
                       "type": "string"
                     },
@@ -1577,10 +1612,15 @@
                     "paymentAccountId": {
                       "format": "uuid",
                       "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
                     }
                   },
                   "required": [
                     "brand",
+                    "closingBoundary",
                     "closingDay",
                     "createdAt",
                     "currencyCode",
@@ -1589,7 +1629,8 @@
                     "id",
                     "limit",
                     "name",
-                    "paymentAccountId"
+                    "paymentAccountId",
+                    "version"
                   ],
                   "type": "object"
                 }
@@ -1609,6 +1650,271 @@
           }
         ],
         "summary": "Get a credit card owned by the authenticated user",
+        "tags": ["credit-cards"]
+      },
+      "patch": {
+        "operationId": "CreditCardController_update",
+        "parameters": [
+          {
+            "name": "cardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "brand": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "closingBoundary": {
+                    "description": "next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.",
+                    "enum": ["next-cycle", "closing-cycle"],
+                    "type": "string"
+                  },
+                  "closingDay": {
+                    "maximum": 31,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "dueDay": {
+                    "maximum": 31,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "limit": {
+                    "maxLength": 1002,
+                    "pattern": "^\\d+(?:\\.\\d+)?$",
+                    "type": "string"
+                  },
+                  "name": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "expectedVersion": {
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "brand",
+                  "closingBoundary",
+                  "closingDay",
+                  "dueDay",
+                  "expectedVersion",
+                  "limit",
+                  "name"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "brand": {
+                      "type": "string"
+                    },
+                    "closingBoundary": {
+                      "description": "next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.",
+                      "enum": ["next-cycle", "closing-cycle"],
+                      "type": "string"
+                    },
+                    "closingDay": {
+                      "maximum": 31,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "dueDay": {
+                      "maximum": 31,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "limit": {
+                      "description": "Organizational estimate only; it never blocks or releases a real card limit.",
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "paymentAccountId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "brand",
+                    "closingBoundary",
+                    "closingDay",
+                    "createdAt",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "dueDay",
+                    "id",
+                    "limit",
+                    "name",
+                    "paymentAccountId",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned credit card was not found"
+          },
+          "409": {
+            "description": "Card was modified concurrently"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change organizational settings of an owned credit card",
+        "tags": ["credit-cards"]
+      }
+    },
+    "/api/v1/credit-cards/{cardId}/cycle": {
+      "get": {
+        "operationId": "CreditCardController_cycle",
+        "parameters": [
+          {
+            "name": "at",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "cardId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "closesOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "configurationPending": {
+                      "type": "boolean"
+                    },
+                    "dueOn": {
+                      "format": "date",
+                      "type": "string",
+                      "description": "Due date after skipping weekends and holidays."
+                    },
+                    "firstPurchaseDate": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "holidayDatasetVersion": {
+                      "type": "string"
+                    },
+                    "lastPurchaseDate": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "purchaseDate": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "scheduledDueOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "timeZone": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "cardId",
+                    "closesOn",
+                    "configurationPending",
+                    "dueOn",
+                    "firstPurchaseDate",
+                    "holidayDatasetVersion",
+                    "lastPurchaseDate",
+                    "purchaseDate",
+                    "scheduledDueOn",
+                    "timeZone"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned credit card was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the billing cycle that contains a purchase made at an instant (default: now)",
         "tags": ["credit-cards"]
       }
     },
@@ -6990,6 +7296,325 @@
           }
         ],
         "summary": "Create or update the authenticated user profile",
+        "tags": ["users"]
+      }
+    },
+    "/api/v1/users/me/holiday-settings": {
+      "get": {
+        "operationId": "HolidaySettingsController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "datasetVersion": {
+                      "type": "string"
+                    },
+                    "declared": {
+                      "items": {
+                        "properties": {
+                          "day": {
+                            "maximum": 31,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "month": {
+                            "maximum": 12,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "name": {
+                            "maxLength": 120,
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "year": {
+                            "description": "null repeats every year.",
+                            "maximum": 9999,
+                            "minimum": 1900,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": ["day", "id", "month", "name", "year"],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "municipalityCode": {
+                      "nullable": true,
+                      "pattern": "^\\d{7}$",
+                      "type": "string"
+                    },
+                    "stateCode": {
+                      "nullable": true,
+                      "pattern": "^[A-Z]{2}$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "datasetVersion",
+                    "declared",
+                    "municipalityCode",
+                    "stateCode"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the holiday location and declared holidays",
+        "tags": ["users"]
+      }
+    },
+    "/api/v1/users/me/holiday-settings/location": {
+      "put": {
+        "operationId": "HolidaySettingsController_putLocation",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "municipalityCode": {
+                    "nullable": true,
+                    "pattern": "^\\d{7}$",
+                    "type": "string"
+                  },
+                  "stateCode": {
+                    "nullable": true,
+                    "pattern": "^[A-Z]{2}$",
+                    "type": "string"
+                  }
+                },
+                "required": ["municipalityCode", "stateCode"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "datasetVersion": {
+                      "type": "string"
+                    },
+                    "declared": {
+                      "items": {
+                        "properties": {
+                          "day": {
+                            "maximum": 31,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "month": {
+                            "maximum": 12,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "name": {
+                            "maxLength": 120,
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "year": {
+                            "description": "null repeats every year.",
+                            "maximum": 9999,
+                            "minimum": 1900,
+                            "nullable": true,
+                            "type": "integer"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": ["day", "id", "month", "name", "year"],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "municipalityCode": {
+                      "nullable": true,
+                      "pattern": "^\\d{7}$",
+                      "type": "string"
+                    },
+                    "stateCode": {
+                      "nullable": true,
+                      "pattern": "^[A-Z]{2}$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "datasetVersion",
+                    "declared",
+                    "municipalityCode",
+                    "stateCode"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set the UF and IBGE municipality used for holidays",
+        "tags": ["users"]
+      }
+    },
+    "/api/v1/users/me/holiday-settings/declared": {
+      "post": {
+        "operationId": "HolidaySettingsController_declare",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "day": {
+                    "maximum": 31,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "month": {
+                    "maximum": 12,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "name": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "year": {
+                    "description": "null repeats every year.",
+                    "maximum": 9999,
+                    "minimum": 1900,
+                    "nullable": true,
+                    "type": "integer"
+                  }
+                },
+                "required": ["day", "month", "name", "year"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "day": {
+                      "maximum": 31,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "month": {
+                      "maximum": 12,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "name": {
+                      "maxLength": 120,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "year": {
+                      "description": "null repeats every year.",
+                      "maximum": 9999,
+                      "minimum": 1900,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    }
+                  },
+                  "required": ["day", "id", "month", "name", "year"],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Declare a local holiday missing from the dataset",
+        "tags": ["users"]
+      }
+    },
+    "/api/v1/users/me/holiday-settings/declared/{holidayId}": {
+      "delete": {
+        "operationId": "HolidaySettingsController_remove",
+        "parameters": [
+          {
+            "name": "holidayId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Declared holiday removed"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Declared holiday was not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a declared holiday",
         "tags": ["users"]
       }
     },

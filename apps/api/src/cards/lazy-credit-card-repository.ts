@@ -29,6 +29,14 @@ export class LazyCreditCardRepository implements CreditCardRepository {
     return this.getRepository().listForOwner(ownerId);
   }
 
+  public update(
+    card: CreditCard,
+    expectedVersion: number,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<boolean> {
+    return this.getRepository().update(card, expectedVersion, auditEvent);
+  }
+
   private getRepository(): PrismaCreditCardRepository {
     this.repository ??= new PrismaCreditCardRepository(this.prisma.get());
     return this.repository;

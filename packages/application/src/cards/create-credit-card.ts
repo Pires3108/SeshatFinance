@@ -13,7 +13,7 @@ import type { IdentifierGenerator } from '../ports/identifier-generator.js';
 export type CreateCreditCardCommand = Readonly<{
   actorId: string;
   brand: string;
-  closingBoundary?: CardClosingBoundary;
+  closingBoundary?: CardClosingBoundary | undefined;
   closingDay: number;
   currencyCode: string;
   currencyMinorUnitScale: number;
