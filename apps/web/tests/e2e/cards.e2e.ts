@@ -39,11 +39,7 @@ test.beforeAll(async (): Promise<void> => {
     }
     await client.query(
       'INSERT INTO user_sessions (id, user_id, token_hash, created_at, last_seen_at) VALUES ($1, $2, $3, now(), now())',
-      [
-        randomUUID(),
-        userId,
-        createHash('sha256').update(token).digest('hex'),
-      ],
+      [randomUUID(), userId, createHash('sha256').update(token).digest('hex')],
     );
     await client.query(
       'INSERT INTO user_profiles (id, updated_at) VALUES ($1, now())',
