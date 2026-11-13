@@ -120,6 +120,13 @@ export class Transfer {
     return true;
   }
 
+  /** Eliminates both legs of a trashed pair together (RII-026 option b). */
+  public eliminate(at: Date): void {
+    this.changePairLifecycle((transaction) => {
+      transaction.eliminate(at);
+    });
+  }
+
   public toSnapshot(): TransferSnapshot {
     return {
       destination: this.destination.toSnapshot(),

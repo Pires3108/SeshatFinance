@@ -28,6 +28,7 @@ export async function proxyTransaction(
           part === 'transactions' ||
           part === 'refunds' ||
           part === 'lifecycle' ||
+          part === 'elimination' ||
           uuid.test(part),
       ) ||
     (lifecycle !== undefined && !lifecycles.has(lifecycle))
@@ -59,6 +60,11 @@ export async function proxyTransaction(
         cache: 'no-store',
       },
     );
+    if (response.status === 204)
+      return new NextResponse(null, {
+        status: 204,
+        headers: { 'Cache-Control': 'no-store' },
+      });
     const body: unknown = await response.json();
     return NextResponse.json(body, {
       status: response.status,

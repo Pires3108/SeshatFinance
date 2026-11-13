@@ -122,7 +122,7 @@ export class PrismaTransactionRepository
   ): Promise<readonly TransactionRevision[]> {
     const exists = await this.client.transaction.findFirst({
       select: { id: true },
-      where: { id: transactionId, ownerId },
+      where: { id: transactionId, ownerId, eliminatedAt: null },
     });
     if (exists === null) return [];
     const rows = await this.client.transactionRevision.findMany({
@@ -145,7 +145,8 @@ export class PrismaTransactionRepository
   ): Promise<Transaction | null> {
     const row = await this.client.transaction.findFirst({
       include: { tagAssignments: { select: { tagId: true } } },
-      where: { id, ownerId },
+      // Eliminated entries leave every ordinary read (RII-026 option b).
+      where: { id, ownerId, eliminatedAt: null },
     });
     return row === null ? null : restoreTransaction(row);
   }
@@ -161,6 +162,7 @@ export class PrismaTransactionRepository
       where: {
         accountId,
         ownerId,
+        eliminatedAt: null,
         ...(lifecycle === undefined ? {} : { lifecycle }),
       },
     });
@@ -208,6 +210,7 @@ export class PrismaTransactionRepository
       where: {
         occurredAt: { gte: from, lt: to },
         ownerId,
+        eliminatedAt: null,
         ...(lifecycle === undefined ? {} : { lifecycle }),
         ...(filters?.accountId === undefined
           ? {}
@@ -583,6 +586,7 @@ export function restoreTransaction(row: PersistedTransaction): Transaction {
     occurredAt: row.occurredAt,
     ownerId: row.ownerId,
     trashedAt: row.trashedAt,
+    ...(row.eliminatedAt === null ? {} : { eliminatedAt: row.eliminatedAt }),
     updatedAt: row.updatedAt,
     version: row.version,
   });

@@ -218,6 +218,8 @@ model Transaction {
   lifecycle              TransactionLifecycle @default(active)
   archivedAt             DateTime?            @map("archived_at") @db.Timestamptz(6)
   trashedAt              DateTime?            @map("trashed_at") @db.Timestamptz(6)
+  /// Terminal elimination from the trash (RII-026 option b); never deleted.
+  eliminatedAt           DateTime?            @map("eliminated_at") @db.Timestamptz(6)
   createdAt              DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt              DateTime             @map("updated_at") @db.Timestamptz(6)
   version                Int                  @default(1)
@@ -359,6 +361,7 @@ enum FinancialAuditAction {
   unarchived
   moved_to_trash      @map("moved-to-trash")
   restored_from_trash @map("restored-from-trash")
+  eliminated
 
   @@map("financial_audit_action")
 }

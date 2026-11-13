@@ -69,11 +69,21 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-026 — Purga definitiva da lixeira após 30 dias
 
-- **Estado:** aberto.
+- **Estado:** decidido em 12/11/2026 pela opção (b) e implementado na US-034.
 - **Referências:** RF-090; RNF-056; RF-088; INV-007 a INV-011; US-034, US-035.
 - **Risco:** a purga física de itens na lixeira há mais de 30 dias conflita com a trilha de auditoria append-only e com as revisões de lançamento, que referenciam o lançamento com `ON DELETE RESTRICT`. Apagar o lançamento exigiria apagar ou desligar revisões, vínculos de reembolso, chaves de idempotência e pares de transferência, perdendo rastreabilidade exigida por RF-088.
 - **Decisão necessária:** escolher entre (a) remoção física com anonimização prévia das revisões e manutenção apenas dos eventos de auditoria, (b) estado terminal “eliminado” sem remoção física, ocultando o item da lixeira, ou (c) remoção física completa, revendo a retenção da auditoria. Definir também a regra para itens com vínculos (transferência, reembolso, ajuste).
-- **Limite atual:** a US-034 entrega restauração e lixeira idempotentes, listagens sem lixeira e a interface de ciclo de vida de lançamentos. A purga automática e a eliminação definitiva manual de RF-090 não são implementadas até essa decisão.
+- **Decisão:** opção (b). A eliminação definitiva é um estado terminal (`eliminated_at`) sem remoção física. O lançamento continua armazenado com suas revisões, vínculos e eventos de auditoria, mas sai de toda leitura ordinária e da lixeira e não pode ser restaurado nem alterado.
+- **Aplicação na US-034:**
+  - **Eliminação manual (RF-090):** `POST /api/v1/transactions/:id/elimination` e `POST /api/v1/transfers/:id/elimination`, com confirmação reforçada: o corpo deve trazer o identificador do item. Na interface, a ação só é habilitada depois que a pessoa digita o identificador.
+  - **Purga automática (RNF-056):** o worker elimina, a cada hora, os itens na lixeira há mais de 30 dias.
+  - **Auditoria:** cada eliminação gera o evento `eliminated`. Na purga, o ator registrado é o sistema (`00000000-0000-0000-0000-000000000000`), em nome do titular.
+  - **Elegibilidade:**
+    - lançamento avulso sem reembolso vinculado e sem ajuste de saldo;
+    - transferência sempre pelo par inteiro;
+    - perna de transferência só pela transferência.
+  - **Fora da elegibilidade:** itens com reembolso ou ajuste permanecem na lixeira, preservando o histórico financeiro, até que o vínculo seja resolvido por compensação, conforme a RII-014.
+- **Limite atual:** contas na lixeira não são eliminadas automaticamente. A eliminação de conta exige decidir o destino dos lançamentos dela.
 
 ### RII-009 — Captura e armazenamento de número de conta mascarado
 

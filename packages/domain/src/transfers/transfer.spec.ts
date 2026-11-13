@@ -62,6 +62,26 @@ describe('Transfer', () => {
     });
   });
 
+  it('eliminates both legs of a trashed pair together (RII-026 option b)', () => {
+    const transfer = Transfer.create(base);
+    expect(() => {
+      transfer.eliminate(new Date('2026-09-21T15:00:00.000Z'));
+    }).toThrow('Only a transaction in the trash can be eliminated.');
+    transfer.moveToTrash(new Date('2026-09-21T15:00:00.000Z'));
+
+    transfer.eliminate(new Date('2026-09-21T16:00:00.000Z'));
+
+    const snapshot = transfer.toSnapshot();
+    expect(snapshot.source.eliminatedAt).toEqual(
+      new Date('2026-09-21T16:00:00.000Z'),
+    );
+    expect(snapshot.destination.eliminatedAt).toEqual(
+      new Date('2026-09-21T16:00:00.000Z'),
+    );
+    expect(snapshot.source.version).toBe(snapshot.destination.version);
+    expect(transfer.netBalanceEffect().toDecimal()).toBe('0.00');
+  });
+
   it('treats a repeated trash or restore of the pair as a no-op (US-034)', () => {
     const transfer = Transfer.create(base);
     expect(

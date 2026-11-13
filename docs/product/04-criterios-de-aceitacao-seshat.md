@@ -67,6 +67,8 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 **Dado** uma consulta ordinária sem filtro de estado, **quando** listar contas, movimentações ou transferências, **então** os itens na lixeira não aparecerão; ativos e arquivados continuarão listados.  
 **Dado** um item já na lixeira, **quando** for enviado à lixeira novamente, ou um item fora da lixeira **quando** for restaurado, **então** a operação devolverá o estado atual sem nova versão, sem alteração de saldo e sem novo evento de auditoria.  
 **Dado** um item arquivado enviado à lixeira, **quando** restaurado, **então** voltará ao estado arquivado; desarquivar é uma ação distinta.  
+**Dado** um lançamento ou transferência na lixeira, **quando** o titular digitar o identificador do item e confirmar a eliminação definitiva, **então** o item deixará a lixeira e todas as consultas, não poderá ser restaurado, os saldos não mudarão e um evento de auditoria `eliminated` será registrado.  
+**Dado** um item na lixeira há mais de 30 dias, sem reembolso nem ajuste vinculado, **quando** a rotina de retenção executar, **então** ele será eliminado com auditoria do ator de sistema; itens mais recentes ou vinculados permanecerão restauráveis.  
 **Referências:** RF-032, RF-090; RN-005, RN-046, RN-047; RNF-056; RII-008; RII-026.
 
 ### CA-008 — Cartão e fatura

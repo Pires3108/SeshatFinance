@@ -86,7 +86,8 @@ export class PrismaTransferRepository
         destinationTransaction: true,
         sourceTransaction: true,
       },
-      where: { id, ownerId },
+      // Eliminated pairs leave every ordinary read (RII-026 option b).
+      where: { id, ownerId, sourceTransaction: { eliminatedAt: null } },
     });
     if (row === null) return null;
     return Transfer.restore({
@@ -106,9 +107,10 @@ export class PrismaTransferRepository
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       where: {
         ownerId,
-        ...(lifecycle === undefined
-          ? {}
-          : { sourceTransaction: { lifecycle } }),
+        sourceTransaction: {
+          eliminatedAt: null,
+          ...(lifecycle === undefined ? {} : { lifecycle }),
+        },
       },
     });
     return rows.map((row) =>

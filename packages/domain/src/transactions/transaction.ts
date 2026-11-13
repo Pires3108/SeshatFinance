@@ -22,6 +22,8 @@ export type TransactionSnapshot = Readonly<{
   occurredAt: Date;
   ownerId: string;
   trashedAt: Date | null;
+  /** Terminal elimination from the trash (RII-026 option b). */
+  eliminatedAt?: Date | null;
   updatedAt: Date;
   version: number;
 }>;
@@ -242,6 +244,32 @@ export class Transaction {
     return true;
   }
 
+  public get eliminatedAt(): Date | null {
+    return this.state.eliminatedAt ?? null;
+  }
+
+  /**
+   * Permanently eliminates a transaction from the trash. Terminal: the row is
+   * kept for revisions and audit but leaves every ordinary view.
+   */
+  public eliminate(at: Date): void {
+    if (this.state.lifecycle !== 'trashed' || this.state.trashedAt === null) {
+      throw new TransactionLifecycleError(
+        'Only a transaction in the trash can be eliminated.',
+      );
+    }
+    if (this.eliminatedAt !== null) {
+      throw new TransactionLifecycleError('Transaction is already eliminated.');
+    }
+    const eliminatedAt = checkedTransitionInstant(at, this.state.updatedAt);
+    this.state = {
+      ...this.state,
+      eliminatedAt,
+      updatedAt: eliminatedAt,
+      version: this.state.version + 1,
+    };
+  }
+
   public toSnapshot(): TransactionSnapshot {
     return copySnapshot(this.state);
   }
@@ -268,6 +296,11 @@ export class Transaction {
     at: Date,
     timestamps: Pick<TransactionSnapshot, 'archivedAt' | 'trashedAt'>,
   ): void {
+    if (this.eliminatedAt !== null) {
+      throw new TransactionLifecycleError(
+        'An eliminated transaction cannot change.',
+      );
+    }
     this.state = {
       ...this.state,
       ...timestamps,
@@ -413,6 +446,14 @@ function copySnapshot(snapshot: TransactionSnapshot): TransactionSnapshot {
     occurredAt: new Date(snapshot.occurredAt),
     trashedAt:
       snapshot.trashedAt === null ? null : new Date(snapshot.trashedAt),
+    ...(snapshot.eliminatedAt === undefined
+      ? {}
+      : {
+          eliminatedAt:
+            snapshot.eliminatedAt === null
+              ? null
+              : new Date(snapshot.eliminatedAt),
+        }),
     updatedAt: new Date(snapshot.updatedAt),
   };
 }
