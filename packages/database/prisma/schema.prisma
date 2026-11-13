@@ -177,6 +177,7 @@ model CreditCard {
   closingDay             Int                 @map("closing_day") @db.SmallInt
   dueDay                 Int                 @map("due_day") @db.SmallInt
   closingBoundary        String              @default("next-cycle") @map("closing_boundary") @db.VarChar(16)
+  attentionDays          Int                 @default(5) @map("attention_days") @db.SmallInt
   version                Int                 @default(1)
   createdAt              DateTime            @map("created_at") @db.Timestamptz(6)
   purchases              CardPurchase[]

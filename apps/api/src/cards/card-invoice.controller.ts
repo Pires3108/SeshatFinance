@@ -5,7 +5,7 @@ import {
   GetCardInvoiceUseCase,
   invoiceRemaining,
   ListCardInvoicesUseCase,
-  type CardInvoiceView,
+  type CardInvoiceStateView,
 } from '@seshat/application';
 import { InvalidCivilDateError } from '@seshat/domain';
 import {
@@ -52,6 +52,9 @@ const cardIdSchema = z.uuid();
 const closesOnSchema = z.iso.date();
 
 type InvoiceResponse = Readonly<{
+  attentionDays: number;
+  daysUntilDue: number;
+  dueState: 'no-purchases' | 'paid' | 'on-time' | 'attention' | 'overdue';
   closedAt: string | null;
   closedTotal: string | null;
   closesOn: string;
@@ -82,6 +85,18 @@ type InvoiceDetailResponse = InvoiceResponse &
 const civilDate = { format: 'date', type: 'string' } as const;
 const decimal = { pattern: '^-?\\d+(?:\\.\\d+)?$', type: 'string' } as const;
 const invoiceProperties: Record<string, SchemaObject> = {
+  attentionDays: { maximum: 30, minimum: 0, type: 'integer' },
+  daysUntilDue: {
+    description:
+      'Calendar days until the effective due date; negative once overdue.',
+    type: 'integer',
+  },
+  dueState: {
+    description:
+      'Server-derived state: overdue only after the effective due date with a remaining obligation.',
+    enum: ['no-purchases', 'paid', 'on-time', 'attention', 'overdue'],
+    type: 'string',
+  },
   closedAt: { format: 'date-time', nullable: true, type: 'string' },
   closedTotal: {
     ...decimal,
@@ -229,9 +244,12 @@ export class CardInvoiceController {
   }
 }
 
-export function mapInvoice(view: CardInvoiceView): InvoiceResponse {
+export function mapInvoice(view: CardInvoiceStateView): InvoiceResponse {
   const value = view.invoice.toSnapshot();
   return {
+    attentionDays: view.attentionDays,
+    daysUntilDue: view.due.daysUntilDue,
+    dueState: view.due.state,
     closedAt: value.closedAt?.toISOString() ?? null,
     closedTotal: value.closedTotal?.amount ?? null,
     closesOn: value.closesOn,

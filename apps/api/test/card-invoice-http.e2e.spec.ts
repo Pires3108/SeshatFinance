@@ -4,7 +4,7 @@ import {
   GetCardInvoiceUseCase,
   ListCardInvoicesUseCase,
   ResolveAuthenticatedActorUseCase,
-  type CardInvoiceView,
+  type CardInvoiceStateView,
 } from '@seshat/application';
 import {
   CardCycleSchedule,
@@ -28,7 +28,7 @@ const actorId = 'actor-b';
 const authorization = 'Bearer actor-b-token';
 const brl = Currency.create('BRL', 2);
 
-function view(): CardInvoiceView {
+function view(): CardInvoiceStateView {
   const invoice = CardInvoice.form({
     cardId,
     closingBoundary: 'next-cycle',
@@ -46,6 +46,8 @@ function view(): CardInvoiceView {
   }).close(Money.fromDecimal('130.35', brl), new Date('2026-10-29T12:00:00Z'));
   return {
     invoice,
+    attentionDays: 5,
+    due: { daysUntilDue: -1, state: 'overdue' },
     purchaseCount: 2,
     purchasesTotal: Money.fromDecimal('130.35', brl),
     settledTotal: Money.fromDecimal('0', brl),
@@ -106,6 +108,8 @@ describe('Card invoice HTTP boundary', () => {
         closesOn: '2026-10-28',
         dueOn: '2026-11-09',
         purchasesTotal: '130.35',
+        daysUntilDue: -1,
+        dueState: 'overdue',
         remaining: '130.35',
         status: 'closed',
       }),

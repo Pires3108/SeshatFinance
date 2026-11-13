@@ -61,7 +61,10 @@ const limitSchema = z
   .regex(/^\d+(?:\.\d+)?$/u);
 const cycleDaySchema = z.number().int().min(1).max(31);
 
+const attentionDaysSchema = z.number().int().min(0).max(30);
+
 const createSchema = z.object({
+  attentionDays: attentionDaysSchema.optional(),
   brand: z.string().trim().min(1),
   closingBoundary: closingBoundarySchema.optional(),
   closingDay: cycleDaySchema,
@@ -73,6 +76,7 @@ const createSchema = z.object({
   paymentAccountId: z.uuid(),
 });
 const updateSchema = z.object({
+  attentionDays: attentionDaysSchema.optional(),
   brand: z.string().trim().min(1),
   closingBoundary: closingBoundarySchema,
   closingDay: cycleDaySchema,
@@ -90,6 +94,7 @@ type CreateRequest = z.infer<typeof createSchema>;
 type UpdateRequest = z.infer<typeof updateSchema>;
 type CycleQuery = z.infer<typeof cycleQuerySchema>;
 type Response = Readonly<{
+  attentionDays: number;
   brand: string;
   closingBoundary: string;
   closingDay: number;
@@ -124,8 +129,17 @@ const closingBoundaryProperty: SchemaObject = {
   type: 'string',
 };
 
+const attentionDaysProperty: SchemaObject = {
+  description:
+    'Days before the effective due date that flag an invoice for attention.',
+  maximum: 30,
+  minimum: 0,
+  type: 'integer',
+};
+
 const responseSchema: SchemaObject = {
   properties: {
+    attentionDays: attentionDaysProperty,
     brand: { type: 'string' },
     closingBoundary: closingBoundaryProperty,
     closingDay: { maximum: 31, minimum: 1, type: 'integer' },
@@ -145,6 +159,7 @@ const responseSchema: SchemaObject = {
     version: { minimum: 1, type: 'integer' },
   },
   required: [
+    'attentionDays',
     'brand',
     'closingBoundary',
     'closingDay',
@@ -331,6 +346,7 @@ export class CreditCardController {
 function mapCard(card: CreditCard): Response {
   const value = card.toSnapshot();
   return {
+    attentionDays: value.attentionDays,
     brand: value.brand,
     closingBoundary: value.closingBoundary,
     closingDay: value.closingDay,
@@ -386,6 +402,7 @@ function mapError(error: unknown): Error {
 
 function settingsProperties(): Record<string, SchemaObject> {
   return {
+    attentionDays: attentionDaysProperty,
     brand: { minLength: 1, type: 'string' },
     closingBoundary: closingBoundaryProperty,
     closingDay: { maximum: 31, minimum: 1, type: 'integer' },

@@ -21,6 +21,7 @@ export class PrismaCreditCardRepository implements CreditCardRepository {
       await client.creditCard.create({
         data: {
           brand: snapshot.brand,
+          attentionDays: snapshot.attentionDays,
           closingBoundary: snapshot.closingBoundary,
           closingDay: snapshot.closingDay,
           createdAt: snapshot.createdAt,
@@ -59,6 +60,7 @@ export class PrismaCreditCardRepository implements CreditCardRepository {
       const result = await client.creditCard.updateMany({
         data: {
           brand: snapshot.brand,
+          attentionDays: snapshot.attentionDays,
           closingBoundary: snapshot.closingBoundary,
           closingDay: snapshot.closingDay,
           dueDay: snapshot.dueDay,
@@ -102,6 +104,7 @@ function restoreCard(row: PersistedCard): CreditCard {
       : `${digits.slice(0, -row.currencyMinorUnitScale)}.${digits.slice(-row.currencyMinorUnitScale)}`;
   return CreditCard.restore({
     brand: row.brand,
+    attentionDays: row.attentionDays,
     closingBoundary: parseClosingBoundary(row.closingBoundary),
     closingDay: row.closingDay,
     createdAt: row.createdAt,

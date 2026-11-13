@@ -29,6 +29,7 @@ import {
   ListCardInvoicesUseCase,
   GetCardInvoiceUseCase,
   CloseCardInvoiceUseCase,
+  InvoiceDueStateResolver,
   DeclareInvoiceSettlementUseCase,
   type InvoiceSettlementRepository,
   type CardInvoiceRepository,
@@ -578,13 +579,22 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         new ListCardPurchasesUseCase(cards, purchases),
     },
     {
-      inject: [LazyCreditCardRepository, LazyCardInvoiceRepository],
+      inject: [
+        LazyCreditCardRepository,
+        LazyCardInvoiceRepository,
+        LazyUserProfileRepository,
+      ],
       provide: ListCardInvoicesUseCase,
       useFactory: (
         cards: CreditCardRepository,
         invoices: CardInvoiceRepository,
+        profiles: UserProfileRepository,
       ): ListCardInvoicesUseCase =>
-        new ListCardInvoicesUseCase(cards, invoices),
+        new ListCardInvoicesUseCase(
+          cards,
+          invoices,
+          new InvoiceDueStateResolver(profiles, new SystemClock()),
+        ),
     },
     {
       inject: [
@@ -592,6 +602,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         LazyCardInvoiceRepository,
         LazyCardPurchaseRepository,
         LazyInvoiceSettlementRepository,
+        LazyUserProfileRepository,
       ],
       provide: GetCardInvoiceUseCase,
       useFactory: (
@@ -599,8 +610,15 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         invoices: CardInvoiceRepository,
         purchases: CardPurchaseRepository,
         settlements: LazyInvoiceSettlementRepository,
+        profiles: UserProfileRepository,
       ): GetCardInvoiceUseCase =>
-        new GetCardInvoiceUseCase(cards, invoices, purchases, settlements),
+        new GetCardInvoiceUseCase(
+          cards,
+          invoices,
+          purchases,
+          settlements,
+          new InvoiceDueStateResolver(profiles, new SystemClock()),
+        ),
     },
     {
       inject: [
@@ -623,17 +641,23 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         ),
     },
     {
-      inject: [LazyCreditCardRepository, LazyCardInvoiceRepository],
+      inject: [
+        LazyCreditCardRepository,
+        LazyCardInvoiceRepository,
+        LazyUserProfileRepository,
+      ],
       provide: CloseCardInvoiceUseCase,
       useFactory: (
         cards: CreditCardRepository,
         invoices: CardInvoiceRepository,
+        profiles: UserProfileRepository,
       ): CloseCardInvoiceUseCase =>
         new CloseCardInvoiceUseCase(
           cards,
           invoices,
           new SystemClock(),
           new SystemIdentifierGenerator(),
+          new InvoiceDueStateResolver(profiles, new SystemClock()),
         ),
     },
     {
