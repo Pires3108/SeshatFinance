@@ -304,6 +304,18 @@ export {
   type UpdateCreditCardCommand,
 } from './cards/manage-credit-card.js';
 export {
+  CardPurchaseCategoryUnavailableError,
+  CardPurchaseCurrencyMismatchError,
+  ListCardPurchasesUseCase,
+  parseCardPurchaseResponse,
+  REGISTER_CARD_PURCHASE_OPERATION,
+  RegisterCardPurchaseUseCase,
+  serializeCardPurchaseResponse,
+  type CardPurchaseRepository,
+  type IdempotentCardPurchaseRecord,
+  type RegisterCardPurchaseCommand,
+} from './cards/register-card-purchase.js';
+export {
   DeclareHolidayUseCase,
   EMPTY_HOLIDAY_SETTINGS,
   GetHolidaySettingsUseCase,
