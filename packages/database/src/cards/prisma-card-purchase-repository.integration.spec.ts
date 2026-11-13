@@ -150,7 +150,7 @@ describe('card purchases and invoices in PostgreSQL', () => {
     const close = (): ReturnType<
       PrismaCardInvoiceRepository['closeAtomically']
     > =>
-      (invoices!).closeAtomically(
+      invoiceRepository().closeAtomically(
         cardId,
         '2026-10-28',
         ownerId,
@@ -217,6 +217,16 @@ describe('card purchases and invoices in PostgreSQL', () => {
     ).toEqual(['2026-11-28', '2026-10-28']);
   });
 
+  function invoiceRepository(): PrismaCardInvoiceRepository {
+    if (invoices === undefined) throw unavailable();
+    return invoices;
+  }
+
+  function purchaseRepository(): PrismaCardPurchaseRepository {
+    if (purchases === undefined) throw unavailable();
+    return purchases;
+  }
+
   function record(amount: string, key: string, month: string): Promise<string> {
     const [year, monthNumber] = month.split('-').map(Number) as [
       number,
@@ -248,7 +258,7 @@ describe('card purchases and invoices in PostgreSQL', () => {
       requestedAt: new Date('2026-10-20T15:00:00.000Z'),
     };
     const id = randomUUID();
-    return (purchases!).insertAtomically(
+    return purchaseRepository().insertAtomically(
       request,
       candidates,
       (invoice, postedAfterClose): CardPurchaseWrite => {
