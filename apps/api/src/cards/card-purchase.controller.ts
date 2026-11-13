@@ -75,7 +75,7 @@ const listSchema = z.object({
 
 type CreateRequest = z.infer<typeof createSchema>;
 type ListRequest = z.infer<typeof listSchema>;
-type PurchaseResponse = Readonly<{
+export type PurchaseResponse = Readonly<{
   amount: string;
   cardId: string;
   categoryId: string | null;
@@ -87,13 +87,14 @@ type PurchaseResponse = Readonly<{
   externalId: string | null;
   id: string;
   occurredAt: string;
+  postedAfterClose: boolean;
 }>;
 
 const decimal = {
   pattern: '^\\d+(?:\\.\\d+)?$',
   type: 'string',
 } as const;
-const purchaseSchema: SchemaObject = {
+export const purchaseSchema: SchemaObject = {
   description:
     'A purchase already made outside Seshat Finance: one expense and the same card obligation. It never changes the paying account balance.',
   properties: {
@@ -112,6 +113,11 @@ const purchaseSchema: SchemaObject = {
     externalId: { nullable: true, type: 'string' },
     id: { format: 'uuid', type: 'string' },
     occurredAt: { format: 'date-time', type: 'string' },
+    postedAfterClose: {
+      description:
+        'True when its own cycle was already closed and it joined the next open invoice.',
+      type: 'boolean',
+    },
   },
   required: [
     'amount',
@@ -125,6 +131,7 @@ const purchaseSchema: SchemaObject = {
     'externalId',
     'id',
     'occurredAt',
+    'postedAfterClose',
   ],
   type: 'object',
 };
@@ -242,7 +249,7 @@ export class CardPurchaseController {
   }
 }
 
-function mapPurchase(purchase: CardPurchase): PurchaseResponse {
+export function mapPurchase(purchase: CardPurchase): PurchaseResponse {
   const value = purchase.toSnapshot();
   return {
     amount: value.amount.amount,
@@ -256,6 +263,7 @@ function mapPurchase(purchase: CardPurchase): PurchaseResponse {
     externalId: value.externalId,
     id: value.id,
     occurredAt: value.occurredAt.toISOString(),
+    postedAfterClose: value.postedAfterClose,
   };
 }
 

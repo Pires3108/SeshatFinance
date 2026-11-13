@@ -109,6 +109,13 @@ export {
   type CardPurchaseSnapshot,
   type CreateCardPurchaseProperties,
 } from './cards/card-purchase.js';
+export {
+  CardInvoice,
+  InvalidCardInvoiceError,
+  type CardInvoiceSnapshot,
+  type CardInvoiceStatus,
+  type FormCardInvoiceProperties,
+} from './cards/card-invoice.js';
 export { CivilDate, InvalidCivilDateError } from './calendar/civil-date.js';
 export {
   assertHolidayLocation,

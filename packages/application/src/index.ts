@@ -302,6 +302,7 @@ export {
   GetCreditCardCycleUseCase,
   UpdateCreditCardUseCase,
   type CreditCardCycleView,
+  type ResolvedCardCycle,
   type UpdateCreditCardCommand,
 } from './cards/manage-credit-card.js';
 export {
@@ -313,9 +314,22 @@ export {
   RegisterCardPurchaseUseCase,
   serializeCardPurchaseResponse,
   type CardPurchaseRepository,
+  type CardPurchaseWrite,
+  INVOICE_ROUTING_CYCLES,
   type IdempotentCardPurchaseRecord,
   type RegisterCardPurchaseCommand,
 } from './cards/register-card-purchase.js';
+export {
+  CardInvoiceNotFoundError,
+  CloseCardInvoiceUseCase,
+  GetCardInvoiceUseCase,
+  invoiceRemaining,
+  ListCardInvoicesUseCase,
+  type CardInvoiceDetail,
+  type CardInvoicePurchaseReader,
+  type CardInvoiceRepository,
+  type CardInvoiceView,
+} from './cards/manage-card-invoice.js';
 export {
   DeclareHolidayUseCase,
   EMPTY_HOLIDAY_SETTINGS,

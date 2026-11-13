@@ -1,9 +1,9 @@
 import type {
   CardPurchaseRepository,
+  CardPurchaseWrite,
   IdempotencyRequest,
-  IdempotentCardPurchaseRecord,
 } from '@seshat/application';
-import { CardPurchase, type FinancialAuditEvent } from '@seshat/domain';
+import { CardPurchase, type CardInvoice } from '@seshat/domain';
 
 import { insertFinancialAuditEvent } from '../audit/index.js';
 import {
@@ -13,6 +13,7 @@ import {
 } from '../idempotency/idempotency-records.js';
 import type { PrismaClient } from '../generated/prisma/client.js';
 import { PrismaTransactionRunner } from '../prisma/prisma-transaction-runner.js';
+import { lockOrFormInvoice } from './prisma-card-invoice-repository.js';
 
 const MAX_PURCHASES = 500;
 
@@ -33,18 +34,33 @@ export class PrismaCardPurchaseRepository implements CardPurchaseRepository {
   }
 
   public async insertAtomically(
-    purchase: CardPurchase,
-    auditEvent: FinancialAuditEvent,
-    idempotency: IdempotentCardPurchaseRecord,
+    request: IdempotencyRequest,
+    candidates: readonly CardInvoice[],
+    build: (
+      invoice: CardInvoice,
+      postedAfterClose: boolean,
+    ) => CardPurchaseWrite,
   ): Promise<string> {
-    const snapshot = purchase.toSnapshot();
     return this.transactions.run(async () => {
       const client = this.transactions.transactionClient;
-      const replayed = await claimIdempotencyKey(client, idempotency.request);
+      const replayed = await claimIdempotencyKey(client, request);
       if (replayed !== null) return replayed;
+      let index = -1;
+      for (const [position, candidate] of candidates.entries()) {
+        if ((await lockOrFormInvoice(client, candidate)) === 'open') {
+          index = position;
+          break;
+        }
+      }
+      const invoice = candidates[index];
+      if (invoice === undefined) {
+        throw new Error('No open card invoice within the routing window.');
+      }
+      const write = build(invoice, index > 0);
+      const snapshot = write.purchase.toSnapshot();
       await client.cardPurchase.create({
         data: {
-          amountMinorUnits: purchase.amount.toMinorUnits().toString(),
+          amountMinorUnits: write.purchase.amount.toMinorUnits().toString(),
           cardId: snapshot.cardId,
           categoryId: snapshot.categoryId,
           createdAt: snapshot.createdAt,
@@ -56,15 +72,12 @@ export class PrismaCardPurchaseRepository implements CardPurchaseRepository {
           id: snapshot.id,
           occurredAt: snapshot.occurredAt,
           ownerId: snapshot.ownerId,
+          postedAfterClose: snapshot.postedAfterClose,
         },
       });
-      await insertFinancialAuditEvent(client, auditEvent);
-      await storeIdempotentResponse(
-        client,
-        idempotency.request,
-        idempotency.response,
-      );
-      return idempotency.response;
+      await insertFinancialAuditEvent(client, write.auditEvent);
+      await storeIdempotentResponse(client, request, write.response);
+      return write.response;
     });
   }
 
@@ -131,5 +144,6 @@ function restorePurchase(row: PersistedPurchase): CardPurchase {
     id: row.id,
     occurredAt: row.occurredAt,
     ownerId: row.ownerId,
+    postedAfterClose: row.postedAfterClose,
   });
 }

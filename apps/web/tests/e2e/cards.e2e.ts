@@ -251,3 +251,97 @@ test('a card purchase joins the current invoice without changing the paying acco
   );
   expect(await balance.json()).toMatchObject({ amount: '500.00' });
 });
+
+test('an invoice closes once and later purchases join the next invoice', async ({
+  page,
+  context,
+  request,
+}) => {
+  const headers = { Cookie: cookie };
+  const account = (await (
+    await request.post(`${apiUrl}/api/v1/accounts`, {
+      headers,
+      data: {
+        name: 'Conta da fatura',
+        typeKey: 'checking-account',
+        initialBalance: '0.00',
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        color: null,
+        description: null,
+        icon: null,
+        institution: null,
+      },
+    })
+  ).json()) as { id: string };
+  const card = (await (
+    await request.post(`${apiUrl}/api/v1/credit-cards`, {
+      headers,
+      data: {
+        brand: 'Visa',
+        closingDay: 28,
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        dueDay: 7,
+        limit: '1000.00',
+        name: 'Cartão da fatura',
+        paymentAccountId: account.id,
+      },
+    })
+  ).json()) as { id: string };
+  const purchase = (
+    amount: string,
+    description: string,
+  ): ReturnType<typeof request.post> =>
+    request.post(`${apiUrl}/api/v1/credit-cards/${card.id}/purchases`, {
+      headers: { ...headers, 'Idempotency-Key': randomUUID() },
+      data: {
+        amount,
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        description,
+        occurredAt: '2026-10-20T15:00:00Z',
+      },
+    });
+  expect((await purchase('100.00', 'Antes do fechamento')).status()).toBe(201);
+  await context.addCookies([
+    {
+      name: '__Host-seshat_session',
+      value: token,
+      domain: 'localhost',
+      path: '/',
+      secure: true,
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ]);
+
+  await page.goto('/cartoes');
+  const invoices = page.getByRole('region', {
+    name: 'Faturas do Cartão da fatura',
+  });
+  await expect(invoices).toContainText('Fatura de 28/10/2026 — Aberta');
+  await invoices.getByRole('button', { name: 'Fechar fatura' }).click();
+  await invoices.getByRole('button', { name: 'Confirmar fechamento' }).click();
+  await expect(invoices.getByRole('status')).toContainText(
+    'Fatura de 28/10/2026 fechada.',
+  );
+  await expect(invoices).toContainText('Fatura de 28/10/2026 — Fechada');
+
+  const late = await purchase('25.00', 'Depois do fechamento');
+  expect(await late.json()).toMatchObject({
+    cycleClosesOn: '2026-11-28',
+    postedAfterClose: true,
+  });
+  await page.reload();
+  await expect(invoices).toContainText('Fatura de 28/11/2026 — Aberta');
+  const closed = await request.get(
+    `${apiUrl}/api/v1/credit-cards/${card.id}/invoices/2026-10-28`,
+    { headers },
+  );
+  expect(await closed.json()).toMatchObject({
+    closedTotal: '100.00',
+    purchasesTotal: '100.00',
+    status: 'closed',
+  });
+});

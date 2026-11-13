@@ -92,6 +92,10 @@ export class UpdateCreditCardUseCase {
   }
 }
 
+/** The cycle of an instant plus the next cycles, for invoice routing. */
+export type ResolvedCardCycle = Omit<CreditCardCycleView, 'card'> &
+  Readonly<{ followingCycles: (count: number) => readonly CardCycle[] }>;
+
 export type CreditCardCycleView = Readonly<{
   card: CreditCard;
   cycle: CardCycle;
@@ -111,7 +115,7 @@ export class CardCycleResolver {
   public async resolve(
     card: CreditCard,
     instant: Date,
-  ): Promise<Omit<CreditCardCycleView, 'card'>> {
+  ): Promise<ResolvedCardCycle> {
     const profile = await this.profiles.findById(card.ownerId);
     const timeZone = profile?.timeZone ?? DEFAULT_TIME_ZONE;
     const purchaseDate = CivilDate.parse(
@@ -123,6 +127,18 @@ export class CardCycleResolver {
     );
     return {
       cycle: card.cycleSchedule.cycleFor(purchaseDate, isHoliday),
+      followingCycles: (count: number): readonly CardCycle[] => {
+        const first = card.cycleSchedule.cycleFor(purchaseDate, isHoliday);
+        return Array.from({ length: count }, (_, offset) => {
+          const index =
+            first.closesOn.year * 12 + (first.closesOn.month - 1) + offset;
+          return card.cycleSchedule.cycleClosingIn(
+            Math.floor(index / 12),
+            (index % 12) + 1,
+            isHoliday,
+          );
+        });
+      },
       holidayDatasetVersion: BRAZIL_HOLIDAY_DATASET_VERSION,
       purchaseDate,
       timeZone,
@@ -148,9 +164,16 @@ export class GetCreditCardCycleUseCase {
   ): Promise<CreditCardCycleView> {
     const card = await this.cards.findByIdForOwner(query.cardId, query.actorId);
     if (card === null) throw new CreditCardNotFoundError();
+    const resolved = await this.resolver.resolve(
+      card,
+      query.at ?? this.clock.now(),
+    );
     return {
       card,
-      ...(await this.resolver.resolve(card, query.at ?? this.clock.now())),
+      cycle: resolved.cycle,
+      holidayDatasetVersion: resolved.holidayDatasetVersion,
+      purchaseDate: resolved.purchaseDate,
+      timeZone: resolved.timeZone,
     };
   }
 }
