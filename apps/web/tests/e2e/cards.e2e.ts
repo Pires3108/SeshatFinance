@@ -183,3 +183,71 @@ test('cards register, show the business-day due date and update with version thr
   });
   expect(stale.status()).toBe(409);
 });
+
+test('a card purchase joins the current invoice without changing the paying account', async ({
+  page,
+  context,
+  request,
+}) => {
+  const headers = { Cookie: cookie };
+  const account = (await (
+    await request.post(`${apiUrl}/api/v1/accounts`, {
+      headers,
+      data: {
+        name: 'Conta da compra',
+        typeKey: 'checking-account',
+        initialBalance: '500.00',
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        color: null,
+        description: null,
+        icon: null,
+        institution: null,
+      },
+    })
+  ).json()) as { id: string };
+  const card = await request.post(`${apiUrl}/api/v1/credit-cards`, {
+    headers,
+    data: {
+      brand: 'Elo',
+      closingDay: 31,
+      currencyCode: 'BRL',
+      currencyMinorUnitScale: 2,
+      dueDay: 10,
+      limit: '2000.00',
+      name: 'Cartão das compras',
+      paymentAccountId: account.id,
+    },
+  });
+  expect(card.status()).toBe(201);
+  await context.addCookies([
+    {
+      name: '__Host-seshat_session',
+      value: token,
+      domain: 'localhost',
+      path: '/',
+      secure: true,
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ]);
+
+  await page.goto('/cartoes');
+  const item = page
+    .getByRole('listitem')
+    .filter({ hasText: 'Cartão das compras' });
+  await item
+    .getByRole('button', { name: 'Registrar compra realizada' })
+    .click();
+  await item.getByLabel('Descrição').fill('Livraria');
+  await item.getByLabel('Valor (BRL)').fill('89,90');
+  await item.getByRole('button', { name: 'Registrar compra' }).click();
+  await expect(item.getByRole('status')).toContainText('Compra registrada');
+  await expect(item).toContainText('Livraria: 89,90 BRL');
+
+  const balance = await request.get(
+    `${apiUrl}/api/v1/accounts/${account.id}/balance`,
+    { headers },
+  );
+  expect(await balance.json()).toMatchObject({ amount: '500.00' });
+});

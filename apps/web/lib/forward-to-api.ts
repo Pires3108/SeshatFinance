@@ -6,6 +6,8 @@ const noStore = { 'Cache-Control': 'no-store' };
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 const MAX_BODY_BYTES = 16_384;
+const UUID_V4 =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 export type ForwardError =
   | 'unauthorized'
@@ -58,9 +60,16 @@ export async function forwardToApi(
   request: Request,
   path: string,
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  options: Readonly<{ idempotent?: boolean }> = {},
 ): Promise<NextResponse> {
   const session = sessionCookie(request);
   if (session === undefined) return errorResponse('unauthorized');
+  const idempotencyKey = request.headers.get('idempotency-key');
+  if (
+    options.idempotent === true &&
+    (idempotencyKey === null || !UUID_V4.test(idempotencyKey))
+  )
+    return errorResponse('invalid_input');
   let body: string | undefined;
   if (method === 'POST' || method === 'PUT' || method === 'PATCH') {
     body = await request.text();
@@ -78,6 +87,9 @@ export async function forwardToApi(
         cache: 'no-store',
         headers: {
           Cookie: session,
+          ...(options.idempotent === true && idempotencyKey !== null
+            ? { 'Idempotency-Key': idempotencyKey }
+            : {}),
           ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
         },
         method,

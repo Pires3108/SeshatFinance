@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PATCH } from './[cardId]/route';
 import { GET as getCycle } from './[cardId]/cycle/route';
+import { POST as postPurchase } from './[cardId]/purchases/route';
 import { GET, POST } from './route';
 
 const session = `__Host-seshat_session=${'a'.repeat(43)}`;
@@ -92,5 +93,40 @@ describe('credit card browser proxy', () => {
     const [url] = fetch.mock.calls[0] as [URL];
     expect(url.pathname).toBe(`/api/v1/credit-cards/${cardId}/cycle`);
     expect(url.searchParams.get('at')).toBe('2026-10-27T12:00:00.000Z');
+  });
+});
+
+describe('card purchase browser proxy', () => {
+  it('forwards a UUID v4 idempotency key and rejects a missing one', async () => {
+    const fetch = vi.fn().mockResolvedValue(Response.json({ id: cardId }));
+    vi.stubGlobal('fetch', fetch);
+    const key = '6f1c2f5e-8a4b-4c1d-9e2f-3a4b5c6d7e8f';
+    const context = { params: Promise.resolve({ cardId }) };
+
+    const missing = await postPurchase(
+      browserRequest(`/api/cards/${cardId}/purchases`, {
+        body: '{}',
+        method: 'POST',
+      }),
+      context,
+    );
+    expect(missing.status).toBe(400);
+    expect(fetch).not.toHaveBeenCalled();
+
+    const request = new Request(
+      `http://localhost:3000/api/cards/${cardId}/purchases`,
+      {
+        body: '{}',
+        headers: { cookie: session, 'idempotency-key': key },
+        method: 'POST',
+      },
+    );
+    const response = await postPurchase(request, context);
+    expect(response.status).toBe(200);
+    const [, init] = fetch.mock.calls[0] as [URL, RequestInit];
+    expect(init.headers).toMatchObject({
+      Cookie: session,
+      'Idempotency-Key': key,
+    });
   });
 });
