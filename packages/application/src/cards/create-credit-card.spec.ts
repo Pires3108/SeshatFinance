@@ -72,6 +72,7 @@ describe('CreateCreditCardUseCase', () => {
       },
       findByIdForOwner: () => Promise.resolve(null),
       listForOwner: () => Promise.resolve([]),
+      update: () => Promise.resolve(true),
     };
     const identifiers = ['card-id', 'audit-id'];
     const useCase = new CreateCreditCardUseCase(
@@ -104,6 +105,7 @@ describe('CreateCreditCardUseCase', () => {
         insert: () => Promise.resolve(),
         findByIdForOwner: () => Promise.resolve(null),
         listForOwner: () => Promise.resolve([]),
+        update: () => Promise.resolve(true),
       },
       { now: () => new Date() },
       { generate: () => 'id' },
@@ -121,6 +123,7 @@ describe('CreateCreditCardUseCase', () => {
         insert: () => Promise.resolve(),
         findByIdForOwner: () => Promise.resolve(null),
         listForOwner: () => Promise.resolve([]),
+        update: () => Promise.resolve(true),
       },
       { now: () => new Date() },
       { generate: () => 'id' },

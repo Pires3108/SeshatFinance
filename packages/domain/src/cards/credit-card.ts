@@ -1,7 +1,14 @@
 import { Money, type MoneySnapshot } from '../money/money.js';
+import {
+  CARD_CLOSING_BOUNDARIES,
+  CardCycleSchedule,
+  DEFAULT_CARD_CLOSING_BOUNDARY,
+  type CardClosingBoundary,
+} from './card-cycle-schedule.js';
 
 export type CreditCardSnapshot = Readonly<{
   brand: string;
+  closingBoundary: CardClosingBoundary;
   closingDay: number;
   createdAt: Date;
   dueDay: number;
@@ -10,10 +17,12 @@ export type CreditCardSnapshot = Readonly<{
   name: string;
   ownerId: string;
   paymentAccountId: string;
+  version: number;
 }>;
 
 export type CreateCreditCardProperties = Readonly<{
   brand: string;
+  closingBoundary?: CardClosingBoundary;
   closingDay: number;
   createdAt: Date;
   dueDay: number;
@@ -22,6 +31,17 @@ export type CreateCreditCardProperties = Readonly<{
   name: string;
   ownerId: string;
   paymentAccountId: string;
+  version?: number;
+}>;
+
+/** Organizational settings the holder may change after registration. */
+export type CreditCardChanges = Readonly<{
+  brand: string;
+  closingBoundary: CardClosingBoundary;
+  closingDay: number;
+  dueDay: number;
+  limit: Money;
+  name: string;
 }>;
 
 export class InvalidCreditCardError extends Error {
@@ -42,6 +62,15 @@ export class CreditCard {
     assertRequiredText(properties.brand, 'Credit card brand');
     assertCycleDay(properties.closingDay, 'Credit card closing day');
     assertCycleDay(properties.dueDay, 'Credit card due day');
+    const closingBoundary =
+      properties.closingBoundary ?? DEFAULT_CARD_CLOSING_BOUNDARY;
+    if (!CARD_CLOSING_BOUNDARIES.includes(closingBoundary)) {
+      throw new InvalidCreditCardError('Unknown credit card closing boundary.');
+    }
+    const version = properties.version ?? 1;
+    if (!Number.isSafeInteger(version) || version < 1) {
+      throw new InvalidCreditCardError('Credit card version must be positive.');
+    }
     if (Number.isNaN(properties.createdAt.getTime())) {
       throw new InvalidCreditCardError(
         'Credit card creation instant must be valid.',
@@ -53,6 +82,7 @@ export class CreditCard {
 
     return new CreditCard({
       brand: properties.brand.trim(),
+      closingBoundary,
       closingDay: properties.closingDay,
       createdAt: new Date(properties.createdAt),
       dueDay: properties.dueDay,
@@ -61,6 +91,7 @@ export class CreditCard {
       name: properties.name.trim(),
       ownerId: properties.ownerId,
       paymentAccountId: properties.paymentAccountId,
+      version,
     });
   }
 
@@ -68,6 +99,26 @@ export class CreditCard {
     return CreditCard.create({
       ...snapshot,
       limit: Money.restore(snapshot.limit),
+    });
+  }
+
+  /**
+   * Returns the card with new organizational settings and the next version.
+   * The limit keeps the card currency; it never blocks external purchases.
+   */
+  public update(changes: CreditCardChanges): CreditCard {
+    if (!changes.limit.currency.equals(this.limit.currency)) {
+      throw new InvalidCreditCardError(
+        'Credit card limit must keep the card currency.',
+      );
+    }
+    return CreditCard.create({
+      ...changes,
+      createdAt: this.state.createdAt,
+      id: this.state.id,
+      ownerId: this.state.ownerId,
+      paymentAccountId: this.state.paymentAccountId,
+      version: this.state.version + 1,
     });
   }
 
@@ -85,6 +136,18 @@ export class CreditCard {
 
   public get limit(): Money {
     return Money.restore(this.state.limit);
+  }
+
+  public get version(): number {
+    return this.state.version;
+  }
+
+  public get cycleSchedule(): CardCycleSchedule {
+    return CardCycleSchedule.create({
+      closingBoundary: this.state.closingBoundary,
+      closingDay: this.state.closingDay,
+      dueDay: this.state.dueDay,
+    });
   }
 
   public toSnapshot(): CreditCardSnapshot {

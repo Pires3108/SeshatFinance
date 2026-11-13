@@ -3,6 +3,7 @@ import {
   Currency,
   FinancialAuditEvent,
   Money,
+  type CardClosingBoundary,
 } from '@seshat/domain';
 
 import type { AccountRepository } from '../accounts/create-account.js';
@@ -12,6 +13,7 @@ import type { IdentifierGenerator } from '../ports/identifier-generator.js';
 export type CreateCreditCardCommand = Readonly<{
   actorId: string;
   brand: string;
+  closingBoundary?: CardClosingBoundary;
   closingDay: number;
   currencyCode: string;
   currencyMinorUnitScale: number;
@@ -25,6 +27,12 @@ export interface CreditCardRepository {
   insert(card: CreditCard, auditEvent: FinancialAuditEvent): Promise<void>;
   findByIdForOwner(id: string, ownerId: string): Promise<CreditCard | null>;
   listForOwner(ownerId: string): Promise<readonly CreditCard[]>;
+  /** Returns false when the stored version no longer matches. */
+  update(
+    card: CreditCard,
+    expectedVersion: number,
+    auditEvent: FinancialAuditEvent,
+  ): Promise<boolean>;
 }
 
 export class GetOwnedCreditCardUseCase {
@@ -83,6 +91,9 @@ export class CreateCreditCardUseCase {
     const at = this.clock.now();
     const card = CreditCard.create({
       brand: command.brand,
+      ...(command.closingBoundary === undefined
+        ? {}
+        : { closingBoundary: command.closingBoundary }),
       closingDay: command.closingDay,
       createdAt: at,
       dueDay: command.dueDay,
