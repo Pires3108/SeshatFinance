@@ -345,3 +345,128 @@ test('an invoice closes once and later purchases join the next invoice', async (
     status: 'closed',
   });
 });
+
+test('a declared settlement reduces account and invoice once without a new expense', async ({
+  page,
+  context,
+  request,
+}) => {
+  const headers = { Cookie: cookie };
+  const account = (await (
+    await request.post(`${apiUrl}/api/v1/accounts`, {
+      headers,
+      data: {
+        name: 'Conta da quitação',
+        typeKey: 'checking-account',
+        initialBalance: '1000.00',
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        color: null,
+        description: null,
+        icon: null,
+        institution: null,
+      },
+    })
+  ).json()) as { id: string };
+  const card = (await (
+    await request.post(`${apiUrl}/api/v1/credit-cards`, {
+      headers,
+      data: {
+        brand: 'Visa',
+        closingDay: 28,
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        dueDay: 7,
+        limit: '1000.00',
+        name: 'Cartão da quitação',
+        paymentAccountId: account.id,
+      },
+    })
+  ).json()) as { id: string };
+  const bought = await request.post(
+    `${apiUrl}/api/v1/credit-cards/${card.id}/purchases`,
+    {
+      headers: { ...headers, 'Idempotency-Key': randomUUID() },
+      data: {
+        amount: '100.00',
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        description: 'Compra da quitação',
+        occurredAt: '2026-10-20T15:00:00Z',
+      },
+    },
+  );
+  expect(bought.status()).toBe(201);
+  await context.addCookies([
+    {
+      name: '__Host-seshat_session',
+      value: token,
+      domain: 'localhost',
+      path: '/',
+      secure: true,
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ]);
+
+  await page.goto('/cartoes');
+  const invoices = page.getByRole('region', {
+    name: 'Faturas do Cartão da quitação',
+  });
+  await invoices
+    .getByRole('button', { name: 'Registrar pagamento realizado' })
+    .click();
+  const form = invoices.getByRole('form', {
+    name: 'Registrar pagamento da fatura de 28/10/2026',
+  });
+  await form.getByLabel('Valor pago (BRL)').fill('40,00');
+  await form.getByLabel('Data do pagamento').fill('2026-11-05T10:00');
+  await expect(form).toContainText('100,00 BRL → 60,00 BRL');
+  await expect(form).toContainText('1.000,00 BRL → 960,00 BRL');
+  await form
+    .getByLabel(
+      'Confirmo que este pagamento já foi feito fora da Seshat Finance',
+    )
+    .check();
+  await form
+    .getByRole('button', { name: 'Registrar pagamento realizado' })
+    .click();
+  await expect(invoices.getByRole('status')).toContainText(
+    'Pagamento de 40,00 BRL registrado',
+  );
+  await expect(invoices).toContainText('Restante: 60,00 BRL');
+
+  const balance = await request.get(
+    `${apiUrl}/api/v1/accounts/${account.id}/balance`,
+    { headers },
+  );
+  expect(await balance.json()).toMatchObject({ amount: '960.00' });
+  const excess = await request.post(
+    `${apiUrl}/api/v1/credit-cards/${card.id}/invoices/2026-10-28/settlements`,
+    {
+      headers: { ...headers, 'Idempotency-Key': randomUUID() },
+      data: {
+        accountId: account.id,
+        amount: '60.01',
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        paidAt: '2026-11-06T10:00:00Z',
+      },
+    },
+  );
+  expect(excess.status()).toBe(422);
+  const month = await request.get(
+    `${apiUrl}/api/v1/transactions/temporal?period=month&date=2026-11-05`,
+    { headers },
+  );
+  const view = (await month.json()) as {
+    totals: { expense: string }[];
+    days: { transactions: { cardSettlement: boolean }[] }[];
+  };
+  expect(view.totals.every((total) => total.expense === '0.00')).toBe(true);
+  expect(
+    view.days
+      .flatMap((day) => day.transactions)
+      .some((item) => item.cardSettlement),
+  ).toBe(true);
+});
