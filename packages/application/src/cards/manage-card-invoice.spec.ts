@@ -15,6 +15,7 @@ import {
   CloseCardInvoiceUseCase,
   GetCardInvoiceUseCase,
   invoiceRemaining,
+  InvoiceDueStateResolver,
   type CardInvoiceRepository,
   type CardInvoiceView,
 } from './manage-card-invoice.js';
@@ -89,11 +90,26 @@ function invoices(): CardInvoiceRepository & {
 
 const clock = { now: () => new Date('2026-10-29T12:00:00.000Z') };
 const ids = { generate: () => 'audit-id' };
+const states = (now: string): InvoiceDueStateResolver =>
+  new InvoiceDueStateResolver(
+    {
+      changeTimeZone: () => Promise.resolve(null),
+      findById: () => Promise.resolve(null),
+      upsert: (profile) => Promise.resolve(profile),
+    },
+    { now: () => new Date(now) },
+  );
 
 describe('CloseCardInvoiceUseCase', () => {
   it('freezes the purchases total once and audits only the change', async () => {
     const repository = invoices();
-    const useCase = new CloseCardInvoiceUseCase(cards, repository, clock, ids);
+    const useCase = new CloseCardInvoiceUseCase(
+      cards,
+      repository,
+      clock,
+      ids,
+      states('2026-10-29T12:00:00.000Z'),
+    );
     const command = {
       actorId: ownerId,
       cardId: card.id,
@@ -120,7 +136,13 @@ describe('CloseCardInvoiceUseCase', () => {
     ['a missing invoice', { closesOn: '2026-09-28' }, CardInvoiceNotFoundError],
   ])('rejects %s', async (_label, change, error) => {
     await expect(
-      new CloseCardInvoiceUseCase(cards, invoices(), clock, ids).execute({
+      new CloseCardInvoiceUseCase(
+        cards,
+        invoices(),
+        clock,
+        ids,
+        states('2026-10-29T12:00:00.000Z'),
+      ).execute({
         actorId: ownerId,
         cardId: card.id,
         closesOn: '2026-10-28',
@@ -140,9 +162,13 @@ describe('GetCardInvoiceUseCase', () => {
           Promise.resolve(closesOn === '2026-10-28' ? [] : []),
       },
       { listForInvoice: () => Promise.resolve([]) },
+      // 10/11 23:30 in São Paulo is the day after the 09/11 due date.
+      states('2026-11-11T02:30:00.000Z'),
     ).execute({ actorId: ownerId, cardId: card.id, closesOn: '2026-10-28' });
 
     expect(detail.purchaseCount).toBe(2);
+    expect(detail.due).toEqual({ daysUntilDue: -1, state: 'overdue' });
+    expect(detail.attentionDays).toBe(5);
     expect(invoiceRemaining(detail).toDecimal()).toBe('100.35');
   });
 });

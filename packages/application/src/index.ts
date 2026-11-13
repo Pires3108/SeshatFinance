@@ -331,6 +331,8 @@ export {
   type CardInvoicePurchaseReader,
   type CardInvoiceRepository,
   type CardInvoiceView,
+  type CardInvoiceStateView,
+  InvoiceDueStateResolver,
   type InvoiceSettlementReader,
 } from './cards/manage-card-invoice.js';
 export {

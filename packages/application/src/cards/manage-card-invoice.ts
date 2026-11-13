@@ -1,13 +1,18 @@
 import {
   CivilDate,
+  deriveInvoiceDueState,
   FinancialAuditEvent,
   Money,
+  type CreditCard,
+  type InvoiceDueStateView,
   type CardInvoice,
   type CardPurchase,
   type InvoiceSettlement,
 } from '@seshat/domain';
 
+import { readCivilDate } from '../ports/civil-date.js';
 import type { Clock } from '../ports/clock.js';
+import type { UserProfileRepository } from '../users/update-own-user-profile.js';
 import type { IdentifierGenerator } from '../ports/identifier-generator.js';
 import type { CreditCardRepository } from './create-credit-card.js';
 import { CreditCardNotFoundError } from './manage-credit-card.js';
@@ -48,6 +53,43 @@ export interface CardInvoiceRepository {
   ): Promise<CardInvoiceView | null>;
 }
 
+/** Invoice view with its server-derived due state (US-042). */
+export type CardInvoiceStateView = CardInvoiceView &
+  Readonly<{ attentionDays: number; due: InvoiceDueStateView }>;
+
+/** Derives due states with the holder's time zone and injected clock. */
+export class InvoiceDueStateResolver {
+  public constructor(
+    private readonly profiles: UserProfileRepository,
+    private readonly clock: Clock,
+  ) {}
+
+  public async today(ownerId: string): Promise<CivilDate> {
+    const profile = await this.profiles.findById(ownerId);
+    return CivilDate.parse(
+      readCivilDate(this.clock, profile?.timeZone ?? 'America/Sao_Paulo'),
+    );
+  }
+
+  public static apply(
+    view: CardInvoiceView,
+    card: CreditCard,
+    today: CivilDate,
+  ): CardInvoiceStateView {
+    return {
+      ...view,
+      attentionDays: card.attentionDays,
+      due: deriveInvoiceDueState({
+        attentionDays: card.attentionDays,
+        dueOn: CivilDate.parse(view.invoice.toSnapshot().dueOn),
+        purchasesMinorUnits: view.purchasesTotal.toMinorUnits(),
+        remainingMinorUnits: invoiceRemaining(view).toMinorUnits(),
+        today,
+      }),
+    };
+  }
+}
+
 export interface CardInvoicePurchaseReader {
   listForCard(
     cardId: string,
@@ -75,18 +117,23 @@ export class ListCardInvoicesUseCase {
   public constructor(
     private readonly cards: CreditCardRepository,
     private readonly invoices: CardInvoiceRepository,
+    private readonly states: InvoiceDueStateResolver,
   ) {}
 
   public async execute(
     query: Readonly<{ actorId: string; cardId: string }>,
-  ): Promise<readonly CardInvoiceView[]> {
+  ): Promise<readonly CardInvoiceStateView[]> {
     const card = await this.cards.findByIdForOwner(query.cardId, query.actorId);
     if (card === null) throw new CreditCardNotFoundError();
-    return this.invoices.listForCard(card.id, query.actorId);
+    const today = await this.states.today(query.actorId);
+    const views = await this.invoices.listForCard(card.id, query.actorId);
+    return views.map((view) =>
+      InvoiceDueStateResolver.apply(view, card, today),
+    );
   }
 }
 
-export type CardInvoiceDetail = CardInvoiceView &
+export type CardInvoiceDetail = CardInvoiceStateView &
   Readonly<{
     purchases: readonly CardPurchase[];
     settlements: readonly InvoiceSettlement[];
@@ -99,6 +146,7 @@ export class GetCardInvoiceUseCase {
     private readonly invoices: CardInvoiceRepository,
     private readonly purchases: CardInvoicePurchaseReader,
     private readonly settlements: InvoiceSettlementReader,
+    private readonly states: InvoiceDueStateResolver,
   ) {}
 
   public async execute(
@@ -114,7 +162,11 @@ export class GetCardInvoiceUseCase {
     );
     if (view === null) throw new CardInvoiceNotFoundError();
     return {
-      ...view,
+      ...InvoiceDueStateResolver.apply(
+        view,
+        card,
+        await this.states.today(query.actorId),
+      ),
       purchases: await this.purchases.listForCard(
         card.id,
         query.actorId,
@@ -139,11 +191,12 @@ export class CloseCardInvoiceUseCase {
     private readonly invoices: CardInvoiceRepository,
     private readonly clock: Clock,
     private readonly identifiers: IdentifierGenerator,
+    private readonly states: InvoiceDueStateResolver,
   ) {}
 
   public async execute(
     command: Readonly<{ actorId: string; cardId: string; closesOn: string }>,
-  ): Promise<CardInvoiceView> {
+  ): Promise<CardInvoiceStateView> {
     const closesOn = CivilDate.parse(command.closesOn).toString();
     const card = await this.cards.findByIdForOwner(
       command.cardId,
@@ -169,7 +222,11 @@ export class CloseCardInvoiceUseCase {
       }),
     );
     if (view === null) throw new CardInvoiceNotFoundError();
-    return view;
+    return InvoiceDueStateResolver.apply(
+      view,
+      card,
+      await this.states.today(command.actorId),
+    );
   }
 }
 
