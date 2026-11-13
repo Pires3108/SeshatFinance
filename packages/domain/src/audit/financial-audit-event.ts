@@ -6,6 +6,7 @@ export const financialAuditActions = [
   'moved-to-trash',
   'restored-from-trash',
   'eliminated',
+  'closed',
 ] as const;
 
 /** Actor recorded for automatic, system-initiated changes (retention). */
@@ -20,6 +21,7 @@ export const financialAuditResourceTypes = [
   'balance-adjustment',
   'credit-card',
   'card-purchase',
+  'card-invoice',
   'manual-exchange-quote',
 ] as const;
 

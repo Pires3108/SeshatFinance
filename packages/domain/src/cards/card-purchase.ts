@@ -13,6 +13,8 @@ export type CardPurchaseSnapshot = Readonly<{
   id: string;
   occurredAt: Date;
   ownerId: string;
+  /** True when its own cycle was already closed and it joined the next open invoice. */
+  postedAfterClose: boolean;
 }>;
 
 export type CreateCardPurchaseProperties = Readonly<{
@@ -26,6 +28,7 @@ export type CreateCardPurchaseProperties = Readonly<{
   id: string;
   occurredAt: Date;
   ownerId: string;
+  postedAfterClose?: boolean | undefined;
 }>;
 
 export class InvalidCardPurchaseError extends Error {
@@ -79,6 +82,7 @@ export class CardPurchase {
       id: properties.id,
       occurredAt: new Date(properties.occurredAt),
       ownerId: properties.ownerId,
+      postedAfterClose: properties.postedAfterClose ?? false,
     });
   }
 

@@ -1,4 +1,5 @@
 import {
+  CardInvoice,
   CardPurchase,
   Currency,
   FinancialAuditEvent,
@@ -39,17 +40,32 @@ export type IdempotentCardPurchaseRecord = Readonly<{
   response: string;
 }>;
 
+/** Number of cycles searched for an open invoice (one year). */
+export const INVOICE_ROUTING_CYCLES = 13;
+
+/** Built once the destination invoice is known, inside the transaction. */
+export type CardPurchaseWrite = Readonly<{
+  purchase: CardPurchase;
+  auditEvent: FinancialAuditEvent;
+  response: string;
+}>;
+
 export interface CardPurchaseRepository {
   findIdempotentResponse(request: IdempotencyRequest): Promise<string | null>;
   /**
-   * Records the purchase, its audit event and the idempotency record in one
-   * transaction. Returns the stored response instead of writing when an
-   * identical request committed first.
+   * In one transaction: claims the idempotency key, forms or locks the
+   * candidate invoices in order and picks the first open one, then writes the
+   * purchase built for it, its audit event and the idempotency record.
+   * Returns the stored response instead of writing when an identical request
+   * committed first. Closed invoices are never changed.
    */
   insertAtomically(
-    purchase: CardPurchase,
-    auditEvent: FinancialAuditEvent,
-    idempotency: IdempotentCardPurchaseRecord,
+    request: IdempotencyRequest,
+    candidates: readonly CardInvoice[],
+    build: (
+      invoice: CardInvoice,
+      postedAfterClose: boolean,
+    ) => CardPurchaseWrite,
   ): Promise<string>;
   listForCard(
     cardId: string,
@@ -131,31 +147,63 @@ export class RegisterCardPurchaseUseCase {
     ) {
       throw new CardPurchaseCategoryUnavailableError();
     }
-    const { cycle } = await this.cycles.resolve(card, command.occurredAt);
-    const purchase = CardPurchase.create({
-      amount,
-      cardId: card.id,
-      categoryId,
-      createdAt: at,
-      cycleClosesOn: cycle.closesOn,
-      description: command.description,
-      externalId: command.externalId,
-      id: this.identifiers.generate(),
-      occurredAt: command.occurredAt,
-      ownerId: command.actorId,
-    });
-    const stored = await this.purchases.insertAtomically(
-      purchase,
-      FinancialAuditEvent.create({
-        action: 'created',
-        actorId: command.actorId,
-        id: this.identifiers.generate(),
-        occurredAt: at,
+    const resolved = await this.cycles.resolve(card, command.occurredAt);
+    const candidates = resolved
+      .followingCycles(INVOICE_ROUTING_CYCLES)
+      .map((cycle) =>
+        CardInvoice.form({
+          cardId: card.id,
+          closingBoundary: card.toSnapshot().closingBoundary,
+          createdAt: at,
+          currency,
+          cycle,
+          holidayDatasetVersion: resolved.holidayDatasetVersion,
+          id: this.identifiers.generate(),
+          ownerId: command.actorId,
+          timeZone: resolved.timeZone,
+        }),
+      );
+    const purchaseId = this.identifiers.generate();
+    const auditId = this.identifiers.generate();
+    const build = (
+      invoice: CardInvoice,
+      postedAfterClose: boolean,
+    ): CardPurchaseWrite => {
+      const purchase = CardPurchase.create({
+        amount,
+        cardId: card.id,
+        categoryId,
+        createdAt: at,
+        cycleClosesOn: invoice.closesOn,
+        description: command.description,
+        externalId: command.externalId,
+        id: purchaseId,
+        occurredAt: command.occurredAt,
         ownerId: command.actorId,
-        resourceId: purchase.id,
-        resourceType: 'card-purchase',
-      }),
-      { request, response: serializeCardPurchaseResponse(purchase) },
+        postedAfterClose,
+      });
+      return {
+        auditEvent: FinancialAuditEvent.create({
+          action: 'created',
+          actorId: command.actorId,
+          id: auditId,
+          occurredAt: at,
+          ownerId: command.actorId,
+          resourceId: purchase.id,
+          resourceType: 'card-purchase',
+        }),
+        purchase,
+        response: serializeCardPurchaseResponse(purchase),
+      };
+    };
+    // Validates the purchase before opening the transaction.
+    const first = candidates[0];
+    if (first === undefined) throw new Error('No invoice candidate.');
+    build(first, false);
+    const stored = await this.purchases.insertAtomically(
+      request,
+      candidates,
+      build,
     );
     return parseCardPurchaseResponse(stored);
   }

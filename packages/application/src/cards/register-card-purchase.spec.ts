@@ -49,7 +49,7 @@ const cards: CreditCardRepository = {
   update: () => Promise.resolve(true),
 };
 
-function purchases(): CardPurchaseRepository & {
+function purchases(closed: readonly string[] = []): CardPurchaseRepository & {
   inserted: { purchase: CardPurchase; event: FinancialAuditEvent }[];
 } {
   const records = new Map<string, { hash: string; response: string }>();
@@ -64,15 +64,21 @@ function purchases(): CardPurchaseRepository & {
   };
   return {
     findIdempotentResponse: (request) => Promise.resolve(find(request)),
-    insertAtomically: (purchase, event, idempotency) => {
-      const replay = find(idempotency.request);
+    insertAtomically: (request, candidates, build) => {
+      const replay = find(request);
       if (replay !== null) return Promise.resolve(replay);
-      inserted.push({ event, purchase });
-      records.set(`${idempotency.request.ownerId}:${idempotency.request.key}`, {
-        hash: hash(idempotency.request),
-        response: idempotency.response,
+      const index = candidates.findIndex(
+        (invoice) => !closed.includes(invoice.closesOn.toString()),
+      );
+      const invoice = candidates[index];
+      if (invoice === undefined) throw new Error('no open invoice');
+      const write = build(invoice, index > 0);
+      inserted.push({ event: write.auditEvent, purchase: write.purchase });
+      records.set(`${request.ownerId}:${request.key}`, {
+        hash: hash(request),
+        response: write.response,
       });
-      return Promise.resolve(idempotency.response);
+      return Promise.resolve(write.response);
     },
     inserted,
     listForCard: () => Promise.resolve(inserted.map((item) => item.purchase)),
@@ -156,6 +162,18 @@ describe('RegisterCardPurchaseUseCase', () => {
     });
 
     expect(purchase.toSnapshot().cycleClosesOn).toBe('2026-11-28');
+  });
+
+  it('routes a purchase whose invoice is closed to the next open invoice', async () => {
+    const repository = purchases(['2026-10-28']);
+
+    const purchase = await useCase(repository).execute(command);
+
+    expect(purchase.toSnapshot()).toMatchObject({
+      cycleClosesOn: '2026-11-28',
+      occurredAt: command.occurredAt,
+      postedAfterClose: true,
+    });
   });
 
   it('replays an identical retry without a second write', async () => {
