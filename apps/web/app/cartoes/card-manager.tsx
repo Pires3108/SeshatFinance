@@ -11,6 +11,7 @@ import {
 } from 'react';
 
 import type { AccountWithBalance } from '../accounts/account-contract';
+import { CardInvoices } from './card-invoices';
 import { CardPurchases } from './card-purchases';
 import {
   boundaryLabels,
@@ -89,6 +90,9 @@ export function CardManager(): ReactNode {
     text: ReactNode;
   }> | null>(null);
   const [saving, setSaving] = useState(false);
+  const [refreshTokens, setRefreshTokens] = useState<
+    Readonly<Record<string, number>>
+  >({});
   const messageRef = useRef<HTMLParagraphElement>(null);
 
   const load = useCallback(async (): Promise<void> => {
@@ -427,7 +431,16 @@ export function CardManager(): ReactNode {
                   <CardPurchases
                     card={card}
                     cycleClosesOn={cycle?.closesOn ?? null}
-                    onRecorded={() => undefined}
+                    onRecorded={() => {
+                      setRefreshTokens((tokens) => ({
+                        ...tokens,
+                        [card.id]: (tokens[card.id] ?? 0) + 1,
+                      }));
+                    }}
+                  />
+                  <CardInvoices
+                    card={card}
+                    refreshToken={refreshTokens[card.id] ?? 0}
                   />
                   <div className="account-actions">
                     <button
