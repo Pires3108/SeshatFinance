@@ -55,6 +55,33 @@ export interface TransactionFinancialLinkRepository {
     transactionId: string,
     ownerId: string,
   ): Promise<string | null>;
+  /** Settlement whose account effect is this entry (US-041), if any. */
+  findCardSettlementIdByEntryForOwner?(
+    transactionId: string,
+    ownerId: string,
+  ): Promise<string | null>;
+}
+
+export class TransactionRequiresCardSettlementMutationError extends Error {
+  public constructor(public readonly settlementId: string) {
+    super('A card settlement entry cannot be changed on its own.');
+    this.name = 'TransactionRequiresCardSettlementMutationError';
+  }
+}
+
+/** Keeps the account effect of a declared settlement consistent (INV-015). */
+export async function assertNotCardSettlementEntry(
+  links: TransactionFinancialLinkRepository,
+  transactionId: string,
+  ownerId: string,
+): Promise<void> {
+  const settlementId = await links.findCardSettlementIdByEntryForOwner?.(
+    transactionId,
+    ownerId,
+  );
+  if (settlementId !== undefined && settlementId !== null) {
+    throw new TransactionRequiresCardSettlementMutationError(settlementId);
+  }
 }
 
 export type CreateTransactionCommand = Readonly<{
@@ -439,6 +466,11 @@ export class UpdateOwnedTransactionUseCase {
     if (transferId !== null) {
       throw new TransactionRequiresTransferMutationError(transferId);
     }
+    await assertNotCardSettlementEntry(
+      this.financialLinks,
+      transactionId,
+      actorId,
+    );
   }
 
   private async save(
@@ -482,6 +514,11 @@ export class ChangeOwnedTransactionLifecycleUseCase {
     if (transferId !== null) {
       throw new TransactionRequiresTransferMutationError(transferId);
     }
+    await assertNotCardSettlementEntry(
+      this.financialLinks,
+      transaction.id,
+      command.actorId,
+    );
     const expectedVersion = transaction.toSnapshot().version;
     const at = this.clock.now();
     let changed = true;

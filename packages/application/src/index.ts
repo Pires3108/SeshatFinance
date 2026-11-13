@@ -199,6 +199,8 @@ export {
   TransactionIdempotencyConflictError,
   type TransactionRevision,
   TransactionRequiresTransferMutationError,
+  TransactionRequiresCardSettlementMutationError,
+  assertNotCardSettlementEntry,
   UpdateOwnedTransactionUseCase,
   TransactionAccountUnavailableError,
   type CreateTransactionCommand,
@@ -329,7 +331,20 @@ export {
   type CardInvoicePurchaseReader,
   type CardInvoiceRepository,
   type CardInvoiceView,
+  type InvoiceSettlementReader,
 } from './cards/manage-card-invoice.js';
+export {
+  DECLARE_INVOICE_SETTLEMENT_OPERATION,
+  DeclareInvoiceSettlementUseCase,
+  InvoiceSettlementAccountUnavailableError,
+  InvoiceSettlementCurrencyMismatchError,
+  InvoiceSettlementExceedsRemainingError,
+  parseInvoiceSettlementResponse,
+  serializeInvoiceSettlementResponse,
+  type DeclareInvoiceSettlementCommand,
+  type InvoiceSettlementRepository,
+  type InvoiceSettlementWrite,
+} from './cards/declare-invoice-settlement.js';
 export {
   DeclareHolidayUseCase,
   EMPTY_HOLIDAY_SETTINGS,

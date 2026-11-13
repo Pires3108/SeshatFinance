@@ -1,3 +1,4 @@
+import { assertNotCardSettlementEntry } from './create-transaction.js';
 import type { TagRepository } from '../classifications/manage-tag.js';
 import { FinancialAuditEventFactory } from '../audit/create-financial-audit-event.js';
 import type { Clock } from '../ports/clock.js';
@@ -67,6 +68,11 @@ export class SetOwnedTransactionTagsUseCase {
     if (transferId !== null) {
       throw new TransactionRequiresTransferMutationError(transferId);
     }
+    await assertNotCardSettlementEntry(
+      this.financialLinks,
+      command.transactionId,
+      command.actorId,
+    );
     const tagIds = [...new Set(command.tagIds)];
     const currentTagIds = await this.assignments.listTagIdsForOwner(
       command.transactionId,
