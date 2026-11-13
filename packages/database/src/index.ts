@@ -20,6 +20,7 @@ export {
 } from './audit/prisma-financial-audit-event-repository.js';
 export { PrismaCreditCardRepository } from './cards/prisma-credit-card-repository.js';
 export { PrismaCardPurchaseRepository } from './cards/prisma-card-purchase-repository.js';
+export { PrismaCardInvoiceRepository } from './cards/prisma-card-invoice-repository.js';
 export { PrismaFamilyGroupRepository } from './family/prisma-family-group-repository.js';
 export { PrismaCounterpartyRepository } from './counterparties/prisma-counterparty-repository.js';
 export { PrismaManualExchangeQuoteRepository } from './money/prisma-manual-exchange-quote-repository.js';

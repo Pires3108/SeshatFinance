@@ -180,6 +180,7 @@ model CreditCard {
   version                Int            @default(1)
   createdAt              DateTime       @map("created_at") @db.Timestamptz(6)
   purchases              CardPurchase[]
+  invoices               CardInvoice[]
 
   @@unique([id, ownerId])
   @@index([ownerId, createdAt, id])
@@ -365,6 +366,7 @@ enum FinancialAuditAction {
   moved_to_trash      @map("moved-to-trash")
   restored_from_trash @map("restored-from-trash")
   eliminated
+  closed
 
   @@map("financial_audit_action")
 }
@@ -376,6 +378,7 @@ enum FinancialAuditResourceType {
   balance_adjustment    @map("balance-adjustment")
   credit_card           @map("credit-card")
   card_purchase         @map("card-purchase")
+  card_invoice          @map("card-invoice")
   manual_exchange_quote @map("manual-exchange-quote")
 
   @@map("financial_audit_resource_type")
@@ -544,9 +547,37 @@ model CardPurchase {
   externalId             String?    @map("external_id") @db.VarChar(255)
   occurredAt             DateTime   @map("occurred_at") @db.Timestamptz(6)
   cycleClosesOn          DateTime   @map("cycle_closes_on") @db.Date
+  postedAfterClose       Boolean    @default(false) @map("posted_after_close")
   createdAt              DateTime   @map("created_at") @db.Timestamptz(6)
 
   @@unique([id, ownerId])
   @@index([ownerId, cardId, cycleClosesOn, occurredAt])
   @@map("card_purchases")
+}
+
+model CardInvoice {
+  id                     String     @id @db.Uuid
+  ownerId                String     @map("owner_id") @db.Uuid
+  cardId                 String     @map("card_id") @db.Uuid
+  card                   CreditCard @relation(fields: [cardId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  closesOn               DateTime   @map("closes_on") @db.Date
+  firstPurchaseDate      DateTime   @map("first_purchase_date") @db.Date
+  lastPurchaseDate       DateTime   @map("last_purchase_date") @db.Date
+  scheduledDueOn         DateTime   @map("scheduled_due_on") @db.Date
+  dueOn                  DateTime   @map("due_on") @db.Date
+  closingBoundary        String     @map("closing_boundary") @db.VarChar(16)
+  configurationPending   Boolean    @map("configuration_pending")
+  holidayDatasetVersion  String     @map("holiday_dataset_version") @db.VarChar(40)
+  timeZone               String     @map("time_zone") @db.VarChar(64)
+  currencyCode           String     @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale Int        @map("currency_minor_unit_scale") @db.SmallInt
+  status                 String     @db.VarChar(8)
+  closedAt               DateTime?  @map("closed_at") @db.Timestamptz(6)
+  closedTotalMinorUnits  Decimal?   @map("closed_total_minor_units") @db.Decimal(1000, 0)
+  createdAt              DateTime   @map("created_at") @db.Timestamptz(6)
+  version                Int        @default(1)
+
+  @@unique([id, ownerId])
+  @@unique([ownerId, cardId, closesOn])
+  @@map("card_invoices")
 }
