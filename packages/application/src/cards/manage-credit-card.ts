@@ -36,6 +36,7 @@ export class CreditCardVersionConflictError extends Error {
 
 export type UpdateCreditCardCommand = Readonly<{
   actorId: string;
+  attentionDays?: number | undefined;
   cardId: string;
   expectedVersion: number;
   brand: string;
@@ -67,6 +68,7 @@ export class UpdateCreditCardUseCase {
       throw new CreditCardVersionConflictError();
     }
     const updated = current.update({
+      attentionDays: command.attentionDays,
       brand: command.brand,
       closingBoundary: command.closingBoundary,
       closingDay: command.closingDay,

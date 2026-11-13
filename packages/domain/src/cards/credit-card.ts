@@ -5,8 +5,14 @@ import {
   DEFAULT_CARD_CLOSING_BOUNDARY,
   type CardClosingBoundary,
 } from './card-cycle-schedule.js';
+import {
+  assertInvoiceAttentionDays,
+  DEFAULT_INVOICE_ATTENTION_DAYS,
+} from './invoice-due-state.js';
 
 export type CreditCardSnapshot = Readonly<{
+  /** Days before the due date that flag an invoice for attention (US-042). */
+  attentionDays: number;
   brand: string;
   closingBoundary: CardClosingBoundary;
   closingDay: number;
@@ -21,6 +27,7 @@ export type CreditCardSnapshot = Readonly<{
 }>;
 
 export type CreateCreditCardProperties = Readonly<{
+  attentionDays?: number | undefined;
   brand: string;
   closingBoundary?: CardClosingBoundary;
   closingDay: number;
@@ -36,6 +43,7 @@ export type CreateCreditCardProperties = Readonly<{
 
 /** Organizational settings the holder may change after registration. */
 export type CreditCardChanges = Readonly<{
+  attentionDays?: number | undefined;
   brand: string;
   closingBoundary: CardClosingBoundary;
   closingDay: number;
@@ -67,6 +75,15 @@ export class CreditCard {
     if (!CARD_CLOSING_BOUNDARIES.includes(closingBoundary)) {
       throw new InvalidCreditCardError('Unknown credit card closing boundary.');
     }
+    const attentionDays =
+      properties.attentionDays ?? DEFAULT_INVOICE_ATTENTION_DAYS;
+    try {
+      assertInvoiceAttentionDays(attentionDays);
+    } catch {
+      throw new InvalidCreditCardError(
+        'Attention days must be between 0 and 30.',
+      );
+    }
     const version = properties.version ?? 1;
     if (!Number.isSafeInteger(version) || version < 1) {
       throw new InvalidCreditCardError('Credit card version must be positive.');
@@ -81,6 +98,7 @@ export class CreditCard {
     }
 
     return new CreditCard({
+      attentionDays,
       brand: properties.brand.trim(),
       closingBoundary,
       closingDay: properties.closingDay,
@@ -114,6 +132,7 @@ export class CreditCard {
     }
     return CreditCard.create({
       ...changes,
+      attentionDays: changes.attentionDays ?? this.state.attentionDays,
       createdAt: this.state.createdAt,
       id: this.state.id,
       ownerId: this.state.ownerId,
@@ -140,6 +159,10 @@ export class CreditCard {
 
   public get version(): number {
     return this.state.version;
+  }
+
+  public get attentionDays(): number {
+    return this.state.attentionDays;
   }
 
   public get cycleSchedule(): CardCycleSchedule {

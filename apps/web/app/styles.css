@@ -388,3 +388,22 @@ button:focus-visible {
   gap: 0.5rem 1rem;
   padding: 0.5rem 0;
 }
+.invoice-state {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+  font-weight: 600;
+}
+.invoice-state.overdue {
+  color: #a52d2d;
+}
+.invoice-state.attention {
+  color: #7a4b00;
+}
+.invoice-state.paid,
+.invoice-state.on-time,
+.invoice-state.no-purchases {
+  color: #176a61;
+}

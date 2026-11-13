@@ -122,6 +122,16 @@ export {
   type CreateInvoiceSettlementProperties,
   type InvoiceSettlementSnapshot,
 } from './cards/invoice-settlement.js';
+export {
+  assertInvoiceAttentionDays,
+  DEFAULT_INVOICE_ATTENTION_DAYS,
+  deriveInvoiceDueState,
+  InvalidInvoiceAttentionDaysError,
+  MAX_INVOICE_ATTENTION_DAYS,
+  type InvoiceDueState,
+  type InvoiceDueStateInput,
+  type InvoiceDueStateView,
+} from './cards/invoice-due-state.js';
 export { CivilDate, InvalidCivilDateError } from './calendar/civil-date.js';
 export {
   assertHolidayLocation,

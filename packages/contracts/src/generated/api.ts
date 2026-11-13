@@ -1794,6 +1794,8 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": readonly {
+                        /** @description Days before the effective due date that flag an invoice for attention. */
+                        readonly attentionDays: number;
                         readonly brand: string;
                         /**
                          * @description next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.
@@ -1836,6 +1838,8 @@ export interface operations {
         readonly requestBody: {
             readonly content: {
                 readonly "application/json": {
+                    /** @description Days before the effective due date that flag an invoice for attention. */
+                    readonly attentionDays?: number;
                     readonly brand: string;
                     /**
                      * @description next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.
@@ -1860,6 +1864,8 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        /** @description Days before the effective due date that flag an invoice for attention. */
+                        readonly attentionDays: number;
                         readonly brand: string;
                         /**
                          * @description next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.
@@ -1916,6 +1922,8 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        /** @description Days before the effective due date that flag an invoice for attention. */
+                        readonly attentionDays: number;
                         readonly brand: string;
                         /**
                          * @description next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.
@@ -1967,6 +1975,8 @@ export interface operations {
         readonly requestBody: {
             readonly content: {
                 readonly "application/json": {
+                    /** @description Days before the effective due date that flag an invoice for attention. */
+                    readonly attentionDays?: number;
                     readonly brand: string;
                     /**
                      * @description next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.
@@ -1988,6 +1998,8 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        /** @description Days before the effective due date that flag an invoice for attention. */
+                        readonly attentionDays: number;
                         readonly brand: string;
                         /**
                          * @description next-cycle: a purchase on the closing date opens the next invoice; closing-cycle: it stays in the closing invoice.
@@ -2266,6 +2278,14 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": readonly {
+                        readonly attentionDays: number;
+                        /** @description Calendar days until the effective due date; negative once overdue. */
+                        readonly daysUntilDue: number;
+                        /**
+                         * @description Server-derived state: overdue only after the effective due date with a remaining obligation.
+                         * @enum {string}
+                         */
+                        readonly dueState: "no-purchases" | "paid" | "on-time" | "attention" | "overdue";
                         /** Format: date-time */
                         readonly closedAt: string | null;
                         /** @description Purchases total frozen at manual closing. */
@@ -2337,6 +2357,14 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly attentionDays: number;
+                        /** @description Calendar days until the effective due date; negative once overdue. */
+                        readonly daysUntilDue: number;
+                        /**
+                         * @description Server-derived state: overdue only after the effective due date with a remaining obligation.
+                         * @enum {string}
+                         */
+                        readonly dueState: "no-purchases" | "paid" | "on-time" | "attention" | "overdue";
                         /** Format: date-time */
                         readonly closedAt: string | null;
                         /** @description Purchases total frozen at manual closing. */
@@ -2454,6 +2482,14 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly attentionDays: number;
+                        /** @description Calendar days until the effective due date; negative once overdue. */
+                        readonly daysUntilDue: number;
+                        /**
+                         * @description Server-derived state: overdue only after the effective due date with a remaining obligation.
+                         * @enum {string}
+                         */
+                        readonly dueState: "no-purchases" | "paid" | "on-time" | "attention" | "overdue";
                         /** Format: date-time */
                         readonly closedAt: string | null;
                         /** @description Purchases total frozen at manual closing. */

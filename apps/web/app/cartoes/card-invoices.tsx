@@ -17,6 +17,7 @@ import {
   type Card,
 } from './card-presentation';
 import { InvoiceSettlementForm } from './invoice-settlement-form';
+import { invoiceStateLabel } from './invoice-state';
 
 type Settlement = Readonly<{ id: string; amount: string; paidAt: string }>;
 
@@ -178,6 +179,9 @@ export function CardInvoices({
                   Fatura de {formatCivilDate(invoice.closesOn)} —{' '}
                   {statusLabels[invoice.status]}
                 </strong>
+                <span className={`invoice-state ${invoice.dueState}`}>
+                  {invoiceStateLabel(invoice.dueState, invoice.daysUntilDue)}
+                </span>
               </p>
               <p>
                 Compras: {formatInvoiceAmount(invoice, invoice.purchasesTotal)}{' '}

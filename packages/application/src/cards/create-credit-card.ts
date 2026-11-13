@@ -12,6 +12,7 @@ import type { IdentifierGenerator } from '../ports/identifier-generator.js';
 
 export type CreateCreditCardCommand = Readonly<{
   actorId: string;
+  attentionDays?: number | undefined;
   brand: string;
   closingBoundary?: CardClosingBoundary | undefined;
   closingDay: number;
@@ -90,6 +91,7 @@ export class CreateCreditCardUseCase {
     }
     const at = this.clock.now();
     const card = CreditCard.create({
+      attentionDays: command.attentionDays,
       brand: command.brand,
       ...(command.closingBoundary === undefined
         ? {}

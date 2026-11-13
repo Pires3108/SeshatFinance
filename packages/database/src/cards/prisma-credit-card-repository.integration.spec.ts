@@ -51,6 +51,7 @@ describe('PrismaCreditCardRepository', () => {
       '../../prisma/migrations/20261109120000_transaction_time_zone/migration.sql',
       '../../prisma/migrations/20261112130000_trash_elimination/migration.sql',
       '../../prisma/migrations/20261113100000_card_cycle_and_holiday_settings/migration.sql',
+      '../../prisma/migrations/20261113140000_card_invoice_attention_days/migration.sql',
     ]) {
       await migrationClient.query(
         await readFile(new URL(path, import.meta.url), 'utf8'),

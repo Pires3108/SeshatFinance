@@ -27,6 +27,7 @@ import {
 
 type LoadState = 'loading' | 'ready' | 'unauthorized' | 'unavailable';
 type Draft = Readonly<{
+  attentionDays: string;
   brand: string;
   closingBoundary: ClosingBoundary;
   closingDay: string;
@@ -37,6 +38,7 @@ type Draft = Readonly<{
 }>;
 
 const emptyDraft: Draft = {
+  attentionDays: '5',
   brand: '',
   closingBoundary: 'next-cycle',
   closingDay: '',
@@ -50,6 +52,7 @@ const DECIMAL = /^\d+(?:[.,]\d+)?$/u;
 
 function draftOf(card: Card): Draft {
   return {
+    attentionDays: String(card.attentionDays),
     brand: card.brand,
     closingBoundary: card.closingBoundary,
     closingDay: String(card.closingDay),
@@ -75,6 +78,11 @@ function validationError(draft: Draft, creating: boolean): string | null {
     return 'Informe o limite com números, por exemplo 3500,00.';
   if (validDay(draft.closingDay) === null || validDay(draft.dueDay) === null)
     return 'Os dias de fechamento e vencimento devem estar entre 1 e 31.';
+  if (
+    !/^\d{1,2}$/u.test(draft.attentionDays) ||
+    Number(draft.attentionDays) > 30
+  )
+    return 'A antecedência do aviso deve estar entre 0 e 30 dias.';
   return null;
 }
 
@@ -160,6 +168,7 @@ export function CardManager(): ReactNode {
       return;
     }
     const settings = {
+      attentionDays: Number(draft.attentionDays),
       brand: draft.brand.trim(),
       closingBoundary: draft.closingBoundary,
       closingDay: validDay(draft.closingDay),
@@ -363,6 +372,10 @@ export function CardManager(): ReactNode {
             {field('dueDay', 'Dia de vencimento', {
               inputMode: 'numeric',
               note: 'Se cair em fim de semana ou feriado do seu local, passa para o próximo dia útil.',
+            })}
+            {field('attentionDays', 'Avisar quantos dias antes do vencimento', {
+              inputMode: 'numeric',
+              note: 'A fatura com saldo devedor aparece em “Atenção” a partir desse número de dias antes do vencimento (de 0 a 30).',
             })}
             <fieldset className="field">
               <legend>Compras feitas no dia do fechamento</legend>
