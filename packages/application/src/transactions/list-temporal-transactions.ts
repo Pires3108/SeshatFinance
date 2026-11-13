@@ -6,6 +6,11 @@ export type TemporalPeriod = 'day' | 'week' | 'month';
 export type TemporalTransaction = Readonly<{
   transaction: Transaction;
   timeZone: string;
+  /**
+   * Account effect of a declared card settlement (US-041). It changes the
+   * balance but is neither income nor expense in the totals (INV-015).
+   */
+  cardSettlement?: boolean;
 }>;
 
 export interface TemporalTransactionRepository {
@@ -163,7 +168,8 @@ function sumTotals(
   transactions: readonly TemporalTransaction[],
 ): readonly TemporalTotal[] {
   const totals = new Map<string, { income: Money; expense: Money }>();
-  for (const { transaction } of transactions) {
+  for (const { transaction, cardSettlement } of transactions) {
+    if (cardSettlement === true) continue;
     const amount = transaction.amount;
     const key = `${amount.currency.code}:${String(amount.currency.minorUnitScale)}`;
     const current = totals.get(key) ?? {

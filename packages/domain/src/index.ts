@@ -116,6 +116,12 @@ export {
   type CardInvoiceStatus,
   type FormCardInvoiceProperties,
 } from './cards/card-invoice.js';
+export {
+  InvalidInvoiceSettlementError,
+  InvoiceSettlement,
+  type CreateInvoiceSettlementProperties,
+  type InvoiceSettlementSnapshot,
+} from './cards/invoice-settlement.js';
 export { CivilDate, InvalidCivilDateError } from './calendar/civil-date.js';
 export {
   assertHolidayLocation,

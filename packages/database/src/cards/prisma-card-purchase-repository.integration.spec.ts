@@ -3,6 +3,8 @@ import { readdir, readFile } from 'node:fs/promises';
 
 import {
   IdempotencyConflictError,
+  InvoiceSettlementExceedsRemainingError,
+  invoiceRemaining,
   type CardPurchaseWrite,
   type IdempotencyRequest,
 } from '@seshat/application';
@@ -13,10 +15,13 @@ import {
   CardCycleSchedule,
   CardInvoice,
   CardPurchase,
+  CivilDate,
   CreditCard,
   Currency,
   FinancialAuditEvent,
+  InvoiceSettlement,
   Money,
+  Transaction,
 } from '@seshat/domain';
 import { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -27,6 +32,8 @@ import { createPrismaClient } from '../prisma/create-prisma-client.js';
 import { PrismaCardInvoiceRepository } from './prisma-card-invoice-repository.js';
 import { PrismaCardPurchaseRepository } from './prisma-card-purchase-repository.js';
 import { PrismaCreditCardRepository } from './prisma-credit-card-repository.js';
+import { PrismaInvoiceSettlementRepository } from './prisma-invoice-settlement-repository.js';
+import { PrismaTransactionRepository } from '../transactions/prisma-transaction-repository.js';
 
 const ownerId = '99999999-9999-4999-8999-999999999999';
 const otherId = '88888888-8888-4888-8888-888888888888';
@@ -217,6 +224,127 @@ describe('card purchases and invoices in PostgreSQL', () => {
     ).toEqual(['2026-11-28', '2026-10-28']);
   });
 
+  it('settles part of the invoice: account and obligation drop by the same amount', async () => {
+    if (client === undefined || invoices === undefined) throw unavailable();
+    const before = await client.financialAuditEvent.count();
+
+    await expect(settle('100.00', randomUUID())).resolves.not.toBeNull();
+
+    const view = await invoices.findForCard(cardId, '2026-10-28', ownerId);
+    expect(view?.settledTotal.toDecimal()).toBe('100.00');
+    expect(view?.purchasesTotal.toDecimal()).toBe('137.35');
+    const movements = await client.transaction.findMany({
+      where: { accountId },
+    });
+    expect(movements).toHaveLength(1);
+    expect(movements[0]?.kind).toBe('expense');
+    expect(movements[0]?.amountMinorUnits.toFixed(0)).toBe('10000');
+    await expect(client.financialAuditEvent.count()).resolves.toBe(before + 2);
+  });
+
+  it('rejects a payment above the remaining obligation without writing', async () => {
+    if (client === undefined) throw unavailable();
+    const before = await client.invoiceSettlement.count();
+
+    await expect(settle('37.36', randomUUID())).rejects.toThrow(
+      InvoiceSettlementExceedsRemainingError,
+    );
+    await expect(client.invoiceSettlement.count()).resolves.toBe(before);
+    await expect(
+      client.transaction.count({ where: { accountId } }),
+    ).resolves.toBe(1);
+  });
+
+  it('never lets concurrent payments exceed the obligation', async () => {
+    if (client === undefined || invoices === undefined) throw unavailable();
+
+    const results = await Promise.allSettled([
+      settle('30.00', randomUUID()),
+      settle('30.00', randomUUID()),
+    ]);
+
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    const view = await invoices.findForCard(cardId, '2026-10-28', ownerId);
+    expect(view?.settledTotal.toDecimal()).toBe('130.00');
+    expect(view === null ? undefined : invoiceRemaining(view).toDecimal()).toBe(
+      '7.35',
+    );
+  });
+
+  it('freezes the settlement movement and keeps it out of expense totals', async () => {
+    if (client === undefined) throw unavailable();
+    const movement = await client.transaction.findFirstOrThrow({
+      where: { accountId, cardSettlement: { isNot: null } },
+    });
+    await expect(
+      client.transaction.update({
+        data: { lifecycle: 'trashed', trashedAt: new Date() },
+        where: { id: movement.id },
+      }),
+    ).rejects.toThrow();
+    const temporal = await new PrismaTransactionRepository(
+      client,
+    ).listWithTimeZoneForOwnerBetween(
+      ownerId,
+      new Date('2026-11-01T00:00:00.000Z'),
+      new Date('2026-12-01T00:00:00.000Z'),
+      'active',
+    );
+    expect(temporal.length).toBeGreaterThan(0);
+    expect(temporal.every((item) => item.cardSettlement === true)).toBe(true);
+    await expect(
+      new PrismaTransactionRepository(
+        client,
+      ).findCardSettlementIdByEntryForOwner(movement.id, ownerId),
+    ).resolves.not.toBeNull();
+  });
+
+  function settle(amount: string, key: string): Promise<string | null> {
+    if (client === undefined) throw unavailable();
+    const money = Money.fromDecimal(amount, brl);
+    const transaction = Transaction.create({
+      accountId,
+      amount: money,
+      createdAt: new Date('2026-11-05T12:00:00.000Z'),
+      description: 'Pagamento da fatura',
+      id: randomUUID(),
+      kind: 'expense',
+      occurredAt: new Date('2026-11-05T10:00:00.000Z'),
+      ownerId,
+    });
+    const settlement = InvoiceSettlement.create({
+      accountId,
+      amount: money,
+      cardId,
+      createdAt: new Date('2026-11-05T12:00:00.000Z'),
+      id: randomUUID(),
+      invoiceClosesOn: CivilDate.parse('2026-10-28'),
+      ownerId,
+      paidAt: new Date('2026-11-05T10:00:00.000Z'),
+      transactionId: transaction.id,
+    });
+    return new PrismaInvoiceSettlementRepository(client).settleAtomically(
+      {
+        key,
+        operation: 'invoice-settlement.create',
+        ownerId,
+        payload: { amount },
+        requestedAt: new Date('2026-11-05T12:00:00.000Z'),
+      },
+      cardId,
+      '2026-10-28',
+      {
+        auditEvents: [
+          audit(transaction.id, 'transaction'),
+          audit(settlement.id, 'invoice-settlement'),
+        ],
+        response: JSON.stringify(settlement.toSnapshot()),
+        settlement,
+        transaction,
+      },
+    );
+  }
+
   function invoiceRepository(): PrismaCardInvoiceRepository {
     if (invoices === undefined) throw unavailable();
     return invoices;
@@ -285,7 +413,12 @@ describe('card purchases and invoices in PostgreSQL', () => {
 
 function audit(
   resourceId: string,
-  resourceType: 'account' | 'credit-card' | 'card-purchase',
+  resourceType:
+    | 'account'
+    | 'credit-card'
+    | 'card-purchase'
+    | 'transaction'
+    | 'invoice-settlement',
 ): FinancialAuditEvent {
   return FinancialAuditEvent.create({
     action: 'created',

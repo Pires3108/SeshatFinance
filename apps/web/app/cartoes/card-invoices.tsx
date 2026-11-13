@@ -16,6 +16,9 @@ import {
   formatCivilDate,
   type Card,
 } from './card-presentation';
+import { InvoiceSettlementForm } from './invoice-settlement-form';
+
+type Settlement = Readonly<{ id: string; amount: string; paidAt: string }>;
 
 export type Invoice =
   paths['/api/v1/credit-cards/{cardId}/invoices']['get']['responses'][200]['content']['application/json'][number];
@@ -54,6 +57,10 @@ export function CardInvoices({
   const [invoices, setInvoices] = useState<readonly Invoice[] | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [purchases, setPurchases] = useState<readonly Purchase[] | null>(null);
+  const [settlementList, setSettlementList] = useState<readonly Settlement[]>(
+    [],
+  );
+  const [settling, setSettling] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<Readonly<{
@@ -95,9 +102,13 @@ export function CardInvoices({
         { cache: 'no-store' },
       );
       const data = response.ok
-        ? ((await response.json()) as { purchases: Purchase[] })
+        ? ((await response.json()) as {
+            purchases: Purchase[];
+            settlements: Settlement[];
+          })
         : null;
       setPurchases(data?.purchases ?? []);
+      setSettlementList(data?.settlements ?? []);
     } catch {
       setPurchases([]);
     }
@@ -221,7 +232,31 @@ export function CardInvoices({
                       Fechar fatura
                     </button>
                   ))}
+                {!/^0(?:.0+)?$/u.test(invoice.remaining) &&
+                  settling !== invoice.closesOn && (
+                    <button
+                      onClick={() => {
+                        setSettling(invoice.closesOn);
+                      }}
+                      type="button"
+                    >
+                      Registrar pagamento realizado
+                    </button>
+                  )}
               </div>
+              {settling === invoice.closesOn && (
+                <InvoiceSettlementForm
+                  card={card}
+                  invoice={invoice}
+                  onDone={(text) => {
+                    setSettling(null);
+                    if (text !== null) {
+                      setMessage({ kind: 'status', text });
+                      void load();
+                    }
+                  }}
+                />
+              )}
               {confirming === invoice.closesOn && (
                 <p className="field-note">
                   Fechar congela o total de compras desta fatura. Compras
@@ -258,6 +293,19 @@ export function CardInvoices({
                         </li>
                       ))}
                     </ul>
+                  )}
+                  {settlementList.length > 0 && (
+                    <>
+                      <p>Pagamentos registrados:</p>
+                      <ul>
+                        {settlementList.map((settlement) => (
+                          <li key={settlement.id}>
+                            {formatInvoiceAmount(invoice, settlement.amount)} em{' '}
+                            {formatCivilDate(settlement.paidAt.slice(0, 10))}
+                          </li>
+                        ))}
+                      </ul>
+                    </>
                   )}
                 </div>
               )}

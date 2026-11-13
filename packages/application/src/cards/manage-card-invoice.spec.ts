@@ -132,10 +132,15 @@ describe('CloseCardInvoiceUseCase', () => {
 
 describe('GetCardInvoiceUseCase', () => {
   it('returns the invoice with its purchases as memory of calculation', async () => {
-    const detail = await new GetCardInvoiceUseCase(cards, invoices(), {
-      listForCard: (_card, _owner, closesOn) =>
-        Promise.resolve(closesOn === '2026-10-28' ? [] : []),
-    }).execute({ actorId: ownerId, cardId: card.id, closesOn: '2026-10-28' });
+    const detail = await new GetCardInvoiceUseCase(
+      cards,
+      invoices(),
+      {
+        listForCard: (_card, _owner, closesOn) =>
+          Promise.resolve(closesOn === '2026-10-28' ? [] : []),
+      },
+      { listForInvoice: () => Promise.resolve([]) },
+    ).execute({ actorId: ownerId, cardId: card.id, closesOn: '2026-10-28' });
 
     expect(detail.purchaseCount).toBe(2);
     expect(invoiceRemaining(detail).toDecimal()).toBe('100.35');

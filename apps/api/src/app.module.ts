@@ -29,6 +29,8 @@ import {
   ListCardInvoicesUseCase,
   GetCardInvoiceUseCase,
   CloseCardInvoiceUseCase,
+  DeclareInvoiceSettlementUseCase,
+  type InvoiceSettlementRepository,
   type CardInvoiceRepository,
   type CardPurchaseRepository,
   GetHolidaySettingsUseCase,
@@ -139,6 +141,8 @@ import { CardPurchaseController } from './cards/card-purchase.controller.js';
 import { LazyCardPurchaseRepository } from './cards/lazy-card-purchase-repository.js';
 import { CardInvoiceController } from './cards/card-invoice.controller.js';
 import { LazyCardInvoiceRepository } from './cards/lazy-card-invoice-repository.js';
+import { InvoiceSettlementController } from './cards/invoice-settlement.controller.js';
+import { LazyInvoiceSettlementRepository } from './cards/lazy-invoice-settlement-repository.js';
 import { CounterpartyController } from './counterparties/counterparty.controller.js';
 import { LazyCounterpartyRepository } from './counterparties/lazy-counterparty-repository.js';
 import { LazyCreditCardRepository } from './cards/lazy-credit-card-repository.js';
@@ -208,6 +212,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     CreditCardController,
     CardPurchaseController,
     CardInvoiceController,
+    InvoiceSettlementController,
     CounterpartyController,
     FamilyGroupController,
     AuthController,
@@ -306,6 +311,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     LazyCreditCardRepository,
     LazyCardPurchaseRepository,
     LazyCardInvoiceRepository,
+    LazyInvoiceSettlementRepository,
     LazyCounterpartyRepository,
     LazyManualExchangeQuoteRepository,
     LazyFamilyGroupRepository,
@@ -585,14 +591,36 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         LazyCreditCardRepository,
         LazyCardInvoiceRepository,
         LazyCardPurchaseRepository,
+        LazyInvoiceSettlementRepository,
       ],
       provide: GetCardInvoiceUseCase,
       useFactory: (
         cards: CreditCardRepository,
         invoices: CardInvoiceRepository,
         purchases: CardPurchaseRepository,
+        settlements: LazyInvoiceSettlementRepository,
       ): GetCardInvoiceUseCase =>
-        new GetCardInvoiceUseCase(cards, invoices, purchases),
+        new GetCardInvoiceUseCase(cards, invoices, purchases, settlements),
+    },
+    {
+      inject: [
+        LazyCreditCardRepository,
+        LazyAccountRepository,
+        LazyInvoiceSettlementRepository,
+      ],
+      provide: DeclareInvoiceSettlementUseCase,
+      useFactory: (
+        cards: CreditCardRepository,
+        accounts: AccountRepository,
+        settlements: InvoiceSettlementRepository,
+      ): DeclareInvoiceSettlementUseCase =>
+        new DeclareInvoiceSettlementUseCase(
+          cards,
+          accounts,
+          settlements,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
     },
     {
       inject: [LazyCreditCardRepository, LazyCardInvoiceRepository],

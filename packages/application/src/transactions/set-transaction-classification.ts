@@ -1,3 +1,4 @@
+import { assertNotCardSettlementEntry } from './create-transaction.js';
 import type { CategoryRepository } from '../classifications/manage-category.js';
 import type { CostCenterRepository } from '../classifications/manage-cost-center.js';
 import { FinancialAuditEventFactory } from '../audit/create-financial-audit-event.js';
@@ -93,6 +94,11 @@ export class SetOwnedTransactionClassificationUseCase {
     if (transferId !== null) {
       throw new TransactionRequiresTransferMutationError(transferId);
     }
+    await assertNotCardSettlementEntry(
+      this.financialLinks,
+      command.transactionId,
+      command.actorId,
+    );
     const selection: TransactionClassificationSelection = {
       categoryId: command.categoryId,
       costCenterId: command.costCenterId,

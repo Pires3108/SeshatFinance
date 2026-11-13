@@ -133,10 +133,13 @@ export class TemporalTransactionController {
         to: view.to.toISOString(),
         days: view.days.map((day) => ({
           date: day.date,
-          transactions: day.transactions.map(({ transaction, timeZone }) => ({
-            ...mapTransaction(transaction),
-            timeZone,
-          })),
+          transactions: day.transactions.map(
+            ({ transaction, timeZone, cardSettlement }) => ({
+              ...mapTransaction(transaction),
+              cardSettlement: cardSettlement === true,
+              timeZone,
+            }),
+          ),
           totals: day.totals,
         })),
         totals: view.totals,

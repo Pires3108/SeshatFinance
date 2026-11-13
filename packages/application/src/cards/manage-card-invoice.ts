@@ -4,6 +4,7 @@ import {
   Money,
   type CardInvoice,
   type CardPurchase,
+  type InvoiceSettlement,
 } from '@seshat/domain';
 
 import type { Clock } from '../ports/clock.js';
@@ -55,6 +56,14 @@ export interface CardInvoicePurchaseReader {
   ): Promise<readonly CardPurchase[]>;
 }
 
+export interface InvoiceSettlementReader {
+  listForInvoice(
+    cardId: string,
+    invoiceClosesOn: string,
+    ownerId: string,
+  ): Promise<readonly InvoiceSettlement[]>;
+}
+
 export class CardInvoiceNotFoundError extends Error {
   public constructor() {
     super('Owned card invoice was not found.');
@@ -78,7 +87,10 @@ export class ListCardInvoicesUseCase {
 }
 
 export type CardInvoiceDetail = CardInvoiceView &
-  Readonly<{ purchases: readonly CardPurchase[] }>;
+  Readonly<{
+    purchases: readonly CardPurchase[];
+    settlements: readonly InvoiceSettlement[];
+  }>;
 
 /** Invoice with its purchases, the memory of calculation of its total. */
 export class GetCardInvoiceUseCase {
@@ -86,6 +98,7 @@ export class GetCardInvoiceUseCase {
     private readonly cards: CreditCardRepository,
     private readonly invoices: CardInvoiceRepository,
     private readonly purchases: CardInvoicePurchaseReader,
+    private readonly settlements: InvoiceSettlementReader,
   ) {}
 
   public async execute(
@@ -106,6 +119,11 @@ export class GetCardInvoiceUseCase {
         card.id,
         query.actorId,
         closesOn,
+      ),
+      settlements: await this.settlements.listForInvoice(
+        card.id,
+        closesOn,
+        query.actorId,
       ),
     };
   }

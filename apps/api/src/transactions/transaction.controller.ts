@@ -9,6 +9,7 @@ import {
   OwnedTransactionNotFoundError,
   TransactionAccountUnavailableError,
   TransactionRequiresTransferMutationError,
+  TransactionRequiresCardSettlementMutationError,
   TransactionVersionConflictError,
   TransactionIdempotencyConflictError,
   UpdateOwnedTransactionUseCase,
@@ -547,6 +548,10 @@ function mapError(error: unknown): Error {
   if (error instanceof TransactionIdempotencyConflictError)
     return new ConflictException(
       'Idempotency key was used for a different transaction.',
+    );
+  if (error instanceof TransactionRequiresCardSettlementMutationError)
+    return new ConflictException(
+      'Card settlement entries cannot be changed on their own.',
     );
   if (error instanceof TransactionRequiresTransferMutationError)
     return new ConflictException(

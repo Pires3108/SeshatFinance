@@ -234,11 +234,15 @@ export class PrismaTransactionRepository
     lifecycle: 'active',
   ): Promise<readonly TemporalTransaction[]> {
     const rows = await this.client.transaction.findMany({
-      include: { tagAssignments: { select: { tagId: true } } },
+      include: {
+        cardSettlement: { select: { id: true } },
+        tagAssignments: { select: { tagId: true } },
+      },
       orderBy: [{ occurredAt: 'asc' }, { id: 'asc' }],
       where: { occurredAt: { gte: from, lt: to }, ownerId, lifecycle },
     });
     return rows.map((row) => ({
+      cardSettlement: row.cardSettlement !== null,
       transaction: restoreTransaction(row),
       timeZone: row.timeZone,
     }));
@@ -415,6 +419,17 @@ export class PrismaTransactionRepository
         );
       throw error;
     }
+  }
+
+  public async findCardSettlementIdByEntryForOwner(
+    transactionId: string,
+    ownerId: string,
+  ): Promise<string | null> {
+    const settlement = await this.client.invoiceSettlement.findFirst({
+      select: { id: true },
+      where: { ownerId, transactionId },
+    });
+    return settlement?.id ?? null;
   }
 
   public async findTransferIdByEntryForOwner(

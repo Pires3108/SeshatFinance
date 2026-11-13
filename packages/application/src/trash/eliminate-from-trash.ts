@@ -1,3 +1,4 @@
+import { assertNotCardSettlementEntry } from '../transactions/create-transaction.js';
 import {
   FinancialAuditEvent,
   SYSTEM_AUDIT_ACTOR_ID,
@@ -102,6 +103,7 @@ export class TrashEliminator {
     if (transferId !== null) {
       throw new TransactionRequiresTransferMutationError(transferId);
     }
+    await assertNotCardSettlementEntry(this.links, transaction.id, ownerId);
     if (await this.trash.hasRetentionLinks(transaction.id, ownerId)) {
       throw new TrashEliminationBlockedError();
     }

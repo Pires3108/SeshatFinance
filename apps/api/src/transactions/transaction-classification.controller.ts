@@ -5,6 +5,7 @@ import {
   OwnedTransactionNotFoundError,
   SetOwnedTransactionClassificationUseCase,
   TransactionRequiresTransferMutationError,
+  TransactionRequiresCardSettlementMutationError,
   type TransactionClassificationSelection,
 } from '@seshat/application';
 import {
@@ -142,6 +143,10 @@ function mapError(error: unknown): Error {
   ) {
     return new BadRequestException('Invalid transaction classification.');
   }
+  if (error instanceof TransactionRequiresCardSettlementMutationError)
+    return new ConflictException(
+      'Card settlement entries cannot be changed on their own.',
+    );
   if (error instanceof TransactionRequiresTransferMutationError) {
     return new ConflictException(
       'Transfer entries must be changed through the transfer endpoint.',

@@ -165,22 +165,23 @@ model Account {
 }
 
 model CreditCard {
-  id                     String         @id @db.Uuid
-  ownerId                String         @map("owner_id") @db.Uuid
-  paymentAccountId       String         @map("payment_account_id") @db.Uuid
-  paymentAccount         Account        @relation(fields: [paymentAccountId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  id                     String              @id @db.Uuid
+  ownerId                String              @map("owner_id") @db.Uuid
+  paymentAccountId       String              @map("payment_account_id") @db.Uuid
+  paymentAccount         Account             @relation(fields: [paymentAccountId, ownerId], references: [id, ownerId], onDelete: Restrict)
   name                   String
   brand                  String
-  limitMinorUnits        Decimal        @map("limit_minor_units") @db.Decimal(1000, 0)
-  currencyCode           String         @map("currency_code") @db.Char(3)
-  currencyMinorUnitScale Int            @map("currency_minor_unit_scale") @db.SmallInt
-  closingDay             Int            @map("closing_day") @db.SmallInt
-  dueDay                 Int            @map("due_day") @db.SmallInt
-  closingBoundary        String         @default("next-cycle") @map("closing_boundary") @db.VarChar(16)
-  version                Int            @default(1)
-  createdAt              DateTime       @map("created_at") @db.Timestamptz(6)
+  limitMinorUnits        Decimal             @map("limit_minor_units") @db.Decimal(1000, 0)
+  currencyCode           String              @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale Int                 @map("currency_minor_unit_scale") @db.SmallInt
+  closingDay             Int                 @map("closing_day") @db.SmallInt
+  dueDay                 Int                 @map("due_day") @db.SmallInt
+  closingBoundary        String              @default("next-cycle") @map("closing_boundary") @db.VarChar(16)
+  version                Int                 @default(1)
+  createdAt              DateTime            @map("created_at") @db.Timestamptz(6)
   purchases              CardPurchase[]
   invoices               CardInvoice[]
+  settlements            InvoiceSettlement[]
 
   @@unique([id, ownerId])
   @@index([ownerId, createdAt, id])
@@ -241,6 +242,7 @@ model Transaction {
   revisions              TransactionRevision[]
   refundExpenseLinks     RefundLink[]             @relation("refund_expense")
   refundEntryLink        RefundLink?              @relation("refund_entry")
+  cardSettlement         InvoiceSettlement?
 
   @@unique([id, ownerId])
   @@index([ownerId, accountId, occurredAt])
@@ -379,6 +381,7 @@ enum FinancialAuditResourceType {
   credit_card           @map("credit-card")
   card_purchase         @map("card-purchase")
   card_invoice          @map("card-invoice")
+  invoice_settlement    @map("invoice-settlement")
   manual_exchange_quote @map("manual-exchange-quote")
 
   @@map("financial_audit_resource_type")
@@ -580,4 +583,25 @@ model CardInvoice {
   @@unique([id, ownerId])
   @@unique([ownerId, cardId, closesOn])
   @@map("card_invoices")
+}
+
+model InvoiceSettlement {
+  id                     String      @id @db.Uuid
+  ownerId                String      @map("owner_id") @db.Uuid
+  cardId                 String      @map("card_id") @db.Uuid
+  card                   CreditCard  @relation(fields: [cardId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  invoiceClosesOn        DateTime    @map("invoice_closes_on") @db.Date
+  accountId              String      @map("account_id") @db.Uuid
+  transactionId          String      @unique @map("transaction_id") @db.Uuid
+  transaction            Transaction @relation(fields: [transactionId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  amountMinorUnits       Decimal     @map("amount_minor_units") @db.Decimal(1000, 0)
+  currencyCode           String      @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale Int         @map("currency_minor_unit_scale") @db.SmallInt
+  paidAt                 DateTime    @map("paid_at") @db.Timestamptz(6)
+  createdAt              DateTime    @map("created_at") @db.Timestamptz(6)
+
+  @@unique([id, ownerId])
+  @@unique([transactionId, ownerId])
+  @@index([ownerId, cardId, invoiceClosesOn])
+  @@map("invoice_settlements")
 }
