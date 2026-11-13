@@ -51,7 +51,7 @@ model Counterparty {
 }
 
 model RegistrationIntent {
-  emailHash Bytes @id @map("email_hash") @db.ByteA
+  emailHash Bytes    @id @map("email_hash") @db.ByteA
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
 
@@ -60,16 +60,16 @@ model RegistrationIntent {
 }
 
 model UserProfile {
-  id                   String   @id @db.Uuid
-  registrationConfirmed Boolean @default(true) @map("registration_confirmed")
-  displayName          String?  @map("display_name") @db.VarChar(120)
-  locale               String   @default("pt-BR") @db.VarChar(16)
-  timeZone             String   @default("America/Sao_Paulo") @map("time_zone") @db.VarChar(64)
-  presentationCurrency String   @default("BRL") @map("presentation_currency") @db.Char(3)
-  refundPresentation   String   @default("separate-income") @map("refund_presentation") @db.VarChar(32)
-  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
-  version              Int      @default(1)
+  id                    String   @id @db.Uuid
+  registrationConfirmed Boolean  @default(true) @map("registration_confirmed")
+  displayName           String?  @map("display_name") @db.VarChar(120)
+  locale                String   @default("pt-BR") @db.VarChar(16)
+  timeZone              String   @default("America/Sao_Paulo") @map("time_zone") @db.VarChar(64)
+  presentationCurrency  String   @default("BRL") @map("presentation_currency") @db.Char(3)
+  refundPresentation    String   @default("separate-income") @map("refund_presentation") @db.VarChar(32)
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  version               Int      @default(1)
 
   @@map("user_profiles")
 }
@@ -88,12 +88,12 @@ model UserTimeZoneChange {
 }
 
 model UserSession {
-  id         String       @id @db.Uuid
-  userId     String       @map("user_id") @db.Uuid
-  tokenHash  String       @unique @map("token_hash") @db.Char(64)
-  createdAt  DateTime     @map("created_at") @db.Timestamptz(6)
-  lastSeenAt DateTime     @map("last_seen_at") @db.Timestamptz(6)
-  revokedAt  DateTime?    @map("revoked_at") @db.Timestamptz(6)
+  id         String    @id @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  tokenHash  String    @unique @map("token_hash") @db.Char(64)
+  createdAt  DateTime  @map("created_at") @db.Timestamptz(6)
+  lastSeenAt DateTime  @map("last_seen_at") @db.Timestamptz(6)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(6)
 
   @@index([userId, revokedAt])
   @@map("user_sessions")
@@ -165,20 +165,21 @@ model Account {
 }
 
 model CreditCard {
-  id                     String   @id @db.Uuid
-  ownerId                String   @map("owner_id") @db.Uuid
-  paymentAccountId       String   @map("payment_account_id") @db.Uuid
-  paymentAccount         Account  @relation(fields: [paymentAccountId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  id                     String         @id @db.Uuid
+  ownerId                String         @map("owner_id") @db.Uuid
+  paymentAccountId       String         @map("payment_account_id") @db.Uuid
+  paymentAccount         Account        @relation(fields: [paymentAccountId, ownerId], references: [id, ownerId], onDelete: Restrict)
   name                   String
   brand                  String
-  limitMinorUnits        Decimal  @map("limit_minor_units") @db.Decimal(1000, 0)
-  currencyCode           String   @map("currency_code") @db.Char(3)
-  currencyMinorUnitScale Int      @map("currency_minor_unit_scale") @db.SmallInt
-  closingDay             Int      @map("closing_day") @db.SmallInt
-  dueDay                 Int      @map("due_day") @db.SmallInt
-  closingBoundary        String   @default("next-cycle") @map("closing_boundary") @db.VarChar(16)
-  version                Int      @default(1)
-  createdAt              DateTime @map("created_at") @db.Timestamptz(6)
+  limitMinorUnits        Decimal        @map("limit_minor_units") @db.Decimal(1000, 0)
+  currencyCode           String         @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale Int            @map("currency_minor_unit_scale") @db.SmallInt
+  closingDay             Int            @map("closing_day") @db.SmallInt
+  dueDay                 Int            @map("due_day") @db.SmallInt
+  closingBoundary        String         @default("next-cycle") @map("closing_boundary") @db.VarChar(16)
+  version                Int            @default(1)
+  createdAt              DateTime       @map("created_at") @db.Timestamptz(6)
+  purchases              CardPurchase[]
 
   @@unique([id, ownerId])
   @@index([ownerId, createdAt, id])
@@ -202,43 +203,43 @@ enum TransactionLifecycle {
 }
 
 model Transaction {
-  id                     String               @id @db.Uuid
-  ownerId                String               @map("owner_id") @db.Uuid
-  accountId              String               @map("account_id") @db.Uuid
-  account                Account              @relation(fields: [accountId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  id                     String                   @id @db.Uuid
+  ownerId                String                   @map("owner_id") @db.Uuid
+  accountId              String                   @map("account_id") @db.Uuid
+  account                Account                  @relation(fields: [accountId, ownerId], references: [id, ownerId], onDelete: Restrict)
   kind                   TransactionKind
-  amountMinorUnits       Decimal              @map("amount_minor_units") @db.Decimal(1000, 0)
-  currencyCode           String               @map("currency_code") @db.Char(3)
-  currencyMinorUnitScale Int                  @map("currency_minor_unit_scale") @db.SmallInt
+  amountMinorUnits       Decimal                  @map("amount_minor_units") @db.Decimal(1000, 0)
+  currencyCode           String                   @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale Int                      @map("currency_minor_unit_scale") @db.SmallInt
   description            String?
   observations           String?
-  counterpartyId         String?              @map("counterparty_id") @db.Uuid
-  counterparty           Counterparty?        @relation(fields: [counterpartyId, ownerId], references: [id, ownerId], onDelete: Restrict)
-  counterpartyName       String?              @map("counterparty_name") @db.VarChar(200)
-  occurredAt             DateTime             @map("occurred_at") @db.Timestamptz(6)
-  timeZone               String               @default("America/Sao_Paulo") @map("time_zone") @db.VarChar(64)
-  lifecycle              TransactionLifecycle @default(active)
-  archivedAt             DateTime?            @map("archived_at") @db.Timestamptz(6)
-  trashedAt              DateTime?            @map("trashed_at") @db.Timestamptz(6)
+  counterpartyId         String?                  @map("counterparty_id") @db.Uuid
+  counterparty           Counterparty?            @relation(fields: [counterpartyId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  counterpartyName       String?                  @map("counterparty_name") @db.VarChar(200)
+  occurredAt             DateTime                 @map("occurred_at") @db.Timestamptz(6)
+  timeZone               String                   @default("America/Sao_Paulo") @map("time_zone") @db.VarChar(64)
+  lifecycle              TransactionLifecycle     @default(active)
+  archivedAt             DateTime?                @map("archived_at") @db.Timestamptz(6)
+  trashedAt              DateTime?                @map("trashed_at") @db.Timestamptz(6)
   /// Terminal elimination from the trash (RII-026 option b); never deleted.
-  eliminatedAt           DateTime?            @map("eliminated_at") @db.Timestamptz(6)
-  createdAt              DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt              DateTime             @map("updated_at") @db.Timestamptz(6)
-  version                Int                  @default(1)
+  eliminatedAt           DateTime?                @map("eliminated_at") @db.Timestamptz(6)
+  createdAt              DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime                 @map("updated_at") @db.Timestamptz(6)
+  version                Int                      @default(1)
   tagAssignments         TransactionTag[]
-  categoryId             String?              @map("category_id") @db.Uuid
-  category               Category?            @relation("transaction_category", fields: [categoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
-  subcategoryId          String?              @map("subcategory_id") @db.Uuid
-  subcategory            Category?            @relation("transaction_subcategory", fields: [subcategoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
-  costCenterId           String?              @map("cost_center_id") @db.Uuid
-  costCenter             CostCenter?          @relation(fields: [costCenterId, ownerId], references: [id, ownerId], onDelete: Restrict)
-  outgoingTransfer       Transfer?            @relation("transfer_source")
-  incomingTransfer       Transfer?            @relation("transfer_destination")
+  categoryId             String?                  @map("category_id") @db.Uuid
+  category               Category?                @relation("transaction_category", fields: [categoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  subcategoryId          String?                  @map("subcategory_id") @db.Uuid
+  subcategory            Category?                @relation("transaction_subcategory", fields: [subcategoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  costCenterId           String?                  @map("cost_center_id") @db.Uuid
+  costCenter             CostCenter?              @relation(fields: [costCenterId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  outgoingTransfer       Transfer?                @relation("transfer_source")
+  incomingTransfer       Transfer?                @relation("transfer_destination")
   balanceAdjustment      BalanceAdjustment?
   idempotencyRecords     TransactionIdempotency[]
   revisions              TransactionRevision[]
-  refundExpenseLinks     RefundLink[]         @relation("refund_expense")
-  refundEntryLink        RefundLink?          @relation("refund_entry")
+  refundExpenseLinks     RefundLink[]             @relation("refund_expense")
+  refundEntryLink        RefundLink?              @relation("refund_entry")
 
   @@unique([id, ownerId])
   @@index([ownerId, accountId, occurredAt])
@@ -247,10 +248,10 @@ model Transaction {
 }
 
 model TransactionIdempotency {
-  ownerId       String @map("owner_id") @db.Uuid
-  key           String @db.VarChar(128)
+  ownerId       String      @map("owner_id") @db.Uuid
+  key           String      @db.VarChar(128)
   fingerprint   String
-  transactionId String @map("transaction_id") @db.Uuid
+  transactionId String      @map("transaction_id") @db.Uuid
   transaction   Transaction @relation(fields: [transactionId, ownerId], references: [id, ownerId], onDelete: Restrict)
 
   @@id([ownerId, key])
@@ -272,16 +273,16 @@ model IdempotencyRecord {
 }
 
 model TransactionRevision {
-  id            String @id @db.Uuid
-  ownerId       String @map("owner_id") @db.Uuid
-  transactionId String @map("transaction_id") @db.Uuid
-  transaction   Transaction @relation(fields: [transactionId, ownerId], references: [id, ownerId], onDelete: Restrict)
-  actorId       String @map("actor_id") @db.Uuid
-  previousVersion Int @map("previous_version")
-  newVersion Int @map("new_version")
-  before        Json
-  after         Json
-  occurredAt    DateTime @map("occurred_at") @db.Timestamptz(6)
+  id              String      @id @db.Uuid
+  ownerId         String      @map("owner_id") @db.Uuid
+  transactionId   String      @map("transaction_id") @db.Uuid
+  transaction     Transaction @relation(fields: [transactionId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  actorId         String      @map("actor_id") @db.Uuid
+  previousVersion Int         @map("previous_version")
+  newVersion      Int         @map("new_version")
+  before          Json
+  after           Json
+  occurredAt      DateTime    @map("occurred_at") @db.Timestamptz(6)
 
   @@unique([transactionId, newVersion])
   @@index([ownerId, transactionId, newVersion])
@@ -372,30 +373,31 @@ enum FinancialAuditResourceType {
   account
   transaction
   transfer
-  balance_adjustment @map("balance-adjustment")
-  credit_card        @map("credit-card")
+  balance_adjustment    @map("balance-adjustment")
+  credit_card           @map("credit-card")
+  card_purchase         @map("card-purchase")
   manual_exchange_quote @map("manual-exchange-quote")
 
   @@map("financial_audit_resource_type")
 }
 
 model FinancialAuditEvent {
-  id           String                     @id @db.Uuid
-  ownerId      String                     @map("owner_id") @db.Uuid
-  actorId      String                     @map("actor_id") @db.Uuid
-  action       FinancialAuditAction
-  resourceType FinancialAuditResourceType @map("resource_type")
-  resourceId   String                     @map("resource_id") @db.Uuid
-  occurredAt   DateTime                   @map("occurred_at") @db.Timestamptz(6)
+  id            String                     @id @db.Uuid
+  ownerId       String                     @map("owner_id") @db.Uuid
+  actorId       String                     @map("actor_id") @db.Uuid
+  action        FinancialAuditAction
+  resourceType  FinancialAuditResourceType @map("resource_type")
+  resourceId    String                     @map("resource_id") @db.Uuid
+  occurredAt    DateTime                   @map("occurred_at") @db.Timestamptz(6)
   /// Assigned by the link_financial_audit_event trigger (ADR-036).
-  ownerSequence BigInt                    @default(0) @map("owner_sequence")
+  ownerSequence BigInt                     @default(0) @map("owner_sequence")
   /// Assigned by the link_financial_audit_event trigger (ADR-036).
-  previousHash String                     @default(dbgenerated("repeat('0'::text, 64)")) @map("previous_hash") @db.Char(64)
+  previousHash  String                     @default(dbgenerated("repeat('0'::text, 64)")) @map("previous_hash") @db.Char(64)
   /// Assigned by the link_financial_audit_event trigger (ADR-036).
-  hash         String                     @default(dbgenerated("repeat('0'::text, 64)")) @db.Char(64)
-  result       String                     @default("succeeded") @db.VarChar(16)
-  errorCode    String?                    @map("error_code") @db.VarChar(64)
-  correlationId String?                   @map("correlation_id") @db.Uuid
+  hash          String                     @default(dbgenerated("repeat('0'::text, 64)")) @db.Char(64)
+  result        String                     @default("succeeded") @db.VarChar(16)
+  errorCode     String?                    @map("error_code") @db.VarChar(64)
+  correlationId String?                    @map("correlation_id") @db.Uuid
 
   @@unique([ownerId, ownerSequence])
   @@index([ownerId, occurredAt, id])
@@ -446,6 +448,8 @@ model Category {
   createdAt                  DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt                  DateTime      @map("updated_at") @db.Timestamptz(6)
   version                    Int           @default(1)
+
+  cardPurchases CardPurchase[]
 
   @@unique([id, ownerId])
   @@index([ownerId, parentCategoryId])
@@ -524,4 +528,25 @@ model UserDeclaredHoliday {
   @@unique([id, ownerId])
   @@index([ownerId, month, day])
   @@map("user_declared_holidays")
+}
+
+model CardPurchase {
+  id                     String     @id @db.Uuid
+  ownerId                String     @map("owner_id") @db.Uuid
+  cardId                 String     @map("card_id") @db.Uuid
+  card                   CreditCard @relation(fields: [cardId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  categoryId             String?    @map("category_id") @db.Uuid
+  category               Category?  @relation(fields: [categoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  amountMinorUnits       Decimal    @map("amount_minor_units") @db.Decimal(1000, 0)
+  currencyCode           String     @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale Int        @map("currency_minor_unit_scale") @db.SmallInt
+  description            String     @db.VarChar(500)
+  externalId             String?    @map("external_id") @db.VarChar(255)
+  occurredAt             DateTime   @map("occurred_at") @db.Timestamptz(6)
+  cycleClosesOn          DateTime   @map("cycle_closes_on") @db.Date
+  createdAt              DateTime   @map("created_at") @db.Timestamptz(6)
+
+  @@unique([id, ownerId])
+  @@index([ownerId, cardId, cycleClosesOn, occurredAt])
+  @@map("card_purchases")
 }

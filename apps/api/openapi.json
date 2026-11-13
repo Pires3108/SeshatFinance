@@ -1918,6 +1918,294 @@
         "tags": ["credit-cards"]
       }
     },
+    "/api/v1/credit-cards/{cardId}/purchases": {
+      "post": {
+        "operationId": "CardPurchaseController_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "amount": {
+                    "pattern": "^\\d+(?:\\.\\d+)?$",
+                    "type": "string"
+                  },
+                  "categoryId": {
+                    "format": "uuid",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "currencyCode": {
+                    "pattern": "^[A-Z]{3}$",
+                    "type": "string"
+                  },
+                  "currencyMinorUnitScale": {
+                    "maximum": 18,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "description": {
+                    "maxLength": 500,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "externalId": {
+                    "maxLength": 255,
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "occurredAt": {
+                    "format": "date-time",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currencyCode",
+                  "currencyMinorUnitScale",
+                  "description",
+                  "occurredAt"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "A purchase already made outside Seshat Finance: one expense and the same card obligation. It never changes the paying account balance.",
+                  "properties": {
+                    "amount": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "cardId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "categoryId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "cycleClosesOn": {
+                      "description": "Closing date of the single cycle the purchase belongs to.",
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "externalId": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "occurredAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "amount",
+                    "cardId",
+                    "categoryId",
+                    "createdAt",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "cycleClosesOn",
+                    "description",
+                    "externalId",
+                    "id",
+                    "occurredAt"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or idempotency key"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned card or category not found"
+          },
+          "409": {
+            "description": "Idempotency key reused with a different payload or still in progress"
+          },
+          "422": {
+            "description": "Purchase currency differs from the card currency"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a purchase already made with an owned credit card",
+        "tags": ["credit-cards"]
+      },
+      "get": {
+        "operationId": "CardPurchaseController_list",
+        "parameters": [
+          {
+            "name": "cycleClosesOn",
+            "required": false,
+            "in": "query",
+            "description": "Only purchases of the cycle closing on this date",
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "description": "A purchase already made outside Seshat Finance: one expense and the same card obligation. It never changes the paying account balance.",
+                    "properties": {
+                      "amount": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "cardId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "categoryId": {
+                        "format": "uuid",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "currencyCode": {
+                        "pattern": "^[A-Z]{3}$",
+                        "type": "string"
+                      },
+                      "currencyMinorUnitScale": {
+                        "maximum": 18,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "cycleClosesOn": {
+                        "description": "Closing date of the single cycle the purchase belongs to.",
+                        "format": "date",
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "externalId": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "occurredAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "amount",
+                      "cardId",
+                      "categoryId",
+                      "createdAt",
+                      "currencyCode",
+                      "currencyMinorUnitScale",
+                      "cycleClosesOn",
+                      "description",
+                      "externalId",
+                      "id",
+                      "occurredAt"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned card not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List purchases of an owned credit card",
+        "tags": ["credit-cards"]
+      }
+    },
     "/api/v1/counterparties": {
       "post": {
         "operationId": "CounterpartyController_create",
@@ -7641,6 +7929,7 @@
                 "transfer",
                 "balance-adjustment",
                 "credit-card",
+                "card-purchase",
                 "manual-exchange-quote"
               ],
               "type": "string"
@@ -7700,6 +7989,7 @@
                           "transfer",
                           "balance-adjustment",
                           "credit-card",
+                          "card-purchase",
                           "manual-exchange-quote"
                         ]
                       },

@@ -18,3 +18,4 @@ O status de uma decisão não comprova a conclusão da implementação. As evid�
 - [ADR-035 — Idempotência de comandos financeiros compostos](0035-idempotencia-de-comandos-financeiros.md)
 - [ADR-036 — Cadeia de hash da auditoria financeira](0036-cadeia-de-hash-da-auditoria-financeira.md)
 - [ADR-037 — Ciclo do cartão e calendário de feriados](0037-ciclo-do-cartao-e-calendario-de-feriados.md)
+- [ADR-038 — Compra no cartão como fato financeiro próprio](0038-compra-no-cartao-como-fato-proprio.md)

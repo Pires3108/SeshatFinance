@@ -103,6 +103,12 @@ export {
   type CardCycleScheduleProperties,
   type HolidayPredicate,
 } from './cards/card-cycle-schedule.js';
+export {
+  CardPurchase,
+  InvalidCardPurchaseError,
+  type CardPurchaseSnapshot,
+  type CreateCardPurchaseProperties,
+} from './cards/card-purchase.js';
 export { CivilDate, InvalidCivilDateError } from './calendar/civil-date.js';
 export {
   assertHolidayLocation,

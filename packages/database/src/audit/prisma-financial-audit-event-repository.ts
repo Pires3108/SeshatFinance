@@ -152,6 +152,8 @@ function toPersistedResourceType(
       return 'balance_adjustment';
     case 'credit-card':
       return 'credit_card';
+    case 'card-purchase':
+      return 'card_purchase';
     case 'manual-exchange-quote':
       return 'manual_exchange_quote';
     default:
@@ -167,6 +169,8 @@ function fromPersistedResourceType(
       return 'balance-adjustment';
     case 'credit_card':
       return 'credit-card';
+    case 'card_purchase':
+      return 'card-purchase';
     case 'manual_exchange_quote':
       return 'manual-exchange-quote';
     default:

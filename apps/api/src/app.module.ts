@@ -23,6 +23,10 @@ import {
   ListOwnedCreditCardsUseCase,
   UpdateCreditCardUseCase,
   GetCreditCardCycleUseCase,
+  CardCycleResolver,
+  RegisterCardPurchaseUseCase,
+  ListCardPurchasesUseCase,
+  type CardPurchaseRepository,
   GetHolidaySettingsUseCase,
   UpdateHolidayLocationUseCase,
   DeclareHolidayUseCase,
@@ -127,6 +131,8 @@ import { LazyAccountRepository } from './accounts/lazy-account-repository.js';
 import { BalanceAdjustmentController } from './adjustments/balance-adjustment.controller.js';
 import { LazyBalanceAdjustmentRepository } from './adjustments/lazy-balance-adjustment-repository.js';
 import { CreditCardController } from './cards/credit-card.controller.js';
+import { CardPurchaseController } from './cards/card-purchase.controller.js';
+import { LazyCardPurchaseRepository } from './cards/lazy-card-purchase-repository.js';
 import { CounterpartyController } from './counterparties/counterparty.controller.js';
 import { LazyCounterpartyRepository } from './counterparties/lazy-counterparty-repository.js';
 import { LazyCreditCardRepository } from './cards/lazy-credit-card-repository.js';
@@ -194,6 +200,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     AccountTypeController,
     BalanceAdjustmentController,
     CreditCardController,
+    CardPurchaseController,
     CounterpartyController,
     FamilyGroupController,
     AuthController,
@@ -290,6 +297,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     LazyAccountRepository,
     LazyBalanceAdjustmentRepository,
     LazyCreditCardRepository,
+    LazyCardPurchaseRepository,
     LazyCounterpartyRepository,
     LazyManualExchangeQuoteRepository,
     LazyFamilyGroupRepository,
@@ -520,6 +528,40 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
           holidays,
           new SystemClock(),
         ),
+    },
+    {
+      inject: [
+        LazyCreditCardRepository,
+        LazyCardPurchaseRepository,
+        LazyCategoryRepository,
+        LazyUserProfileRepository,
+        LazyHolidaySettingsRepository,
+      ],
+      provide: RegisterCardPurchaseUseCase,
+      useFactory: (
+        cards: CreditCardRepository,
+        purchases: CardPurchaseRepository,
+        categories: CategoryRepository,
+        profiles: UserProfileRepository,
+        holidays: HolidaySettingsRepository,
+      ): RegisterCardPurchaseUseCase =>
+        new RegisterCardPurchaseUseCase(
+          cards,
+          purchases,
+          categories,
+          new CardCycleResolver(profiles, holidays),
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyCreditCardRepository, LazyCardPurchaseRepository],
+      provide: ListCardPurchasesUseCase,
+      useFactory: (
+        cards: CreditCardRepository,
+        purchases: CardPurchaseRepository,
+      ): ListCardPurchasesUseCase =>
+        new ListCardPurchasesUseCase(cards, purchases),
     },
     {
       inject: [LazyHolidaySettingsRepository],

@@ -101,36 +101,56 @@ export type CreditCardCycleView = Readonly<{
   holidayDatasetVersion: string;
 }>;
 
-/** The single cycle that contains a purchase made at `at` (default: now). */
-export class GetCreditCardCycleUseCase {
+/** Resolves cycles with the holder's time zone and holiday location. */
+export class CardCycleResolver {
   public constructor(
-    private readonly cards: CreditCardRepository,
     private readonly profiles: UserProfileRepository,
     private readonly holidays: HolidaySettingsRepository,
-    private readonly clock: Clock,
   ) {}
+
+  public async resolve(
+    card: CreditCard,
+    instant: Date,
+  ): Promise<Omit<CreditCardCycleView, 'card'>> {
+    const profile = await this.profiles.findById(card.ownerId);
+    const timeZone = profile?.timeZone ?? DEFAULT_TIME_ZONE;
+    const purchaseDate = CivilDate.parse(
+      readCivilDate({ now: () => instant }, timeZone),
+    );
+    const isHoliday = await resolveHolidayPredicate(
+      this.holidays,
+      card.ownerId,
+    );
+    return {
+      cycle: card.cycleSchedule.cycleFor(purchaseDate, isHoliday),
+      holidayDatasetVersion: BRAZIL_HOLIDAY_DATASET_VERSION,
+      purchaseDate,
+      timeZone,
+    };
+  }
+}
+
+/** The single cycle that contains a purchase made at `at` (default: now). */
+export class GetCreditCardCycleUseCase {
+  private readonly resolver: CardCycleResolver;
+
+  public constructor(
+    private readonly cards: CreditCardRepository,
+    profiles: UserProfileRepository,
+    holidays: HolidaySettingsRepository,
+    private readonly clock: Clock,
+  ) {
+    this.resolver = new CardCycleResolver(profiles, holidays);
+  }
 
   public async execute(
     query: Readonly<{ actorId: string; cardId: string; at?: Date }>,
   ): Promise<CreditCardCycleView> {
     const card = await this.cards.findByIdForOwner(query.cardId, query.actorId);
     if (card === null) throw new CreditCardNotFoundError();
-    const profile = await this.profiles.findById(query.actorId);
-    const timeZone = profile?.timeZone ?? DEFAULT_TIME_ZONE;
-    const instant = query.at ?? this.clock.now();
-    const purchaseDate = CivilDate.parse(
-      readCivilDate({ now: () => instant }, timeZone),
-    );
-    const isHoliday = await resolveHolidayPredicate(
-      this.holidays,
-      query.actorId,
-    );
     return {
       card,
-      cycle: card.cycleSchedule.cycleFor(purchaseDate, isHoliday),
-      holidayDatasetVersion: BRAZIL_HOLIDAY_DATASET_VERSION,
-      purchaseDate,
-      timeZone,
+      ...(await this.resolver.resolve(card, query.at ?? this.clock.now())),
     };
   }
 }

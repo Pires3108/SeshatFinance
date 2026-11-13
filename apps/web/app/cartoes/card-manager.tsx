@@ -11,6 +11,7 @@ import {
 } from 'react';
 
 import type { AccountWithBalance } from '../accounts/account-contract';
+import { CardPurchases } from './card-purchases';
 import {
   boundaryLabels,
   cycleSummary,
@@ -423,6 +424,11 @@ export function CardManager(): ReactNode {
                     <span>Limite organizacional</span>
                     <strong>{formatLimit(card)}</strong>
                   </p>
+                  <CardPurchases
+                    card={card}
+                    cycleClosesOn={cycle?.closesOn ?? null}
+                    onRecorded={() => undefined}
+                  />
                   <div className="account-actions">
                     <button
                       onClick={() => {
