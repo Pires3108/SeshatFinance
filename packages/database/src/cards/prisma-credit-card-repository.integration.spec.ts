@@ -50,6 +50,7 @@ describe('PrismaCreditCardRepository', () => {
       '../../prisma/migrations/20260919210000_create_user_profiles/migration.sql',
       '../../prisma/migrations/20261109120000_transaction_time_zone/migration.sql',
       '../../prisma/migrations/20261112130000_trash_elimination/migration.sql',
+      '../../prisma/migrations/20261113100000_card_cycle_and_holiday_settings/migration.sql',
     ]) {
       await migrationClient.query(
         await readFile(new URL(path, import.meta.url), 'utf8'),
@@ -143,6 +144,100 @@ describe('PrismaCreditCardRepository', () => {
       repository.listForOwner('88888888-8888-4888-8888-888888888888'),
     ).resolves.toEqual([]);
   });
+
+  it('defaults the closing boundary and version for new cards', async () => {
+    if (repository === undefined) throw unavailable();
+    const found = await repository.findByIdForOwner(
+      '22222222-2222-4222-8222-222222222222',
+      ownerId,
+    );
+    expect(found?.toSnapshot()).toMatchObject({
+      closingBoundary: 'next-cycle',
+      version: 1,
+    });
+  });
+
+  it('updates settings with optimistic version and one audit event', async () => {
+    if (client === undefined || repository === undefined) throw unavailable();
+    const id = '22222222-2222-4222-8222-222222222222';
+    const current = await repository.findByIdForOwner(id, ownerId);
+    if (current === null) throw unavailable();
+    const updated = current.update({
+      brand: 'Master',
+      closingBoundary: 'closing-cycle',
+      closingDay: 5,
+      dueDay: 15,
+      limit: Money.fromDecimal('5000.10', Currency.create('BRL', 2)),
+      name: 'Cartão viagem',
+    });
+
+    await expect(
+      repository.update(
+        updated,
+        1,
+        auditEvent(id, 'credit-card', crypto.randomUUID(), 'updated'),
+      ),
+    ).resolves.toBe(true);
+    const restored = await repository.findByIdForOwner(id, ownerId);
+    expect(restored?.toSnapshot()).toMatchObject({
+      brand: 'Master',
+      closingBoundary: 'closing-cycle',
+      closingDay: 5,
+      dueDay: 15,
+      name: 'Cartão viagem',
+      version: 2,
+    });
+    expect(restored?.limit.toDecimal()).toBe('5000.10');
+    await expect(
+      client.financialAuditEvent.count({
+        where: { action: 'updated', resourceId: id },
+      }),
+    ).resolves.toBe(1);
+  });
+
+  it('rejects a stale version without writing an audit event', async () => {
+    if (client === undefined || repository === undefined) throw unavailable();
+    const id = '22222222-2222-4222-8222-222222222222';
+    const current = await repository.findByIdForOwner(id, ownerId);
+    if (current === null) throw unavailable();
+    const before = await client.financialAuditEvent.count();
+
+    await expect(
+      repository.update(
+        current.update({
+          brand: 'Elo',
+          closingBoundary: 'next-cycle',
+          closingDay: 10,
+          dueDay: 20,
+          limit: current.limit,
+          name: 'Outro nome',
+        }),
+        1,
+        auditEvent(id, 'credit-card', crypto.randomUUID(), 'updated'),
+      ),
+    ).resolves.toBe(false);
+    await expect(client.financialAuditEvent.count()).resolves.toBe(before);
+    expect(
+      (await repository.findByIdForOwner(id, ownerId))?.toSnapshot().brand,
+    ).toBe('Master');
+  });
+
+  it('never updates another holder card', async () => {
+    if (repository === undefined) throw unavailable();
+    const foreign = CreditCard.restore({
+      ...creditCard('22222222-2222-4222-8222-222222222222').toSnapshot(),
+      ownerId: '88888888-8888-4888-8888-888888888888',
+      version: 2,
+    });
+
+    await expect(
+      repository.update(
+        foreign,
+        2,
+        auditEvent(foreign.id, 'credit-card', crypto.randomUUID(), 'updated'),
+      ),
+    ).resolves.toBe(false);
+  });
 });
 
 function account(): Account {
@@ -178,9 +273,10 @@ function auditEvent(
   resourceId: string,
   resourceType: 'account' | 'credit-card',
   id: string,
+  action: 'created' | 'updated' = 'created',
 ): FinancialAuditEvent {
   return FinancialAuditEvent.create({
-    action: 'created',
+    action,
     actorId: ownerId,
     id,
     occurredAt: new Date('2026-09-22T18:00:00.000Z'),
