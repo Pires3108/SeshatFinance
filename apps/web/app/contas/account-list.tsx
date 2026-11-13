@@ -170,6 +170,7 @@ export function AccountList(): ReactNode {
         <Link className="brand" href="/">
           Seshat Finance
         </Link>
+        <Link href="/cartoes">Cartões</Link>
         <Link href="/entrar">Minha sessão</Link>
       </header>
       <main className="accounts-page" id="main-content" tabIndex={-1}>
