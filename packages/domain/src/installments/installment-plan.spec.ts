@@ -12,6 +12,8 @@ import {
   type InstallmentPlan,
 } from './installment-plan.js';
 
+/** Properties run hundreds of plans; keep them clear of the 5 s default. */
+const PROPERTY_TIMEOUT_MS = 30_000;
 const brl = Currency.create('BRL', 2);
 const money = (amount: string): Money => Money.fromDecimal(amount, brl);
 const rate = (
@@ -159,61 +161,75 @@ describe('calculateInstallmentPlan properties (INV-005, INV-019)', () => {
             }),
     }));
 
-  it('closes the total, the principal and the interest exactly', () => {
-    fc.assert(
-      fc.property(input, (planInput) => {
-        const plan = calculateInstallmentPlan(planInput);
-        const sum = (
-          pick: (i: InstallmentPlan['installments'][number]) => Money,
-        ): bigint =>
-          plan.installments.reduce(
-            (acc, item) => acc + pick(item).toMinorUnits(),
-            0n,
-          );
+  it(
+    'closes the total, the principal and the interest exactly',
+    () => {
+      fc.assert(
+        fc.property(input, (planInput) => {
+          const plan = calculateInstallmentPlan(planInput);
+          const sum = (
+            pick: (i: InstallmentPlan['installments'][number]) => Money,
+          ): bigint =>
+            plan.installments.reduce(
+              (acc, item) => acc + pick(item).toMinorUnits(),
+              0n,
+            );
 
-        expect(plan.installments).toHaveLength(planInput.count);
-        expect(sum((i) => i.amount)).toBe(plan.total.toMinorUnits());
-        expect(sum((i) => i.principal)).toBe(plan.principal.toMinorUnits());
-        expect(sum((i) => i.interest)).toBe(plan.interest.toMinorUnits());
-        expect(plan.principal.add(plan.interest).equals(plan.total)).toBe(true);
-        for (const item of plan.installments) {
-          expect(
-            item.amount.currency.equals(planInput.principal.currency),
-          ).toBe(true);
-          expect(item.principal.toMinorUnits()).toBeGreaterThanOrEqual(0n);
-          expect(item.interest.toMinorUnits()).toBeGreaterThanOrEqual(0n);
-          expect(item.principal.add(item.interest).equals(item.amount)).toBe(
+          expect(plan.installments).toHaveLength(planInput.count);
+          expect(sum((i) => i.amount)).toBe(plan.total.toMinorUnits());
+          expect(sum((i) => i.principal)).toBe(plan.principal.toMinorUnits());
+          expect(sum((i) => i.interest)).toBe(plan.interest.toMinorUnits());
+          expect(plan.principal.add(plan.interest).equals(plan.total)).toBe(
             true,
           );
-        }
-      }),
-      { numRuns: 200 },
-    );
-  });
+          for (const item of plan.installments) {
+            expect(
+              item.amount.currency.equals(planInput.principal.currency),
+            ).toBe(true);
+            expect(item.principal.toMinorUnits()).toBeGreaterThanOrEqual(0n);
+            expect(item.interest.toMinorUnits()).toBeGreaterThanOrEqual(0n);
+            expect(item.principal.add(item.interest).equals(item.amount)).toBe(
+              true,
+            );
+          }
+        }),
+        { numRuns: 200 },
+      );
+    },
+    PROPERTY_TIMEOUT_MS,
+  );
 
-  it('is deterministic and keeps earlier installments equal', () => {
-    fc.assert(
-      fc.property(input, (planInput) => {
-        const first = calculateInstallmentPlan(planInput);
-        const second = calculateInstallmentPlan(planInput);
-        const regular = first.installments[0]?.amount.toMinorUnits();
+  it(
+    'is deterministic and keeps earlier installments equal',
+    () => {
+      fc.assert(
+        fc.property(input, (planInput) => {
+          const first = calculateInstallmentPlan(planInput);
+          const second = calculateInstallmentPlan(planInput);
+          const regular = first.installments[0]?.amount.toMinorUnits();
 
-        expect(amounts(second)).toEqual(amounts(first));
-        for (const item of first.installments.slice(0, -1)) {
-          expect(item.amount.toMinorUnits()).toBe(regular);
-        }
-      }),
-      { numRuns: 100 },
-    );
-  });
+          expect(amounts(second)).toEqual(amounts(first));
+          for (const item of first.installments.slice(0, -1)) {
+            expect(item.amount.toMinorUnits()).toBe(regular);
+          }
+        }),
+        { numRuns: 100 },
+      );
+    },
+    PROPERTY_TIMEOUT_MS,
+  );
 
-  it('never charges less than the principal', () => {
-    fc.assert(
-      fc.property(input, (planInput) => {
-        const plan = calculateInstallmentPlan(planInput);
-        expect(plan.total.compare(plan.principal)).toBeGreaterThanOrEqual(0);
-      }),
-      { numRuns: 100 },
-    );
-  });
+  it(
+    'never charges less than the principal',
+    () => {
+      fc.assert(
+        fc.property(input, (planInput) => {
+          const plan = calculateInstallmentPlan(planInput);
+          expect(plan.total.compare(plan.principal)).toBeGreaterThanOrEqual(0);
+        }),
+        { numRuns: 100 },
+      );
+    },
+    PROPERTY_TIMEOUT_MS,
+  );
 });
