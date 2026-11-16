@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/node": "latest"
+    "@types/node": "latest",
+    "fast-check": "^4.10.2"
   }
 }
