@@ -358,3 +358,9 @@ Uma invariante P0 somente é considerada implementada quando:
 4. está vinculada ao requisito e regra;
 5. falha no pipeline quando violada;
 6. possui evidência de caso normal e caso de limite.
+
+### INV-048 — Saldo pendente de empréstimo reconciliável
+
+Saldo pendente é o total do cronograma vigente, mais multas declaradas, menos pagamentos, quitações e descontos ativos; cada evento o altera exatamente uma vez e reversões o restauram sem apagar o histórico.
+
+**Referências:** RF-035; RN-018 a RN-021, RN-023; ADR-042.
