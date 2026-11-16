@@ -22,3 +22,4 @@ O status de uma decisão não comprova a conclusão da implementação. As evid�
 - [ADR-039 — Formação e fechamento manual da fatura](0039-formacao-e-fechamento-da-fatura.md)
 - [ADR-040 — Quitação declarada da fatura](0040-quitacao-declarada-da-fatura.md)
 - [ADR-041 — Estados de atenção e atraso da fatura](0041-estados-de-atencao-e-atraso-da-fatura.md)
+- [ADR-042 — Parcelamento, juros e empréstimos declarados](0042-parcelamento-juros-e-emprestimos.md)

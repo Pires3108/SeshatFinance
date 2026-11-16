@@ -25,12 +25,12 @@
 - **RN-015:** a despesa é reconhecida na compra, não no pagamento da fatura.
 - **RN-016:** após declaração do usuário, o registro de pagamento de fatura reduz saldo organizacional da conta pagadora e obrigação do cartão sem criar nova despesa nem efetuar pagamento externo.
 - **RN-017:** o limite organizacional estimado diminui na compra registrada e aumenta na quitação ou estorno registrados, sem bloquear ou liberar limite real.
-- **RN-018:** o principal é distribuído entre parcelas na menor unidade da moeda original. Na divisão igual, cada parcela anterior trunca o quociente em direção a zero e a última recebe todo o resíduo, inclusive para total negativo; a soma permanece igual ao principal. Juros, taxas e a confirmação do parcelamento exigem suas regras próprias.
+- **RN-018:** o principal é distribuído entre parcelas na menor unidade da moeda original. Na divisão igual, cada parcela anterior trunca o quociente em direção a zero e a última recebe todo o resíduo, inclusive para total negativo; a soma permanece igual ao principal. Com juros, o total é calculado em racional exato, arredondado uma única vez com meio-para-cima para a escala da moeda e repartido pela mesma regra (ADR-042).
 - **RN-019:** juros são calculados pelo método escolhido e exibidos separadamente do principal.
 - **RN-020:** juros simples usam juros = principal × taxa × períodos; compostos usam montante = principal × (1 + taxa)^períodos.
 - **RN-021:** antes da confirmação, mostrar total financiado, juros, total final, valor e vencimento das parcelas.
 - **RN-022:** a fatura é fechada manualmente após notificação da data prevista.
-- **RN-023:** pagamento parcial mantém obrigação remanescente; juros e multa dependem de configuração explícita.
+- **RN-023:** pagamento parcial mantém obrigação remanescente; juros e multa dependem de configuração explícita. Em empréstimos, o pagamento parcial aloca primeiro a parcela vencida mais antiga e, nela, multa → juros → principal, salvo prioridade escolhida no evento; excedente exige classificação explícita. Em faturas, excedente é recusado (ADR-042).
 - **RN-024:** fatura vencida e não liquidada fica vermelha; proximidade do vencimento usa atenção não dependente só de cor.
 
 ## 4. Recorrências e projeções
