@@ -180,3 +180,24 @@ export {
   type CounterpartyType,
   type CounterpartyStatus,
 } from './counterparties/counterparty.js';
+export { InvalidRationalError, Rational } from './interest/rational.js';
+export {
+  InterestRate,
+  InvalidInterestRateError,
+  interestMethods,
+  interestPeriodicities,
+  type InterestMethod,
+  type InterestPeriodicity,
+  type InterestRateSnapshot,
+} from './interest/interest-rate.js';
+export {
+  calculateInstallmentPlan,
+  INSTALLMENT_CALCULATION_VERSION,
+  InvalidInstallmentPlanError,
+  MAX_INSTALLMENT_COUNT,
+  MIN_INSTALLMENT_COUNT,
+  type InstallmentCalculationMemory,
+  type InstallmentPlan,
+  type InstallmentPlanInput,
+  type PlannedInstallment,
+} from './installments/installment-plan.js';
