@@ -25,7 +25,7 @@ Parcelamento no cartão, juros estimados e empréstimos alteram obrigação, sal
 ### Parcelamento no cartão
 
 - Juros simples: `juros = principal × taxa × n`. Compostos: `total = principal × (1 + taxa)^n`. Sem taxa, `total = principal`.
-- `total` é dividido em `n` parcelas por RN-018. O principal de cada parcela vem de `principal.split(n)` e os juros da parcela são a diferença entre a parcela e seu principal. A soma das parcelas, dos principais e dos juros fecha exatamente (INV-005, INV-019).
+- `total` é dividido em `n` parcelas por RN-018. Os juros acumulados até a parcela `k` são `piso(juros × valor acumulado até k ÷ total)`, e a última parcela recebe o restante; o principal da parcela é o valor menos seus juros. Assim nenhum componente fica negativo e a soma das parcelas, dos principais e dos juros fecha exatamente (INV-005, INV-019).
 - Exemplos de aceite: 100,00 BRL em 3x sem juros → 33,33 + 33,33 + 33,34. 100,00 BRL a 1% simples em 2 períodos → 2,00 de juros, total 102,00. 100,00 BRL a 1% composto em 2 períodos → total 102,01.
 - Cada parcela pertence ao ciclo calculado pelo `CardCycleSchedule` (ADR-037), a partir do ciclo da compra. Só a parcela do ciclo corrente compõe a obrigação da fatura; as demais são compromissos projetados até seu ciclo.
 - O cronograma e os parâmetros originais ficam congelados com `calculationVersion`. Mudança de parâmetro cria nova versão auditável; renegociação não reescreve o cronograma anterior.
