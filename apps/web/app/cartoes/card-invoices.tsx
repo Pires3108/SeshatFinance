@@ -50,6 +50,22 @@ function isInvoiceList(value: unknown): value is readonly Invoice[] {
   );
 }
 
+type InstallmentLine = Readonly<{
+  amount: string;
+  count: number;
+  description: string;
+  interest: string;
+  number: number;
+  planId: string;
+}>;
+
+function localToday(): string {
+  const now = new Date();
+  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000)
+    .toISOString()
+    .slice(0, 10);
+}
+
 /** Invoices of a card with their memory of calculation and manual closing. */
 export function CardInvoices({
   card,
@@ -58,6 +74,9 @@ export function CardInvoices({
   const [invoices, setInvoices] = useState<readonly Invoice[] | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [purchases, setPurchases] = useState<readonly Purchase[] | null>(null);
+  const [installments, setInstallments] = useState<readonly InstallmentLine[]>(
+    [],
+  );
   const [settlementList, setSettlementList] = useState<readonly Settlement[]>(
     [],
   );
@@ -97,6 +116,7 @@ export function CardInvoices({
     }
     setExpanded(closesOn);
     setPurchases(null);
+    setInstallments([]);
     try {
       const response = await fetch(
         `/api/cards/${card.id}/invoices/${closesOn}`,
@@ -104,11 +124,13 @@ export function CardInvoices({
       );
       const data = response.ok
         ? ((await response.json()) as {
+            installments?: InstallmentLine[];
             purchases: Purchase[];
             settlements: Settlement[];
           })
         : null;
       setPurchases(data?.purchases ?? []);
+      setInstallments(data?.installments ?? []);
       setSettlementList(data?.settlements ?? []);
     } catch {
       setPurchases([]);
@@ -189,6 +211,11 @@ export function CardInvoices({
                 {formatInvoiceAmount(invoice, invoice.remaining)} · Vence em{' '}
                 {formatCivilDate(invoice.dueOn)}
               </p>
+              {invoice.firstPurchaseDate > localToday() && (
+                <p className="field-note invoice-projected">
+                  Compromisso projetado: o ciclo desta fatura ainda não começou.
+                </p>
+              )}
               {invoice.dueOn !== invoice.scheduledDueOn && (
                 <p className="field-note">
                   Vencimento configurado em{' '}
@@ -297,6 +324,23 @@ export function CardInvoices({
                         </li>
                       ))}
                     </ul>
+                  )}
+                  {installments.length > 0 && (
+                    <>
+                      <p>Parcelas nesta fatura:</p>
+                      <ul>
+                        {installments.map((line) => (
+                          <li key={`${line.planId}-${String(line.number)}`}>
+                            {line.description} — parcela {line.number}/
+                            {line.count}:{' '}
+                            {formatInvoiceAmount(invoice, line.amount)}
+                            {/^0(?:\.0+)?$/u.test(line.interest)
+                              ? ''
+                              : ` (juros estimados ${formatInvoiceAmount(invoice, line.interest)})`}
+                          </li>
+                        ))}
+                      </ul>
+                    </>
                   )}
                   {settlementList.length > 0 && (
                     <>

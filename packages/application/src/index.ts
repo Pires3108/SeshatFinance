@@ -346,6 +346,8 @@ export {
   invoiceRemaining,
   ListCardInvoicesUseCase,
   type CardInvoiceDetail,
+  type CardInvoiceInstallment,
+  type CardInvoiceInstallmentReader,
   type CardInvoicePurchaseReader,
   type CardInvoiceRepository,
   type CardInvoiceView,

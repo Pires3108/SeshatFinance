@@ -26,6 +26,10 @@ import {
   CardCycleResolver,
   RegisterCardPurchaseUseCase,
   ListCardPurchasesUseCase,
+  PreviewCardInstallmentPlanUseCase,
+  RegisterCardInstallmentPlanUseCase,
+  GetCardInstallmentPlanUseCase,
+  type CardInstallmentPlanRepository,
   ListCardInvoicesUseCase,
   GetCardInvoiceUseCase,
   CloseCardInvoiceUseCase,
@@ -139,6 +143,8 @@ import { BalanceAdjustmentController } from './adjustments/balance-adjustment.co
 import { LazyBalanceAdjustmentRepository } from './adjustments/lazy-balance-adjustment-repository.js';
 import { CreditCardController } from './cards/credit-card.controller.js';
 import { CardPurchaseController } from './cards/card-purchase.controller.js';
+import { CardInstallmentPlanController } from './cards/card-installment-plan.controller.js';
+import { LazyCardInstallmentPlanRepository } from './cards/lazy-card-installment-plan-repository.js';
 import { LazyCardPurchaseRepository } from './cards/lazy-card-purchase-repository.js';
 import { CardInvoiceController } from './cards/card-invoice.controller.js';
 import { LazyCardInvoiceRepository } from './cards/lazy-card-invoice-repository.js';
@@ -212,6 +218,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     BalanceAdjustmentController,
     CreditCardController,
     CardPurchaseController,
+    CardInstallmentPlanController,
     CardInvoiceController,
     InvoiceSettlementController,
     CounterpartyController,
@@ -311,6 +318,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     LazyBalanceAdjustmentRepository,
     LazyCreditCardRepository,
     LazyCardPurchaseRepository,
+    LazyCardInstallmentPlanRepository,
     LazyCardInvoiceRepository,
     LazyInvoiceSettlementRepository,
     LazyCounterpartyRepository,
@@ -603,6 +611,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         LazyCardPurchaseRepository,
         LazyInvoiceSettlementRepository,
         LazyUserProfileRepository,
+        LazyCardInstallmentPlanRepository,
       ],
       provide: GetCardInvoiceUseCase,
       useFactory: (
@@ -611,6 +620,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         purchases: CardPurchaseRepository,
         settlements: LazyInvoiceSettlementRepository,
         profiles: UserProfileRepository,
+        installments: LazyCardInstallmentPlanRepository,
       ): GetCardInvoiceUseCase =>
         new GetCardInvoiceUseCase(
           cards,
@@ -618,7 +628,59 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
           purchases,
           settlements,
           new InvoiceDueStateResolver(profiles, new SystemClock()),
+          installments,
         ),
+    },
+    {
+      inject: [
+        LazyCreditCardRepository,
+        LazyCardInstallmentPlanRepository,
+        LazyUserProfileRepository,
+        LazyHolidaySettingsRepository,
+      ],
+      provide: PreviewCardInstallmentPlanUseCase,
+      useFactory: (
+        cards: CreditCardRepository,
+        plans: CardInstallmentPlanRepository,
+        profiles: UserProfileRepository,
+        holidays: HolidaySettingsRepository,
+      ): PreviewCardInstallmentPlanUseCase =>
+        new PreviewCardInstallmentPlanUseCase(
+          cards,
+          plans,
+          new CardCycleResolver(profiles, holidays),
+        ),
+    },
+    {
+      inject: [
+        LazyCreditCardRepository,
+        LazyCardInstallmentPlanRepository,
+        LazyUserProfileRepository,
+        LazyHolidaySettingsRepository,
+      ],
+      provide: RegisterCardInstallmentPlanUseCase,
+      useFactory: (
+        cards: CreditCardRepository,
+        plans: CardInstallmentPlanRepository,
+        profiles: UserProfileRepository,
+        holidays: HolidaySettingsRepository,
+      ): RegisterCardInstallmentPlanUseCase =>
+        new RegisterCardInstallmentPlanUseCase(
+          cards,
+          plans,
+          new CardCycleResolver(profiles, holidays),
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyCreditCardRepository, LazyCardInstallmentPlanRepository],
+      provide: GetCardInstallmentPlanUseCase,
+      useFactory: (
+        cards: CreditCardRepository,
+        plans: CardInstallmentPlanRepository,
+      ): GetCardInstallmentPlanUseCase =>
+        new GetCardInstallmentPlanUseCase(cards, plans),
     },
     {
       inject: [

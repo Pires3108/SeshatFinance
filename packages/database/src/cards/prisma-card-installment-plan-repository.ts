@@ -1,5 +1,7 @@
 import {
   CardInstallmentInvoiceClosedError,
+  type CardInvoiceInstallment,
+  type CardInvoiceInstallmentReader,
   CardInstallmentSettledAboveObligationError,
   CardPurchaseAlreadyInstalledError,
   type CardInstallmentPlanRepository,
@@ -42,7 +44,9 @@ type PersistedPlan = Prisma.CardInstallmentPlanGetPayload<{
   include: typeof planInclude;
 }>;
 
-export class PrismaCardInstallmentPlanRepository implements CardInstallmentPlanRepository {
+export class PrismaCardInstallmentPlanRepository
+  implements CardInstallmentPlanRepository, CardInvoiceInstallmentReader
+{
   private readonly transactions: PrismaTransactionRunner;
 
   public constructor(
@@ -73,6 +77,45 @@ export class PrismaCardInstallmentPlanRepository implements CardInstallmentPlanR
     ownerId: string,
   ): Promise<CardInstallmentPlan | null> {
     return findPlan(this.client, purchaseId, ownerId);
+  }
+
+  public async listForCycle(
+    cardId: string,
+    cycleClosesOn: string,
+    ownerId: string,
+  ): Promise<readonly CardInvoiceInstallment[]> {
+    const rows = await this.client.cardInstallment.findMany({
+      include: {
+        plan: {
+          select: {
+            installmentCount: true,
+            purchase: { select: { description: true } },
+            purchaseId: true,
+          },
+        },
+      },
+      orderBy: [{ planId: 'asc' }, { number: 'asc' }],
+      where: {
+        cardId,
+        cycleClosesOn: civilDateToDate(cycleClosesOn),
+        ownerId,
+      },
+    });
+    return rows.map((row) => {
+      const scale = row.currencyMinorUnitScale;
+      const at = (value: Prisma.Decimal): Money =>
+        Money.restore(money(value, row.currencyCode, scale));
+      return {
+        amount: at(row.amountMinorUnits),
+        count: row.plan.installmentCount,
+        description: row.plan.purchase.description,
+        interest: at(row.interestMinorUnits),
+        number: row.number,
+        planId: row.planId,
+        principal: at(row.principalMinorUnits),
+        purchaseId: row.plan.purchaseId,
+      };
+    });
   }
 
   public async insertAtomically(

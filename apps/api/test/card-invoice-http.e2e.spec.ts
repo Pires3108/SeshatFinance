@@ -137,6 +137,40 @@ describe('Card invoice HTTP boundary', () => {
     });
   });
 
+  it('lists installments of the cycle in the invoice detail (US-044)', async () => {
+    get.execute.mockResolvedValue({
+      ...view(),
+      installments: [
+        {
+          amount: Money.fromDecimal('33.33', brl),
+          count: 3,
+          description: 'Geladeira',
+          interest: Money.fromDecimal('0', brl),
+          number: 1,
+          planId: '3c2b1a09-8f7e-4d6c-9b5a-4f3e2d1c0b9a',
+          principal: Money.fromDecimal('33.33', brl),
+          purchaseId: '0a4b9c3d-2e1f-4a5b-8c7d-6e5f4a3b2c1d',
+        },
+      ],
+      purchases: [],
+      settlements: [],
+    });
+
+    const response = await application.inject({
+      headers: { authorization },
+      method: 'GET',
+      url: `/api/v1/credit-cards/${cardId}/invoices/2026-10-28`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      installments: [
+        { amount: '33.33', count: 3, description: 'Geladeira', number: 1 },
+      ],
+      purchases: [],
+    });
+  });
+
   it('does not reveal another holder invoice', async () => {
     get.execute.mockRejectedValue(new CardInvoiceNotFoundError());
 
