@@ -15,6 +15,7 @@ import {
 } from '../idempotency/idempotency-records.js';
 import type { PrismaClient } from '../generated/prisma/client.js';
 import { PrismaTransactionRunner } from '../prisma/prisma-transaction-runner.js';
+import { cycleChargeSums } from './card-cycle-charges.js';
 import {
   civilDateToDate,
   dateToCivilDate,
@@ -59,11 +60,8 @@ export class PrismaInvoiceSettlementRepository
         FOR UPDATE
       `;
       if (invoice === undefined) return null;
-      const [purchases, settled] = await Promise.all([
-        client.cardPurchase.aggregate({
-          _sum: { amountMinorUnits: true },
-          where: { cardId, cycleClosesOn: closesOn, ownerId: request.ownerId },
-        }),
+      const [charges, settled] = await Promise.all([
+        cycleChargeSums(client, cardId, request.ownerId, closesOn),
         client.invoiceSettlement.aggregate({
           _sum: { amountMinorUnits: true },
           where: {
@@ -74,7 +72,7 @@ export class PrismaInvoiceSettlementRepository
         }),
       ]);
       const remaining =
-        BigInt((purchases._sum.amountMinorUnits ?? 0).toFixed(0)) -
+        (charges.get(dateToCivilDate(closesOn))?.total.toMinorUnits() ?? 0n) -
         BigInt((settled._sum.amountMinorUnits ?? 0).toFixed(0));
       const amount = write.settlement.amount.toMinorUnits();
       if (amount > remaining)

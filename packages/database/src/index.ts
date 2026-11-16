@@ -22,6 +22,7 @@ export { PrismaCreditCardRepository } from './cards/prisma-credit-card-repositor
 export { PrismaCardPurchaseRepository } from './cards/prisma-card-purchase-repository.js';
 export { PrismaCardInvoiceRepository } from './cards/prisma-card-invoice-repository.js';
 export { PrismaInvoiceSettlementRepository } from './cards/prisma-invoice-settlement-repository.js';
+export { PrismaCardInstallmentPlanRepository } from './cards/prisma-card-installment-plan-repository.js';
 export { PrismaFamilyGroupRepository } from './family/prisma-family-group-repository.js';
 export { PrismaCounterpartyRepository } from './counterparties/prisma-counterparty-repository.js';
 export { PrismaManualExchangeQuoteRepository } from './money/prisma-manual-exchange-quote-repository.js';

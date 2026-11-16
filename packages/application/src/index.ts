@@ -322,6 +322,24 @@ export {
   type RegisterCardPurchaseCommand,
 } from './cards/register-card-purchase.js';
 export {
+  CardInstallmentInvoiceClosedError,
+  CardInstallmentSettledAboveObligationError,
+  CardPurchaseAlreadyInstalledError,
+  CardPurchaseNotFoundError,
+  GetCardInstallmentPlanUseCase,
+  parseCardInstallmentPlanResponse,
+  PreviewCardInstallmentPlanUseCase,
+  REGISTER_CARD_INSTALLMENT_PLAN_OPERATION,
+  RegisterCardInstallmentPlanUseCase,
+  serializeCardInstallmentPlanResponse,
+  type CardInstallmentPlanPreview,
+  type CardInstallmentPlanQuery,
+  type CardInstallmentPlanRepository,
+  type CardInstallmentPlanWrite,
+  type CardInstallmentRateInput,
+  type RegisterCardInstallmentPlanCommand,
+} from './cards/register-card-installment-plan.js';
+export {
   CardInvoiceNotFoundError,
   CloseCardInvoiceUseCase,
   GetCardInvoiceUseCase,

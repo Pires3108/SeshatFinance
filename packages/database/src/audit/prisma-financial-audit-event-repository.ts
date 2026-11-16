@@ -154,6 +154,8 @@ function toPersistedResourceType(
       return 'credit_card';
     case 'card-purchase':
       return 'card_purchase';
+    case 'card-installment-plan':
+      return 'card_installment_plan';
     case 'card-invoice':
       return 'card_invoice';
     case 'invoice-settlement':
@@ -175,6 +177,8 @@ function fromPersistedResourceType(
       return 'credit-card';
     case 'card_purchase':
       return 'card-purchase';
+    case 'card_installment_plan':
+      return 'card-installment-plan';
     case 'card_invoice':
       return 'card-invoice';
     case 'invoice_settlement':

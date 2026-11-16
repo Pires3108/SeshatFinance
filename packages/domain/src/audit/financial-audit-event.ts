@@ -21,6 +21,7 @@ export const financialAuditResourceTypes = [
   'balance-adjustment',
   'credit-card',
   'card-purchase',
+  'card-installment-plan',
   'card-invoice',
   'invoice-settlement',
   'manual-exchange-quote',
