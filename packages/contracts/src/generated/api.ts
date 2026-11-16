@@ -232,6 +232,75 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/loans": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List owned loans with their pending balance */
+        readonly get: operations["LoanController_list"];
+        readonly put?: never;
+        /** Record a loan already agreed outside Seshat Finance */
+        readonly post: operations["LoanController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/loans/{loanId}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get a loan with its schedule and events */
+        readonly get: operations["LoanController_get"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/loans/{loanId}/events": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Declare a payment, prepayment or reversal already done outside Seshat Finance */
+        readonly post: operations["LoanController_event"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/loans/{loanId}/renegotiation": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Register a renegotiation agreed outside Seshat Finance as a new linked loan */
+        readonly post: operations["LoanController_renegotiation"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/credit-cards/{cardId}/invoices": {
         readonly parameters: {
             readonly query?: never;
@@ -2571,6 +2640,746 @@ export interface operations {
                 content?: never;
             };
             /** @description A target invoice is closed, or settlements already exceed the new obligation */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly LoanController_list: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        readonly allocationOrder: readonly ("fee" | "interest" | "principal")[] | null;
+                        /** @enum {string} */
+                        readonly businessDayRule: "next-business-day" | "none";
+                        /** Format: date */
+                        readonly contractedOn: string;
+                        readonly count: number;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly declaredAmounts: readonly string[] | null;
+                        readonly description: string;
+                        /** Format: date */
+                        readonly firstDueOn: string;
+                        readonly lateFeePercent: string | null;
+                        readonly principal: string;
+                        /** @enum {string} */
+                        readonly profile: "constant" | "decreasing" | "declared";
+                        readonly rate: {
+                            /** @enum {string} */
+                            readonly method: "simple" | "compound";
+                            readonly percentPerPeriod: string;
+                            /** @enum {string} */
+                            readonly periodicity: "monthly";
+                        } | null;
+                        readonly calculationVersion: number;
+                        /** Format: uuid */
+                        readonly counterpartyId: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly credit: string;
+                        /** @enum {string} */
+                        readonly direction: "payable" | "receivable";
+                        readonly events: readonly {
+                            readonly allocationOrder: readonly ("fee" | "interest" | "principal")[] | null;
+                            readonly amount: string | null;
+                            readonly declaredFee: string | null;
+                            readonly discount: string | null;
+                            /** @enum {string|null} */
+                            readonly excess: "extra-amortization" | "receivable-credit" | null;
+                            /** Format: uuid */
+                            readonly id: string;
+                            /** @enum {string} */
+                            readonly kind: "payment" | "prepayment" | "renegotiation" | "reversal";
+                            /** Format: uuid */
+                            readonly newLoanId: string | null;
+                            /** Format: date */
+                            readonly occurredOn: string | null;
+                            readonly reason: string | null;
+                            /** Format: date-time */
+                            readonly recordedAt: string;
+                            readonly reversed: boolean;
+                            /** Format: uuid */
+                            readonly reversedEventId: string | null;
+                        }[];
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly installments: readonly {
+                            readonly amount: string;
+                            readonly declaredFee: string | null;
+                            /**
+                             * Format: date
+                             * @description Effective due date; delay starts the next day.
+                             */
+                            readonly dueOn: string;
+                            readonly estimatedFee: string | null;
+                            readonly interest: string;
+                            readonly number: number;
+                            readonly paid: string;
+                            readonly principal: string;
+                            readonly remaining: string;
+                            /** Format: date */
+                            readonly scheduledDueOn: string;
+                            /** @enum {string} */
+                            readonly situation: "paid" | "prepaid" | "renegotiated" | "overdue" | "partial" | "open";
+                        }[];
+                        readonly interest: string;
+                        readonly paidTotal: string;
+                        /** @description Organizational outstanding balance (INV-048); negative when a declared credit exceeds it. */
+                        readonly pending: string;
+                        /** Format: uuid */
+                        readonly renegotiatedFromId: string | null;
+                        /** @enum {string} */
+                        readonly status: "active" | "settled" | "renegotiated";
+                        readonly total: string;
+                    }[];
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly LoanController_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                /** @description UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409. */
+                readonly "Idempotency-Key": string;
+            };
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly allocationOrder?: readonly ("fee" | "interest" | "principal")[] | null;
+                    /** @enum {string} */
+                    readonly businessDayRule: "next-business-day" | "none";
+                    /** Format: date */
+                    readonly contractedOn: string;
+                    readonly count: number;
+                    readonly currencyCode: string;
+                    readonly currencyMinorUnitScale: number;
+                    readonly declaredAmounts?: readonly string[] | null;
+                    readonly description: string;
+                    /** Format: date */
+                    readonly firstDueOn: string;
+                    readonly lateFeePercent?: string | null;
+                    readonly principal: string;
+                    /** @enum {string} */
+                    readonly profile: "constant" | "decreasing" | "declared";
+                    readonly rate?: {
+                        /** @enum {string} */
+                        readonly method: "simple" | "compound";
+                        readonly percentPerPeriod: string;
+                        /** @enum {string} */
+                        readonly periodicity: "monthly";
+                    } | null;
+                    /** Format: uuid */
+                    readonly counterpartyId?: string | null;
+                    /** @enum {string} */
+                    readonly direction: "payable" | "receivable";
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly allocationOrder: readonly ("fee" | "interest" | "principal")[] | null;
+                        /** @enum {string} */
+                        readonly businessDayRule: "next-business-day" | "none";
+                        /** Format: date */
+                        readonly contractedOn: string;
+                        readonly count: number;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly declaredAmounts: readonly string[] | null;
+                        readonly description: string;
+                        /** Format: date */
+                        readonly firstDueOn: string;
+                        readonly lateFeePercent: string | null;
+                        readonly principal: string;
+                        /** @enum {string} */
+                        readonly profile: "constant" | "decreasing" | "declared";
+                        readonly rate: {
+                            /** @enum {string} */
+                            readonly method: "simple" | "compound";
+                            readonly percentPerPeriod: string;
+                            /** @enum {string} */
+                            readonly periodicity: "monthly";
+                        } | null;
+                        readonly calculationVersion: number;
+                        /** Format: uuid */
+                        readonly counterpartyId: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly credit: string;
+                        /** @enum {string} */
+                        readonly direction: "payable" | "receivable";
+                        readonly events: readonly {
+                            readonly allocationOrder: readonly ("fee" | "interest" | "principal")[] | null;
+                            readonly amount: string | null;
+                            readonly declaredFee: string | null;
+                            readonly discount: string | null;
+                            /** @enum {string|null} */
+                            readonly excess: "extra-amortization" | "receivable-credit" | null;
+                            /** Format: uuid */
+                            readonly id: string;
+                            /** @enum {string} */
+                            readonly kind: "payment" | "prepayment" | "renegotiation" | "reversal";
+                            /** Format: uuid */
+                            readonly newLoanId: string | null;
+                            /** Format: date */
+                            readonly occurredOn: string | null;
+                            readonly reason: string | null;
+                            /** Format: date-time */
+                            readonly recordedAt: string;
+                            readonly reversed: boolean;
+                            /** Format: uuid */
+                            readonly reversedEventId: string | null;
+                        }[];
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly installments: readonly {
+                            readonly amount: string;
+                            readonly declaredFee: string | null;
+                            /**
+                             * Format: date
+                             * @description Effective due date; delay starts the next day.
+                             */
+                            readonly dueOn: string;
+                            readonly estimatedFee: string | null;
+                            readonly interest: string;
+                            readonly number: number;
+                            readonly paid: string;
+                            readonly principal: string;
+                            readonly remaining: string;
+                            /** Format: date */
+                            readonly scheduledDueOn: string;
+                            /** @enum {string} */
+                            readonly situation: "paid" | "prepaid" | "renegotiated" | "overdue" | "partial" | "open";
+                        }[];
+                        readonly interest: string;
+                        readonly paidTotal: string;
+                        /** @description Organizational outstanding balance (INV-048); negative when a declared credit exceeds it. */
+                        readonly pending: string;
+                        /** Format: uuid */
+                        readonly renegotiatedFromId: string | null;
+                        /** @enum {string} */
+                        readonly status: "active" | "settled" | "renegotiated";
+                        readonly total: string;
+                    };
+                };
+            };
+            /** @description Invalid terms or idempotency key */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned active counterparty not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency key reused with a different payload */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly LoanController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly loanId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly allocationOrder: readonly ("fee" | "interest" | "principal")[] | null;
+                        /** @enum {string} */
+                        readonly businessDayRule: "next-business-day" | "none";
+                        /** Format: date */
+                        readonly contractedOn: string;
+                        readonly count: number;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly declaredAmounts: readonly string[] | null;
+                        readonly description: string;
+                        /** Format: date */
+                        readonly firstDueOn: string;
+                        readonly lateFeePercent: string | null;
+                        readonly principal: string;
+                        /** @enum {string} */
+                        readonly profile: "constant" | "decreasing" | "declared";
+                        readonly rate: {
+                            /** @enum {string} */
+                            readonly method: "simple" | "compound";
+                            readonly percentPerPeriod: string;
+                            /** @enum {string} */
+                            readonly periodicity: "monthly";
+                        } | null;
+                        readonly calculationVersion: number;
+                        /** Format: uuid */
+                        readonly counterpartyId: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly credit: string;
+                        /** @enum {string} */
+                        readonly direction: "payable" | "receivable";
+                        readonly events: readonly {
+                            readonly allocationOrder: readonly ("fee" | "interest" | "principal")[] | null;
+                            readonly amount: string | null;
+                            readonly declaredFee: string | null;
+                            readonly discount: string | null;
+                            /** @enum {string|null} */
+                            readonly excess: "extra-amortization" | "receivable-credit" | null;
+                            /** Format: uuid */
+                            readonly id: string;
+                            /** @enum {string} */
+                            readonly kind: "payment" | "prepayment" | "renegotiation" | "reversal";
+                            /** Format: uuid */
+                            readonly newLoanId: string | null;
+                            /** Format: date */
+                            readonly occurredOn: string | null;
+                            readonly reason: string | null;
+                            /** Format: date-time */
+                            readonly recordedAt: string;
+                            readonly reversed: boolean;
+                            /** Format: uuid */
+                            readonly reversedEventId: string | null;
+                        }[];
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly installments: readonly {
+                            readonly amount: string;
+                            readonly declaredFee: string | null;
+                            /**
+                             * Format: date
+                             * @description Effective due date; delay starts the next day.
+                             */
+                            readonly dueOn: string;
+                            readonly estimatedFee: string | null;
+                            readonly interest: string;
+                            readonly number: number;
+                            readonly paid: string;
+                            readonly principal: string;
+                            readonly remaining: string;
+                            /** Format: date */
+                            readonly scheduledDueOn: string;
+                            /** @enum {string} */
+                            readonly situation: "paid" | "prepaid" | "renegotiated" | "overdue" | "partial" | "open";
+                        }[];
+                        readonly interest: string;
+                        readonly paidTotal: string;
+                        /** @description Organizational outstanding balance (INV-048); negative when a declared credit exceeds it. */
+                        readonly pending: string;
+                        /** Format: uuid */
+                        readonly renegotiatedFromId: string | null;
+                        /** @enum {string} */
+                        readonly status: "active" | "settled" | "renegotiated";
+                        readonly total: string;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned loan not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly LoanController_event: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                /** @description UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409. */
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly loanId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly allocationOrder?: readonly ("fee" | "interest" | "principal")[] | null;
+                    readonly amount: string;
+                    readonly declaredFee?: string | null;
+                    /** @enum {string|null} */
+                    readonly excess?: "extra-amortization" | "receivable-credit" | null;
+                    /** @enum {string} */
+                    readonly kind: "payment";
+                    /** Format: date */
+                    readonly occurredOn: string;
+                } | {
+                    readonly amount: string;
+                    readonly discount: string;
+                    /** @enum {string} */
+                    readonly kind: "prepayment";
+                    /** Format: date */
+                    readonly occurredOn: string;
+                } | {
+                    /** @enum {string} */
+                    readonly kind: "reversal";
+                    readonly reason: string;
+                    /** Format: uuid */
+                    readonly reversedEventId: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly allocationOrder: readonly ("fee" | "interest" | "principal")[] | null;
+                        /** @enum {string} */
+                        readonly businessDayRule: "next-business-day" | "none";
+                        /** Format: date */
+                        readonly contractedOn: string;
+                        readonly count: number;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly declaredAmounts: readonly string[] | null;
+                        readonly description: string;
+                        /** Format: date */
+                        readonly firstDueOn: string;
+                        readonly lateFeePercent: string | null;
+                        readonly principal: string;
+                        /** @enum {string} */
+                        readonly profile: "constant" | "decreasing" | "declared";
+                        readonly rate: {
+                            /** @enum {string} */
+                            readonly method: "simple" | "compound";
+                            readonly percentPerPeriod: string;
+                            /** @enum {string} */
+                            readonly periodicity: "monthly";
+                        } | null;
+                        readonly calculationVersion: number;
+                        /** Format: uuid */
+                        readonly counterpartyId: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly credit: string;
+                        /** @enum {string} */
+                        readonly direction: "payable" | "receivable";
+                        readonly events: readonly {
+                            readonly allocationOrder: readonly ("fee" | "interest" | "principal")[] | null;
+                            readonly amount: string | null;
+                            readonly declaredFee: string | null;
+                            readonly discount: string | null;
+                            /** @enum {string|null} */
+                            readonly excess: "extra-amortization" | "receivable-credit" | null;
+                            /** Format: uuid */
+                            readonly id: string;
+                            /** @enum {string} */
+                            readonly kind: "payment" | "prepayment" | "renegotiation" | "reversal";
+                            /** Format: uuid */
+                            readonly newLoanId: string | null;
+                            /** Format: date */
+                            readonly occurredOn: string | null;
+                            readonly reason: string | null;
+                            /** Format: date-time */
+                            readonly recordedAt: string;
+                            readonly reversed: boolean;
+                            /** Format: uuid */
+                            readonly reversedEventId: string | null;
+                        }[];
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly installments: readonly {
+                            readonly amount: string;
+                            readonly declaredFee: string | null;
+                            /**
+                             * Format: date
+                             * @description Effective due date; delay starts the next day.
+                             */
+                            readonly dueOn: string;
+                            readonly estimatedFee: string | null;
+                            readonly interest: string;
+                            readonly number: number;
+                            readonly paid: string;
+                            readonly principal: string;
+                            readonly remaining: string;
+                            /** Format: date */
+                            readonly scheduledDueOn: string;
+                            /** @enum {string} */
+                            readonly situation: "paid" | "prepaid" | "renegotiated" | "overdue" | "partial" | "open";
+                        }[];
+                        readonly interest: string;
+                        readonly paidTotal: string;
+                        /** @description Organizational outstanding balance (INV-048); negative when a declared credit exceeds it. */
+                        readonly pending: string;
+                        /** Format: uuid */
+                        readonly renegotiatedFromId: string | null;
+                        /** @enum {string} */
+                        readonly status: "active" | "settled" | "renegotiated";
+                        readonly total: string;
+                    };
+                };
+            };
+            /** @description Invalid event or idempotency key */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned loan not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency key reused with a different payload */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unclassified excess, prepayment mismatch, closed loan or future date */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly LoanController_renegotiation: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                /** @description UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409. */
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly loanId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** Format: date */
+                    readonly occurredOn: string;
+                    readonly terms: {
+                        readonly allocationOrder?: readonly ("fee" | "interest" | "principal")[] | null;
+                        /** @enum {string} */
+                        readonly businessDayRule: "next-business-day" | "none";
+                        /** Format: date */
+                        readonly contractedOn: string;
+                        readonly count: number;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly declaredAmounts?: readonly string[] | null;
+                        readonly description: string;
+                        /** Format: date */
+                        readonly firstDueOn: string;
+                        readonly lateFeePercent?: string | null;
+                        readonly principal: string;
+                        /** @enum {string} */
+                        readonly profile: "constant" | "decreasing" | "declared";
+                        readonly rate?: {
+                            /** @enum {string} */
+                            readonly method: "simple" | "compound";
+                            readonly percentPerPeriod: string;
+                            /** @enum {string} */
+                            readonly periodicity: "monthly";
+                        } | null;
+                    };
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly allocationOrder: readonly ("fee" | "interest" | "principal")[] | null;
+                        /** @enum {string} */
+                        readonly businessDayRule: "next-business-day" | "none";
+                        /** Format: date */
+                        readonly contractedOn: string;
+                        readonly count: number;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly declaredAmounts: readonly string[] | null;
+                        readonly description: string;
+                        /** Format: date */
+                        readonly firstDueOn: string;
+                        readonly lateFeePercent: string | null;
+                        readonly principal: string;
+                        /** @enum {string} */
+                        readonly profile: "constant" | "decreasing" | "declared";
+                        readonly rate: {
+                            /** @enum {string} */
+                            readonly method: "simple" | "compound";
+                            readonly percentPerPeriod: string;
+                            /** @enum {string} */
+                            readonly periodicity: "monthly";
+                        } | null;
+                        readonly calculationVersion: number;
+                        /** Format: uuid */
+                        readonly counterpartyId: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly credit: string;
+                        /** @enum {string} */
+                        readonly direction: "payable" | "receivable";
+                        readonly events: readonly {
+                            readonly allocationOrder: readonly ("fee" | "interest" | "principal")[] | null;
+                            readonly amount: string | null;
+                            readonly declaredFee: string | null;
+                            readonly discount: string | null;
+                            /** @enum {string|null} */
+                            readonly excess: "extra-amortization" | "receivable-credit" | null;
+                            /** Format: uuid */
+                            readonly id: string;
+                            /** @enum {string} */
+                            readonly kind: "payment" | "prepayment" | "renegotiation" | "reversal";
+                            /** Format: uuid */
+                            readonly newLoanId: string | null;
+                            /** Format: date */
+                            readonly occurredOn: string | null;
+                            readonly reason: string | null;
+                            /** Format: date-time */
+                            readonly recordedAt: string;
+                            readonly reversed: boolean;
+                            /** Format: uuid */
+                            readonly reversedEventId: string | null;
+                        }[];
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly installments: readonly {
+                            readonly amount: string;
+                            readonly declaredFee: string | null;
+                            /**
+                             * Format: date
+                             * @description Effective due date; delay starts the next day.
+                             */
+                            readonly dueOn: string;
+                            readonly estimatedFee: string | null;
+                            readonly interest: string;
+                            readonly number: number;
+                            readonly paid: string;
+                            readonly principal: string;
+                            readonly remaining: string;
+                            /** Format: date */
+                            readonly scheduledDueOn: string;
+                            /** @enum {string} */
+                            readonly situation: "paid" | "prepaid" | "renegotiated" | "overdue" | "partial" | "open";
+                        }[];
+                        readonly interest: string;
+                        readonly paidTotal: string;
+                        /** @description Organizational outstanding balance (INV-048); negative when a declared credit exceeds it. */
+                        readonly pending: string;
+                        /** Format: uuid */
+                        readonly renegotiatedFromId: string | null;
+                        /** @enum {string} */
+                        readonly status: "active" | "settled" | "renegotiated";
+                        readonly total: string;
+                    };
+                };
+            };
+            /** @description Invalid terms or idempotency key */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned loan not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency key reused with a different payload */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The loan is already settled or renegotiated, or future date */
             readonly 422: {
                 headers: {
                     readonly [name: string]: unknown;
@@ -6082,7 +6891,7 @@ export interface operations {
         readonly parameters: {
             readonly query?: {
                 readonly resourceId?: unknown;
-                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote";
+                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan";
                 readonly limit?: number;
                 readonly afterSequence?: string;
             };
@@ -6107,7 +6916,7 @@ export interface operations {
                         readonly actorId: string;
                         readonly action: string;
                         /** @enum {string} */
-                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote";
+                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan";
                         /** Format: uuid */
                         readonly resourceId: string;
                         /** @enum {string} */
