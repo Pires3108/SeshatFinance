@@ -824,3 +824,80 @@ test('a recorded purchase is split into installments after a preview (US-044)', 
   );
   expect(await balance.json()).toMatchObject({ amount: '1000.00' });
 });
+
+// Loans (US-047) reuse this file's API process and database fixture.
+test('a declared loan keeps the balance after a partial payment and a corrected reversal (US-047)', async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(90_000);
+  await context.addCookies([
+    {
+      name: '__Host-seshat_session',
+      value: token,
+      domain: 'localhost',
+      path: '/',
+      secure: true,
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ]);
+  const today = new Date();
+  const iso = new Date(today.getTime() - today.getTimezoneOffset() * 60_000)
+    .toISOString()
+    .slice(0, 10);
+
+  await page.goto('/emprestimos');
+  await page.getByRole('button', { name: 'Registrar empréstimo' }).click();
+  const create = page.getByRole('form', { name: 'Registrar empréstimo' });
+  await create.getByLabel('Emprestei (a receber)').check();
+  await create.getByLabel('Descrição').fill('Empréstimo ao Pedro');
+  await create.getByLabel('Valor principal (BRL)').fill('100,00');
+  await create.getByLabel('Data do contrato').fill(iso);
+  await create.getByLabel('Primeiro vencimento').fill(iso);
+  await create.getByLabel('Número de parcelas').fill('1');
+  await create.getByRole('button', { name: 'Registrar' }).click();
+  await expect(page.getByRole('status').first()).toContainText(
+    'Empréstimo registrado',
+    { timeout: 15_000 },
+  );
+  const loan = page
+    .getByRole('listitem')
+    .filter({ hasText: 'Empréstimo ao Pedro' })
+    .first();
+  await expect(loan).toContainText('Pendente: 100,00 BRL');
+
+  const pay = async (amount: string): Promise<void> => {
+    await loan.getByRole('button', { name: 'Registrar pagamento' }).click();
+    const form = loan.getByRole('form', { name: 'Registrar pagamento' });
+    await form.getByLabel('Valor pago (BRL)').fill(amount);
+    await form.getByRole('button', { name: 'Confirmar' }).click();
+    await expect(loan.getByRole('status')).toContainText(
+      'Declaração registrada',
+      { timeout: 15_000 },
+    );
+  };
+  // A wrong payment is reversed and the correct amount declared again.
+  await pay('45,00');
+  await expect(loan).toContainText('Pendente: 55,00 BRL');
+  await loan
+    .getByRole('button', { name: /Reverter pagamento declarado/u })
+    .click();
+  const reversal = loan.getByRole('form', { name: 'Reverter declaração' });
+  await reversal.getByLabel('Motivo da reversão').fill('Valor digitado errado');
+  await reversal.getByRole('button', { name: 'Confirmar' }).click();
+  await expect(loan).toContainText('Pendente: 100,00 BRL', { timeout: 15_000 });
+  await pay('40,00');
+  await expect(loan).toContainText('Pendente: 60,00 BRL');
+  await expect(loan).toContainText('(revertido)');
+  await expect(loan.getByRole('cell', { name: 'Paga em parte' })).toBeVisible();
+
+  // An unclassified excess is refused without changing the balance.
+  await loan.getByRole('button', { name: 'Registrar pagamento' }).click();
+  const excess = loan.getByRole('form', { name: 'Registrar pagamento' });
+  await excess.getByLabel('Valor pago (BRL)').fill('70,00');
+  await excess.getByRole('button', { name: 'Confirmar' }).click();
+  await expect(loan.getByRole('alert')).toContainText('não fecha com o saldo');
+  await excess.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(loan).toContainText('Pendente: 60,00 BRL');
+});
