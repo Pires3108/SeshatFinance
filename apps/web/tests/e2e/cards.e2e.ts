@@ -695,6 +695,7 @@ test('a recorded purchase is split into installments after a preview (US-044)', 
   context,
   request,
 }) => {
+  test.setTimeout(90_000);
   const headers = { Cookie: cookie };
   const account = (await (
     await request.post(`${apiUrl}/api/v1/accounts`, {
@@ -764,6 +765,20 @@ test('a recorded purchase is split into installments after a preview (US-044)', 
     .first();
   await item.getByRole('button', { name: 'Parcelar Geladeira' }).click();
   const form = item.getByRole('form', { name: 'Parcelar Geladeira' });
+  // US-045: compound interest preview shows its calculation memory.
+  await form.getByLabel('Número de parcelas').fill('2');
+  await form.getByLabel('Juros').selectOption('compound');
+  await form.getByLabel('Taxa ao mês (%)').fill('1');
+  await form.getByRole('button', { name: 'Ver prévia' }).click();
+  const memory = form.getByRole('definition');
+  await expect(
+    form.getByRole('region', { name: 'Prévia do parcelamento' }),
+  ).toContainText('Total final: 102,01 BRL', { timeout: 15_000 });
+  await expect(memory.nth(0)).toHaveText('100,00 BRL');
+  await expect(memory.nth(1)).toHaveText('Juros compostos');
+  await expect(memory.nth(2)).toHaveText('1% ao mês');
+  await expect(memory.nth(3)).toHaveText('2');
+  await form.getByLabel('Juros').selectOption('none');
   await form.getByLabel('Número de parcelas').fill('3');
   await form.getByRole('button', { name: 'Ver prévia' }).click();
   const preview = form.getByRole('region', { name: 'Prévia do parcelamento' });

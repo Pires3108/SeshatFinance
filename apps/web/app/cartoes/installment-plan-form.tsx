@@ -33,6 +33,19 @@ function isPreview(value: unknown): value is InstallmentPreview {
   );
 }
 
+function methodLabel(rate: InstallmentPreview['rate']): string {
+  if (rate === null) return 'Sem juros';
+  return rate.method === 'simple' ? 'Juros simples' : 'Juros compostos';
+}
+
+/** RN-020 formulas shown with the declared parameters (US-045). */
+function formulaLabel(rate: InstallmentPreview['rate']): string {
+  if (rate === null) return 'Total = principal';
+  return rate.method === 'simple'
+    ? 'Juros = principal × taxa × períodos'
+    : 'Total = principal × (1 + taxa) ^ períodos';
+}
+
 /**
  * Splits a purchase already recorded with the card (US-044). The preview
  * shows principal, interest, total and each installment (RN-021) before the
@@ -270,10 +283,28 @@ export function InstallmentPlanForm({
               ))}
             </tbody>
           </table>
-          <p className="field-note">
-            Cálculo versão {preview.calculationVersion}: total exato arredondado
-            uma única vez; a diferença de centavos fica na última parcela.
-          </p>
+          <dl aria-label="Memória de cálculo" className="calculation-memory">
+            <dt>Principal</dt>
+            <dd>{money(preview.principal)}</dd>
+            <dt>Método</dt>
+            <dd>{methodLabel(preview.rate)}</dd>
+            <dt>Taxa</dt>
+            <dd>
+              {preview.rate === null
+                ? 'Sem taxa'
+                : `${preview.rate.percentPerPeriod.replace('.', ',')}% ao mês`}
+            </dd>
+            <dt>Períodos</dt>
+            <dd>{preview.count}</dd>
+            <dt>Fórmula</dt>
+            <dd>{formulaLabel(preview.rate)}</dd>
+            <dt>Arredondamento</dt>
+            <dd>
+              Total exato arredondado uma única vez (meio para cima); a
+              diferença de centavos fica na última parcela. Cálculo versão{' '}
+              {preview.calculationVersion}.
+            </dd>
+          </dl>
         </section>
       )}
       <div className="account-actions">
