@@ -45,6 +45,8 @@ model Counterparty {
   updatedAt     DateTime           @map("updated_at") @db.Timestamptz(6)
   version       Int                @default(1)
 
+  loans Loan[]
+
   @@unique([id, ownerId])
   @@index([ownerId, status, name])
   @@map("counterparties")
@@ -383,6 +385,7 @@ enum FinancialAuditResourceType {
   credit_card           @map("credit-card")
   card_purchase         @map("card-purchase")
   card_installment_plan @map("card-installment-plan")
+  loan
   card_invoice          @map("card-invoice")
   invoice_settlement    @map("invoice-settlement")
   manual_exchange_quote @map("manual-exchange-quote")
@@ -654,4 +657,76 @@ model InvoiceSettlement {
   @@unique([transactionId, ownerId])
   @@index([ownerId, cardId, invoiceClosesOn])
   @@map("invoice_settlements")
+}
+
+model Loan {
+  id                     String            @id @db.Uuid
+  ownerId                String            @map("owner_id") @db.Uuid
+  direction              String            @db.VarChar(16)
+  counterpartyId         String?           @map("counterparty_id") @db.Uuid
+  counterparty           Counterparty?     @relation(fields: [counterpartyId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  description            String            @db.VarChar(500)
+  principalMinorUnits    Decimal           @map("principal_minor_units") @db.Decimal(1000, 0)
+  currencyCode           String            @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale Int               @map("currency_minor_unit_scale") @db.SmallInt
+  contractedOn           DateTime          @map("contracted_on") @db.Date
+  firstDueOn             DateTime          @map("first_due_on") @db.Date
+  installmentCount       Int               @map("installment_count") @db.SmallInt
+  rateMethod             String?           @map("rate_method") @db.VarChar(16)
+  ratePercentPerPeriod   String?           @map("rate_percent_per_period") @db.VarChar(16)
+  ratePeriodicity        String?           @map("rate_periodicity") @db.VarChar(16)
+  profile                String            @db.VarChar(16)
+  declaredAmounts        String[]          @map("declared_amounts")
+  lateFeePercent         String?           @map("late_fee_percent") @db.VarChar(16)
+  businessDayRule        String            @map("business_day_rule") @db.VarChar(24)
+  allocationOrder        String[]          @map("allocation_order")
+  calculationVersion     Int               @map("calculation_version")
+  renegotiatedFromId     String?           @map("renegotiated_from_id") @db.Uuid
+  renegotiatedFrom       Loan?             @relation("loan_renegotiations", fields: [renegotiatedFromId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  renegotiations         Loan[]            @relation("loan_renegotiations")
+  createdAt              DateTime          @map("created_at") @db.Timestamptz(6)
+  installments           LoanInstallment[]
+  events                 LoanEvent[]
+
+  @@unique([id, ownerId])
+  @@index([ownerId, createdAt])
+  @@map("loans")
+}
+
+model LoanInstallment {
+  loanId              String   @map("loan_id") @db.Uuid
+  ownerId             String   @map("owner_id") @db.Uuid
+  loan                Loan     @relation(fields: [loanId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  number              Int      @db.SmallInt
+  scheduledDueOn      DateTime @map("scheduled_due_on") @db.Date
+  dueOn               DateTime @map("due_on") @db.Date
+  amountMinorUnits    Decimal  @map("amount_minor_units") @db.Decimal(1000, 0)
+  principalMinorUnits Decimal  @map("principal_minor_units") @db.Decimal(1000, 0)
+  interestMinorUnits  Decimal  @map("interest_minor_units") @db.Decimal(1000, 0)
+
+  @@id([loanId, number])
+  @@map("loan_installments")
+}
+
+model LoanEvent {
+  id                    String    @id @db.Uuid
+  ownerId               String    @map("owner_id") @db.Uuid
+  loanId                String    @map("loan_id") @db.Uuid
+  loan                  Loan      @relation(fields: [loanId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  sequence              Int
+  kind                  String    @db.VarChar(16)
+  occurredOn            DateTime? @map("occurred_on") @db.Date
+  amountMinorUnits      Decimal?  @map("amount_minor_units") @db.Decimal(1000, 0)
+  discountMinorUnits    Decimal?  @map("discount_minor_units") @db.Decimal(1000, 0)
+  declaredFeeMinorUnits Decimal?  @map("declared_fee_minor_units") @db.Decimal(1000, 0)
+  allocationOrder       String[]  @map("allocation_order")
+  excess                String?   @db.VarChar(24)
+  reversedEventId       String?   @map("reversed_event_id") @db.Uuid
+  reason                String?   @db.VarChar(500)
+  newLoanId             String?   @map("new_loan_id") @db.Uuid
+  recordedAt            DateTime  @map("recorded_at") @db.Timestamptz(6)
+
+  @@unique([loanId, sequence])
+  @@index([ownerId, loanId])
+  @@map("loan_events")
 }

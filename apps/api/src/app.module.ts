@@ -30,6 +30,13 @@ import {
   RegisterCardInstallmentPlanUseCase,
   GetCardInstallmentPlanUseCase,
   type CardInstallmentPlanRepository,
+  CreateLoanUseCase,
+  ListLoansUseCase,
+  GetLoanUseCase,
+  RecordLoanEventUseCase,
+  RenegotiateLoanUseCase,
+  LoanCalendar,
+  type LoanRepository,
   ListCardInvoicesUseCase,
   GetCardInvoiceUseCase,
   CloseCardInvoiceUseCase,
@@ -145,6 +152,8 @@ import { CreditCardController } from './cards/credit-card.controller.js';
 import { CardPurchaseController } from './cards/card-purchase.controller.js';
 import { CardInstallmentPlanController } from './cards/card-installment-plan.controller.js';
 import { LazyCardInstallmentPlanRepository } from './cards/lazy-card-installment-plan-repository.js';
+import { LoanController } from './loans/loan.controller.js';
+import { LazyLoanRepository } from './loans/lazy-loan-repository.js';
 import { LazyCardPurchaseRepository } from './cards/lazy-card-purchase-repository.js';
 import { CardInvoiceController } from './cards/card-invoice.controller.js';
 import { LazyCardInvoiceRepository } from './cards/lazy-card-invoice-repository.js';
@@ -219,6 +228,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     CreditCardController,
     CardPurchaseController,
     CardInstallmentPlanController,
+    LoanController,
     CardInvoiceController,
     InvoiceSettlementController,
     CounterpartyController,
@@ -244,6 +254,97 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     TrashEliminationController,
   ],
   providers: [
+    {
+      inject: [
+        LazyLoanRepository,
+        LazyCounterpartyRepository,
+        LazyUserProfileRepository,
+        LazyHolidaySettingsRepository,
+      ],
+      provide: CreateLoanUseCase,
+      useFactory: (
+        loans: LoanRepository,
+        counterparties: CounterpartyRepository,
+        profiles: UserProfileRepository,
+        holidays: HolidaySettingsRepository,
+      ): CreateLoanUseCase =>
+        new CreateLoanUseCase(
+          loans,
+          counterparties,
+          new LoanCalendar(profiles, holidays, new SystemClock()),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [
+        LazyLoanRepository,
+        LazyUserProfileRepository,
+        LazyHolidaySettingsRepository,
+      ],
+      provide: ListLoansUseCase,
+      useFactory: (
+        loans: LoanRepository,
+        profiles: UserProfileRepository,
+        holidays: HolidaySettingsRepository,
+      ): ListLoansUseCase =>
+        new ListLoansUseCase(
+          loans,
+          new LoanCalendar(profiles, holidays, new SystemClock()),
+        ),
+    },
+    {
+      inject: [
+        LazyLoanRepository,
+        LazyUserProfileRepository,
+        LazyHolidaySettingsRepository,
+      ],
+      provide: GetLoanUseCase,
+      useFactory: (
+        loans: LoanRepository,
+        profiles: UserProfileRepository,
+        holidays: HolidaySettingsRepository,
+      ): GetLoanUseCase =>
+        new GetLoanUseCase(
+          loans,
+          new LoanCalendar(profiles, holidays, new SystemClock()),
+        ),
+    },
+    {
+      inject: [
+        LazyLoanRepository,
+        LazyUserProfileRepository,
+        LazyHolidaySettingsRepository,
+      ],
+      provide: RecordLoanEventUseCase,
+      useFactory: (
+        loans: LoanRepository,
+        profiles: UserProfileRepository,
+        holidays: HolidaySettingsRepository,
+      ): RecordLoanEventUseCase =>
+        new RecordLoanEventUseCase(
+          loans,
+          new LoanCalendar(profiles, holidays, new SystemClock()),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [
+        LazyLoanRepository,
+        LazyUserProfileRepository,
+        LazyHolidaySettingsRepository,
+      ],
+      provide: RenegotiateLoanUseCase,
+      useFactory: (
+        loans: LoanRepository,
+        profiles: UserProfileRepository,
+        holidays: HolidaySettingsRepository,
+      ): RenegotiateLoanUseCase =>
+        new RenegotiateLoanUseCase(
+          loans,
+          new LoanCalendar(profiles, holidays, new SystemClock()),
+          new SystemIdentifierGenerator(),
+        ),
+    },
     LazyTrashEliminationRepository,
     {
       inject: [
@@ -319,6 +420,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     LazyCreditCardRepository,
     LazyCardPurchaseRepository,
     LazyCardInstallmentPlanRepository,
+    LazyLoanRepository,
     LazyCardInvoiceRepository,
     LazyInvoiceSettlementRepository,
     LazyCounterpartyRepository,

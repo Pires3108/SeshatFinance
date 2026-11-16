@@ -30,3 +30,4 @@ export { PrismaOpaqueSessionRepository } from './auth/prisma-opaque-session-repo
 export { PrismaLoginAttemptRepository } from './auth/prisma-login-attempt-repository.js';
 export { PrismaOriginAttemptRepository } from './auth/prisma-origin-attempt-repository.js';
 export { PrismaRecoveryRequestAttemptRepository } from './auth/prisma-recovery-request-attempt-repository.js';
+export { PrismaLoanRepository } from './loans/prisma-loan-repository.js';

@@ -2884,6 +2884,2246 @@
         "tags": ["credit-cards"]
       }
     },
+    "/api/v1/loans": {
+      "post": {
+        "operationId": "LoanController_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "allocationOrder": {
+                    "items": {
+                      "enum": ["fee", "interest", "principal"],
+                      "type": "string"
+                    },
+                    "maxItems": 3,
+                    "minItems": 3,
+                    "type": "array",
+                    "nullable": true
+                  },
+                  "businessDayRule": {
+                    "enum": ["next-business-day", "none"],
+                    "type": "string"
+                  },
+                  "contractedOn": {
+                    "format": "date",
+                    "type": "string"
+                  },
+                  "count": {
+                    "maximum": 420,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "currencyCode": {
+                    "pattern": "^[A-Z]{3}$",
+                    "type": "string"
+                  },
+                  "currencyMinorUnitScale": {
+                    "maximum": 18,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "declaredAmounts": {
+                    "items": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "nullable": true,
+                    "type": "array"
+                  },
+                  "description": {
+                    "maxLength": 500,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "firstDueOn": {
+                    "format": "date",
+                    "type": "string"
+                  },
+                  "lateFeePercent": {
+                    "nullable": true,
+                    "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                    "type": "string"
+                  },
+                  "principal": {
+                    "pattern": "^\\d+(?:\\.\\d+)?$",
+                    "type": "string"
+                  },
+                  "profile": {
+                    "enum": ["constant", "decreasing", "declared"],
+                    "type": "string"
+                  },
+                  "rate": {
+                    "additionalProperties": false,
+                    "nullable": true,
+                    "properties": {
+                      "method": {
+                        "enum": ["simple", "compound"],
+                        "type": "string"
+                      },
+                      "percentPerPeriod": {
+                        "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                        "type": "string"
+                      },
+                      "periodicity": {
+                        "enum": ["monthly"],
+                        "type": "string"
+                      }
+                    },
+                    "required": ["method", "percentPerPeriod", "periodicity"],
+                    "type": "object"
+                  },
+                  "counterpartyId": {
+                    "format": "uuid",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "direction": {
+                    "enum": ["payable", "receivable"],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "businessDayRule",
+                  "contractedOn",
+                  "count",
+                  "currencyCode",
+                  "currencyMinorUnitScale",
+                  "description",
+                  "firstDueOn",
+                  "principal",
+                  "profile",
+                  "direction"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "A loan to pay or receive, declared by the holder. Seshat Finance never moves money for it.",
+                  "properties": {
+                    "allocationOrder": {
+                      "items": {
+                        "enum": ["fee", "interest", "principal"],
+                        "type": "string"
+                      },
+                      "maxItems": 3,
+                      "minItems": 3,
+                      "type": "array",
+                      "nullable": true
+                    },
+                    "businessDayRule": {
+                      "enum": ["next-business-day", "none"],
+                      "type": "string"
+                    },
+                    "contractedOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "count": {
+                      "maximum": 420,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "declaredAmounts": {
+                      "items": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "nullable": true,
+                      "type": "array"
+                    },
+                    "description": {
+                      "maxLength": 500,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "firstDueOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "lateFeePercent": {
+                      "nullable": true,
+                      "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                      "type": "string"
+                    },
+                    "principal": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "profile": {
+                      "enum": ["constant", "decreasing", "declared"],
+                      "type": "string"
+                    },
+                    "rate": {
+                      "additionalProperties": false,
+                      "nullable": true,
+                      "properties": {
+                        "method": {
+                          "enum": ["simple", "compound"],
+                          "type": "string"
+                        },
+                        "percentPerPeriod": {
+                          "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                          "type": "string"
+                        },
+                        "periodicity": {
+                          "enum": ["monthly"],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["method", "percentPerPeriod", "periodicity"],
+                      "type": "object"
+                    },
+                    "calculationVersion": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "counterpartyId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "credit": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "direction": {
+                      "enum": ["payable", "receivable"],
+                      "type": "string"
+                    },
+                    "events": {
+                      "items": {
+                        "properties": {
+                          "allocationOrder": {
+                            "items": {
+                              "enum": ["fee", "interest", "principal"],
+                              "type": "string"
+                            },
+                            "maxItems": 3,
+                            "minItems": 3,
+                            "type": "array",
+                            "nullable": true
+                          },
+                          "amount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "declaredFee": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "discount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "excess": {
+                            "enum": ["extra-amortization", "receivable-credit"],
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "kind": {
+                            "enum": [
+                              "payment",
+                              "prepayment",
+                              "renegotiation",
+                              "reversal"
+                            ],
+                            "type": "string"
+                          },
+                          "newLoanId": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "occurredOn": {
+                            "format": "date",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "reason": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "recordedAt": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "reversed": {
+                            "type": "boolean"
+                          },
+                          "reversedEventId": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "allocationOrder",
+                          "amount",
+                          "declaredFee",
+                          "discount",
+                          "excess",
+                          "id",
+                          "kind",
+                          "newLoanId",
+                          "occurredOn",
+                          "reason",
+                          "recordedAt",
+                          "reversed",
+                          "reversedEventId"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "installments": {
+                      "items": {
+                        "properties": {
+                          "amount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "declaredFee": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "dueOn": {
+                            "format": "date",
+                            "type": "string",
+                            "description": "Effective due date; delay starts the next day."
+                          },
+                          "estimatedFee": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "interest": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "number": {
+                            "maximum": 420,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "paid": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "principal": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "remaining": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "scheduledDueOn": {
+                            "format": "date",
+                            "type": "string"
+                          },
+                          "situation": {
+                            "enum": [
+                              "paid",
+                              "prepaid",
+                              "renegotiated",
+                              "overdue",
+                              "partial",
+                              "open"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "amount",
+                          "declaredFee",
+                          "dueOn",
+                          "estimatedFee",
+                          "interest",
+                          "number",
+                          "paid",
+                          "principal",
+                          "remaining",
+                          "scheduledDueOn",
+                          "situation"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "interest": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "paidTotal": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "pending": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Organizational outstanding balance (INV-048); negative when a declared credit exceeds it."
+                    },
+                    "renegotiatedFromId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "status": {
+                      "enum": ["active", "settled", "renegotiated"],
+                      "type": "string"
+                    },
+                    "total": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "allocationOrder",
+                    "businessDayRule",
+                    "contractedOn",
+                    "count",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "declaredAmounts",
+                    "description",
+                    "firstDueOn",
+                    "lateFeePercent",
+                    "principal",
+                    "profile",
+                    "rate",
+                    "calculationVersion",
+                    "counterpartyId",
+                    "createdAt",
+                    "credit",
+                    "direction",
+                    "events",
+                    "id",
+                    "installments",
+                    "interest",
+                    "paidTotal",
+                    "pending",
+                    "renegotiatedFromId",
+                    "status",
+                    "total"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid terms or idempotency key"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned active counterparty not found"
+          },
+          "409": {
+            "description": "Idempotency key reused with a different payload"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a loan already agreed outside Seshat Finance",
+        "tags": ["loans"]
+      },
+      "get": {
+        "operationId": "LoanController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "description": "A loan to pay or receive, declared by the holder. Seshat Finance never moves money for it.",
+                    "properties": {
+                      "allocationOrder": {
+                        "items": {
+                          "enum": ["fee", "interest", "principal"],
+                          "type": "string"
+                        },
+                        "maxItems": 3,
+                        "minItems": 3,
+                        "type": "array",
+                        "nullable": true
+                      },
+                      "businessDayRule": {
+                        "enum": ["next-business-day", "none"],
+                        "type": "string"
+                      },
+                      "contractedOn": {
+                        "format": "date",
+                        "type": "string"
+                      },
+                      "count": {
+                        "maximum": 420,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "currencyCode": {
+                        "pattern": "^[A-Z]{3}$",
+                        "type": "string"
+                      },
+                      "currencyMinorUnitScale": {
+                        "maximum": 18,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "declaredAmounts": {
+                        "items": {
+                          "pattern": "^\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                      },
+                      "description": {
+                        "maxLength": 500,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "firstDueOn": {
+                        "format": "date",
+                        "type": "string"
+                      },
+                      "lateFeePercent": {
+                        "nullable": true,
+                        "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                        "type": "string"
+                      },
+                      "principal": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "profile": {
+                        "enum": ["constant", "decreasing", "declared"],
+                        "type": "string"
+                      },
+                      "rate": {
+                        "additionalProperties": false,
+                        "nullable": true,
+                        "properties": {
+                          "method": {
+                            "enum": ["simple", "compound"],
+                            "type": "string"
+                          },
+                          "percentPerPeriod": {
+                            "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                            "type": "string"
+                          },
+                          "periodicity": {
+                            "enum": ["monthly"],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "method",
+                          "percentPerPeriod",
+                          "periodicity"
+                        ],
+                        "type": "object"
+                      },
+                      "calculationVersion": {
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "counterpartyId": {
+                        "format": "uuid",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "credit": {
+                        "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "direction": {
+                        "enum": ["payable", "receivable"],
+                        "type": "string"
+                      },
+                      "events": {
+                        "items": {
+                          "properties": {
+                            "allocationOrder": {
+                              "items": {
+                                "enum": ["fee", "interest", "principal"],
+                                "type": "string"
+                              },
+                              "maxItems": 3,
+                              "minItems": 3,
+                              "type": "array",
+                              "nullable": true
+                            },
+                            "amount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "declaredFee": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "discount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "excess": {
+                              "enum": [
+                                "extra-amortization",
+                                "receivable-credit"
+                              ],
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "id": {
+                              "format": "uuid",
+                              "type": "string"
+                            },
+                            "kind": {
+                              "enum": [
+                                "payment",
+                                "prepayment",
+                                "renegotiation",
+                                "reversal"
+                              ],
+                              "type": "string"
+                            },
+                            "newLoanId": {
+                              "format": "uuid",
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "occurredOn": {
+                              "format": "date",
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "reason": {
+                              "nullable": true,
+                              "type": "string"
+                            },
+                            "recordedAt": {
+                              "format": "date-time",
+                              "type": "string"
+                            },
+                            "reversed": {
+                              "type": "boolean"
+                            },
+                            "reversedEventId": {
+                              "format": "uuid",
+                              "nullable": true,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "allocationOrder",
+                            "amount",
+                            "declaredFee",
+                            "discount",
+                            "excess",
+                            "id",
+                            "kind",
+                            "newLoanId",
+                            "occurredOn",
+                            "reason",
+                            "recordedAt",
+                            "reversed",
+                            "reversedEventId"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "installments": {
+                        "items": {
+                          "properties": {
+                            "amount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "declaredFee": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "dueOn": {
+                              "format": "date",
+                              "type": "string",
+                              "description": "Effective due date; delay starts the next day."
+                            },
+                            "estimatedFee": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "interest": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "number": {
+                              "maximum": 420,
+                              "minimum": 1,
+                              "type": "integer"
+                            },
+                            "paid": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "principal": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "remaining": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "scheduledDueOn": {
+                              "format": "date",
+                              "type": "string"
+                            },
+                            "situation": {
+                              "enum": [
+                                "paid",
+                                "prepaid",
+                                "renegotiated",
+                                "overdue",
+                                "partial",
+                                "open"
+                              ],
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "amount",
+                            "declaredFee",
+                            "dueOn",
+                            "estimatedFee",
+                            "interest",
+                            "number",
+                            "paid",
+                            "principal",
+                            "remaining",
+                            "scheduledDueOn",
+                            "situation"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "interest": {
+                        "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "paidTotal": {
+                        "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "pending": {
+                        "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                        "type": "string",
+                        "description": "Organizational outstanding balance (INV-048); negative when a declared credit exceeds it."
+                      },
+                      "renegotiatedFromId": {
+                        "format": "uuid",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "status": {
+                        "enum": ["active", "settled", "renegotiated"],
+                        "type": "string"
+                      },
+                      "total": {
+                        "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "allocationOrder",
+                      "businessDayRule",
+                      "contractedOn",
+                      "count",
+                      "currencyCode",
+                      "currencyMinorUnitScale",
+                      "declaredAmounts",
+                      "description",
+                      "firstDueOn",
+                      "lateFeePercent",
+                      "principal",
+                      "profile",
+                      "rate",
+                      "calculationVersion",
+                      "counterpartyId",
+                      "createdAt",
+                      "credit",
+                      "direction",
+                      "events",
+                      "id",
+                      "installments",
+                      "interest",
+                      "paidTotal",
+                      "pending",
+                      "renegotiatedFromId",
+                      "status",
+                      "total"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List owned loans with their pending balance",
+        "tags": ["loans"]
+      }
+    },
+    "/api/v1/loans/{loanId}": {
+      "get": {
+        "operationId": "LoanController_get",
+        "parameters": [
+          {
+            "name": "loanId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "A loan to pay or receive, declared by the holder. Seshat Finance never moves money for it.",
+                  "properties": {
+                    "allocationOrder": {
+                      "items": {
+                        "enum": ["fee", "interest", "principal"],
+                        "type": "string"
+                      },
+                      "maxItems": 3,
+                      "minItems": 3,
+                      "type": "array",
+                      "nullable": true
+                    },
+                    "businessDayRule": {
+                      "enum": ["next-business-day", "none"],
+                      "type": "string"
+                    },
+                    "contractedOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "count": {
+                      "maximum": 420,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "declaredAmounts": {
+                      "items": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "nullable": true,
+                      "type": "array"
+                    },
+                    "description": {
+                      "maxLength": 500,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "firstDueOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "lateFeePercent": {
+                      "nullable": true,
+                      "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                      "type": "string"
+                    },
+                    "principal": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "profile": {
+                      "enum": ["constant", "decreasing", "declared"],
+                      "type": "string"
+                    },
+                    "rate": {
+                      "additionalProperties": false,
+                      "nullable": true,
+                      "properties": {
+                        "method": {
+                          "enum": ["simple", "compound"],
+                          "type": "string"
+                        },
+                        "percentPerPeriod": {
+                          "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                          "type": "string"
+                        },
+                        "periodicity": {
+                          "enum": ["monthly"],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["method", "percentPerPeriod", "periodicity"],
+                      "type": "object"
+                    },
+                    "calculationVersion": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "counterpartyId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "credit": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "direction": {
+                      "enum": ["payable", "receivable"],
+                      "type": "string"
+                    },
+                    "events": {
+                      "items": {
+                        "properties": {
+                          "allocationOrder": {
+                            "items": {
+                              "enum": ["fee", "interest", "principal"],
+                              "type": "string"
+                            },
+                            "maxItems": 3,
+                            "minItems": 3,
+                            "type": "array",
+                            "nullable": true
+                          },
+                          "amount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "declaredFee": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "discount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "excess": {
+                            "enum": ["extra-amortization", "receivable-credit"],
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "kind": {
+                            "enum": [
+                              "payment",
+                              "prepayment",
+                              "renegotiation",
+                              "reversal"
+                            ],
+                            "type": "string"
+                          },
+                          "newLoanId": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "occurredOn": {
+                            "format": "date",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "reason": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "recordedAt": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "reversed": {
+                            "type": "boolean"
+                          },
+                          "reversedEventId": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "allocationOrder",
+                          "amount",
+                          "declaredFee",
+                          "discount",
+                          "excess",
+                          "id",
+                          "kind",
+                          "newLoanId",
+                          "occurredOn",
+                          "reason",
+                          "recordedAt",
+                          "reversed",
+                          "reversedEventId"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "installments": {
+                      "items": {
+                        "properties": {
+                          "amount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "declaredFee": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "dueOn": {
+                            "format": "date",
+                            "type": "string",
+                            "description": "Effective due date; delay starts the next day."
+                          },
+                          "estimatedFee": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "interest": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "number": {
+                            "maximum": 420,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "paid": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "principal": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "remaining": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "scheduledDueOn": {
+                            "format": "date",
+                            "type": "string"
+                          },
+                          "situation": {
+                            "enum": [
+                              "paid",
+                              "prepaid",
+                              "renegotiated",
+                              "overdue",
+                              "partial",
+                              "open"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "amount",
+                          "declaredFee",
+                          "dueOn",
+                          "estimatedFee",
+                          "interest",
+                          "number",
+                          "paid",
+                          "principal",
+                          "remaining",
+                          "scheduledDueOn",
+                          "situation"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "interest": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "paidTotal": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "pending": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Organizational outstanding balance (INV-048); negative when a declared credit exceeds it."
+                    },
+                    "renegotiatedFromId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "status": {
+                      "enum": ["active", "settled", "renegotiated"],
+                      "type": "string"
+                    },
+                    "total": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "allocationOrder",
+                    "businessDayRule",
+                    "contractedOn",
+                    "count",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "declaredAmounts",
+                    "description",
+                    "firstDueOn",
+                    "lateFeePercent",
+                    "principal",
+                    "profile",
+                    "rate",
+                    "calculationVersion",
+                    "counterpartyId",
+                    "createdAt",
+                    "credit",
+                    "direction",
+                    "events",
+                    "id",
+                    "installments",
+                    "interest",
+                    "paidTotal",
+                    "pending",
+                    "renegotiatedFromId",
+                    "status",
+                    "total"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned loan not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a loan with its schedule and events",
+        "tags": ["loans"]
+      }
+    },
+    "/api/v1/loans/{loanId}/events": {
+      "post": {
+        "operationId": "LoanController_event",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "loanId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "allocationOrder": {
+                        "items": {
+                          "enum": ["fee", "interest", "principal"],
+                          "type": "string"
+                        },
+                        "maxItems": 3,
+                        "minItems": 3,
+                        "type": "array",
+                        "nullable": true
+                      },
+                      "amount": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "declaredFee": {
+                        "nullable": true,
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "excess": {
+                        "enum": ["extra-amortization", "receivable-credit"],
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "kind": {
+                        "enum": ["payment"],
+                        "type": "string"
+                      },
+                      "occurredOn": {
+                        "format": "date",
+                        "type": "string"
+                      }
+                    },
+                    "required": ["amount", "kind", "occurredOn"],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "amount": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "discount": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "kind": {
+                        "enum": ["prepayment"],
+                        "type": "string"
+                      },
+                      "occurredOn": {
+                        "format": "date",
+                        "type": "string"
+                      }
+                    },
+                    "required": ["amount", "discount", "kind", "occurredOn"],
+                    "type": "object"
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "enum": ["reversal"],
+                        "type": "string"
+                      },
+                      "reason": {
+                        "maxLength": 500,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "reversedEventId": {
+                        "format": "uuid",
+                        "type": "string"
+                      }
+                    },
+                    "required": ["kind", "reason", "reversedEventId"],
+                    "type": "object"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "A loan to pay or receive, declared by the holder. Seshat Finance never moves money for it.",
+                  "properties": {
+                    "allocationOrder": {
+                      "items": {
+                        "enum": ["fee", "interest", "principal"],
+                        "type": "string"
+                      },
+                      "maxItems": 3,
+                      "minItems": 3,
+                      "type": "array",
+                      "nullable": true
+                    },
+                    "businessDayRule": {
+                      "enum": ["next-business-day", "none"],
+                      "type": "string"
+                    },
+                    "contractedOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "count": {
+                      "maximum": 420,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "declaredAmounts": {
+                      "items": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "nullable": true,
+                      "type": "array"
+                    },
+                    "description": {
+                      "maxLength": 500,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "firstDueOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "lateFeePercent": {
+                      "nullable": true,
+                      "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                      "type": "string"
+                    },
+                    "principal": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "profile": {
+                      "enum": ["constant", "decreasing", "declared"],
+                      "type": "string"
+                    },
+                    "rate": {
+                      "additionalProperties": false,
+                      "nullable": true,
+                      "properties": {
+                        "method": {
+                          "enum": ["simple", "compound"],
+                          "type": "string"
+                        },
+                        "percentPerPeriod": {
+                          "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                          "type": "string"
+                        },
+                        "periodicity": {
+                          "enum": ["monthly"],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["method", "percentPerPeriod", "periodicity"],
+                      "type": "object"
+                    },
+                    "calculationVersion": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "counterpartyId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "credit": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "direction": {
+                      "enum": ["payable", "receivable"],
+                      "type": "string"
+                    },
+                    "events": {
+                      "items": {
+                        "properties": {
+                          "allocationOrder": {
+                            "items": {
+                              "enum": ["fee", "interest", "principal"],
+                              "type": "string"
+                            },
+                            "maxItems": 3,
+                            "minItems": 3,
+                            "type": "array",
+                            "nullable": true
+                          },
+                          "amount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "declaredFee": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "discount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "excess": {
+                            "enum": ["extra-amortization", "receivable-credit"],
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "kind": {
+                            "enum": [
+                              "payment",
+                              "prepayment",
+                              "renegotiation",
+                              "reversal"
+                            ],
+                            "type": "string"
+                          },
+                          "newLoanId": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "occurredOn": {
+                            "format": "date",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "reason": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "recordedAt": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "reversed": {
+                            "type": "boolean"
+                          },
+                          "reversedEventId": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "allocationOrder",
+                          "amount",
+                          "declaredFee",
+                          "discount",
+                          "excess",
+                          "id",
+                          "kind",
+                          "newLoanId",
+                          "occurredOn",
+                          "reason",
+                          "recordedAt",
+                          "reversed",
+                          "reversedEventId"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "installments": {
+                      "items": {
+                        "properties": {
+                          "amount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "declaredFee": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "dueOn": {
+                            "format": "date",
+                            "type": "string",
+                            "description": "Effective due date; delay starts the next day."
+                          },
+                          "estimatedFee": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "interest": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "number": {
+                            "maximum": 420,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "paid": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "principal": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "remaining": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "scheduledDueOn": {
+                            "format": "date",
+                            "type": "string"
+                          },
+                          "situation": {
+                            "enum": [
+                              "paid",
+                              "prepaid",
+                              "renegotiated",
+                              "overdue",
+                              "partial",
+                              "open"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "amount",
+                          "declaredFee",
+                          "dueOn",
+                          "estimatedFee",
+                          "interest",
+                          "number",
+                          "paid",
+                          "principal",
+                          "remaining",
+                          "scheduledDueOn",
+                          "situation"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "interest": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "paidTotal": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "pending": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Organizational outstanding balance (INV-048); negative when a declared credit exceeds it."
+                    },
+                    "renegotiatedFromId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "status": {
+                      "enum": ["active", "settled", "renegotiated"],
+                      "type": "string"
+                    },
+                    "total": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "allocationOrder",
+                    "businessDayRule",
+                    "contractedOn",
+                    "count",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "declaredAmounts",
+                    "description",
+                    "firstDueOn",
+                    "lateFeePercent",
+                    "principal",
+                    "profile",
+                    "rate",
+                    "calculationVersion",
+                    "counterpartyId",
+                    "createdAt",
+                    "credit",
+                    "direction",
+                    "events",
+                    "id",
+                    "installments",
+                    "interest",
+                    "paidTotal",
+                    "pending",
+                    "renegotiatedFromId",
+                    "status",
+                    "total"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid event or idempotency key"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned loan not found"
+          },
+          "409": {
+            "description": "Idempotency key reused with a different payload"
+          },
+          "422": {
+            "description": "Unclassified excess, prepayment mismatch, closed loan or future date"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Declare a payment, prepayment or reversal already done outside Seshat Finance",
+        "tags": ["loans"]
+      }
+    },
+    "/api/v1/loans/{loanId}/renegotiation": {
+      "post": {
+        "operationId": "LoanController_renegotiation",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "loanId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "occurredOn": {
+                    "format": "date",
+                    "type": "string"
+                  },
+                  "terms": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "allocationOrder": {
+                        "items": {
+                          "enum": ["fee", "interest", "principal"],
+                          "type": "string"
+                        },
+                        "maxItems": 3,
+                        "minItems": 3,
+                        "type": "array",
+                        "nullable": true
+                      },
+                      "businessDayRule": {
+                        "enum": ["next-business-day", "none"],
+                        "type": "string"
+                      },
+                      "contractedOn": {
+                        "format": "date",
+                        "type": "string"
+                      },
+                      "count": {
+                        "maximum": 420,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "currencyCode": {
+                        "pattern": "^[A-Z]{3}$",
+                        "type": "string"
+                      },
+                      "currencyMinorUnitScale": {
+                        "maximum": 18,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "declaredAmounts": {
+                        "items": {
+                          "pattern": "^\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        },
+                        "nullable": true,
+                        "type": "array"
+                      },
+                      "description": {
+                        "maxLength": 500,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "firstDueOn": {
+                        "format": "date",
+                        "type": "string"
+                      },
+                      "lateFeePercent": {
+                        "nullable": true,
+                        "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                        "type": "string"
+                      },
+                      "principal": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "profile": {
+                        "enum": ["constant", "decreasing", "declared"],
+                        "type": "string"
+                      },
+                      "rate": {
+                        "additionalProperties": false,
+                        "nullable": true,
+                        "properties": {
+                          "method": {
+                            "enum": ["simple", "compound"],
+                            "type": "string"
+                          },
+                          "percentPerPeriod": {
+                            "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                            "type": "string"
+                          },
+                          "periodicity": {
+                            "enum": ["monthly"],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "method",
+                          "percentPerPeriod",
+                          "periodicity"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "businessDayRule",
+                      "contractedOn",
+                      "count",
+                      "currencyCode",
+                      "currencyMinorUnitScale",
+                      "description",
+                      "firstDueOn",
+                      "principal",
+                      "profile"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": ["occurredOn", "terms"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "A loan to pay or receive, declared by the holder. Seshat Finance never moves money for it.",
+                  "properties": {
+                    "allocationOrder": {
+                      "items": {
+                        "enum": ["fee", "interest", "principal"],
+                        "type": "string"
+                      },
+                      "maxItems": 3,
+                      "minItems": 3,
+                      "type": "array",
+                      "nullable": true
+                    },
+                    "businessDayRule": {
+                      "enum": ["next-business-day", "none"],
+                      "type": "string"
+                    },
+                    "contractedOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "count": {
+                      "maximum": 420,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "declaredAmounts": {
+                      "items": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      },
+                      "nullable": true,
+                      "type": "array"
+                    },
+                    "description": {
+                      "maxLength": 500,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "firstDueOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "lateFeePercent": {
+                      "nullable": true,
+                      "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                      "type": "string"
+                    },
+                    "principal": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "profile": {
+                      "enum": ["constant", "decreasing", "declared"],
+                      "type": "string"
+                    },
+                    "rate": {
+                      "additionalProperties": false,
+                      "nullable": true,
+                      "properties": {
+                        "method": {
+                          "enum": ["simple", "compound"],
+                          "type": "string"
+                        },
+                        "percentPerPeriod": {
+                          "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                          "type": "string"
+                        },
+                        "periodicity": {
+                          "enum": ["monthly"],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["method", "percentPerPeriod", "periodicity"],
+                      "type": "object"
+                    },
+                    "calculationVersion": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "counterpartyId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "credit": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "direction": {
+                      "enum": ["payable", "receivable"],
+                      "type": "string"
+                    },
+                    "events": {
+                      "items": {
+                        "properties": {
+                          "allocationOrder": {
+                            "items": {
+                              "enum": ["fee", "interest", "principal"],
+                              "type": "string"
+                            },
+                            "maxItems": 3,
+                            "minItems": 3,
+                            "type": "array",
+                            "nullable": true
+                          },
+                          "amount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "declaredFee": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "discount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "excess": {
+                            "enum": ["extra-amortization", "receivable-credit"],
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "kind": {
+                            "enum": [
+                              "payment",
+                              "prepayment",
+                              "renegotiation",
+                              "reversal"
+                            ],
+                            "type": "string"
+                          },
+                          "newLoanId": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "occurredOn": {
+                            "format": "date",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "reason": {
+                            "nullable": true,
+                            "type": "string"
+                          },
+                          "recordedAt": {
+                            "format": "date-time",
+                            "type": "string"
+                          },
+                          "reversed": {
+                            "type": "boolean"
+                          },
+                          "reversedEventId": {
+                            "format": "uuid",
+                            "nullable": true,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "allocationOrder",
+                          "amount",
+                          "declaredFee",
+                          "discount",
+                          "excess",
+                          "id",
+                          "kind",
+                          "newLoanId",
+                          "occurredOn",
+                          "reason",
+                          "recordedAt",
+                          "reversed",
+                          "reversedEventId"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "installments": {
+                      "items": {
+                        "properties": {
+                          "amount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "declaredFee": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "dueOn": {
+                            "format": "date",
+                            "type": "string",
+                            "description": "Effective due date; delay starts the next day."
+                          },
+                          "estimatedFee": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "interest": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "number": {
+                            "maximum": 420,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "paid": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "principal": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "remaining": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "scheduledDueOn": {
+                            "format": "date",
+                            "type": "string"
+                          },
+                          "situation": {
+                            "enum": [
+                              "paid",
+                              "prepaid",
+                              "renegotiated",
+                              "overdue",
+                              "partial",
+                              "open"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "amount",
+                          "declaredFee",
+                          "dueOn",
+                          "estimatedFee",
+                          "interest",
+                          "number",
+                          "paid",
+                          "principal",
+                          "remaining",
+                          "scheduledDueOn",
+                          "situation"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "interest": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "paidTotal": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "pending": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Organizational outstanding balance (INV-048); negative when a declared credit exceeds it."
+                    },
+                    "renegotiatedFromId": {
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "status": {
+                      "enum": ["active", "settled", "renegotiated"],
+                      "type": "string"
+                    },
+                    "total": {
+                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "allocationOrder",
+                    "businessDayRule",
+                    "contractedOn",
+                    "count",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "declaredAmounts",
+                    "description",
+                    "firstDueOn",
+                    "lateFeePercent",
+                    "principal",
+                    "profile",
+                    "rate",
+                    "calculationVersion",
+                    "counterpartyId",
+                    "createdAt",
+                    "credit",
+                    "direction",
+                    "events",
+                    "id",
+                    "installments",
+                    "interest",
+                    "paidTotal",
+                    "pending",
+                    "renegotiatedFromId",
+                    "status",
+                    "total"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid terms or idempotency key"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned loan not found"
+          },
+          "409": {
+            "description": "Idempotency key reused with a different payload"
+          },
+          "422": {
+            "description": "The loan is already settled or renegotiated, or future date"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register a renegotiation agreed outside Seshat Finance as a new linked loan",
+        "tags": ["loans"]
+      }
+    },
     "/api/v1/credit-cards/{cardId}/invoices": {
       "get": {
         "operationId": "CardInvoiceController_list",
@@ -9504,7 +11744,8 @@
                 "card-installment-plan",
                 "card-invoice",
                 "invoice-settlement",
-                "manual-exchange-quote"
+                "manual-exchange-quote",
+                "loan"
               ],
               "type": "string"
             }
@@ -9567,7 +11808,8 @@
                           "card-installment-plan",
                           "card-invoice",
                           "invoice-settlement",
-                          "manual-exchange-quote"
+                          "manual-exchange-quote",
+                          "loan"
                         ]
                       },
                       "resourceId": {
