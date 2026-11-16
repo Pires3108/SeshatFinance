@@ -35,6 +35,8 @@ export type CardInstallmentPlanSnapshot = Readonly<{
   interest: MoneySnapshot;
   total: MoneySnapshot;
   status: CardInstallmentPlanStatus;
+  /** Plan this one renegotiated (US-046), or null for the original plan. */
+  renegotiatedFromId: string | null;
   createdAt: Date;
   installments: readonly CardInstallmentSnapshot[];
 }>;
@@ -65,6 +67,7 @@ export class CardInstallmentPlan {
       plan: InstallmentPlan;
       cycles: readonly CivilDate[];
       installmentIds: readonly string[];
+      renegotiatedFromId?: string | null | undefined;
     }>,
   ): CardInstallmentPlan {
     const { plan, cycles, installmentIds } = properties;
@@ -134,6 +137,7 @@ export class CardInstallmentPlan {
       principal: plan.principal.toSnapshot(),
       purchaseId: properties.purchaseId,
       rate: plan.memory.rate,
+      renegotiatedFromId: properties.renegotiatedFromId ?? null,
       status: 'active',
       total: plan.total.toSnapshot(),
     });
@@ -162,6 +166,7 @@ export class CardInstallmentPlan {
       ownerId: snapshot.ownerId,
       plan: recalculated,
       purchaseId: snapshot.purchaseId,
+      renegotiatedFromId: snapshot.renegotiatedFromId,
     });
     const expected = restored.state.installments;
     const matches =

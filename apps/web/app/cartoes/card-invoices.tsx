@@ -11,6 +11,7 @@ import {
 
 import { formatBalance } from '../accounts/account-presentation';
 import { formatPurchaseAmount, type Purchase } from './card-purchases';
+import { InstallmentPlanActions } from './installment-plan-actions';
 import {
   boundaryLabels,
   formatCivilDate,
@@ -55,8 +56,10 @@ type InstallmentLine = Readonly<{
   count: number;
   description: string;
   interest: string;
+  kind?: 'installment' | 'prepayment';
   number: number;
   planId: string;
+  purchaseId: string;
 }>;
 
 function localToday(): string {
@@ -74,6 +77,7 @@ export function CardInvoices({
   const [invoices, setInvoices] = useState<readonly Invoice[] | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [purchases, setPurchases] = useState<readonly Purchase[] | null>(null);
+  const [managing, setManaging] = useState<string | null>(null);
   const [installments, setInstallments] = useState<readonly InstallmentLine[]>(
     [],
   );
@@ -109,14 +113,16 @@ export function CardInvoices({
     if (message !== null) messageRef.current?.focus();
   }, [message]);
 
-  async function toggle(closesOn: string): Promise<void> {
-    if (expanded === closesOn) {
+  async function toggle(closesOn: string, refresh = false): Promise<void> {
+    if (expanded === closesOn && !refresh) {
       setExpanded(null);
       return;
     }
     setExpanded(closesOn);
-    setPurchases(null);
-    setInstallments([]);
+    if (!refresh) {
+      setPurchases(null);
+      setInstallments([]);
+    }
     try {
       const response = await fetch(
         `/api/cards/${card.id}/invoices/${closesOn}`,
@@ -331,12 +337,42 @@ export function CardInvoices({
                       <ul>
                         {installments.map((line) => (
                           <li key={`${line.planId}-${String(line.number)}`}>
-                            {line.description} — parcela {line.number}/
-                            {line.count}:{' '}
+                            {line.kind === 'prepayment'
+                              ? `${line.description} — antecipação das parcelas futuras: `
+                              : `${line.description} — parcela ${String(line.number)}/${String(line.count)}: `}
                             {formatInvoiceAmount(invoice, line.amount)}
                             {/^0(?:\.0+)?$/u.test(line.interest)
                               ? ''
-                              : ` (juros estimados ${formatInvoiceAmount(invoice, line.interest)})`}
+                              : ` (juros estimados ${formatInvoiceAmount(invoice, line.interest)})`}{' '}
+                            {line.kind !== 'prepayment' && (
+                              <button
+                                aria-expanded={managing === line.purchaseId}
+                                onClick={() => {
+                                  setManaging(
+                                    managing === line.purchaseId
+                                      ? null
+                                      : line.purchaseId,
+                                  );
+                                }}
+                                type="button"
+                              >
+                                {managing === line.purchaseId
+                                  ? 'Ocultar parcelamento'
+                                  : `Gerenciar parcelamento de ${line.description}`}
+                              </button>
+                            )}
+                            {managing === line.purchaseId &&
+                              line.kind !== 'prepayment' && (
+                                <InstallmentPlanActions
+                                  card={card}
+                                  description={line.description}
+                                  onChanged={() => {
+                                    void load();
+                                    void toggle(invoice.closesOn, true);
+                                  }}
+                                  purchaseId={line.purchaseId}
+                                />
+                              )}
                           </li>
                         ))}
                       </ul>

@@ -916,3 +916,131 @@ test('a declared loan keeps the balance after a partial payment and a corrected 
   await excess.getByRole('button', { name: 'Cancelar' }).click();
   await expect(loan).toContainText('Pendente: 60,00 BRL');
 });
+
+test('future installments are prepaid from the invoice and the prepayment is reversed (US-046)', async ({
+  page,
+  context,
+  request,
+}) => {
+  test.setTimeout(90_000);
+  const headers = { Cookie: cookie };
+  const account = (await (
+    await request.post(`${apiUrl}/api/v1/accounts`, {
+      headers,
+      data: {
+        name: 'Conta da antecipação',
+        typeKey: 'checking-account',
+        initialBalance: '1000.00',
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        color: null,
+        description: null,
+        icon: null,
+        institution: null,
+      },
+    })
+  ).json()) as { id: string };
+  const card = (await (
+    await request.post(`${apiUrl}/api/v1/credit-cards`, {
+      headers,
+      data: {
+        brand: 'Elo',
+        closingDay: 31,
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        dueDay: 10,
+        limit: '5000.00',
+        name: 'Cartão antecipado',
+        paymentAccountId: account.id,
+      },
+    })
+  ).json()) as { id: string };
+  const purchase = (await (
+    await request.post(`${apiUrl}/api/v1/credit-cards/${card.id}/purchases`, {
+      headers: { ...headers, 'Idempotency-Key': randomUUID() },
+      data: {
+        amount: '100.00',
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        description: 'Notebook',
+        occurredAt: new Date().toISOString(),
+      },
+    })
+  ).json()) as { id: string; cycleClosesOn: string };
+  const plan = await request.post(
+    `${apiUrl}/api/v1/credit-cards/${card.id}/purchases/${purchase.id}/installment-plan`,
+    {
+      headers: { ...headers, 'Idempotency-Key': randomUUID() },
+      data: { count: 3 },
+    },
+  );
+  expect(plan.status()).toBe(201);
+  await context.addCookies([
+    {
+      name: '__Host-seshat_session',
+      value: token,
+      domain: 'localhost',
+      path: '/',
+      secure: true,
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ]);
+  const totals = async (): Promise<string[]> =>
+    (
+      (await (
+        await request.get(`${apiUrl}/api/v1/credit-cards/${card.id}/invoices`, {
+          headers,
+        })
+      ).json()) as { closesOn: string; purchasesTotal: string }[]
+    )
+      .sort((left, right) => left.closesOn.localeCompare(right.closesOn))
+      .map((invoice) => invoice.purchasesTotal);
+
+  await page.goto('/cartoes');
+  const item = page
+    .getByRole('listitem')
+    .filter({ hasText: 'Cartão antecipado' })
+    .first();
+  const invoices = item.getByRole('region', { name: /Faturas do/u });
+  await invoices
+    .getByRole('listitem')
+    .filter({ hasText: purchase.cycleClosesOn.split('-').reverse().join('/') })
+    .first()
+    .getByRole('button', { name: 'Ver detalhes' })
+    .click();
+  await item
+    .getByRole('button', { name: 'Gerenciar parcelamento de Notebook' })
+    .click();
+  const panel = item.getByRole('region', { name: 'Parcelamento de Notebook' });
+  await panel
+    .getByRole('button', { name: 'Antecipar parcelas futuras' })
+    .click();
+  const prepay = panel.getByRole('form', {
+    name: 'Antecipar parcelas futuras',
+  });
+  await expect(prepay.getByLabel('Valor pago na antecipação')).toHaveValue(
+    '66.67',
+  );
+  await prepay.getByRole('button', { name: 'Confirmar' }).click();
+  await expect(panel.getByRole('status')).toHaveText(
+    'Parcelamento atualizado.',
+    {
+      timeout: 15_000,
+    },
+  );
+  await expect(panel).toContainText('Antecipada');
+  expect(await totals()).toEqual(['100.00', '0.00', '0.00']);
+
+  await panel.getByRole('button', { name: 'Reverter antecipação' }).click();
+  const reversal = panel.getByRole('form', { name: 'Reverter antecipação' });
+  await reversal.getByLabel('Motivo da reversão').fill('Lançada por engano');
+  await reversal.getByRole('button', { name: 'Confirmar' }).click();
+  await expect(panel).toContainText('(revertida)', { timeout: 15_000 });
+  expect(await totals()).toEqual(['33.33', '33.33', '33.34']);
+  const balance = await request.get(
+    `${apiUrl}/api/v1/accounts/${account.id}/balance`,
+    { headers },
+  );
+  expect(await balance.json()).toMatchObject({ amount: '1000.00' });
+});

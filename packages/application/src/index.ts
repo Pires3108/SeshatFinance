@@ -430,3 +430,18 @@ export {
   type RecordLoanEventCommand,
   type RenegotiateLoanCommand,
 } from './loans/manage-loan.js';
+export {
+  CardInstallmentPlanNotFoundError,
+  CHANGE_CARD_INSTALLMENT_PLAN_OPERATION,
+  GetCardInstallmentPlanChainUseCase,
+  PrepayCardInstallmentPlanUseCase,
+  RenegotiateCardInstallmentPlanUseCase,
+  ReverseCardInstallmentPlanChangeUseCase,
+  type CardInstallmentPlanChangeRepository,
+  type CardPlanChainView,
+  type CardPlanChangeWrite,
+  type CardPlanRecord,
+  type PrepayCardInstallmentPlanCommand,
+  type RenegotiateCardInstallmentPlanCommand,
+  type ReverseCardInstallmentPlanChangeCommand,
+} from './cards/manage-card-installment-plan.js';
