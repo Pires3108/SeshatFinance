@@ -277,6 +277,7 @@ export function CardManager(): ReactNode {
           Seshat Finance
         </Link>
         <Link href="/contas">Contas</Link>
+        <Link href="/emprestimos">Empréstimos</Link>
         <Link href="/preferencias">Preferências</Link>
       </header>
       <main className="accounts-page" id="main-content" tabIndex={-1}>

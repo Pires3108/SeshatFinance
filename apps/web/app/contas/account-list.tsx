@@ -171,6 +171,7 @@ export function AccountList(): ReactNode {
           Seshat Finance
         </Link>
         <Link href="/cartoes">Cartões</Link>
+        <Link href="/emprestimos">Empréstimos</Link>
         <Link href="/entrar">Minha sessão</Link>
       </header>
       <main className="accounts-page" id="main-content" tabIndex={-1}>
