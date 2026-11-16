@@ -123,7 +123,7 @@ export function minorUnitsToDecimal(value: string, scale: number): string {
   return negative ? `-${amount}` : amount;
 }
 
-function restorePurchase(row: PersistedPurchase): CardPurchase {
+export function restorePurchase(row: PersistedPurchase): CardPurchase {
   return CardPurchase.restore({
     amount: {
       amount: minorUnitsToDecimal(

@@ -5,13 +5,13 @@ import type {
 import {
   CARD_CLOSING_BOUNDARIES,
   CardInvoice,
-  Currency,
   Money,
   type CardClosingBoundary,
   type FinancialAuditEvent,
 } from '@seshat/domain';
 
 import { insertFinancialAuditEvent } from '../audit/index.js';
+import { cycleChargeSums, type CycleChargeSum } from './card-cycle-charges.js';
 import type { Prisma, PrismaClient } from '../generated/prisma/client.js';
 import { PrismaTransactionRunner } from '../prisma/prisma-transaction-runner.js';
 import {
@@ -140,37 +140,20 @@ export class PrismaCardInvoiceRepository implements CardInvoiceRepository {
   }
 }
 
-type PurchaseSum = Readonly<{ count: number; total: Money }>;
+type PurchaseSum = CycleChargeSum;
 
-async function purchaseSums(
+/** Charges per cycle: single-invoice purchases plus installments. */
+function purchaseSums(
   client: QueryClient,
   cardId: string,
   ownerId: string,
   closesOn?: string,
 ): Promise<ReadonlyMap<string, PurchaseSum>> {
-  const groups = await client.cardPurchase.groupBy({
-    _count: { _all: true },
-    _sum: { amountMinorUnits: true },
-    by: ['cycleClosesOn', 'currencyCode', 'currencyMinorUnitScale'],
-    where: {
-      cardId,
-      ownerId,
-      ...(closesOn === undefined
-        ? {}
-        : { cycleClosesOn: civilDateToDate(closesOn) }),
-    },
-  });
-  return new Map(
-    groups.map((group) => [
-      dateToCivilDate(group.cycleClosesOn),
-      {
-        count: group._count._all,
-        total: Money.fromMinorUnits(
-          BigInt((group._sum.amountMinorUnits ?? 0).toFixed(0)),
-          Currency.create(group.currencyCode, group.currencyMinorUnitScale),
-        ),
-      },
-    ]),
+  return cycleChargeSums(
+    client,
+    cardId,
+    ownerId,
+    closesOn === undefined ? undefined : civilDateToDate(closesOn),
   );
 }
 

@@ -201,3 +201,11 @@ export {
   type InstallmentPlanInput,
   type PlannedInstallment,
 } from './installments/installment-plan.js';
+export {
+  CARD_INSTALLMENT_PLAN_STATUSES,
+  CardInstallmentPlan,
+  InvalidCardInstallmentPlanError,
+  type CardInstallmentPlanSnapshot,
+  type CardInstallmentPlanStatus,
+  type CardInstallmentSnapshot,
+} from './cards/card-installment-plan.js';
