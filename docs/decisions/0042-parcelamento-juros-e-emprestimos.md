@@ -42,7 +42,11 @@ Parcelamento no cartão, juros estimados e empréstimos alteram obrigação, sal
   - **decrescente (SAC):** amortizações = `P.split(n)`; juros de cada período = HALF_UP(`saldo devedor × i`); parcela = amortização + juros.
   - **crescente:** parcelas informadas pelo usuário; a soma deve fechar o total declarado, sem fórmula inferida.
   - Sem taxa, os três perfis equivalem a `P.split(n)`.
-- No Price, os juros de cada parcela são HALF_UP(`saldo × i`) e a última parcela absorve a diferença para fechar o total.
+- No Price, o principal acumulado até a parcela `k` segue o valor exato `P × ((1+i)^k − 1) / ((1+i)^n − 1)`, arredondado com HALF_UP e mantido nos limites que impedem componente negativo; os juros da parcela são o valor menos esse principal e a última fecha o total. Em contratos comuns o resultado coincide com HALF_UP(`saldo × i`); a forma acumulada evita amortização negativa com taxa alta e principal pequeno.
+- Perfil constante com juros simples usa o total RN-020 dividido em parcelas iguais, como no cartão; no SAC o método não altera o resultado, pois os juros incidem sobre o saldo de cada período.
+- **Obrigação elegível:** em uma data, são as parcelas com vencimento efetivo até essa data, com multa, juros e principal em aberto. O excedente é o valor que passa dessa obrigação: `extra-amortization` aplica-o às próximas parcelas, da mais antiga para a mais nova, e é recusado se passar do contrato inteiro; `receivable-credit` registra crédito com a contraparte e pode deixar o saldo organizacional negativo.
+- A multa estimada é fixada uma única vez por parcela que fica em aberto depois do vencimento efetivo; uma multa declarada no pagamento vale para a parcela vencida mais antiga.
+- A quitação antecipada exige que valor pago mais desconto seja igual ao saldo pendente na data; depois dela, ou de uma renegociação, novos pagamentos são recusados até que o evento seja revertido.
 - **Multa por atraso:** percentual declarado aplicado uma vez sobre a parcela vencida, com HALF_UP. É estimativa; o valor efetivo declarado prevalece sem apagar a estimativa.
 - **Alocação de pagamento parcial (28/09/2026):** parcela vencida mais antiga primeiro; nela, multa → juros → principal. O usuário pode substituir a prioridade no evento.
 - **Excedente:** exige classificação explícita, `extra-amortization` ou `receivable-credit`. Sem ela, o pagamento é recusado sem escrita.
