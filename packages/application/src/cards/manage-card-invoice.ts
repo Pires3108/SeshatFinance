@@ -133,9 +133,35 @@ export class ListCardInvoicesUseCase {
   }
 }
 
+/** One installment that composes the invoice of its cycle (US-044). */
+export type CardInvoiceInstallment = Readonly<{
+  planId: string;
+  purchaseId: string;
+  description: string;
+  number: number;
+  count: number;
+  amount: Money;
+  principal: Money;
+  interest: Money;
+}>;
+
+export interface CardInvoiceInstallmentReader {
+  listForCycle(
+    cardId: string,
+    cycleClosesOn: string,
+    ownerId: string,
+  ): Promise<readonly CardInvoiceInstallment[]>;
+}
+
+const noInstallments: CardInvoiceInstallmentReader = {
+  listForCycle: () => Promise.resolve([]),
+};
+
 export type CardInvoiceDetail = CardInvoiceStateView &
   Readonly<{
+    /** Purchases paid in this single invoice (installed ones excluded). */
     purchases: readonly CardPurchase[];
+    installments: readonly CardInvoiceInstallment[];
     settlements: readonly InvoiceSettlement[];
   }>;
 
@@ -147,6 +173,7 @@ export class GetCardInvoiceUseCase {
     private readonly purchases: CardInvoicePurchaseReader,
     private readonly settlements: InvoiceSettlementReader,
     private readonly states: InvoiceDueStateResolver,
+    private readonly installments: CardInvoiceInstallmentReader = noInstallments,
   ) {}
 
   public async execute(
@@ -161,17 +188,28 @@ export class GetCardInvoiceUseCase {
       query.actorId,
     );
     if (view === null) throw new CardInvoiceNotFoundError();
+    const installments = await this.installments.listForCycle(
+      card.id,
+      closesOn,
+      query.actorId,
+    );
+    const installed = new Set(
+      installments
+        .filter((installment) => installment.number === 1)
+        .map((installment) => installment.purchaseId),
+    );
     return {
       ...InvoiceDueStateResolver.apply(
         view,
         card,
         await this.states.today(query.actorId),
       ),
-      purchases: await this.purchases.listForCard(
-        card.id,
-        query.actorId,
-        closesOn,
-      ),
+      installments,
+      // A plan's first installment lives in the purchase cycle and replaces
+      // the purchase there, so the listed items add up to the total.
+      purchases: (
+        await this.purchases.listForCard(card.id, query.actorId, closesOn)
+      ).filter((purchase) => !installed.has(purchase.id)),
       settlements: await this.settlements.listForInvoice(
         card.id,
         closesOn,

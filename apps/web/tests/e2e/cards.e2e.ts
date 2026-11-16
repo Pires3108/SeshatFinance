@@ -689,3 +689,138 @@ test('full journey: purchase, close, failed excess, partial and final settlement
   );
   expect(await balance.json()).toMatchObject({ amount: '220.00' });
 });
+
+test('a recorded purchase is split into installments after a preview (US-044)', async ({
+  page,
+  context,
+  request,
+}) => {
+  const headers = { Cookie: cookie };
+  const account = (await (
+    await request.post(`${apiUrl}/api/v1/accounts`, {
+      headers,
+      data: {
+        name: 'Conta do parcelamento',
+        typeKey: 'checking-account',
+        initialBalance: '1000.00',
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        color: null,
+        description: null,
+        icon: null,
+        institution: null,
+      },
+    })
+  ).json()) as { id: string };
+  const card = (await (
+    await request.post(`${apiUrl}/api/v1/credit-cards`, {
+      headers,
+      data: {
+        brand: 'Visa',
+        closingDay: 31,
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        dueDay: 10,
+        limit: '5000.00',
+        name: 'Cartão parcelado',
+        paymentAccountId: account.id,
+      },
+    })
+  ).json()) as { id: string };
+  const purchase = await request.post(
+    `${apiUrl}/api/v1/credit-cards/${card.id}/purchases`,
+    {
+      headers: { ...headers, 'Idempotency-Key': randomUUID() },
+      data: {
+        amount: '100.00',
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        description: 'Geladeira',
+        occurredAt: new Date().toISOString(),
+      },
+    },
+  );
+  expect(purchase.status()).toBe(201);
+  const recorded = (await purchase.json()) as {
+    id: string;
+    cycleClosesOn: string;
+  };
+  await context.addCookies([
+    {
+      name: '__Host-seshat_session',
+      value: token,
+      domain: 'localhost',
+      path: '/',
+      secure: true,
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ]);
+
+  await page.goto('/cartoes');
+  const item = page
+    .getByRole('listitem')
+    .filter({ hasText: 'Cartão parcelado' })
+    .first();
+  await item.getByRole('button', { name: 'Parcelar Geladeira' }).click();
+  const form = item.getByRole('form', { name: 'Parcelar Geladeira' });
+  await form.getByLabel('Número de parcelas').fill('3');
+  await form.getByRole('button', { name: 'Ver prévia' }).click();
+  const preview = form.getByRole('region', { name: 'Prévia do parcelamento' });
+  await expect(preview).toContainText('Total final: 100,00 BRL', {
+    timeout: 15_000,
+  });
+  const rows = preview.getByRole('row');
+  await expect(rows.nth(1)).toContainText('33,33 BRL');
+  await expect(rows.nth(2)).toContainText('33,33 BRL');
+  await expect(rows.nth(3)).toContainText('33,34 BRL');
+
+  // Nothing is recorded before the confirmation.
+  const before = await request.get(
+    `${apiUrl}/api/v1/credit-cards/${card.id}/purchases/${recorded.id}/installment-plan`,
+    { headers },
+  );
+  expect(before.status()).toBe(404);
+
+  await form.getByRole('button', { name: 'Confirmar parcelamento' }).click();
+  await expect(item.getByRole('status').first()).toContainText(
+    'Geladeira parcelada em 3x',
+    { timeout: 15_000 },
+  );
+
+  const invoice = await request.get(
+    `${apiUrl}/api/v1/credit-cards/${card.id}/invoices/${recorded.cycleClosesOn}`,
+    { headers },
+  );
+  expect(await invoice.json()).toMatchObject({
+    installments: [{ amount: '33.33', count: 3, number: 1 }],
+    purchases: [],
+    purchasesTotal: '33.33',
+  });
+  const invoices = (await (
+    await request.get(`${apiUrl}/api/v1/credit-cards/${card.id}/invoices`, {
+      headers,
+    })
+  ).json()) as { closesOn: string; purchasesTotal: string }[];
+  expect(invoices.map((entry) => entry.purchasesTotal).sort()).toEqual([
+    '33.33',
+    '33.33',
+    '33.34',
+  ]);
+
+  await page.reload();
+  const reloaded = page
+    .getByRole('listitem')
+    .filter({ hasText: 'Cartão parcelado' })
+    .first();
+  await expect(
+    reloaded.getByText(
+      'Compromisso projetado: o ciclo desta fatura ainda não começou.',
+    ),
+  ).toHaveCount(2);
+  const balance = await request.get(
+    `${apiUrl}/api/v1/accounts/${account.id}/balance`,
+    { headers },
+  );
+  expect(await balance.json()).toMatchObject({ amount: '1000.00' });
+});

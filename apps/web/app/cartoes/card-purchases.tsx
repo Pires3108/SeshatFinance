@@ -12,6 +12,7 @@ import {
 
 import { formatBalance } from '../accounts/account-presentation';
 import { formatCivilDate, type Card } from './card-presentation';
+import { InstallmentPlanForm } from './installment-plan-form';
 
 export type Purchase =
   paths['/api/v1/credit-cards/{cardId}/purchases']['get']['responses'][200]['content']['application/json'][number];
@@ -61,6 +62,7 @@ export function CardPurchases({
   const [amount, setAmount] = useState('');
   const [occurredAt, setOccurredAt] = useState(localNow);
   const [saving, setSaving] = useState(false);
+  const [installing, setInstalling] = useState<string | null>(null);
   const [message, setMessage] = useState<Readonly<{
     kind: 'status' | 'error';
     text: string;
@@ -172,7 +174,37 @@ export function CardPurchases({
         <ul>
           {purchases.map((purchase) => (
             <li key={purchase.id}>
-              {purchase.description}: {formatPurchaseAmount(purchase)}
+              {purchase.description}: {formatPurchaseAmount(purchase)}{' '}
+              {installing === purchase.id ? (
+                <InstallmentPlanForm
+                  card={card}
+                  onClose={() => {
+                    setInstalling(null);
+                  }}
+                  onRecorded={(plan) => {
+                    setInstalling(null);
+                    const first = plan.installments[0];
+                    setMessage({
+                      kind: 'status',
+                      text: `${purchase.description} parcelada em ${String(plan.count)}x. A primeira parcela compõe a fatura que fecha em ${first === undefined ? '' : formatCivilDate(first.cycleClosesOn)}; as demais ficam projetadas até o seu ciclo.`,
+                    });
+                    void load();
+                    onRecorded();
+                  }}
+                  purchase={purchase}
+                />
+              ) : (
+                <button
+                  aria-label={`Parcelar ${purchase.description}`}
+                  onClick={() => {
+                    setMessage(null);
+                    setInstalling(purchase.id);
+                  }}
+                  type="button"
+                >
+                  Parcelar
+                </button>
+              )}
             </li>
           ))}
         </ul>

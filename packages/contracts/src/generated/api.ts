@@ -197,6 +197,41 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/credit-cards/{cardId}/purchases/{purchaseId}/installment-plan/preview": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Preview splitting a recorded card purchase into installments */
+        readonly post: operations["CardInstallmentPlanController_preview"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/credit-cards/{cardId}/purchases/{purchaseId}/installment-plan": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get the installment plan of a card purchase */
+        readonly get: operations["CardInstallmentPlanController_get"];
+        readonly put?: never;
+        /** Split a recorded card purchase into installments (declaration only) */
+        readonly post: operations["CardInstallmentPlanController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/credit-cards/{cardId}/invoices": {
         readonly parameters: {
             readonly query?: never;
@@ -2261,6 +2296,289 @@ export interface operations {
             };
         };
     };
+    readonly CardInstallmentPlanController_preview: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly purchaseId: string;
+                readonly cardId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly count: number;
+                    /** @description Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted. */
+                    readonly rate?: {
+                        /** @enum {string} */
+                        readonly method: "simple" | "compound";
+                        readonly percentPerPeriod: string;
+                        /** @enum {string} */
+                        readonly periodicity: "monthly";
+                    } | null;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly calculationVersion: number;
+                        readonly count: number;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        /** @description Estimated interest. */
+                        readonly interest: string;
+                        readonly principal: string;
+                        /** @description Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted. */
+                        readonly rate: {
+                            /** @enum {string} */
+                            readonly method: "simple" | "compound";
+                            readonly percentPerPeriod: string;
+                            /** @enum {string} */
+                            readonly periodicity: "monthly";
+                        } | null;
+                        /** @description Exact total rounded once, half up, to the currency scale (ADR-042). */
+                        readonly total: string;
+                        readonly installments: readonly {
+                            readonly amount: string;
+                            /**
+                             * Format: date
+                             * @description Closing date of the invoice the installment composes.
+                             */
+                            readonly cycleClosesOn: string;
+                            readonly interest: string;
+                            readonly number: number;
+                            readonly principal: string;
+                            /**
+                             * Format: date
+                             * @description Effective due date.
+                             */
+                            readonly dueOn: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Invalid count or rate */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned card or purchase not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CardInstallmentPlanController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly purchaseId: string;
+                readonly cardId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly calculationVersion: number;
+                        readonly count: number;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        /** @description Estimated interest. */
+                        readonly interest: string;
+                        readonly principal: string;
+                        /** @description Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted. */
+                        readonly rate: {
+                            /** @enum {string} */
+                            readonly method: "simple" | "compound";
+                            readonly percentPerPeriod: string;
+                            /** @enum {string} */
+                            readonly periodicity: "monthly";
+                        } | null;
+                        /** @description Exact total rounded once, half up, to the currency scale (ADR-042). */
+                        readonly total: string;
+                        /** Format: uuid */
+                        readonly cardId: string;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly installments: readonly {
+                            readonly amount: string;
+                            /**
+                             * Format: date
+                             * @description Closing date of the invoice the installment composes.
+                             */
+                            readonly cycleClosesOn: string;
+                            readonly interest: string;
+                            readonly number: number;
+                            readonly principal: string;
+                            /** Format: uuid */
+                            readonly id: string;
+                        }[];
+                        /** Format: uuid */
+                        readonly purchaseId: string;
+                        /** @enum {string} */
+                        readonly status: "active";
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned card, purchase or installment plan not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CardInstallmentPlanController_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                /** @description UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409. */
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly purchaseId: string;
+                readonly cardId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly count: number;
+                    /** @description Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted. */
+                    readonly rate?: {
+                        /** @enum {string} */
+                        readonly method: "simple" | "compound";
+                        readonly percentPerPeriod: string;
+                        /** @enum {string} */
+                        readonly periodicity: "monthly";
+                    } | null;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly calculationVersion: number;
+                        readonly count: number;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        /** @description Estimated interest. */
+                        readonly interest: string;
+                        readonly principal: string;
+                        /** @description Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted. */
+                        readonly rate: {
+                            /** @enum {string} */
+                            readonly method: "simple" | "compound";
+                            readonly percentPerPeriod: string;
+                            /** @enum {string} */
+                            readonly periodicity: "monthly";
+                        } | null;
+                        /** @description Exact total rounded once, half up, to the currency scale (ADR-042). */
+                        readonly total: string;
+                        /** Format: uuid */
+                        readonly cardId: string;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        readonly installments: readonly {
+                            readonly amount: string;
+                            /**
+                             * Format: date
+                             * @description Closing date of the invoice the installment composes.
+                             */
+                            readonly cycleClosesOn: string;
+                            readonly interest: string;
+                            readonly number: number;
+                            readonly principal: string;
+                            /** Format: uuid */
+                            readonly id: string;
+                        }[];
+                        /** Format: uuid */
+                        readonly purchaseId: string;
+                        /** @enum {string} */
+                        readonly status: "active";
+                    };
+                };
+            };
+            /** @description Invalid count, rate or idempotency key */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned card or purchase not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Purchase already split, or idempotency key reused with a different payload */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A target invoice is closed, or settlements already exceed the new obligation */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly CardInvoiceController_list: {
         readonly parameters: {
             readonly query?: never;
@@ -2399,6 +2717,20 @@ export interface operations {
                         readonly status: "open" | "closed";
                         readonly timeZone: string;
                         readonly version: number;
+                        /** @description Installments of plans that compose this cycle (US-044). Together with purchases they add up to purchasesTotal. */
+                        readonly installments: readonly {
+                            readonly amount: string;
+                            readonly count: number;
+                            readonly description: string;
+                            readonly interest: string;
+                            readonly number: number;
+                            /** Format: uuid */
+                            readonly planId: string;
+                            readonly principal: string;
+                            /** Format: uuid */
+                            readonly purchaseId: string;
+                        }[];
+                        /** @description Purchases paid in this single invoice; a purchase split into installments is listed through its installments. */
                         readonly purchases: readonly {
                             readonly amount: string;
                             /** Format: uuid */

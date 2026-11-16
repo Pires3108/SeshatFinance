@@ -2256,6 +2256,634 @@
         "tags": ["credit-cards"]
       }
     },
+    "/api/v1/credit-cards/{cardId}/purchases/{purchaseId}/installment-plan/preview": {
+      "post": {
+        "operationId": "CardInstallmentPlanController_preview",
+        "parameters": [
+          {
+            "name": "purchaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "count": {
+                    "maximum": 420,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "rate": {
+                    "additionalProperties": false,
+                    "description": "Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted.",
+                    "nullable": true,
+                    "properties": {
+                      "method": {
+                        "enum": ["simple", "compound"],
+                        "type": "string"
+                      },
+                      "percentPerPeriod": {
+                        "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                        "type": "string"
+                      },
+                      "periodicity": {
+                        "enum": ["monthly"],
+                        "type": "string"
+                      }
+                    },
+                    "required": ["method", "percentPerPeriod", "periodicity"],
+                    "type": "object"
+                  }
+                },
+                "required": ["count"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "RN-021 preview: principal, interest, total, value and due date of each installment. Nothing is recorded.",
+                  "properties": {
+                    "calculationVersion": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "count": {
+                      "maximum": 420,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "interest": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Estimated interest."
+                    },
+                    "principal": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "rate": {
+                      "additionalProperties": false,
+                      "description": "Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted.",
+                      "nullable": true,
+                      "properties": {
+                        "method": {
+                          "enum": ["simple", "compound"],
+                          "type": "string"
+                        },
+                        "percentPerPeriod": {
+                          "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                          "type": "string"
+                        },
+                        "periodicity": {
+                          "enum": ["monthly"],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["method", "percentPerPeriod", "periodicity"],
+                      "type": "object"
+                    },
+                    "total": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Exact total rounded once, half up, to the currency scale (ADR-042)."
+                    },
+                    "installments": {
+                      "items": {
+                        "properties": {
+                          "amount": {
+                            "pattern": "^\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "cycleClosesOn": {
+                            "format": "date",
+                            "type": "string",
+                            "description": "Closing date of the invoice the installment composes."
+                          },
+                          "interest": {
+                            "pattern": "^\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "number": {
+                            "maximum": 420,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "principal": {
+                            "pattern": "^\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "dueOn": {
+                            "format": "date",
+                            "type": "string",
+                            "description": "Effective due date."
+                          }
+                        },
+                        "required": [
+                          "amount",
+                          "cycleClosesOn",
+                          "interest",
+                          "number",
+                          "principal",
+                          "dueOn"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "calculationVersion",
+                    "count",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "interest",
+                    "principal",
+                    "rate",
+                    "total",
+                    "installments"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid count or rate"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned card or purchase not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Preview splitting a recorded card purchase into installments",
+        "tags": ["credit-cards"]
+      }
+    },
+    "/api/v1/credit-cards/{cardId}/purchases/{purchaseId}/installment-plan": {
+      "post": {
+        "operationId": "CardInstallmentPlanController_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "purchaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "count": {
+                    "maximum": 420,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "rate": {
+                    "additionalProperties": false,
+                    "description": "Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted.",
+                    "nullable": true,
+                    "properties": {
+                      "method": {
+                        "enum": ["simple", "compound"],
+                        "type": "string"
+                      },
+                      "percentPerPeriod": {
+                        "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                        "type": "string"
+                      },
+                      "periodicity": {
+                        "enum": ["monthly"],
+                        "type": "string"
+                      }
+                    },
+                    "required": ["method", "percentPerPeriod", "periodicity"],
+                    "type": "object"
+                  }
+                },
+                "required": ["count"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Frozen installment plan of a recorded purchase: the purchase stays the expense and each installment composes the invoice of its cycle.",
+                  "properties": {
+                    "calculationVersion": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "count": {
+                      "maximum": 420,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "interest": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Estimated interest."
+                    },
+                    "principal": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "rate": {
+                      "additionalProperties": false,
+                      "description": "Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted.",
+                      "nullable": true,
+                      "properties": {
+                        "method": {
+                          "enum": ["simple", "compound"],
+                          "type": "string"
+                        },
+                        "percentPerPeriod": {
+                          "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                          "type": "string"
+                        },
+                        "periodicity": {
+                          "enum": ["monthly"],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["method", "percentPerPeriod", "periodicity"],
+                      "type": "object"
+                    },
+                    "total": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Exact total rounded once, half up, to the currency scale (ADR-042)."
+                    },
+                    "cardId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "installments": {
+                      "items": {
+                        "properties": {
+                          "amount": {
+                            "pattern": "^\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "cycleClosesOn": {
+                            "format": "date",
+                            "type": "string",
+                            "description": "Closing date of the invoice the installment composes."
+                          },
+                          "interest": {
+                            "pattern": "^\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "number": {
+                            "maximum": 420,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "principal": {
+                            "pattern": "^\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "amount",
+                          "cycleClosesOn",
+                          "interest",
+                          "number",
+                          "principal",
+                          "id"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "purchaseId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "status": {
+                      "enum": ["active"],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "calculationVersion",
+                    "count",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "interest",
+                    "principal",
+                    "rate",
+                    "total",
+                    "cardId",
+                    "createdAt",
+                    "id",
+                    "installments",
+                    "purchaseId",
+                    "status"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid count, rate or idempotency key"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned card or purchase not found"
+          },
+          "409": {
+            "description": "Purchase already split, or idempotency key reused with a different payload"
+          },
+          "422": {
+            "description": "A target invoice is closed, or settlements already exceed the new obligation"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Split a recorded card purchase into installments (declaration only)",
+        "tags": ["credit-cards"]
+      },
+      "get": {
+        "operationId": "CardInstallmentPlanController_get",
+        "parameters": [
+          {
+            "name": "purchaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Frozen installment plan of a recorded purchase: the purchase stays the expense and each installment composes the invoice of its cycle.",
+                  "properties": {
+                    "calculationVersion": {
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "count": {
+                      "maximum": 420,
+                      "minimum": 1,
+                      "type": "integer"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "interest": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Estimated interest."
+                    },
+                    "principal": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string"
+                    },
+                    "rate": {
+                      "additionalProperties": false,
+                      "description": "Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted.",
+                      "nullable": true,
+                      "properties": {
+                        "method": {
+                          "enum": ["simple", "compound"],
+                          "type": "string"
+                        },
+                        "percentPerPeriod": {
+                          "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                          "type": "string"
+                        },
+                        "periodicity": {
+                          "enum": ["monthly"],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["method", "percentPerPeriod", "periodicity"],
+                      "type": "object"
+                    },
+                    "total": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Exact total rounded once, half up, to the currency scale (ADR-042)."
+                    },
+                    "cardId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "installments": {
+                      "items": {
+                        "properties": {
+                          "amount": {
+                            "pattern": "^\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "cycleClosesOn": {
+                            "format": "date",
+                            "type": "string",
+                            "description": "Closing date of the invoice the installment composes."
+                          },
+                          "interest": {
+                            "pattern": "^\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "number": {
+                            "maximum": 420,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "principal": {
+                            "pattern": "^\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "amount",
+                          "cycleClosesOn",
+                          "interest",
+                          "number",
+                          "principal",
+                          "id"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "purchaseId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "status": {
+                      "enum": ["active"],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "calculationVersion",
+                    "count",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "interest",
+                    "principal",
+                    "rate",
+                    "total",
+                    "cardId",
+                    "createdAt",
+                    "id",
+                    "installments",
+                    "purchaseId",
+                    "status"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned card, purchase or installment plan not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the installment plan of a card purchase",
+        "tags": ["credit-cards"]
+      }
+    },
     "/api/v1/credit-cards/{cardId}/invoices": {
       "get": {
         "operationId": "CardInvoiceController_list",
@@ -2563,7 +3191,60 @@
                       "minimum": 1,
                       "type": "integer"
                     },
+                    "installments": {
+                      "description": "Installments of plans that compose this cycle (US-044). Together with purchases they add up to purchasesTotal.",
+                      "items": {
+                        "properties": {
+                          "amount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "count": {
+                            "maximum": 420,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "interest": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "number": {
+                            "maximum": 420,
+                            "minimum": 1,
+                            "type": "integer"
+                          },
+                          "planId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "principal": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "purchaseId": {
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "amount",
+                          "count",
+                          "description",
+                          "interest",
+                          "number",
+                          "planId",
+                          "principal",
+                          "purchaseId"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
                     "purchases": {
+                      "description": "Purchases paid in this single invoice; a purchase split into installments is listed through its installments.",
                       "items": {
                         "description": "A purchase already made outside Seshat Finance: one expense and the same card obligation. It never changes the paying account balance.",
                         "properties": {
@@ -2724,6 +3405,7 @@
                     "status",
                     "timeZone",
                     "version",
+                    "installments",
                     "purchases",
                     "settlements"
                   ],
