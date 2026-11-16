@@ -97,6 +97,52 @@ describe('calculateInstallmentPlan', () => {
   });
 
   it.each([
+    ['compound', '1563.88'],
+    ['simple', '1529.37'],
+  ] as const)(
+    'reproduces %s interest at 1.99%% over 12 periods exactly (US-045)',
+    (method, total) => {
+      const input = {
+        count: 12,
+        principal: money('1234.56'),
+        rate: rate(method, '1.99'),
+      };
+
+      expect(calculateInstallmentPlan(input).total.toDecimal()).toBe(total);
+      expect(calculateInstallmentPlan(input).total.toDecimal()).toBe(total);
+    },
+  );
+
+  it('treats a zero rate as no interest for both methods', () => {
+    for (const method of ['simple', 'compound'] as const) {
+      const plan = calculateInstallmentPlan({
+        count: 7,
+        principal: money('99.99'),
+        rate: rate(method, '0'),
+      });
+      expect(plan.interest.toDecimal()).toBe('0.00');
+      expect(plan.total.toDecimal()).toBe('99.99');
+    }
+  });
+
+  it('handles the largest rate over the largest count without losing precision', () => {
+    const plan = calculateInstallmentPlan({
+      count: MAX_INSTALLMENT_COUNT,
+      principal: money('1.00'),
+      rate: rate('compound', '100'),
+    });
+
+    // 1.00 × 2^420: a 129-digit amount in minor units, kept exactly.
+    expect(plan.total.toMinorUnits()).toBe(100n * 2n ** 420n);
+    expect(
+      plan.installments.reduce(
+        (sum, item) => sum + item.amount.toMinorUnits(),
+        0n,
+      ),
+    ).toBe(plan.total.toMinorUnits());
+  });
+
+  it.each([
     ['zero installments', { count: 0, principal: money('10.00'), rate: null }],
     ['fractional count', { count: 1.5, principal: money('10.00'), rate: null }],
     [
