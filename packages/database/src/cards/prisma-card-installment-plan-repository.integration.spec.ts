@@ -262,7 +262,8 @@ describe('card installment plans in PostgreSQL (US-044, INV-005, INV-017, INV-01
   });
 
   it('rejects when the purchase invoice is closed, without writing', async () => {
-    const purchaseId = await purchase('40.00', '2027-10-10T12:00:00.000Z');
+    // Outside the months reached by the concurrent plans above (Aug–Nov 2027).
+    const purchaseId = await purchase('40.00', '2028-02-10T12:00:00.000Z');
     await new CloseCardInvoiceUseCase(
       cards(),
       invoices(),
@@ -276,7 +277,7 @@ describe('card installment plans in PostgreSQL (US-044, INV-005, INV-017, INV-01
         },
         clock,
       ),
-    ).execute({ actorId: ownerId, cardId, closesOn: '2027-10-28' });
+    ).execute({ actorId: ownerId, cardId, closesOn: '2028-02-28' });
 
     await expect(install(purchaseId, 2)).rejects.toThrow(
       CardInstallmentInvoiceClosedError,
@@ -284,7 +285,7 @@ describe('card installment plans in PostgreSQL (US-044, INV-005, INV-017, INV-01
     await expect(
       db().cardInstallmentPlan.count({ where: { purchaseId } }),
     ).resolves.toBe(0);
-    expect(await charges('2027-10-28')).toBe('40.00');
+    expect(await charges('2028-02-28')).toBe('40.00');
   });
 
   it('rejects when declared settlements exceed the new obligation (INV-018)', async () => {

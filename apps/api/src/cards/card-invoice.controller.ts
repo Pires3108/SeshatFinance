@@ -78,6 +78,7 @@ type InvoiceResponse = Readonly<{
 }>;
 type InstallmentLineResponse = Readonly<{
   amount: string;
+  kind: 'installment' | 'prepayment';
   count: number;
   description: string;
   interest: string;
@@ -149,7 +150,13 @@ const installmentLineProperties: Record<string, SchemaObject> = {
   count: { maximum: 420, minimum: 1, type: 'integer' },
   description: { type: 'string' },
   interest: decimal,
-  number: { maximum: 420, minimum: 1, type: 'integer' },
+  kind: {
+    description:
+      'An installment of this cycle, or a declared prepayment of later installments (number 0).',
+    enum: ['installment', 'prepayment'],
+    type: 'string',
+  },
+  number: { maximum: 420, minimum: 0, type: 'integer' },
   planId: { format: 'uuid', type: 'string' },
   principal: decimal,
   purchaseId: { format: 'uuid', type: 'string' },
@@ -247,6 +254,7 @@ export class CardInvoiceController {
           count: line.count,
           description: line.description,
           interest: line.interest.toDecimal(),
+          kind: line.kind,
           number: line.number,
           planId: line.planId,
           principal: line.principal.toDecimal(),

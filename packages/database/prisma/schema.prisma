@@ -543,22 +543,22 @@ model UserDeclaredHoliday {
 }
 
 model CardPurchase {
-  id                     String               @id @db.Uuid
-  ownerId                String               @map("owner_id") @db.Uuid
-  cardId                 String               @map("card_id") @db.Uuid
-  card                   CreditCard           @relation(fields: [cardId, ownerId], references: [id, ownerId], onDelete: Restrict)
-  categoryId             String?              @map("category_id") @db.Uuid
-  category               Category?            @relation(fields: [categoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
-  amountMinorUnits       Decimal              @map("amount_minor_units") @db.Decimal(1000, 0)
-  currencyCode           String               @map("currency_code") @db.Char(3)
-  currencyMinorUnitScale Int                  @map("currency_minor_unit_scale") @db.SmallInt
-  description            String               @db.VarChar(500)
-  externalId             String?              @map("external_id") @db.VarChar(255)
-  occurredAt             DateTime             @map("occurred_at") @db.Timestamptz(6)
-  cycleClosesOn          DateTime             @map("cycle_closes_on") @db.Date
-  postedAfterClose       Boolean              @default(false) @map("posted_after_close")
-  createdAt              DateTime             @map("created_at") @db.Timestamptz(6)
-  installmentPlan        CardInstallmentPlan?
+  id                     String                @id @db.Uuid
+  ownerId                String                @map("owner_id") @db.Uuid
+  cardId                 String                @map("card_id") @db.Uuid
+  card                   CreditCard            @relation(fields: [cardId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  categoryId             String?               @map("category_id") @db.Uuid
+  category               Category?             @relation(fields: [categoryId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  amountMinorUnits       Decimal               @map("amount_minor_units") @db.Decimal(1000, 0)
+  currencyCode           String                @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale Int                   @map("currency_minor_unit_scale") @db.SmallInt
+  description            String                @db.VarChar(500)
+  externalId             String?               @map("external_id") @db.VarChar(255)
+  occurredAt             DateTime              @map("occurred_at") @db.Timestamptz(6)
+  cycleClosesOn          DateTime              @map("cycle_closes_on") @db.Date
+  postedAfterClose       Boolean               @default(false) @map("posted_after_close")
+  createdAt              DateTime              @map("created_at") @db.Timestamptz(6)
+  installmentPlans       CardInstallmentPlan[]
 
   @@unique([id, ownerId])
   @@index([ownerId, cardId, cycleClosesOn, occurredAt])
@@ -566,29 +566,34 @@ model CardPurchase {
 }
 
 model CardInstallmentPlan {
-  id                     String            @id @db.Uuid
-  ownerId                String            @map("owner_id") @db.Uuid
-  cardId                 String            @map("card_id") @db.Uuid
-  card                   CreditCard        @relation(fields: [cardId, ownerId], references: [id, ownerId], onDelete: Restrict)
-  purchaseId             String            @unique @map("purchase_id") @db.Uuid
-  purchase               CardPurchase      @relation(fields: [purchaseId, ownerId], references: [id, ownerId], onDelete: Restrict)
-  calculationVersion     Int               @map("calculation_version")
-  installmentCount       Int               @map("installment_count") @db.SmallInt
-  rateMethod             String?           @map("rate_method") @db.VarChar(16)
-  ratePercentPerPeriod   String?           @map("rate_percent_per_period") @db.VarChar(16)
-  ratePeriodicity        String?           @map("rate_periodicity") @db.VarChar(16)
-  principalMinorUnits    Decimal           @map("principal_minor_units") @db.Decimal(1000, 0)
-  interestMinorUnits     Decimal           @map("interest_minor_units") @db.Decimal(1000, 0)
-  totalMinorUnits        Decimal           @map("total_minor_units") @db.Decimal(1000, 0)
-  currencyCode           String            @map("currency_code") @db.Char(3)
-  currencyMinorUnitScale Int               @map("currency_minor_unit_scale") @db.SmallInt
-  status                 String            @default("active") @db.VarChar(16)
-  createdAt              DateTime          @map("created_at") @db.Timestamptz(6)
+  id                     String                      @id @db.Uuid
+  ownerId                String                      @map("owner_id") @db.Uuid
+  cardId                 String                      @map("card_id") @db.Uuid
+  card                   CreditCard                  @relation(fields: [cardId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  /// Unique among root plans (partial index in SQL); renegotiated plans repeat it.
+  purchaseId             String                      @map("purchase_id") @db.Uuid
+  purchase               CardPurchase                @relation(fields: [purchaseId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  calculationVersion     Int                         @map("calculation_version")
+  installmentCount       Int                         @map("installment_count") @db.SmallInt
+  rateMethod             String?                     @map("rate_method") @db.VarChar(16)
+  ratePercentPerPeriod   String?                     @map("rate_percent_per_period") @db.VarChar(16)
+  ratePeriodicity        String?                     @map("rate_periodicity") @db.VarChar(16)
+  principalMinorUnits    Decimal                     @map("principal_minor_units") @db.Decimal(1000, 0)
+  interestMinorUnits     Decimal                     @map("interest_minor_units") @db.Decimal(1000, 0)
+  totalMinorUnits        Decimal                     @map("total_minor_units") @db.Decimal(1000, 0)
+  currencyCode           String                      @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale Int                         @map("currency_minor_unit_scale") @db.SmallInt
+  status                 String                      @default("active") @db.VarChar(16)
+  renegotiatedFromId     String?                     @map("renegotiated_from_id") @db.Uuid
+  renegotiatedFrom       CardInstallmentPlan?        @relation("card_plan_renegotiations", fields: [renegotiatedFromId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  renegotiations         CardInstallmentPlan[]       @relation("card_plan_renegotiations")
+  createdAt              DateTime                    @map("created_at") @db.Timestamptz(6)
   installments           CardInstallment[]
+  changes                CardInstallmentPlanChange[]
 
   @@unique([id, ownerId])
-  @@unique([purchaseId, ownerId])
   @@index([ownerId, cardId])
+  @@index([ownerId, purchaseId])
   @@map("card_installment_plans")
 }
 
@@ -729,4 +734,25 @@ model LoanEvent {
   @@unique([loanId, sequence])
   @@index([ownerId, loanId])
   @@map("loan_events")
+}
+
+/// Append-only changes of a card installment plan (US-046, ADR-042).
+model CardInstallmentPlanChange {
+  id                     String              @id @db.Uuid
+  ownerId                String              @map("owner_id") @db.Uuid
+  planId                 String              @map("plan_id") @db.Uuid
+  plan                   CardInstallmentPlan @relation(fields: [planId, ownerId], references: [id, ownerId], onDelete: Restrict)
+  sequence               Int
+  kind                   String              @db.VarChar(16)
+  effectiveCycleClosesOn DateTime?           @map("effective_cycle_closes_on") @db.Date
+  amountMinorUnits       Decimal?            @map("amount_minor_units") @db.Decimal(1000, 0)
+  discountMinorUnits     Decimal?            @map("discount_minor_units") @db.Decimal(1000, 0)
+  newPlanId              String?             @map("new_plan_id") @db.Uuid
+  reversedChangeId       String?             @map("reversed_change_id") @db.Uuid
+  reason                 String?             @db.VarChar(500)
+  recordedAt             DateTime            @map("recorded_at") @db.Timestamptz(6)
+
+  @@unique([planId, sequence])
+  @@index([ownerId, planId])
+  @@map("card_installment_plan_changes")
 }

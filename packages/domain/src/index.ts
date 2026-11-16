@@ -253,3 +253,16 @@ export {
   type LoanState,
   type LoanStatus,
 } from './loans/loan-ledger.js';
+export {
+  CardPlanClosedError,
+  CardPlanPrepaymentMismatchError,
+  CardPlanWithoutFutureInstallmentsError,
+  deriveCardPlanState,
+  InvalidCardPlanChangeError,
+  type CardPlanChange,
+  type CardPlanInstallmentSituation,
+  type CardPlanPrepayment,
+  type CardPlanRenegotiation,
+  type CardPlanReversal,
+  type CardPlanState,
+} from './cards/card-installment-plan-change.js';

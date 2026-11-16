@@ -135,6 +135,8 @@ export class ListCardInvoicesUseCase {
 
 /** One installment that composes the invoice of its cycle (US-044). */
 export type CardInvoiceInstallment = Readonly<{
+  /** An installment of its cycle, or a declared prepayment (US-046, number 0). */
+  kind: 'installment' | 'prepayment';
   planId: string;
   purchaseId: string;
   description: string;
@@ -195,7 +197,10 @@ export class GetCardInvoiceUseCase {
     );
     const installed = new Set(
       installments
-        .filter((installment) => installment.number === 1)
+        .filter(
+          (installment) =>
+            installment.kind === 'installment' && installment.number === 1,
+        )
         .map((installment) => installment.purchaseId),
     );
     return {

@@ -2884,6 +2884,1461 @@
         "tags": ["credit-cards"]
       }
     },
+    "/api/v1/credit-cards/{cardId}/purchases/{purchaseId}/installment-plan/chain": {
+      "get": {
+        "operationId": "CardInstallmentPlanChangeController_chain",
+        "parameters": [
+          {
+            "name": "purchaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Plans of a purchase, the original first and each renegotiated plan after the one it replaced, with their append-only changes.",
+                  "properties": {
+                    "plans": {
+                      "items": {
+                        "properties": {
+                          "changes": {
+                            "items": {
+                              "properties": {
+                                "amount": {
+                                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "discount": {
+                                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "effectiveCycleClosesOn": {
+                                  "format": "date",
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "id": {
+                                  "format": "uuid",
+                                  "type": "string"
+                                },
+                                "kind": {
+                                  "enum": [
+                                    "prepayment",
+                                    "renegotiation",
+                                    "reversal"
+                                  ],
+                                  "type": "string"
+                                },
+                                "newPlanId": {
+                                  "format": "uuid",
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "reason": {
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "recordedAt": {
+                                  "format": "date-time",
+                                  "type": "string"
+                                },
+                                "reversed": {
+                                  "type": "boolean"
+                                },
+                                "reversedChangeId": {
+                                  "format": "uuid",
+                                  "nullable": true,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "amount",
+                                "discount",
+                                "effectiveCycleClosesOn",
+                                "id",
+                                "kind",
+                                "newPlanId",
+                                "reason",
+                                "recordedAt",
+                                "reversed",
+                                "reversedChangeId"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "futureOutstanding": {
+                            "pattern": "^\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "plan": {
+                            "description": "Frozen installment plan of a recorded purchase: the purchase stays the expense and each installment composes the invoice of its cycle.",
+                            "properties": {
+                              "calculationVersion": {
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              "count": {
+                                "maximum": 420,
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              },
+                              "currencyMinorUnitScale": {
+                                "maximum": 18,
+                                "minimum": 0,
+                                "type": "integer"
+                              },
+                              "interest": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string",
+                                "description": "Estimated interest."
+                              },
+                              "principal": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "rate": {
+                                "additionalProperties": false,
+                                "description": "Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted.",
+                                "nullable": true,
+                                "properties": {
+                                  "method": {
+                                    "enum": ["simple", "compound"],
+                                    "type": "string"
+                                  },
+                                  "percentPerPeriod": {
+                                    "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                                    "type": "string"
+                                  },
+                                  "periodicity": {
+                                    "enum": ["monthly"],
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "method",
+                                  "percentPerPeriod",
+                                  "periodicity"
+                                ],
+                                "type": "object"
+                              },
+                              "total": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string",
+                                "description": "Exact total rounded once, half up, to the currency scale (ADR-042)."
+                              },
+                              "cardId": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "createdAt": {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "installments": {
+                                "items": {
+                                  "properties": {
+                                    "amount": {
+                                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                                      "type": "string"
+                                    },
+                                    "cycleClosesOn": {
+                                      "format": "date",
+                                      "type": "string",
+                                      "description": "Closing date of the invoice the installment composes."
+                                    },
+                                    "interest": {
+                                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                                      "type": "string"
+                                    },
+                                    "number": {
+                                      "maximum": 420,
+                                      "minimum": 1,
+                                      "type": "integer"
+                                    },
+                                    "principal": {
+                                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                                      "type": "string"
+                                    },
+                                    "id": {
+                                      "format": "uuid",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "amount",
+                                    "cycleClosesOn",
+                                    "interest",
+                                    "number",
+                                    "principal",
+                                    "id"
+                                  ],
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              },
+                              "purchaseId": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "status": {
+                                "enum": ["active"],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "calculationVersion",
+                              "count",
+                              "currencyCode",
+                              "currencyMinorUnitScale",
+                              "interest",
+                              "principal",
+                              "rate",
+                              "total",
+                              "cardId",
+                              "createdAt",
+                              "id",
+                              "installments",
+                              "purchaseId",
+                              "status"
+                            ],
+                            "type": "object"
+                          },
+                          "situations": {
+                            "items": {
+                              "properties": {
+                                "amount": {
+                                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                                  "type": "string"
+                                },
+                                "cycleClosesOn": {
+                                  "format": "date",
+                                  "type": "string"
+                                },
+                                "number": {
+                                  "maximum": 420,
+                                  "minimum": 1,
+                                  "type": "integer"
+                                },
+                                "situation": {
+                                  "enum": [
+                                    "invoiced",
+                                    "projected",
+                                    "prepaid",
+                                    "renegotiated"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "amount",
+                                "cycleClosesOn",
+                                "number",
+                                "situation"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "status": {
+                            "enum": ["active", "prepaid", "renegotiated"],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "changes",
+                          "futureOutstanding",
+                          "plan",
+                          "situations",
+                          "status"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "referenceCycleClosesOn": {
+                      "description": "Invoice cycle open today; later installments are projected.",
+                      "format": "date",
+                      "type": "string"
+                    }
+                  },
+                  "required": ["plans", "referenceCycleClosesOn"],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned card, purchase or plan not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get every plan of a card purchase with its changes and situations",
+        "tags": ["credit-cards"]
+      }
+    },
+    "/api/v1/credit-cards/{cardId}/purchases/{purchaseId}/installment-plan/prepayment": {
+      "post": {
+        "operationId": "CardInstallmentPlanChangeController_prepayment",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "purchaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "amount": {
+                    "pattern": "^\\d+(?:\\.\\d+)?$",
+                    "type": "string"
+                  },
+                  "discount": {
+                    "pattern": "^\\d+(?:\\.\\d+)?$",
+                    "type": "string"
+                  }
+                },
+                "required": ["amount", "discount"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Plans of a purchase, the original first and each renegotiated plan after the one it replaced, with their append-only changes.",
+                  "properties": {
+                    "plans": {
+                      "items": {
+                        "properties": {
+                          "changes": {
+                            "items": {
+                              "properties": {
+                                "amount": {
+                                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "discount": {
+                                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "effectiveCycleClosesOn": {
+                                  "format": "date",
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "id": {
+                                  "format": "uuid",
+                                  "type": "string"
+                                },
+                                "kind": {
+                                  "enum": [
+                                    "prepayment",
+                                    "renegotiation",
+                                    "reversal"
+                                  ],
+                                  "type": "string"
+                                },
+                                "newPlanId": {
+                                  "format": "uuid",
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "reason": {
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "recordedAt": {
+                                  "format": "date-time",
+                                  "type": "string"
+                                },
+                                "reversed": {
+                                  "type": "boolean"
+                                },
+                                "reversedChangeId": {
+                                  "format": "uuid",
+                                  "nullable": true,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "amount",
+                                "discount",
+                                "effectiveCycleClosesOn",
+                                "id",
+                                "kind",
+                                "newPlanId",
+                                "reason",
+                                "recordedAt",
+                                "reversed",
+                                "reversedChangeId"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "futureOutstanding": {
+                            "pattern": "^\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "plan": {
+                            "description": "Frozen installment plan of a recorded purchase: the purchase stays the expense and each installment composes the invoice of its cycle.",
+                            "properties": {
+                              "calculationVersion": {
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              "count": {
+                                "maximum": 420,
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              },
+                              "currencyMinorUnitScale": {
+                                "maximum": 18,
+                                "minimum": 0,
+                                "type": "integer"
+                              },
+                              "interest": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string",
+                                "description": "Estimated interest."
+                              },
+                              "principal": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "rate": {
+                                "additionalProperties": false,
+                                "description": "Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted.",
+                                "nullable": true,
+                                "properties": {
+                                  "method": {
+                                    "enum": ["simple", "compound"],
+                                    "type": "string"
+                                  },
+                                  "percentPerPeriod": {
+                                    "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                                    "type": "string"
+                                  },
+                                  "periodicity": {
+                                    "enum": ["monthly"],
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "method",
+                                  "percentPerPeriod",
+                                  "periodicity"
+                                ],
+                                "type": "object"
+                              },
+                              "total": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string",
+                                "description": "Exact total rounded once, half up, to the currency scale (ADR-042)."
+                              },
+                              "cardId": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "createdAt": {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "installments": {
+                                "items": {
+                                  "properties": {
+                                    "amount": {
+                                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                                      "type": "string"
+                                    },
+                                    "cycleClosesOn": {
+                                      "format": "date",
+                                      "type": "string",
+                                      "description": "Closing date of the invoice the installment composes."
+                                    },
+                                    "interest": {
+                                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                                      "type": "string"
+                                    },
+                                    "number": {
+                                      "maximum": 420,
+                                      "minimum": 1,
+                                      "type": "integer"
+                                    },
+                                    "principal": {
+                                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                                      "type": "string"
+                                    },
+                                    "id": {
+                                      "format": "uuid",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "amount",
+                                    "cycleClosesOn",
+                                    "interest",
+                                    "number",
+                                    "principal",
+                                    "id"
+                                  ],
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              },
+                              "purchaseId": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "status": {
+                                "enum": ["active"],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "calculationVersion",
+                              "count",
+                              "currencyCode",
+                              "currencyMinorUnitScale",
+                              "interest",
+                              "principal",
+                              "rate",
+                              "total",
+                              "cardId",
+                              "createdAt",
+                              "id",
+                              "installments",
+                              "purchaseId",
+                              "status"
+                            ],
+                            "type": "object"
+                          },
+                          "situations": {
+                            "items": {
+                              "properties": {
+                                "amount": {
+                                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                                  "type": "string"
+                                },
+                                "cycleClosesOn": {
+                                  "format": "date",
+                                  "type": "string"
+                                },
+                                "number": {
+                                  "maximum": 420,
+                                  "minimum": 1,
+                                  "type": "integer"
+                                },
+                                "situation": {
+                                  "enum": [
+                                    "invoiced",
+                                    "projected",
+                                    "prepaid",
+                                    "renegotiated"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "amount",
+                                "cycleClosesOn",
+                                "number",
+                                "situation"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "status": {
+                            "enum": ["active", "prepaid", "renegotiated"],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "changes",
+                          "futureOutstanding",
+                          "plan",
+                          "situations",
+                          "status"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "referenceCycleClosesOn": {
+                      "description": "Invoice cycle open today; later installments are projected.",
+                      "format": "date",
+                      "type": "string"
+                    }
+                  },
+                  "required": ["plans", "referenceCycleClosesOn"],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid amounts or idempotency key"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned card, purchase or plan not found"
+          },
+          "409": {
+            "description": "Idempotency key reused with a different payload"
+          },
+          "422": {
+            "description": "Amount plus discount differ from the future installments, the plan is closed, or the open invoice is closed"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Declare an early settlement of the future installments agreed with the issuer",
+        "tags": ["credit-cards"]
+      }
+    },
+    "/api/v1/credit-cards/{cardId}/purchases/{purchaseId}/installment-plan/renegotiation": {
+      "post": {
+        "operationId": "CardInstallmentPlanChangeController_renegotiation",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "purchaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "count": {
+                    "maximum": 420,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "principal": {
+                    "pattern": "^\\d+(?:\\.\\d+)?$",
+                    "type": "string"
+                  },
+                  "rate": {
+                    "additionalProperties": false,
+                    "nullable": true,
+                    "properties": {
+                      "method": {
+                        "enum": ["simple", "compound"],
+                        "type": "string"
+                      },
+                      "percentPerPeriod": {
+                        "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                        "type": "string"
+                      },
+                      "periodicity": {
+                        "enum": ["monthly"],
+                        "type": "string"
+                      }
+                    },
+                    "required": ["method", "percentPerPeriod", "periodicity"],
+                    "type": "object"
+                  }
+                },
+                "required": ["count", "principal"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Plans of a purchase, the original first and each renegotiated plan after the one it replaced, with their append-only changes.",
+                  "properties": {
+                    "plans": {
+                      "items": {
+                        "properties": {
+                          "changes": {
+                            "items": {
+                              "properties": {
+                                "amount": {
+                                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "discount": {
+                                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "effectiveCycleClosesOn": {
+                                  "format": "date",
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "id": {
+                                  "format": "uuid",
+                                  "type": "string"
+                                },
+                                "kind": {
+                                  "enum": [
+                                    "prepayment",
+                                    "renegotiation",
+                                    "reversal"
+                                  ],
+                                  "type": "string"
+                                },
+                                "newPlanId": {
+                                  "format": "uuid",
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "reason": {
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "recordedAt": {
+                                  "format": "date-time",
+                                  "type": "string"
+                                },
+                                "reversed": {
+                                  "type": "boolean"
+                                },
+                                "reversedChangeId": {
+                                  "format": "uuid",
+                                  "nullable": true,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "amount",
+                                "discount",
+                                "effectiveCycleClosesOn",
+                                "id",
+                                "kind",
+                                "newPlanId",
+                                "reason",
+                                "recordedAt",
+                                "reversed",
+                                "reversedChangeId"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "futureOutstanding": {
+                            "pattern": "^\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "plan": {
+                            "description": "Frozen installment plan of a recorded purchase: the purchase stays the expense and each installment composes the invoice of its cycle.",
+                            "properties": {
+                              "calculationVersion": {
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              "count": {
+                                "maximum": 420,
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              },
+                              "currencyMinorUnitScale": {
+                                "maximum": 18,
+                                "minimum": 0,
+                                "type": "integer"
+                              },
+                              "interest": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string",
+                                "description": "Estimated interest."
+                              },
+                              "principal": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "rate": {
+                                "additionalProperties": false,
+                                "description": "Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted.",
+                                "nullable": true,
+                                "properties": {
+                                  "method": {
+                                    "enum": ["simple", "compound"],
+                                    "type": "string"
+                                  },
+                                  "percentPerPeriod": {
+                                    "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                                    "type": "string"
+                                  },
+                                  "periodicity": {
+                                    "enum": ["monthly"],
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "method",
+                                  "percentPerPeriod",
+                                  "periodicity"
+                                ],
+                                "type": "object"
+                              },
+                              "total": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string",
+                                "description": "Exact total rounded once, half up, to the currency scale (ADR-042)."
+                              },
+                              "cardId": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "createdAt": {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "installments": {
+                                "items": {
+                                  "properties": {
+                                    "amount": {
+                                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                                      "type": "string"
+                                    },
+                                    "cycleClosesOn": {
+                                      "format": "date",
+                                      "type": "string",
+                                      "description": "Closing date of the invoice the installment composes."
+                                    },
+                                    "interest": {
+                                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                                      "type": "string"
+                                    },
+                                    "number": {
+                                      "maximum": 420,
+                                      "minimum": 1,
+                                      "type": "integer"
+                                    },
+                                    "principal": {
+                                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                                      "type": "string"
+                                    },
+                                    "id": {
+                                      "format": "uuid",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "amount",
+                                    "cycleClosesOn",
+                                    "interest",
+                                    "number",
+                                    "principal",
+                                    "id"
+                                  ],
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              },
+                              "purchaseId": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "status": {
+                                "enum": ["active"],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "calculationVersion",
+                              "count",
+                              "currencyCode",
+                              "currencyMinorUnitScale",
+                              "interest",
+                              "principal",
+                              "rate",
+                              "total",
+                              "cardId",
+                              "createdAt",
+                              "id",
+                              "installments",
+                              "purchaseId",
+                              "status"
+                            ],
+                            "type": "object"
+                          },
+                          "situations": {
+                            "items": {
+                              "properties": {
+                                "amount": {
+                                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                                  "type": "string"
+                                },
+                                "cycleClosesOn": {
+                                  "format": "date",
+                                  "type": "string"
+                                },
+                                "number": {
+                                  "maximum": 420,
+                                  "minimum": 1,
+                                  "type": "integer"
+                                },
+                                "situation": {
+                                  "enum": [
+                                    "invoiced",
+                                    "projected",
+                                    "prepaid",
+                                    "renegotiated"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "amount",
+                                "cycleClosesOn",
+                                "number",
+                                "situation"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "status": {
+                            "enum": ["active", "prepaid", "renegotiated"],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "changes",
+                          "futureOutstanding",
+                          "plan",
+                          "situations",
+                          "status"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "referenceCycleClosesOn": {
+                      "description": "Invoice cycle open today; later installments are projected.",
+                      "format": "date",
+                      "type": "string"
+                    }
+                  },
+                  "required": ["plans", "referenceCycleClosesOn"],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid terms or idempotency key"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned card, purchase or plan not found"
+          },
+          "409": {
+            "description": "Idempotency key reused with a different payload"
+          },
+          "422": {
+            "description": "The plan is closed, has no future installment, or a target invoice is closed"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register a renegotiation agreed with the issuer as a new linked plan",
+        "tags": ["credit-cards"]
+      }
+    },
+    "/api/v1/credit-cards/{cardId}/purchases/{purchaseId}/installment-plan/changes/{changeId}/reversal": {
+      "post": {
+        "operationId": "CardInstallmentPlanChangeController_reversal",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "changeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "purchaseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cardId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "reason": {
+                    "maxLength": 500,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": ["reason"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Plans of a purchase, the original first and each renegotiated plan after the one it replaced, with their append-only changes.",
+                  "properties": {
+                    "plans": {
+                      "items": {
+                        "properties": {
+                          "changes": {
+                            "items": {
+                              "properties": {
+                                "amount": {
+                                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "discount": {
+                                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "effectiveCycleClosesOn": {
+                                  "format": "date",
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "id": {
+                                  "format": "uuid",
+                                  "type": "string"
+                                },
+                                "kind": {
+                                  "enum": [
+                                    "prepayment",
+                                    "renegotiation",
+                                    "reversal"
+                                  ],
+                                  "type": "string"
+                                },
+                                "newPlanId": {
+                                  "format": "uuid",
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "reason": {
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "recordedAt": {
+                                  "format": "date-time",
+                                  "type": "string"
+                                },
+                                "reversed": {
+                                  "type": "boolean"
+                                },
+                                "reversedChangeId": {
+                                  "format": "uuid",
+                                  "nullable": true,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "amount",
+                                "discount",
+                                "effectiveCycleClosesOn",
+                                "id",
+                                "kind",
+                                "newPlanId",
+                                "reason",
+                                "recordedAt",
+                                "reversed",
+                                "reversedChangeId"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "futureOutstanding": {
+                            "pattern": "^\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "plan": {
+                            "description": "Frozen installment plan of a recorded purchase: the purchase stays the expense and each installment composes the invoice of its cycle.",
+                            "properties": {
+                              "calculationVersion": {
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              "count": {
+                                "maximum": 420,
+                                "minimum": 1,
+                                "type": "integer"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              },
+                              "currencyMinorUnitScale": {
+                                "maximum": 18,
+                                "minimum": 0,
+                                "type": "integer"
+                              },
+                              "interest": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string",
+                                "description": "Estimated interest."
+                              },
+                              "principal": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "rate": {
+                                "additionalProperties": false,
+                                "description": "Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted.",
+                                "nullable": true,
+                                "properties": {
+                                  "method": {
+                                    "enum": ["simple", "compound"],
+                                    "type": "string"
+                                  },
+                                  "percentPerPeriod": {
+                                    "pattern": "^\\d{1,3}(?:\\.\\d{1,6})?$",
+                                    "type": "string"
+                                  },
+                                  "periodicity": {
+                                    "enum": ["monthly"],
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "method",
+                                  "percentPerPeriod",
+                                  "periodicity"
+                                ],
+                                "type": "object"
+                              },
+                              "total": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string",
+                                "description": "Exact total rounded once, half up, to the currency scale (ADR-042)."
+                              },
+                              "cardId": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "createdAt": {
+                                "format": "date-time",
+                                "type": "string"
+                              },
+                              "id": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "installments": {
+                                "items": {
+                                  "properties": {
+                                    "amount": {
+                                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                                      "type": "string"
+                                    },
+                                    "cycleClosesOn": {
+                                      "format": "date",
+                                      "type": "string",
+                                      "description": "Closing date of the invoice the installment composes."
+                                    },
+                                    "interest": {
+                                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                                      "type": "string"
+                                    },
+                                    "number": {
+                                      "maximum": 420,
+                                      "minimum": 1,
+                                      "type": "integer"
+                                    },
+                                    "principal": {
+                                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                                      "type": "string"
+                                    },
+                                    "id": {
+                                      "format": "uuid",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "amount",
+                                    "cycleClosesOn",
+                                    "interest",
+                                    "number",
+                                    "principal",
+                                    "id"
+                                  ],
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              },
+                              "purchaseId": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "status": {
+                                "enum": ["active"],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "calculationVersion",
+                              "count",
+                              "currencyCode",
+                              "currencyMinorUnitScale",
+                              "interest",
+                              "principal",
+                              "rate",
+                              "total",
+                              "cardId",
+                              "createdAt",
+                              "id",
+                              "installments",
+                              "purchaseId",
+                              "status"
+                            ],
+                            "type": "object"
+                          },
+                          "situations": {
+                            "items": {
+                              "properties": {
+                                "amount": {
+                                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                                  "type": "string"
+                                },
+                                "cycleClosesOn": {
+                                  "format": "date",
+                                  "type": "string"
+                                },
+                                "number": {
+                                  "maximum": 420,
+                                  "minimum": 1,
+                                  "type": "integer"
+                                },
+                                "situation": {
+                                  "enum": [
+                                    "invoiced",
+                                    "projected",
+                                    "prepaid",
+                                    "renegotiated"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "amount",
+                                "cycleClosesOn",
+                                "number",
+                                "situation"
+                              ],
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "status": {
+                            "enum": ["active", "prepaid", "renegotiated"],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "changes",
+                          "futureOutstanding",
+                          "plan",
+                          "situations",
+                          "status"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "referenceCycleClosesOn": {
+                      "description": "Invoice cycle open today; later installments are projected.",
+                      "format": "date",
+                      "type": "string"
+                    }
+                  },
+                  "required": ["plans", "referenceCycleClosesOn"],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid reversal or idempotency key"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned card, purchase or plan not found"
+          },
+          "409": {
+            "description": "Idempotency key reused with a different payload"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reverse a declared prepayment with a reason",
+        "tags": ["credit-cards"]
+      }
+    },
     "/api/v1/loans": {
       "post": {
         "operationId": "LoanController_create",
@@ -5451,9 +6906,14 @@
                             "pattern": "^-?\\d+(?:\\.\\d+)?$",
                             "type": "string"
                           },
+                          "kind": {
+                            "description": "An installment of this cycle, or a declared prepayment of later installments (number 0).",
+                            "enum": ["installment", "prepayment"],
+                            "type": "string"
+                          },
                           "number": {
                             "maximum": 420,
-                            "minimum": 1,
+                            "minimum": 0,
                             "type": "integer"
                           },
                           "planId": {
@@ -5474,6 +6934,7 @@
                           "count",
                           "description",
                           "interest",
+                          "kind",
                           "number",
                           "planId",
                           "principal",

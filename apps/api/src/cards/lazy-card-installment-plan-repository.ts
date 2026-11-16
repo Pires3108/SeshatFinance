@@ -1,4 +1,7 @@
 import type {
+  CardInstallmentPlanChangeRepository,
+  CardPlanChangeWrite,
+  CardPlanRecord,
   CardInstallmentPlanRepository,
   CardInvoiceInstallment,
   CardInvoiceInstallmentReader,
@@ -17,7 +20,10 @@ import { LazyPrismaClient } from '../platform/lazy-prisma-client.js';
 
 @Injectable()
 export class LazyCardInstallmentPlanRepository
-  implements CardInstallmentPlanRepository, CardInvoiceInstallmentReader
+  implements
+    CardInstallmentPlanRepository,
+    CardInvoiceInstallmentReader,
+    CardInstallmentPlanChangeRepository
 {
   private repository: PrismaCardInstallmentPlanRepository | undefined;
 
@@ -57,6 +63,29 @@ export class LazyCardInstallmentPlanRepository
     ownerId: string,
   ): Promise<readonly CardInvoiceInstallment[]> {
     return this.getRepository().listForCycle(cardId, cycleClosesOn, ownerId);
+  }
+
+  public findChainForPurchase(
+    purchaseId: string,
+    ownerId: string,
+  ): Promise<readonly CardPlanRecord[]> {
+    return this.getRepository().findChainForPurchase(purchaseId, ownerId);
+  }
+
+  public changeAtomically(
+    request: IdempotencyRequest,
+    planId: string,
+    ownerId: string,
+    referenceInvoice: CardInvoice,
+    build: (record: CardPlanRecord) => CardPlanChangeWrite,
+  ): Promise<string> {
+    return this.getRepository().changeAtomically(
+      request,
+      planId,
+      ownerId,
+      referenceInvoice,
+      build,
+    );
   }
 
   private getRepository(): PrismaCardInstallmentPlanRepository {

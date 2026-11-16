@@ -232,6 +232,74 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/credit-cards/{cardId}/purchases/{purchaseId}/installment-plan/chain": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get every plan of a card purchase with its changes and situations */
+        readonly get: operations["CardInstallmentPlanChangeController_chain"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/credit-cards/{cardId}/purchases/{purchaseId}/installment-plan/prepayment": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Declare an early settlement of the future installments agreed with the issuer */
+        readonly post: operations["CardInstallmentPlanChangeController_prepayment"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/credit-cards/{cardId}/purchases/{purchaseId}/installment-plan/renegotiation": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Register a renegotiation agreed with the issuer as a new linked plan */
+        readonly post: operations["CardInstallmentPlanChangeController_renegotiation"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/credit-cards/{cardId}/purchases/{purchaseId}/installment-plan/changes/{changeId}/reversal": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Reverse a declared prepayment with a reason */
+        readonly post: operations["CardInstallmentPlanChangeController_reversal"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/loans": {
         readonly parameters: {
             readonly query?: never;
@@ -2648,6 +2716,563 @@ export interface operations {
             };
         };
     };
+    readonly CardInstallmentPlanChangeController_chain: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly purchaseId: string;
+                readonly cardId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly plans: readonly {
+                            readonly changes: readonly {
+                                readonly amount: string | null;
+                                readonly discount: string | null;
+                                /** Format: date */
+                                readonly effectiveCycleClosesOn: string | null;
+                                /** Format: uuid */
+                                readonly id: string;
+                                /** @enum {string} */
+                                readonly kind: "prepayment" | "renegotiation" | "reversal";
+                                /** Format: uuid */
+                                readonly newPlanId: string | null;
+                                readonly reason: string | null;
+                                /** Format: date-time */
+                                readonly recordedAt: string;
+                                readonly reversed: boolean;
+                                /** Format: uuid */
+                                readonly reversedChangeId: string | null;
+                            }[];
+                            readonly futureOutstanding: string;
+                            /** @description Frozen installment plan of a recorded purchase: the purchase stays the expense and each installment composes the invoice of its cycle. */
+                            readonly plan: {
+                                readonly calculationVersion: number;
+                                readonly count: number;
+                                readonly currencyCode: string;
+                                readonly currencyMinorUnitScale: number;
+                                /** @description Estimated interest. */
+                                readonly interest: string;
+                                readonly principal: string;
+                                /** @description Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted. */
+                                readonly rate: {
+                                    /** @enum {string} */
+                                    readonly method: "simple" | "compound";
+                                    readonly percentPerPeriod: string;
+                                    /** @enum {string} */
+                                    readonly periodicity: "monthly";
+                                } | null;
+                                /** @description Exact total rounded once, half up, to the currency scale (ADR-042). */
+                                readonly total: string;
+                                /** Format: uuid */
+                                readonly cardId: string;
+                                /** Format: date-time */
+                                readonly createdAt: string;
+                                /** Format: uuid */
+                                readonly id: string;
+                                readonly installments: readonly {
+                                    readonly amount: string;
+                                    /**
+                                     * Format: date
+                                     * @description Closing date of the invoice the installment composes.
+                                     */
+                                    readonly cycleClosesOn: string;
+                                    readonly interest: string;
+                                    readonly number: number;
+                                    readonly principal: string;
+                                    /** Format: uuid */
+                                    readonly id: string;
+                                }[];
+                                /** Format: uuid */
+                                readonly purchaseId: string;
+                                /** @enum {string} */
+                                readonly status: "active";
+                            };
+                            readonly situations: readonly {
+                                readonly amount: string;
+                                /** Format: date */
+                                readonly cycleClosesOn: string;
+                                readonly number: number;
+                                /** @enum {string} */
+                                readonly situation: "invoiced" | "projected" | "prepaid" | "renegotiated";
+                            }[];
+                            /** @enum {string} */
+                            readonly status: "active" | "prepaid" | "renegotiated";
+                        }[];
+                        /**
+                         * Format: date
+                         * @description Invoice cycle open today; later installments are projected.
+                         */
+                        readonly referenceCycleClosesOn: string;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned card, purchase or plan not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CardInstallmentPlanChangeController_prepayment: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                /** @description UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409. */
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly purchaseId: string;
+                readonly cardId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly amount: string;
+                    readonly discount: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly plans: readonly {
+                            readonly changes: readonly {
+                                readonly amount: string | null;
+                                readonly discount: string | null;
+                                /** Format: date */
+                                readonly effectiveCycleClosesOn: string | null;
+                                /** Format: uuid */
+                                readonly id: string;
+                                /** @enum {string} */
+                                readonly kind: "prepayment" | "renegotiation" | "reversal";
+                                /** Format: uuid */
+                                readonly newPlanId: string | null;
+                                readonly reason: string | null;
+                                /** Format: date-time */
+                                readonly recordedAt: string;
+                                readonly reversed: boolean;
+                                /** Format: uuid */
+                                readonly reversedChangeId: string | null;
+                            }[];
+                            readonly futureOutstanding: string;
+                            /** @description Frozen installment plan of a recorded purchase: the purchase stays the expense and each installment composes the invoice of its cycle. */
+                            readonly plan: {
+                                readonly calculationVersion: number;
+                                readonly count: number;
+                                readonly currencyCode: string;
+                                readonly currencyMinorUnitScale: number;
+                                /** @description Estimated interest. */
+                                readonly interest: string;
+                                readonly principal: string;
+                                /** @description Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted. */
+                                readonly rate: {
+                                    /** @enum {string} */
+                                    readonly method: "simple" | "compound";
+                                    readonly percentPerPeriod: string;
+                                    /** @enum {string} */
+                                    readonly periodicity: "monthly";
+                                } | null;
+                                /** @description Exact total rounded once, half up, to the currency scale (ADR-042). */
+                                readonly total: string;
+                                /** Format: uuid */
+                                readonly cardId: string;
+                                /** Format: date-time */
+                                readonly createdAt: string;
+                                /** Format: uuid */
+                                readonly id: string;
+                                readonly installments: readonly {
+                                    readonly amount: string;
+                                    /**
+                                     * Format: date
+                                     * @description Closing date of the invoice the installment composes.
+                                     */
+                                    readonly cycleClosesOn: string;
+                                    readonly interest: string;
+                                    readonly number: number;
+                                    readonly principal: string;
+                                    /** Format: uuid */
+                                    readonly id: string;
+                                }[];
+                                /** Format: uuid */
+                                readonly purchaseId: string;
+                                /** @enum {string} */
+                                readonly status: "active";
+                            };
+                            readonly situations: readonly {
+                                readonly amount: string;
+                                /** Format: date */
+                                readonly cycleClosesOn: string;
+                                readonly number: number;
+                                /** @enum {string} */
+                                readonly situation: "invoiced" | "projected" | "prepaid" | "renegotiated";
+                            }[];
+                            /** @enum {string} */
+                            readonly status: "active" | "prepaid" | "renegotiated";
+                        }[];
+                        /**
+                         * Format: date
+                         * @description Invoice cycle open today; later installments are projected.
+                         */
+                        readonly referenceCycleClosesOn: string;
+                    };
+                };
+            };
+            /** @description Invalid amounts or idempotency key */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned card, purchase or plan not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency key reused with a different payload */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Amount plus discount differ from the future installments, the plan is closed, or the open invoice is closed */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CardInstallmentPlanChangeController_renegotiation: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                /** @description UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409. */
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly purchaseId: string;
+                readonly cardId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly count: number;
+                    readonly principal: string;
+                    readonly rate?: {
+                        /** @enum {string} */
+                        readonly method: "simple" | "compound";
+                        readonly percentPerPeriod: string;
+                        /** @enum {string} */
+                        readonly periodicity: "monthly";
+                    } | null;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly plans: readonly {
+                            readonly changes: readonly {
+                                readonly amount: string | null;
+                                readonly discount: string | null;
+                                /** Format: date */
+                                readonly effectiveCycleClosesOn: string | null;
+                                /** Format: uuid */
+                                readonly id: string;
+                                /** @enum {string} */
+                                readonly kind: "prepayment" | "renegotiation" | "reversal";
+                                /** Format: uuid */
+                                readonly newPlanId: string | null;
+                                readonly reason: string | null;
+                                /** Format: date-time */
+                                readonly recordedAt: string;
+                                readonly reversed: boolean;
+                                /** Format: uuid */
+                                readonly reversedChangeId: string | null;
+                            }[];
+                            readonly futureOutstanding: string;
+                            /** @description Frozen installment plan of a recorded purchase: the purchase stays the expense and each installment composes the invoice of its cycle. */
+                            readonly plan: {
+                                readonly calculationVersion: number;
+                                readonly count: number;
+                                readonly currencyCode: string;
+                                readonly currencyMinorUnitScale: number;
+                                /** @description Estimated interest. */
+                                readonly interest: string;
+                                readonly principal: string;
+                                /** @description Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted. */
+                                readonly rate: {
+                                    /** @enum {string} */
+                                    readonly method: "simple" | "compound";
+                                    readonly percentPerPeriod: string;
+                                    /** @enum {string} */
+                                    readonly periodicity: "monthly";
+                                } | null;
+                                /** @description Exact total rounded once, half up, to the currency scale (ADR-042). */
+                                readonly total: string;
+                                /** Format: uuid */
+                                readonly cardId: string;
+                                /** Format: date-time */
+                                readonly createdAt: string;
+                                /** Format: uuid */
+                                readonly id: string;
+                                readonly installments: readonly {
+                                    readonly amount: string;
+                                    /**
+                                     * Format: date
+                                     * @description Closing date of the invoice the installment composes.
+                                     */
+                                    readonly cycleClosesOn: string;
+                                    readonly interest: string;
+                                    readonly number: number;
+                                    readonly principal: string;
+                                    /** Format: uuid */
+                                    readonly id: string;
+                                }[];
+                                /** Format: uuid */
+                                readonly purchaseId: string;
+                                /** @enum {string} */
+                                readonly status: "active";
+                            };
+                            readonly situations: readonly {
+                                readonly amount: string;
+                                /** Format: date */
+                                readonly cycleClosesOn: string;
+                                readonly number: number;
+                                /** @enum {string} */
+                                readonly situation: "invoiced" | "projected" | "prepaid" | "renegotiated";
+                            }[];
+                            /** @enum {string} */
+                            readonly status: "active" | "prepaid" | "renegotiated";
+                        }[];
+                        /**
+                         * Format: date
+                         * @description Invoice cycle open today; later installments are projected.
+                         */
+                        readonly referenceCycleClosesOn: string;
+                    };
+                };
+            };
+            /** @description Invalid terms or idempotency key */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned card, purchase or plan not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency key reused with a different payload */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The plan is closed, has no future installment, or a target invoice is closed */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly CardInstallmentPlanChangeController_reversal: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                /** @description UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409. */
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly changeId: string;
+                readonly purchaseId: string;
+                readonly cardId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly reason: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly plans: readonly {
+                            readonly changes: readonly {
+                                readonly amount: string | null;
+                                readonly discount: string | null;
+                                /** Format: date */
+                                readonly effectiveCycleClosesOn: string | null;
+                                /** Format: uuid */
+                                readonly id: string;
+                                /** @enum {string} */
+                                readonly kind: "prepayment" | "renegotiation" | "reversal";
+                                /** Format: uuid */
+                                readonly newPlanId: string | null;
+                                readonly reason: string | null;
+                                /** Format: date-time */
+                                readonly recordedAt: string;
+                                readonly reversed: boolean;
+                                /** Format: uuid */
+                                readonly reversedChangeId: string | null;
+                            }[];
+                            readonly futureOutstanding: string;
+                            /** @description Frozen installment plan of a recorded purchase: the purchase stays the expense and each installment composes the invoice of its cycle. */
+                            readonly plan: {
+                                readonly calculationVersion: number;
+                                readonly count: number;
+                                readonly currencyCode: string;
+                                readonly currencyMinorUnitScale: number;
+                                /** @description Estimated interest. */
+                                readonly interest: string;
+                                readonly principal: string;
+                                /** @description Declared rate (ADR-042): percentage per period, 0 to 100 with up to six decimal places; only the monthly schedule period is accepted. */
+                                readonly rate: {
+                                    /** @enum {string} */
+                                    readonly method: "simple" | "compound";
+                                    readonly percentPerPeriod: string;
+                                    /** @enum {string} */
+                                    readonly periodicity: "monthly";
+                                } | null;
+                                /** @description Exact total rounded once, half up, to the currency scale (ADR-042). */
+                                readonly total: string;
+                                /** Format: uuid */
+                                readonly cardId: string;
+                                /** Format: date-time */
+                                readonly createdAt: string;
+                                /** Format: uuid */
+                                readonly id: string;
+                                readonly installments: readonly {
+                                    readonly amount: string;
+                                    /**
+                                     * Format: date
+                                     * @description Closing date of the invoice the installment composes.
+                                     */
+                                    readonly cycleClosesOn: string;
+                                    readonly interest: string;
+                                    readonly number: number;
+                                    readonly principal: string;
+                                    /** Format: uuid */
+                                    readonly id: string;
+                                }[];
+                                /** Format: uuid */
+                                readonly purchaseId: string;
+                                /** @enum {string} */
+                                readonly status: "active";
+                            };
+                            readonly situations: readonly {
+                                readonly amount: string;
+                                /** Format: date */
+                                readonly cycleClosesOn: string;
+                                readonly number: number;
+                                /** @enum {string} */
+                                readonly situation: "invoiced" | "projected" | "prepaid" | "renegotiated";
+                            }[];
+                            /** @enum {string} */
+                            readonly status: "active" | "prepaid" | "renegotiated";
+                        }[];
+                        /**
+                         * Format: date
+                         * @description Invoice cycle open today; later installments are projected.
+                         */
+                        readonly referenceCycleClosesOn: string;
+                    };
+                };
+            };
+            /** @description Invalid reversal or idempotency key */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned card, purchase or plan not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency key reused with a different payload */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly LoanController_list: {
         readonly parameters: {
             readonly query?: never;
@@ -3532,6 +4157,11 @@ export interface operations {
                             readonly count: number;
                             readonly description: string;
                             readonly interest: string;
+                            /**
+                             * @description An installment of this cycle, or a declared prepayment of later installments (number 0).
+                             * @enum {string}
+                             */
+                            readonly kind: "installment" | "prepayment";
                             readonly number: number;
                             /** Format: uuid */
                             readonly planId: string;
