@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { CivilDate } from '../calendar/civil-date.js';
+import { InterestRate } from '../interest/interest-rate.js';
 import { Currency } from '../money/currency.js';
 import { Money, type MoneySnapshot } from '../money/money.js';
 import { Loan, type CreateLoanProperties } from './loan.js';
@@ -75,10 +76,9 @@ describe('deriveLoanState (US-047, INV-048)', () => {
   it('starts the delay the day after the effective due date and fixes the fee once', () => {
     const subject = loan({ lateFeePercent: '2' });
 
-    expect(
-      deriveLoanState(subject, [], date('2026-02-10')).installments[0]
-        ?.situation,
-    ).toBe('open');
+    const onDueDate = deriveLoanState(subject, [], date('2026-02-10'));
+    expect(onDueDate.installments[0]?.situation).toBe('open');
+    expect(onDueDate.pending.toDecimal()).toBe('100.00');
     const late = deriveLoanState(subject, [], date('2026-02-11'));
     expect(late.installments[0]).toMatchObject({ situation: 'overdue' });
     expect(late.installments[0]?.estimatedFee?.toDecimal()).toBe('2.00');
@@ -130,6 +130,38 @@ describe('deriveLoanState (US-047, INV-048)', () => {
     expect(state.installments[0]).toMatchObject({ situation: 'paid' });
     expect(state.installments[1]).toMatchObject({ situation: 'overdue' });
     expect(state.pending.toDecimal()).toBe('55.00');
+  });
+
+  it('pays fee, then interest, then principal unless the event overrides it', () => {
+    const subject = loan({
+      lateFeePercent: '10',
+      rate: InterestRate.create({
+        method: 'simple',
+        percentPerPeriod: '5',
+        periodicity: 'monthly',
+      }),
+    });
+    // 100.00 + 5.00 interest; overdue since 10/02, fee 10.50.
+    const components = (events: LoanEvent[]): string[] => {
+      const item = deriveLoanState(subject, events, date('2026-03-01'))
+        .installments[0];
+      return [item?.paidFee, item?.paidInterest, item?.paidPrincipal].map(
+        (value) => value?.toDecimal() ?? '',
+      );
+    };
+
+    expect(components([payment('p1', '2026-03-01', '12.00')])).toEqual([
+      '10.50',
+      '1.50',
+      '0.00',
+    ]);
+    expect(
+      components([
+        payment('p1', '2026-03-01', '12.00', {
+          allocationOrder: ['principal', 'interest', 'fee'],
+        }),
+      ]),
+    ).toEqual(['0.00', '0.00', '12.00']);
   });
 
   it('lets the declared fee prevail over the estimate without erasing it', () => {

@@ -83,6 +83,33 @@ describe('calculateInstallmentPlan', () => {
     expect(plan.total.toDecimal()).toBe('0.51');
   });
 
+  it('rounds the compound total once, never per period (RII-007)', () => {
+    // Exact 1.00 × 1.015² = 1.030225 → 1.03; rounding each period gives 1.04.
+    const plan = calculateInstallmentPlan({
+      count: 2,
+      principal: money('1.00'),
+      rate: rate('compound', '1.5'),
+    });
+
+    expect(plan.total.toDecimal()).toBe('1.03');
+  });
+
+  it('allocates interest by the cumulative share of each installment (INV-019)', () => {
+    // 1.00 at 0.5% simple over 4 periods: total 1.02 split 0.25/0.25/0.25/0.27.
+    const plan = calculateInstallmentPlan({
+      count: 4,
+      principal: money('1.00'),
+      rate: rate('simple', '0.5'),
+    });
+
+    expect(plan.installments.map((item) => item.interest.toDecimal())).toEqual([
+      '0.00',
+      '0.00',
+      '0.01',
+      '0.01',
+    ]);
+  });
+
   it('keeps every component non-negative when residuals diverge', () => {
     const plan = calculateInstallmentPlan({
       count: 3,

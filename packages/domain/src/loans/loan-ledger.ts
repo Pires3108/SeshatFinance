@@ -71,6 +71,10 @@ export type LoanInstallmentState = Readonly<{
   /** Fee declared by the holder; it prevails over the estimate. */
   declaredFee: Money | null;
   paid: Money;
+  /** Allocation of what was paid, per component (ADR-042 order). */
+  paidFee: Money;
+  paidInterest: Money;
+  paidPrincipal: Money;
   remaining: Money;
   situation: LoanInstallmentSituation;
 }>;
@@ -287,6 +291,9 @@ export function deriveLoanState(
           item.estimatedFee === null ? null : money(item.estimatedFee),
         number: item.number,
         paid: money(paid),
+        paidFee: money(item.paidFee),
+        paidInterest: money(item.paidInterest),
+        paidPrincipal: money(item.paidPrincipal),
         remaining: money(left),
         situation: situation(item, left, paid, today),
       };
