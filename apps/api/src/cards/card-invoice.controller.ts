@@ -76,8 +76,19 @@ type InvoiceResponse = Readonly<{
   timeZone: string;
   version: number;
 }>;
+type InstallmentLineResponse = Readonly<{
+  amount: string;
+  count: number;
+  description: string;
+  interest: string;
+  number: number;
+  planId: string;
+  principal: string;
+  purchaseId: string;
+}>;
 type InvoiceDetailResponse = InvoiceResponse &
   Readonly<{
+    installments: readonly InstallmentLineResponse[];
     purchases: readonly PurchaseResponse[];
     settlements: readonly SettlementResponse[];
   }>;
@@ -133,13 +144,43 @@ const invoiceSchema: SchemaObject = {
   required: Object.keys(invoiceProperties),
   type: 'object',
 };
+const installmentLineProperties: Record<string, SchemaObject> = {
+  amount: decimal,
+  count: { maximum: 420, minimum: 1, type: 'integer' },
+  description: { type: 'string' },
+  interest: decimal,
+  number: { maximum: 420, minimum: 1, type: 'integer' },
+  planId: { format: 'uuid', type: 'string' },
+  principal: decimal,
+  purchaseId: { format: 'uuid', type: 'string' },
+};
 const invoiceDetailSchema: SchemaObject = {
   properties: {
     ...invoiceProperties,
-    purchases: { items: purchaseSchema, type: 'array' },
+    installments: {
+      description:
+        'Installments of plans that compose this cycle (US-044). Together with purchases they add up to purchasesTotal.',
+      items: {
+        properties: installmentLineProperties,
+        required: Object.keys(installmentLineProperties),
+        type: 'object',
+      },
+      type: 'array',
+    },
+    purchases: {
+      description:
+        'Purchases paid in this single invoice; a purchase split into installments is listed through its installments.',
+      items: purchaseSchema,
+      type: 'array',
+    },
     settlements: { items: settlementSchema, type: 'array' },
   },
-  required: [...Object.keys(invoiceProperties), 'purchases', 'settlements'],
+  required: [
+    ...Object.keys(invoiceProperties),
+    'installments',
+    'purchases',
+    'settlements',
+  ],
   type: 'object',
 };
 
@@ -201,6 +242,16 @@ export class CardInvoiceController {
       });
       return {
         ...mapInvoice(detail),
+        installments: detail.installments.map((line) => ({
+          amount: line.amount.toDecimal(),
+          count: line.count,
+          description: line.description,
+          interest: line.interest.toDecimal(),
+          number: line.number,
+          planId: line.planId,
+          principal: line.principal.toDecimal(),
+          purchaseId: line.purchaseId,
+        })),
         purchases: detail.purchases.map(mapPurchase),
         settlements: detail.settlements.map(mapSettlement),
       };
