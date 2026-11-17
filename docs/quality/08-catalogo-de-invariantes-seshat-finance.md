@@ -188,6 +188,12 @@ Criar ou editar uma meta não altera saldo ou patrimônio.
 
 **Referências:** RF-047 a RF-050; RN-033.
 
+### INV-047 — Progresso convertido é só apresentação
+
+A conversão do progresso de uma meta para a moeda do alvo usa cotação manual vigente, exibe taxa, fonte e instante, e nunca reescreve valor original, saldo ou patrimônio. Sem cotação válida, o valor convertido fica indisponível, e não zero. Fatias de contas vinculadas e contribuições não somam o mesmo valor duas vezes.
+
+**Referências:** RF-047, RF-049; RN-068 a RN-070; INV-029; ADR-043.
+
 ### INV-027 — Aporte e resgate não alteram patrimônio por si
 
 Registros de aporte e resgate entre conta e investimento reclassificam ativos; taxas, impostos, ganhos ou perdas são registrados separadamente.

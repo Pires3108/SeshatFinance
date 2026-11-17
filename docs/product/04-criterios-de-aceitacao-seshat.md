@@ -98,8 +98,8 @@ Os critérios validam as jornadas críticas sem repetir cada requisito funcional
 
 ### CA-013 — Metas
 
-**Dado** transferência elegível, **quando** distribuir seu valor entre metas, **então** a soma não excederá a transferência e o progresso será atualizado.  
-**Referências:** RF-047 a RF-050; RN-031 a RN-033.
+**Dado** receita ou transferência recebida elegível, **quando** distribuir seu valor entre metas, **então** a soma não excederá o valor elegível da origem e o progresso será atualizado.  
+**Referências:** RF-047 a RF-050; RN-031 a RN-033, RN-068 a RN-071.
 
 ### CA-014 — Investimento manual
 

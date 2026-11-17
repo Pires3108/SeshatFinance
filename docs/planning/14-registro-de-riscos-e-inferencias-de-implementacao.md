@@ -169,11 +169,12 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-018 — Semântica de metas e reservas
 
-- **Estado:** aberto.
+- **Estado:** decidido em 17/11/2026 e registrado no [ADR-043](../decisions/0043-metas-contribuicoes-e-reservas.md); orçamentos pendentes de confirmação na US-052.
 - **Referências:** RF-047 a RF-050; RN-031 a RN-033; US-049 a US-053.
 - **Risco:** alvo, valor inicial, contas associadas, contribuições e prazo não definem compatibilidade de moeda, cardinalidade das contas, fontes elegíveis de contribuição nem fuso do prazo. Inferir essas regras pode contar saldo duas vezes, aceitar progresso em moeda incompatível ou antecipar uma situação vencida.
 - **Decisão necessária:** aprovar moeda e conversão, associação de contas, fontes e limites de contribuição, e semântica calendária do prazo e situação da meta.
-- **Limite atual:** não persistir metas, contribuições, progresso ou reserva derivada até a decisão. A classificação de conta existente permanece independente e não deve ser apresentada como reserva de meta por inferência.
+- **Decisão:** origens elegíveis são receitas e entradas de transferência (RN-068); conta pode servir a várias metas por fatias cuja soma não supera o saldo (RN-069); prazo é data civil no fuso do perfil e a situação é calculada (RN-070); reserva acima do saldo é recusada na declaração e, se o saldo cair depois, é mantida com aviso (RN-071). Conversão de progresso é só de apresentação (INV-047).
+- **Limite atual:** a classificação de conta existente permanece independente e não é apresentada como reserva ou meta por inferência. As regras de orçamento (inclusão de compras de cartão no realizado e sobreposição) aguardam confirmação no início da US-052.
 
 ### RII-019 — Semântica de empréstimos e pagamentos parciais
 
