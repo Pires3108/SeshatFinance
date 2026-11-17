@@ -93,7 +93,7 @@ A primeira versão será uma aplicação web responsiva e instalável como PWA, 
 ### 4.7 Reservas e metas
 
 - **RF-047 — Meta:** criar meta com nome, valor-alvo, prazo opcional, contas associadas e valor inicial.
-- **RF-048 — Contribuições:** vincular registros de transferências a uma ou mais metas, distribuindo valores explicitamente.
+- **RF-048 — Contribuições:** vincular receitas ou transferências recebidas a uma ou mais metas, distribuindo valores explicitamente (RN-068).
 - **RF-049 — Progresso:** apresentar valor acumulado, valor restante, percentual e situação da meta.
 - **RF-050 — Reserva:** classificar contas ou saldos como reserva e separá-los do saldo disponível sem retirá-los do patrimônio.
 

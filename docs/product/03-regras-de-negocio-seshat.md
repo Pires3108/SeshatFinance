@@ -85,3 +85,12 @@
 
 - **RN-058:** uma despesa aceita zero ou mais reembolsos parciais, integrais ou antecipados à sua data de efetivação. Cada reembolso é uma receita própria vinculada à despesa, na mesma moeda, recebida em conta ativa escolhida pelo usuário. A soma líquida dos reembolsos fora da lixeira nunca supera o valor bruto da despesa.
 - **RN-059:** o valor líquido da despesa é o valor bruto menos reembolsos ativos ou arquivados, deduzidas compensações ativas ou arquivadas. A escolha entre exibir a receita separadamente ou compensar visualmente a despesa não altera lançamentos nem saldos. Correções e cancelamentos financeiros criam lançamento compensatório vinculado com motivo e auditoria; arquivamento, lixeira e restauração preservam os vínculos e recalculam o valor líquido. A purga exige resolver vínculos ativos.
+
+## 10. Metas e reservas
+
+Os identificadores RN-068 a RN-071 seguem a numeração já citada nas histórias da Sprint 8 (SESHAT-65 a SESHAT-69). Detalhes no [ADR-043](../decisions/0043-metas-contribuicoes-e-reservas.md).
+
+- **RN-068:** são origens elegíveis de contribuição as receitas efetivadas e o lado de entrada de transferências efetivadas do titular. O valor elegível é o da movimentação, deduzidos reembolsos e estornos vinculados ativos ou arquivados.
+- **RN-069:** uma conta pode ser vinculada a várias metas, cada vínculo com uma fatia declarada (valor na moeda da conta ou saldo inteiro). A soma das fatias não supera o saldo da conta na declaração; contribuição para conta já vinculada à mesma meta não é contada de novo.
+- **RN-070:** o prazo da meta é data civil no fuso do perfil. A situação é concluída quando o progresso alcança o alvo, atrasada a partir do dia civil seguinte ao prazo se o alvo não foi alcançado e em andamento nos demais casos; pausada e arquivada são escolhas do usuário. Sem cotação válida, progresso convertido e situação ficam indisponíveis, nunca zero.
+- **RN-071:** reserva acima do saldo contábil é recusada na declaração. Se o saldo cair depois abaixo da reserva, a reserva declarada é mantida, o disponível pode ficar negativo e o usuário é avisado; nada é ajustado automaticamente.
