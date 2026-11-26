@@ -127,6 +127,22 @@ describe('Budget (US-052)', () => {
     }).toThrow(InvalidBudgetError);
   });
 
+  it('refuses a limit for a past month after the last version', () => {
+    const budget = market();
+    expect(() => {
+      budget.change(
+        {
+          currentMonth: '2027-06',
+          effectiveFrom: '2027-03',
+          limit: money('900.00'),
+          name: 'Mercado',
+        },
+        later,
+      );
+    }).toThrow(InvalidBudgetError);
+    expect(budget.limitFor('2027-03')?.toDecimal()).toBe('500.00');
+  });
+
   it('archives, refuses edits while archived and restores', () => {
     const budget = market();
     budget.archive(later);

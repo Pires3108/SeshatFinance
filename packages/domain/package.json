@@ -9,7 +9,7 @@
     "build": "tsc -p tsconfig.build.json",
     "lint": "eslint src",
     "test": "vitest run --passWithNoTests",
-    "test:mutation": "node scripts/s07-mutants.mjs",
+    "test:mutation": "node scripts/financial-mutants.mjs",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

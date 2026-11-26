@@ -22,7 +22,7 @@ Todo o cálculo de dinheiro e de taxa usa `bigint` e frações exatas. A regra `
 
 ## Mutação direcionada
 
-O comando `pnpm --filter @seshat/domain test:mutation` (`packages/domain/scripts/s07-mutants.mjs`) roda no CI logo depois de `pnpm test`. Ele aplica um defeito nomeado por vez aos algoritmos do Domain e exige que os testes que protegem aquele código falhem. Se algum mutante sobreviver, o CI falha. O critério é a lista nomeada abaixo, sem percentual global. Os arquivos-fonte são restaurados ao fim de cada mutante.
+O comando `pnpm --filter @seshat/domain test:mutation` (`packages/domain/scripts/financial-mutants.mjs`) roda no CI logo depois de `pnpm test`. Ele aplica um defeito nomeado por vez aos algoritmos do Domain e exige que os testes que protegem aquele código falhem. Se algum mutante sobreviver, o CI falha. O critério é a lista nomeada abaixo, sem percentual global. Os arquivos-fonte são restaurados ao fim de cada mutante.
 
 | Mutante                            | Defeito                                                  | Protege    |
 | ---------------------------------- | -------------------------------------------------------- | ---------- |

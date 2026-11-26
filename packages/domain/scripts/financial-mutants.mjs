@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * Targeted mutation check for the Sprint 7 calculations (US-048, ADR-042).
+ * Targeted mutation check for the Sprint 7 calculations (US-048, ADR-042)
+ * and the Sprint 8 goals, reserves and budgets (US-053, ADR-043).
  *
  * Each mutant is a deliberate, named defect in a financial algorithm. The
  * check applies one mutant at a time to the Domain sources, runs the specs
  * that protect it and requires them to fail ("killed"). Any survivor fails
  * the run. Sources are always restored, even on interruption.
  *
- * Usage: node scripts/s07-mutants.mjs [--list] [mutant-id ...]
+ * Usage: node scripts/financial-mutants.mjs [--list] [mutant-id ...]
  */
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -125,6 +126,81 @@ export const mutants = [
     invariant: 'INV-017: card prepayment discount ignored',
     replace: 'amount !== owed',
     specs: ['src/cards'],
+  },
+  // Sprint 8 (US-053): reserves, contributions, progress and budgets.
+  {
+    file: 'src/reserves/account-reserve.ts',
+    find: '    available: book.subtract(reserved),',
+    id: 'reserve-creates-money',
+    invariant: 'INV-012/INV-013: available ignores the reserve',
+    replace: '    available: book,',
+    specs: ['src/reserves', 'src/goals', 'src/budgets'],
+  },
+  {
+    file: 'src/reserves/account-reserve.ts',
+    find: '  if (amount.compare(balance) > 0)\n    throw new AccountReserveExceedsBalanceError();',
+    id: 'reserve-above-balance-accepted',
+    invariant: 'RN-071: a reserve above the balance is accepted',
+    replace:
+      '  if (amount.compare(balance) > 1)\n    throw new AccountReserveExceedsBalanceError();',
+    specs: ['src/reserves', 'src/goals', 'src/budgets'],
+  },
+  {
+    file: 'src/goals/goal-contribution.ts',
+    find: '  if (total.compare(source) > 0) throw new ContributionExceedsSourceError();',
+    id: 'contribution-exceeds-source',
+    invariant: 'INV-025: lines may exceed their entry',
+    replace:
+      '  if (total.compare(source) > 1) throw new ContributionExceedsSourceError();',
+    specs: ['src/reserves', 'src/goals', 'src/budgets'],
+  },
+  {
+    file: 'src/goals/goal-progress.ts',
+    find: "  const excluded = position.sourceLifecycle === 'trashed';",
+    id: 'trashed-entry-counts',
+    invariant: 'US-050: a trashed entry keeps counting',
+    replace: '  const excluded = false;',
+    specs: ['src/reserves', 'src/goals', 'src/budgets'],
+  },
+  {
+    file: 'src/goals/goal-progress.ts',
+    find: '  const coveredByAccount = linkedAccounts.has(position.accountId);',
+    id: 'linked-entry-counted-twice',
+    invariant: 'INV-025: an entry in a linked account counts twice',
+    replace: '  const coveredByAccount = false;',
+    specs: ['src/reserves', 'src/goals', 'src/budgets'],
+  },
+  {
+    file: 'src/goals/goal-progress.ts',
+    find: "    if (line.conversion.status === 'unavailable') accumulated = null;",
+    id: 'missing-quote-counts-zero',
+    invariant: 'INV-047: a missing quote counts as zero',
+    replace: "    if (line.conversion.status === 'unavailable') continue;",
+    specs: ['src/reserves', 'src/goals', 'src/budgets'],
+  },
+  {
+    file: 'src/budgets/budget.ts',
+    find: '      entry.notSpending ||\n',
+    id: 'budget-transfer-counted',
+    invariant: 'US-052: transfers and adjustments count as spending',
+    replace: '',
+    specs: ['src/reserves', 'src/goals', 'src/budgets'],
+  },
+  {
+    file: 'src/budgets/budget.ts',
+    find: '        ? realized.subtract(entry.amount)',
+    id: 'budget-refund-ignored',
+    invariant: 'US-052: linked refunds do not reduce realized',
+    replace: '        ? realized',
+    specs: ['src/reserves', 'src/goals', 'src/budgets'],
+  },
+  {
+    file: 'src/budgets/budget.ts',
+    find: '    if (next.effectiveFrom < input.currentMonth) {',
+    id: 'budget-limit-retroactive',
+    invariant: 'US-052: a limit change rewrites past months',
+    replace: "    if (next.effectiveFrom < '0000-01') {",
+    specs: ['src/reserves', 'src/goals', 'src/budgets'],
   },
 ];
 
