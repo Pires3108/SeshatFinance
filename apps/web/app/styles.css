@@ -448,3 +448,19 @@ button:focus-visible {
 .goal-distributor-line {
   margin-top: 0.75rem;
 }
+.budget-month {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 14rem;
+  margin: 1rem 0;
+  font-weight: 650;
+}
+.budget-figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 1rem;
+}
+.budget-figures dd {
+  margin: 0.3rem 0 0;
+  font-weight: 700;
+}

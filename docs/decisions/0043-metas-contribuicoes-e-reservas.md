@@ -1,4 +1,4 @@
-# ADR-043 — Metas, contribuições e reservas declaradas
+# ADR-043 — Metas, contribuições, reservas e orçamentos
 
 **Status:** aceita para a Sprint 8 em 17/11/2026.
 
@@ -53,9 +53,22 @@ O RII-018 impedia persistir metas, contribuições, progresso e reservas. Os req
 - Reserva e meta são conceitos independentes: o tipo de conta "reserva" não vincula a conta a nenhuma meta, e reservar não gera transferência.
 - Mudanças de reserva são versionadas e auditadas, com `Idempotency-Key`.
 
-### Orçamentos
+### Orçamentos (adendo de 26/11/2026, US-052)
 
-As regras de orçamento (US-052) seguem pendentes de confirmação no início da história: inclusão de compras de cartão no realizado e sobreposição de orçamentos na mesma dimensão. A proposta é calcular o realizado com as despesas efetivadas no intervalo `[início, próximo início)` no fuso do perfil, deixar compras de cartão fora até existir a visão consolidada de despesas, e recusar dois orçamentos para a mesma dimensão, moeda e período. A confirmação será registrada como adendo deste ADR.
+O titular pediu para seguir o plano da Sprint 8 até o fim. Por isso, as regras abaixo adotam a proposta registrada no plano, sem nova rodada de perguntas. Se ele as revisar, elas mudam aqui.
+
+- **Regra:** um orçamento é mensal e cobre uma única dimensão (categoria, centro de custo ou conta), numa moeda explícita. O mês é civil, no fuso IANA do perfil, no intervalo `[primeiro dia, primeiro dia do mês seguinte)`.
+- **Versões do limite:** cada versão vale a partir de um mês. Mudar o limite nunca altera um mês passado, e o mesmo mês substitui a versão anterior.
+- **Sobreposição:** não pode haver dois orçamentos ativos para a mesma dimensão e moeda (índice único parcial). Arquivar libera a dimensão.
+- **Realizado:** soma das despesas ativas do mês na dimensão. No orçamento por categoria, conta tanto a categoria quanto a subcategoria do lançamento. Do valor saem os reembolsos e entram as compensações vinculadas a essas despesas, quando registrados no mesmo mês.
+- **Fora do realizado:**
+  - transferências entre contas próprias;
+  - ajustes de saldo;
+  - pagamentos de fatura;
+  - compras de cartão, até existir a visão consolidada de despesas;
+  - despesas em outra moeda, que não são convertidas e aparecem só como contagem.
+- **Fonte dos dados:** o realizado é lido pelo caso de uso público da visão temporal (`ListTemporalTransactionsUseCase`), que passou a indicar transferência, ajuste e reembolso.
+- **Limite excedido:** gera apenas um aviso organizacional. Nada bloqueia, cancela ou altera uma transação.
 
 ## Consequências
 

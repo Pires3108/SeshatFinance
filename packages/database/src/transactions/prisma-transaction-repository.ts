@@ -235,14 +235,21 @@ export class PrismaTransactionRepository
   ): Promise<readonly TemporalTransaction[]> {
     const rows = await this.client.transaction.findMany({
       include: {
+        balanceAdjustment: { select: { id: true } },
         cardSettlement: { select: { id: true } },
+        incomingTransfer: { select: { id: true } },
+        outgoingTransfer: { select: { id: true } },
+        refundEntryLink: { select: { expenseTransactionId: true } },
         tagAssignments: { select: { tagId: true } },
       },
       orderBy: [{ occurredAt: 'asc' }, { id: 'asc' }],
       where: { occurredAt: { gte: from, lt: to }, ownerId, lifecycle },
     });
     return rows.map((row) => ({
+      balanceAdjustment: row.balanceAdjustment !== null,
       cardSettlement: row.cardSettlement !== null,
+      refundOfExpenseId: row.refundEntryLink?.expenseTransactionId ?? null,
+      transfer: row.incomingTransfer !== null || row.outgoingTransfer !== null,
       transaction: restoreTransaction(row),
       timeZone: row.timeZone,
     }));

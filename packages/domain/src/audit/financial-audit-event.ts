@@ -29,6 +29,7 @@ export const financialAuditResourceTypes = [
   'goal',
   'account-reserve',
   'goal-contribution',
+  'budget',
 ] as const;
 
 export type FinancialAuditResourceType =

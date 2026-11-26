@@ -10684,6 +10684,990 @@
         "tags": ["goals"]
       }
     },
+    "/api/v1/budgets": {
+      "post": {
+        "operationId": "BudgetController_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "currencyCode": {
+                    "pattern": "^[A-Z]{3}$",
+                    "type": "string"
+                  },
+                  "currencyMinorUnitScale": {
+                    "maximum": 18,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "dimension": {
+                    "properties": {
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "kind": {
+                        "enum": ["category", "cost-center", "account"],
+                        "type": "string"
+                      }
+                    },
+                    "required": ["id", "kind"],
+                    "type": "object"
+                  },
+                  "effectiveFrom": {
+                    "pattern": "^\\d{4}-\\d{2}$",
+                    "type": "string"
+                  },
+                  "limit": {
+                    "pattern": "^\\d+(?:\\.\\d+)?$",
+                    "type": "string"
+                  },
+                  "name": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "currencyCode",
+                  "currencyMinorUnitScale",
+                  "dimension",
+                  "limit",
+                  "name"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "A monthly spending plan for one dimension. Realized comes from the expenses of the month in the profile time zone; exceeding it is only a warning.",
+                  "properties": {
+                    "consumption": {
+                      "description": "Null when the budget starts after the month.",
+                      "nullable": true,
+                      "properties": {
+                        "exceeded": {
+                          "description": "Organizational warning only; no payment is ever blocked.",
+                          "type": "boolean"
+                        },
+                        "excess": {
+                          "properties": {
+                            "amount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "currencyCode": {
+                              "pattern": "^[A-Z]{3}$",
+                              "type": "string"
+                            }
+                          },
+                          "required": ["amount", "currencyCode"],
+                          "type": "object"
+                        },
+                        "planned": {
+                          "properties": {
+                            "amount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "currencyCode": {
+                              "pattern": "^[A-Z]{3}$",
+                              "type": "string"
+                            }
+                          },
+                          "required": ["amount", "currencyCode"],
+                          "type": "object"
+                        },
+                        "realized": {
+                          "properties": {
+                            "amount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "currencyCode": {
+                              "pattern": "^[A-Z]{3}$",
+                              "type": "string"
+                            }
+                          },
+                          "required": ["amount", "currencyCode"],
+                          "type": "object"
+                        },
+                        "remaining": {
+                          "properties": {
+                            "amount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "currencyCode": {
+                              "pattern": "^[A-Z]{3}$",
+                              "type": "string"
+                            }
+                          },
+                          "required": ["amount", "currencyCode"],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "exceeded",
+                        "excess",
+                        "planned",
+                        "realized",
+                        "remaining"
+                      ],
+                      "type": "object"
+                    },
+                    "countedEntries": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "properties": {
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "kind": {
+                          "enum": ["category", "cost-center", "account"],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["id", "kind"],
+                      "type": "object"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "lifecycle": {
+                      "enum": ["active", "archived"],
+                      "type": "string"
+                    },
+                    "limits": {
+                      "items": {
+                        "properties": {
+                          "effectiveFrom": {
+                            "pattern": "^\\d{4}-\\d{2}$",
+                            "type": "string"
+                          },
+                          "limit": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          }
+                        },
+                        "required": ["effectiveFrom", "limit"],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "month": {
+                      "pattern": "^\\d{4}-\\d{2}$",
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "otherCurrencyEntries": {
+                      "description": "Matching expenses in another currency, left out.",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "consumption",
+                    "countedEntries",
+                    "createdAt",
+                    "currencyCode",
+                    "dimension",
+                    "id",
+                    "lifecycle",
+                    "limits",
+                    "month",
+                    "name",
+                    "otherCurrencyEntries",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid budget or idempotency key"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned dimension not found"
+          },
+          "409": {
+            "description": "An active budget already covers the dimension and currency, or the key was reused"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Declare a monthly budget for one dimension",
+        "tags": ["budgets"]
+      },
+      "get": {
+        "operationId": "BudgetController_list",
+        "parameters": [
+          {
+            "name": "month",
+            "required": false,
+            "in": "query",
+            "description": "Civil month YYYY-MM; defaults to the current month",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "description": "A monthly spending plan for one dimension. Realized comes from the expenses of the month in the profile time zone; exceeding it is only a warning.",
+                    "properties": {
+                      "consumption": {
+                        "description": "Null when the budget starts after the month.",
+                        "nullable": true,
+                        "properties": {
+                          "exceeded": {
+                            "description": "Organizational warning only; no payment is ever blocked.",
+                            "type": "boolean"
+                          },
+                          "excess": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "planned": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "realized": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "remaining": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          }
+                        },
+                        "required": [
+                          "exceeded",
+                          "excess",
+                          "planned",
+                          "realized",
+                          "remaining"
+                        ],
+                        "type": "object"
+                      },
+                      "countedEntries": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "currencyCode": {
+                        "pattern": "^[A-Z]{3}$",
+                        "type": "string"
+                      },
+                      "dimension": {
+                        "properties": {
+                          "id": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "kind": {
+                            "enum": ["category", "cost-center", "account"],
+                            "type": "string"
+                          }
+                        },
+                        "required": ["id", "kind"],
+                        "type": "object"
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "lifecycle": {
+                        "enum": ["active", "archived"],
+                        "type": "string"
+                      },
+                      "limits": {
+                        "items": {
+                          "properties": {
+                            "effectiveFrom": {
+                              "pattern": "^\\d{4}-\\d{2}$",
+                              "type": "string"
+                            },
+                            "limit": {
+                              "properties": {
+                                "amount": {
+                                  "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                  "type": "string"
+                                },
+                                "currencyCode": {
+                                  "pattern": "^[A-Z]{3}$",
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["amount", "currencyCode"],
+                              "type": "object"
+                            }
+                          },
+                          "required": ["effectiveFrom", "limit"],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "month": {
+                        "pattern": "^\\d{4}-\\d{2}$",
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "otherCurrencyEntries": {
+                        "description": "Matching expenses in another currency, left out.",
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "version": {
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "consumption",
+                      "countedEntries",
+                      "createdAt",
+                      "currencyCode",
+                      "dimension",
+                      "id",
+                      "lifecycle",
+                      "limits",
+                      "month",
+                      "name",
+                      "otherCurrencyEntries",
+                      "updatedAt",
+                      "version"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List budgets with planned, realized, remaining and excess",
+        "tags": ["budgets"]
+      }
+    },
+    "/api/v1/budgets/{budgetId}": {
+      "put": {
+        "operationId": "BudgetController_change",
+        "parameters": [
+          {
+            "name": "budgetId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "effectiveFrom": {
+                    "pattern": "^\\d{4}-\\d{2}$",
+                    "type": "string"
+                  },
+                  "expectedVersion": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "limit": {
+                    "pattern": "^\\d+(?:\\.\\d+)?$",
+                    "type": "string"
+                  },
+                  "name": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "effectiveFrom",
+                  "expectedVersion",
+                  "limit",
+                  "name"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "A monthly spending plan for one dimension. Realized comes from the expenses of the month in the profile time zone; exceeding it is only a warning.",
+                  "properties": {
+                    "consumption": {
+                      "description": "Null when the budget starts after the month.",
+                      "nullable": true,
+                      "properties": {
+                        "exceeded": {
+                          "description": "Organizational warning only; no payment is ever blocked.",
+                          "type": "boolean"
+                        },
+                        "excess": {
+                          "properties": {
+                            "amount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "currencyCode": {
+                              "pattern": "^[A-Z]{3}$",
+                              "type": "string"
+                            }
+                          },
+                          "required": ["amount", "currencyCode"],
+                          "type": "object"
+                        },
+                        "planned": {
+                          "properties": {
+                            "amount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "currencyCode": {
+                              "pattern": "^[A-Z]{3}$",
+                              "type": "string"
+                            }
+                          },
+                          "required": ["amount", "currencyCode"],
+                          "type": "object"
+                        },
+                        "realized": {
+                          "properties": {
+                            "amount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "currencyCode": {
+                              "pattern": "^[A-Z]{3}$",
+                              "type": "string"
+                            }
+                          },
+                          "required": ["amount", "currencyCode"],
+                          "type": "object"
+                        },
+                        "remaining": {
+                          "properties": {
+                            "amount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "currencyCode": {
+                              "pattern": "^[A-Z]{3}$",
+                              "type": "string"
+                            }
+                          },
+                          "required": ["amount", "currencyCode"],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "exceeded",
+                        "excess",
+                        "planned",
+                        "realized",
+                        "remaining"
+                      ],
+                      "type": "object"
+                    },
+                    "countedEntries": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "properties": {
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "kind": {
+                          "enum": ["category", "cost-center", "account"],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["id", "kind"],
+                      "type": "object"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "lifecycle": {
+                      "enum": ["active", "archived"],
+                      "type": "string"
+                    },
+                    "limits": {
+                      "items": {
+                        "properties": {
+                          "effectiveFrom": {
+                            "pattern": "^\\d{4}-\\d{2}$",
+                            "type": "string"
+                          },
+                          "limit": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          }
+                        },
+                        "required": ["effectiveFrom", "limit"],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "month": {
+                      "pattern": "^\\d{4}-\\d{2}$",
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "otherCurrencyEntries": {
+                      "description": "Matching expenses in another currency, left out.",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "consumption",
+                    "countedEntries",
+                    "createdAt",
+                    "currencyCode",
+                    "dimension",
+                    "id",
+                    "lifecycle",
+                    "limits",
+                    "month",
+                    "name",
+                    "otherCurrencyEntries",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned budget not found"
+          },
+          "409": {
+            "description": "Budget changed by another request"
+          },
+          "422": {
+            "description": "Archived budget"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rename a budget and set its limit from a month on",
+        "tags": ["budgets"]
+      }
+    },
+    "/api/v1/budgets/{budgetId}/lifecycle": {
+      "post": {
+        "operationId": "BudgetController_lifecycle",
+        "parameters": [
+          {
+            "name": "budgetId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "enum": ["archive", "unarchive"],
+                    "type": "string"
+                  },
+                  "expectedVersion": {
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": ["action", "expectedVersion"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "A monthly spending plan for one dimension. Realized comes from the expenses of the month in the profile time zone; exceeding it is only a warning.",
+                  "properties": {
+                    "consumption": {
+                      "description": "Null when the budget starts after the month.",
+                      "nullable": true,
+                      "properties": {
+                        "exceeded": {
+                          "description": "Organizational warning only; no payment is ever blocked.",
+                          "type": "boolean"
+                        },
+                        "excess": {
+                          "properties": {
+                            "amount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "currencyCode": {
+                              "pattern": "^[A-Z]{3}$",
+                              "type": "string"
+                            }
+                          },
+                          "required": ["amount", "currencyCode"],
+                          "type": "object"
+                        },
+                        "planned": {
+                          "properties": {
+                            "amount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "currencyCode": {
+                              "pattern": "^[A-Z]{3}$",
+                              "type": "string"
+                            }
+                          },
+                          "required": ["amount", "currencyCode"],
+                          "type": "object"
+                        },
+                        "realized": {
+                          "properties": {
+                            "amount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "currencyCode": {
+                              "pattern": "^[A-Z]{3}$",
+                              "type": "string"
+                            }
+                          },
+                          "required": ["amount", "currencyCode"],
+                          "type": "object"
+                        },
+                        "remaining": {
+                          "properties": {
+                            "amount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "currencyCode": {
+                              "pattern": "^[A-Z]{3}$",
+                              "type": "string"
+                            }
+                          },
+                          "required": ["amount", "currencyCode"],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "exceeded",
+                        "excess",
+                        "planned",
+                        "realized",
+                        "remaining"
+                      ],
+                      "type": "object"
+                    },
+                    "countedEntries": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "properties": {
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "kind": {
+                          "enum": ["category", "cost-center", "account"],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["id", "kind"],
+                      "type": "object"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "lifecycle": {
+                      "enum": ["active", "archived"],
+                      "type": "string"
+                    },
+                    "limits": {
+                      "items": {
+                        "properties": {
+                          "effectiveFrom": {
+                            "pattern": "^\\d{4}-\\d{2}$",
+                            "type": "string"
+                          },
+                          "limit": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          }
+                        },
+                        "required": ["effectiveFrom", "limit"],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "month": {
+                      "pattern": "^\\d{4}-\\d{2}$",
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "otherCurrencyEntries": {
+                      "description": "Matching expenses in another currency, left out.",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "consumption",
+                    "countedEntries",
+                    "createdAt",
+                    "currencyCode",
+                    "dimension",
+                    "id",
+                    "lifecycle",
+                    "limits",
+                    "month",
+                    "name",
+                    "otherCurrencyEntries",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned budget not found"
+          },
+          "409": {
+            "description": "Budget changed by another request, or unarchiving overlaps an active budget"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Archive or unarchive a budget",
+        "tags": ["budgets"]
+      }
+    },
     "/api/v1/credit-cards/{cardId}/invoices": {
       "get": {
         "operationId": "CardInvoiceController_list",
@@ -17314,7 +18298,8 @@
                 "loan",
                 "goal",
                 "account-reserve",
-                "goal-contribution"
+                "goal-contribution",
+                "budget"
               ],
               "type": "string"
             }
@@ -17381,7 +18366,8 @@
                           "loan",
                           "goal",
                           "account-reserve",
-                          "goal-contribution"
+                          "goal-contribution",
+                          "budget"
                         ]
                       },
                       "resourceId": {

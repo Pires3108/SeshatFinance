@@ -526,6 +526,58 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/budgets": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List budgets with planned, realized, remaining and excess */
+        readonly get: operations["BudgetController_list"];
+        readonly put?: never;
+        /** Declare a monthly budget for one dimension */
+        readonly post: operations["BudgetController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/budgets/{budgetId}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        /** Rename a budget and set its limit from a month on */
+        readonly put: operations["BudgetController_change"];
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/budgets/{budgetId}/lifecycle": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Archive or unarchive a budget */
+        readonly post: operations["BudgetController_lifecycle"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/credit-cards/{cardId}/invoices": {
         readonly parameters: {
             readonly query?: never;
@@ -5700,6 +5752,409 @@ export interface operations {
             };
         };
     };
+    readonly BudgetController_list: {
+        readonly parameters: {
+            readonly query?: {
+                /** @description Civil month YYYY-MM; defaults to the current month */
+                readonly month?: string;
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        /** @description Null when the budget starts after the month. */
+                        readonly consumption: {
+                            /** @description Organizational warning only; no payment is ever blocked. */
+                            readonly exceeded: boolean;
+                            readonly excess: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly planned: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly realized: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly remaining: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                        } | null;
+                        readonly countedEntries: number;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly dimension: {
+                            /** Format: uuid */
+                            readonly id: string;
+                            /** @enum {string} */
+                            readonly kind: "category" | "cost-center" | "account";
+                        };
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived";
+                        readonly limits: readonly {
+                            readonly effectiveFrom: string;
+                            readonly limit: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                        }[];
+                        readonly month: string;
+                        readonly name: string;
+                        /** @description Matching expenses in another currency, left out. */
+                        readonly otherCurrencyEntries: number;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    }[];
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly BudgetController_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                /** @description UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409. */
+                readonly "Idempotency-Key": string;
+            };
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly currencyCode: string;
+                    readonly currencyMinorUnitScale: number;
+                    readonly dimension: {
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly kind: "category" | "cost-center" | "account";
+                    };
+                    readonly effectiveFrom?: string;
+                    readonly limit: string;
+                    readonly name: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** @description Null when the budget starts after the month. */
+                        readonly consumption: {
+                            /** @description Organizational warning only; no payment is ever blocked. */
+                            readonly exceeded: boolean;
+                            readonly excess: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly planned: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly realized: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly remaining: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                        } | null;
+                        readonly countedEntries: number;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly dimension: {
+                            /** Format: uuid */
+                            readonly id: string;
+                            /** @enum {string} */
+                            readonly kind: "category" | "cost-center" | "account";
+                        };
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived";
+                        readonly limits: readonly {
+                            readonly effectiveFrom: string;
+                            readonly limit: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                        }[];
+                        readonly month: string;
+                        readonly name: string;
+                        /** @description Matching expenses in another currency, left out. */
+                        readonly otherCurrencyEntries: number;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Invalid budget or idempotency key */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned dimension not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description An active budget already covers the dimension and currency, or the key was reused */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly BudgetController_change: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly budgetId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly effectiveFrom: string;
+                    readonly expectedVersion: number;
+                    readonly limit: string;
+                    readonly name: string;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** @description Null when the budget starts after the month. */
+                        readonly consumption: {
+                            /** @description Organizational warning only; no payment is ever blocked. */
+                            readonly exceeded: boolean;
+                            readonly excess: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly planned: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly realized: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly remaining: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                        } | null;
+                        readonly countedEntries: number;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly dimension: {
+                            /** Format: uuid */
+                            readonly id: string;
+                            /** @enum {string} */
+                            readonly kind: "category" | "cost-center" | "account";
+                        };
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived";
+                        readonly limits: readonly {
+                            readonly effectiveFrom: string;
+                            readonly limit: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                        }[];
+                        readonly month: string;
+                        readonly name: string;
+                        /** @description Matching expenses in another currency, left out. */
+                        readonly otherCurrencyEntries: number;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned budget not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Budget changed by another request */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Archived budget */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly BudgetController_lifecycle: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly budgetId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** @enum {string} */
+                    readonly action: "archive" | "unarchive";
+                    readonly expectedVersion: number;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** @description Null when the budget starts after the month. */
+                        readonly consumption: {
+                            /** @description Organizational warning only; no payment is ever blocked. */
+                            readonly exceeded: boolean;
+                            readonly excess: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly planned: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly realized: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly remaining: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                        } | null;
+                        readonly countedEntries: number;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly dimension: {
+                            /** Format: uuid */
+                            readonly id: string;
+                            /** @enum {string} */
+                            readonly kind: "category" | "cost-center" | "account";
+                        };
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived";
+                        readonly limits: readonly {
+                            readonly effectiveFrom: string;
+                            readonly limit: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                        }[];
+                        readonly month: string;
+                        readonly name: string;
+                        /** @description Matching expenses in another currency, left out. */
+                        readonly otherCurrencyEntries: number;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned budget not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Budget changed by another request, or unarchiving overlaps an active budget */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly CardInvoiceController_list: {
         readonly parameters: {
             readonly query?: never;
@@ -9208,7 +9663,7 @@ export interface operations {
         readonly parameters: {
             readonly query?: {
                 readonly resourceId?: unknown;
-                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve" | "goal-contribution";
+                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve" | "goal-contribution" | "budget";
                 readonly limit?: number;
                 readonly afterSequence?: string;
             };
@@ -9233,7 +9688,7 @@ export interface operations {
                         readonly actorId: string;
                         readonly action: string;
                         /** @enum {string} */
-                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve" | "goal-contribution";
+                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve" | "goal-contribution" | "budget";
                         /** Format: uuid */
                         readonly resourceId: string;
                         /** @enum {string} */
