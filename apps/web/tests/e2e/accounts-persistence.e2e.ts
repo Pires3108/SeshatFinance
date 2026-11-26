@@ -10,14 +10,18 @@ import {
 } from '@testcontainers/postgresql';
 import { Client } from 'pg';
 
+import { acquireSharedApiPort, stopApi } from './support/shared-api-port';
+
 const apiUrl = 'http://localhost:3101';
 const token = randomBytes(32).toString('base64url');
 const cookie = `__Host-seshat_session=${token}`;
 let container: StartedPostgreSqlContainer | undefined;
 let api: ChildProcess | undefined;
+let releaseApiPort: (() => Promise<void>) | undefined;
 
 test.beforeAll(async (): Promise<void> => {
-  test.setTimeout(120_000);
+  test.setTimeout(660_000);
+  releaseApiPort = await acquireSharedApiPort();
   container = await new PostgreSqlContainer('postgres:17-alpine').start();
   const client = new Client({ connectionString: container.getConnectionUri() });
   await client.connect();
@@ -75,8 +79,9 @@ test.beforeAll(async (): Promise<void> => {
 });
 
 test.afterAll(async (): Promise<void> => {
-  api?.kill();
+  await stopApi(api);
   await container?.stop();
+  await releaseApiPort?.();
 });
 
 test('account list and detail reconcile persisted ledger and lifecycle through the real API', async ({
