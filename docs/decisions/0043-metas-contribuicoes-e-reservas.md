@@ -63,6 +63,7 @@ As regras de orçamento (US-052) seguem pendentes de confirmação no início da
 - Progresso e disponível são leituras derivadas; nenhuma tabela de saldo é reescrita.
 - A fatia limitada ao saldo atual evita dupla contagem quando várias metas compartilham uma conta, ao custo de um aviso extra na interface.
 - A conversão continua só de apresentação; consolidação contábil em BRL segue dependente do RII-007.
+- **Limites da US-049:** a moeda de uma conta não pode ser alterada hoje, então o painel de impacto cobre o arquivamento e a lixeira da conta; se a troca de moeda for criada, ela deve reutilizar o mesmo painel. A rotina opcional de contribuição depende da semântica de recorrência ainda aberta no RII-020 e não foi implementada. Saldo negativo conta zero para a meta, e uma conta na lixeira deixa de contar até ser restaurada.
 
 ## Alternativas consideradas
 

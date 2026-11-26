@@ -19,6 +19,7 @@ import {
   lifecycleLabel,
   typeLabel,
 } from '../accounts/account-presentation';
+import { loadAccountGoalImpact } from '../metas/goal-impact-panel';
 
 const filters: readonly { value: Lifecycle; label: string }[] = [
   { value: 'active', label: 'Ativas' },
@@ -119,6 +120,19 @@ export function AccountList(): ReactNode {
       'move-to-trash': `Mover ${name} para a lixeira? Você poderá restaurar o estado anterior.`,
       'restore-from-trash': `Restaurar ${name} da lixeira? O estado anterior será recuperado.`,
     };
+    if (action === 'archive' || action === 'move-to-trash') {
+      // The impact panel (US-049) lives on the account page, where the holder
+      // chooses what happens to each goal before confirming.
+      const goals = await loadAccountGoalImpact(id);
+      if (goals === null || goals.length > 0) {
+        setActionError(
+          goals === null
+            ? 'Não foi possível verificar as metas desta conta. Tente novamente.'
+            : `${name} participa de metas. Abra a conta para escolher o que fazer com cada meta antes de confirmar.`,
+        );
+        return;
+      }
+    }
     if (!window.confirm(questions[action] ?? 'Confirmar alteração?')) return;
     actionRef.current =
       document.activeElement instanceof HTMLButtonElement

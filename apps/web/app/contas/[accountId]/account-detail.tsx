@@ -18,6 +18,12 @@ import {
   lifecycleLabel,
   typeLabel,
 } from '../../accounts/account-presentation';
+import {
+  GoalImpactPanel,
+  loadAccountGoalImpact,
+  type AccountChange,
+} from '../../metas/goal-impact-panel';
+import type { GoalView } from '../../metas/goal-presentation';
 
 type ViewState =
   | 'loading'
@@ -33,6 +39,10 @@ export function AccountDetail({ accountId }: { accountId: string }): ReactNode {
   const [item, setItem] = useState<AccountWithBalance | null>(null);
   const [actionError, setActionError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [impact, setImpact] = useState<Readonly<{
+    change: AccountChange;
+    goals: readonly GoalView[];
+  }> | null>(null);
   const statusRef = useRef<HTMLParagraphElement>(null);
   const resultRef = useRef<HTMLHeadingElement>(null);
   const actionRef = useRef<HTMLButtonElement | null>(null);
@@ -106,13 +116,33 @@ export function AccountDetail({ accountId }: { accountId: string }): ReactNode {
 
   async function change(action: string): Promise<void> {
     if (item === null) return;
+    if (action === 'archive' || action === 'move-to-trash') {
+      const goals = await loadAccountGoalImpact(accountId);
+      if (goals === null) {
+        setActionError(
+          'Não foi possível verificar as metas desta conta. Tente novamente.',
+        );
+        return;
+      }
+      if (goals.length > 0) {
+        setActionError('');
+        setImpact({ change: action, goals });
+        return;
+      }
+    }
+    await apply(action, true);
+  }
+
+  async function apply(action: string, ask: boolean): Promise<void> {
+    if (item === null) return;
     const questions: Record<string, string> = {
       archive: `Arquivar ${item.account.name}? O histórico e o saldo contábil serão preservados.`,
       unarchive: `Desarquivar ${item.account.name}? A conta voltará a ficar ativa.`,
       'move-to-trash': `Mover ${item.account.name} para a lixeira? Você poderá restaurar o estado anterior.`,
       'restore-from-trash': `Restaurar ${item.account.name} da lixeira? O estado anterior será recuperado.`,
     };
-    if (!window.confirm(questions[action] ?? 'Confirmar alteração?')) return;
+    if (ask && !window.confirm(questions[action] ?? 'Confirmar alteração?'))
+      return;
     actionRef.current =
       document.activeElement instanceof HTMLButtonElement
         ? document.activeElement
@@ -245,6 +275,22 @@ export function AccountDetail({ accountId }: { accountId: string }): ReactNode {
                   Consultar receitas e despesas
                 </Link>
               </p>
+              {impact !== null && (
+                <GoalImpactPanel
+                  accountId={accountId}
+                  accountName={item.account.name}
+                  change={impact.change}
+                  goals={impact.goals}
+                  onCancel={() => {
+                    setImpact(null);
+                  }}
+                  onConfirmed={async () => {
+                    const action = impact.change;
+                    setImpact(null);
+                    await apply(action, false);
+                  }}
+                />
+              )}
               <div className="account-actions">
                 {item.account.lifecycle === 'active' && (
                   <button

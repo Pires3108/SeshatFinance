@@ -160,6 +160,7 @@ model Account {
   transactions             Transaction[]
   balanceAdjustments       BalanceAdjustment[]
   creditCards              CreditCard[]
+  goalLinks                GoalAccountLink[]
 
   @@unique([id, ownerId])
   @@index([ownerId, lifecycle])
@@ -389,6 +390,7 @@ enum FinancialAuditResourceType {
   card_invoice          @map("card-invoice")
   invoice_settlement    @map("invoice-settlement")
   manual_exchange_quote @map("manual-exchange-quote")
+  goal
 
   @@map("financial_audit_resource_type")
 }
@@ -755,4 +757,45 @@ model CardInstallmentPlanChange {
   @@unique([planId, sequence])
   @@index([ownerId, planId])
   @@map("card_installment_plan_changes")
+}
+
+/// US-049 / ADR-043: goals declared by the holder. They organize progress
+/// only and never record transactions (INV-026).
+model Goal {
+  id                     String            @id @db.Uuid
+  ownerId                String            @map("owner_id") @db.Uuid
+  name                   String            @db.VarChar(120)
+  targetMinorUnits       Decimal           @map("target_minor_units") @db.Decimal(1000, 0)
+  initialMinorUnits      Decimal           @map("initial_minor_units") @db.Decimal(1000, 0)
+  currencyCode           String            @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale Int               @map("currency_minor_unit_scale") @db.SmallInt
+  deadline               DateTime?         @db.Date
+  mode                   String            @db.VarChar(16)
+  lifecycle              String            @db.VarChar(16)
+  createdAt              DateTime          @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime          @map("updated_at") @db.Timestamptz(6)
+  version                Int
+  links                  GoalAccountLink[]
+
+  @@unique([id, ownerId])
+  @@index([ownerId, createdAt])
+  @@map("goals")
+}
+
+/// RN-069: the part of an account balance that counts for a goal.
+model GoalAccountLink {
+  goalId                      String   @map("goal_id") @db.Uuid
+  ownerId                     String   @map("owner_id") @db.Uuid
+  accountId                   String   @map("account_id") @db.Uuid
+  position                    Int      @db.SmallInt
+  shareKind                   String   @map("share_kind") @db.VarChar(16)
+  shareMinorUnits             Decimal? @map("share_minor_units") @db.Decimal(1000, 0)
+  shareCurrencyCode           String?  @map("share_currency_code") @db.Char(3)
+  shareCurrencyMinorUnitScale Int?     @map("share_currency_minor_unit_scale") @db.SmallInt
+  goal                        Goal     @relation(fields: [goalId, ownerId], references: [id, ownerId], onDelete: Cascade)
+  account                     Account  @relation(fields: [accountId, ownerId], references: [id, ownerId], onDelete: Restrict)
+
+  @@id([goalId, accountId])
+  @@index([ownerId, accountId])
+  @@map("goal_account_links")
 }
