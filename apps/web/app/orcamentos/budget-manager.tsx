@@ -314,46 +314,43 @@ export function BudgetManager(): ReactNode {
                 value={name}
               />
             </label>
-            <label>
-              Dimensão
-              <select
-                onChange={(event) => {
-                  setKind(event.target.value as DimensionKind);
-                  setDimensionId('');
-                }}
-                value={kind}
-              >
-                <option value="category">Categoria</option>
-                <option value="cost-center">Centro de custo</option>
-                <option value="account">Conta</option>
-              </select>
-            </label>
-            <label>
-              {dimensionLabels[kind]}
-              <select
-                onChange={(event) => {
-                  setDimensionId(event.target.value);
-                }}
-                value={dimensionId}
-              >
-                <option value="">Selecione</option>
-                {options[kind].map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Limite mensal (BRL)
-              <input
-                inputMode="decimal"
-                onChange={(event) => {
-                  setLimit(event.target.value);
-                }}
-                value={limit}
-              />
-            </label>
+            <label htmlFor="budget-dimension-kind">Dimensão</label>
+            <select
+              id="budget-dimension-kind"
+              onChange={(event) => {
+                setKind(event.target.value as DimensionKind);
+                setDimensionId('');
+              }}
+              value={kind}
+            >
+              <option value="category">Categoria</option>
+              <option value="cost-center">Centro de custo</option>
+              <option value="account">Conta</option>
+            </select>
+            <label htmlFor="budget-dimension">{dimensionLabels[kind]}</label>
+            <select
+              id="budget-dimension"
+              onChange={(event) => {
+                setDimensionId(event.target.value);
+              }}
+              value={dimensionId}
+            >
+              <option value="">Selecione</option>
+              {options[kind].map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+            <label htmlFor="budget-limit">Limite mensal (BRL)</label>
+            <input
+              id="budget-limit"
+              inputMode="decimal"
+              onChange={(event) => {
+                setLimit(event.target.value);
+              }}
+              value={limit}
+            />
             <p className="account-note">
               O limite vale a partir de {monthLabel(month)}; meses anteriores
               não mudam.
