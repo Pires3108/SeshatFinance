@@ -13,8 +13,9 @@ test.beforeEach(async ({ page }) => {
     await route.fulfill({
       json: {
         accountId: id,
-        available: { amount: balance.amount, currencyCode: 'BRL' },
-        book: { amount: balance.amount, currencyCode: 'BRL' },
+        // Distinct from the account balance, which tests look up as unique text.
+        available: { amount: '7.77', currencyCode: 'BRL' },
+        book: { amount: '7.77', currencyCode: 'BRL' },
         reserveAboveBalance: false,
         reserveVersion: 0,
         reserved: { amount: '0.00', currencyCode: 'BRL' },
