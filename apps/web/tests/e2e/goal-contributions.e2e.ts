@@ -237,3 +237,45 @@ async function goalIds(request: APIRequestContext): Promise<string[]> {
     (name) => goals.find((goal) => goal.name === name)?.id ?? '',
   );
 }
+
+test('completed and overdue goals are named in text, not only by color (US-053)', async ({
+  page,
+  context,
+  request,
+}) => {
+  const create = async (data: Record<string, unknown>): Promise<void> => {
+    const response = await request.post(`${apiUrl}/api/v1/goals`, {
+      data: {
+        currencyCode: 'BRL',
+        currencyMinorUnitScale: 2,
+        links: [],
+        mode: 'free',
+        target: '500.00',
+        ...data,
+      },
+      headers: { Cookie: cookie, 'Idempotency-Key': randomUUID() },
+    });
+    expect(response.status()).toBe(201);
+  };
+  await create({ initialAmount: '500.00', name: 'Meta cumprida' });
+  await create({ deadline: '2026-01-01', name: 'Meta vencida' });
+  await context.addCookies([
+    {
+      name: '__Host-seshat_session',
+      value: token,
+      domain: 'localhost',
+      path: '/',
+      secure: true,
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ]);
+
+  await page.goto('/metas');
+  await expect(
+    page.getByRole('listitem').filter({ hasText: 'Meta cumprida' }).first(),
+  ).toContainText('Concluída');
+  await expect(
+    page.getByRole('listitem').filter({ hasText: 'Meta vencida' }).first(),
+  ).toContainText('Atrasada');
+});
