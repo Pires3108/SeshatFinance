@@ -36,6 +36,14 @@ import {
   GetContributionUseCase,
   ListContributionSourcesUseCase,
   type GoalContributionRepository,
+  BudgetConsumptionReader,
+  ChangeBudgetLifecycleUseCase,
+  ChangeBudgetUseCase,
+  CreateBudgetUseCase,
+  ListBudgetsUseCase,
+  OwnedBudgetDimensionDirectory,
+  TemporalBudgetEntrySource,
+  type BudgetRepository,
   CreateFamilyGroupUseCase,
   GetOwnedCreditCardUseCase,
   GetOwnedTransferUseCase,
@@ -180,6 +188,8 @@ import { LazyCardInstallmentPlanRepository } from './cards/lazy-card-installment
 import { LoanController } from './loans/loan.controller.js';
 import { GoalController } from './goals/goal.controller.js';
 import { LazyGoalRepository } from './goals/lazy-goal-repository.js';
+import { BudgetController } from './budgets/budget.controller.js';
+import { LazyBudgetRepository } from './budgets/lazy-budget-repository.js';
 import { GoalContributionController } from './goals/goal-contribution.controller.js';
 import { LazyGoalContributionRepository } from './goals/lazy-goal-contribution-repository.js';
 import { AccountReserveController } from './reserves/account-reserve.controller.js';
@@ -264,6 +274,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     GoalController,
     AccountReserveController,
     GoalContributionController,
+    BudgetController,
     CardInvoiceController,
     InvoiceSettlementController,
     CounterpartyController,
@@ -290,6 +301,93 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
   ],
   providers: [
     LazyAccountReserveRepository,
+    LazyBudgetRepository,
+    {
+      inject: [
+        LazyBudgetRepository,
+        ListTemporalTransactionsUseCase,
+        LazyUserProfileRepository,
+        ListOwnedCategoriesUseCase,
+        ListOwnedCostCentersUseCase,
+        GetOwnedAccountUseCase,
+      ],
+      provide: CreateBudgetUseCase,
+      useFactory: (
+        budgets: BudgetRepository,
+        temporal: ListTemporalTransactionsUseCase,
+        profiles: UserProfileRepository,
+        categories: ListOwnedCategoriesUseCase,
+        costCenters: ListOwnedCostCentersUseCase,
+        accounts: GetOwnedAccountUseCase,
+      ): CreateBudgetUseCase => {
+        const kit = budgetKit(temporal, profiles);
+        return new CreateBudgetUseCase(
+          budgets,
+          new OwnedBudgetDimensionDirectory(categories, costCenters, accounts),
+          kit.reader,
+          kit.calendar,
+          new SystemIdentifierGenerator(),
+        );
+      },
+    },
+    {
+      inject: [
+        LazyBudgetRepository,
+        ListTemporalTransactionsUseCase,
+        LazyUserProfileRepository,
+      ],
+      provide: ListBudgetsUseCase,
+      useFactory: (
+        budgets: BudgetRepository,
+        temporal: ListTemporalTransactionsUseCase,
+        profiles: UserProfileRepository,
+      ): ListBudgetsUseCase => {
+        const kit = budgetKit(temporal, profiles);
+        return new ListBudgetsUseCase(budgets, kit.reader);
+      },
+    },
+    {
+      inject: [
+        LazyBudgetRepository,
+        ListTemporalTransactionsUseCase,
+        LazyUserProfileRepository,
+      ],
+      provide: ChangeBudgetUseCase,
+      useFactory: (
+        budgets: BudgetRepository,
+        temporal: ListTemporalTransactionsUseCase,
+        profiles: UserProfileRepository,
+      ): ChangeBudgetUseCase => {
+        const kit = budgetKit(temporal, profiles);
+        return new ChangeBudgetUseCase(
+          budgets,
+          kit.reader,
+          kit.calendar,
+          new SystemIdentifierGenerator(),
+        );
+      },
+    },
+    {
+      inject: [
+        LazyBudgetRepository,
+        ListTemporalTransactionsUseCase,
+        LazyUserProfileRepository,
+      ],
+      provide: ChangeBudgetLifecycleUseCase,
+      useFactory: (
+        budgets: BudgetRepository,
+        temporal: ListTemporalTransactionsUseCase,
+        profiles: UserProfileRepository,
+      ): ChangeBudgetLifecycleUseCase => {
+        const kit = budgetKit(temporal, profiles);
+        return new ChangeBudgetLifecycleUseCase(
+          budgets,
+          kit.reader,
+          kit.calendar,
+          new SystemIdentifierGenerator(),
+        );
+      },
+    },
     LazyGoalContributionRepository,
     {
       inject: [LazyGoalContributionRepository],
@@ -1982,6 +2080,20 @@ function goalKit(
       quotes,
       calendar,
       contributions,
+    ),
+  };
+}
+
+function budgetKit(
+  temporal: ListTemporalTransactionsUseCase,
+  profiles: UserProfileRepository,
+): Readonly<{ calendar: GoalCalendar; reader: BudgetConsumptionReader }> {
+  const calendar = new GoalCalendar(profiles, new SystemClock());
+  return {
+    calendar,
+    reader: new BudgetConsumptionReader(
+      new TemporalBudgetEntrySource(temporal),
+      calendar,
     ),
   };
 }

@@ -312,3 +312,22 @@ export {
   type ContributionLine,
   type ContributionLineSnapshot,
 } from './goals/goal-contribution.js';
+export {
+  Budget,
+  budgetDimensionKinds,
+  BudgetLifecycleError,
+  budgetLifecycles,
+  calculateBudgetConsumption,
+  calculateBudgetRealized,
+  InvalidBudgetError,
+  isBudgetMonth,
+  type BudgetConsumption,
+  type BudgetDimension,
+  type BudgetDimensionKind,
+  type BudgetEntry,
+  type BudgetLifecycle,
+  type BudgetLimitVersion,
+  type BudgetMonth,
+  type BudgetRealized,
+  type BudgetSnapshot,
+} from './budgets/budget.js';

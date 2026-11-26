@@ -11,6 +11,12 @@ export type TemporalTransaction = Readonly<{
    * balance but is neither income nor expense in the totals (INV-015).
    */
   cardSettlement?: boolean;
+  /** Either side of a transfer between owned accounts (US-052). */
+  transfer?: boolean;
+  /** Entry of a balance adjustment, not a spending or an income. */
+  balanceAdjustment?: boolean;
+  /** For a refund or compensation entry, the expense it refers to. */
+  refundOfExpenseId?: string | null;
 }>;
 
 export interface TemporalTransactionRepository {
