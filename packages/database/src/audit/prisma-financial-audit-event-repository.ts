@@ -162,6 +162,8 @@ function toPersistedResourceType(
       return 'invoice_settlement';
     case 'manual-exchange-quote':
       return 'manual_exchange_quote';
+    case 'account-reserve':
+      return 'account_reserve';
     default:
       return resourceType;
   }
@@ -185,6 +187,8 @@ function fromPersistedResourceType(
       return 'invoice-settlement';
     case 'manual_exchange_quote':
       return 'manual-exchange-quote';
+    case 'account_reserve':
+      return 'account-reserve';
     default:
       return resourceType;
   }

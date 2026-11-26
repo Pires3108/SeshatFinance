@@ -27,6 +27,7 @@ export const financialAuditResourceTypes = [
   'manual-exchange-quote',
   'loan',
   'goal',
+  'account-reserve',
 ] as const;
 
 export type FinancialAuditResourceType =
