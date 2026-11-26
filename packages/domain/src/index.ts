@@ -266,3 +266,30 @@ export {
   type CardPlanReversal,
   type CardPlanState,
 } from './cards/card-installment-plan-change.js';
+export {
+  Goal,
+  GoalLifecycleError,
+  goalLifecycles,
+  goalModes,
+  InvalidGoalError,
+  MAX_GOAL_ACCOUNT_LINKS,
+  type GoalAccountLink,
+  type GoalAccountLinkSnapshot,
+  type GoalAccountShare,
+  type GoalDetails,
+  type GoalLifecycle,
+  type GoalMode,
+  type GoalSnapshot,
+} from './goals/goal.js';
+export {
+  calculateGoalProgress,
+  GoalProgressInputError,
+  goalStatuses,
+  type GoalAccountLifecycle,
+  type GoalAccountPosition,
+  type GoalAccountProgressLine,
+  type GoalConversion,
+  type GoalProgress,
+  type GoalStatus,
+  type PresentationQuote,
+} from './goals/goal-progress.js';

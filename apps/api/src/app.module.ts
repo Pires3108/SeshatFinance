@@ -16,6 +16,17 @@ import {
   CorrectOwnedManualExchangeQuoteUseCase,
   GetOwnedManualExchangeQuoteUseCase,
   ListOwnedManualExchangeQuotesUseCase,
+  ChangeGoalLifecycleUseCase,
+  CreateGoalUseCase,
+  GetAccountGoalImpactUseCase,
+  GetGoalUseCase,
+  GoalCalendar,
+  GoalProgressReader,
+  ListGoalsUseCase,
+  OwnedGoalAccountDirectory,
+  UnlinkGoalAccountUseCase,
+  UpdateGoalUseCase,
+  type GoalRepository,
   CreateFamilyGroupUseCase,
   GetOwnedCreditCardUseCase,
   GetOwnedTransferUseCase,
@@ -158,6 +169,8 @@ import { CardInstallmentPlanController } from './cards/card-installment-plan.con
 import { CardInstallmentPlanChangeController } from './cards/card-installment-plan-change.controller.js';
 import { LazyCardInstallmentPlanRepository } from './cards/lazy-card-installment-plan-repository.js';
 import { LoanController } from './loans/loan.controller.js';
+import { GoalController } from './goals/goal.controller.js';
+import { LazyGoalRepository } from './goals/lazy-goal-repository.js';
 import { LazyLoanRepository } from './loans/lazy-loan-repository.js';
 import { LazyCardPurchaseRepository } from './cards/lazy-card-purchase-repository.js';
 import { CardInvoiceController } from './cards/card-invoice.controller.js';
@@ -235,6 +248,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     CardInstallmentPlanController,
     CardInstallmentPlanChangeController,
     LoanController,
+    GoalController,
     CardInvoiceController,
     InvoiceSettlementController,
     CounterpartyController,
@@ -260,6 +274,173 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     TrashEliminationController,
   ],
   providers: [
+    {
+      inject: [
+        LazyGoalRepository,
+        GetOwnedAccountUseCase,
+        GetOwnedAccountBalanceUseCase,
+        ListOwnedManualExchangeQuotesUseCase,
+        LazyUserProfileRepository,
+      ],
+      provide: CreateGoalUseCase,
+      useFactory: (
+        goals: GoalRepository,
+        accounts: GetOwnedAccountUseCase,
+        balances: GetOwnedAccountBalanceUseCase,
+        quotes: ListOwnedManualExchangeQuotesUseCase,
+        profiles: UserProfileRepository,
+      ): CreateGoalUseCase => {
+        const kit = goalKit(goals, accounts, balances, quotes, profiles);
+        return new CreateGoalUseCase(
+          goals,
+          kit.directory,
+          kit.reader,
+          kit.calendar,
+          new SystemIdentifierGenerator(),
+        );
+      },
+    },
+    {
+      inject: [
+        LazyGoalRepository,
+        GetOwnedAccountUseCase,
+        GetOwnedAccountBalanceUseCase,
+        ListOwnedManualExchangeQuotesUseCase,
+        LazyUserProfileRepository,
+      ],
+      provide: ListGoalsUseCase,
+      useFactory: (
+        goals: GoalRepository,
+        accounts: GetOwnedAccountUseCase,
+        balances: GetOwnedAccountBalanceUseCase,
+        quotes: ListOwnedManualExchangeQuotesUseCase,
+        profiles: UserProfileRepository,
+      ): ListGoalsUseCase => {
+        const kit = goalKit(goals, accounts, balances, quotes, profiles);
+        return new ListGoalsUseCase(goals, kit.reader);
+      },
+    },
+    {
+      inject: [
+        LazyGoalRepository,
+        GetOwnedAccountUseCase,
+        GetOwnedAccountBalanceUseCase,
+        ListOwnedManualExchangeQuotesUseCase,
+        LazyUserProfileRepository,
+      ],
+      provide: GetGoalUseCase,
+      useFactory: (
+        goals: GoalRepository,
+        accounts: GetOwnedAccountUseCase,
+        balances: GetOwnedAccountBalanceUseCase,
+        quotes: ListOwnedManualExchangeQuotesUseCase,
+        profiles: UserProfileRepository,
+      ): GetGoalUseCase => {
+        const kit = goalKit(goals, accounts, balances, quotes, profiles);
+        return new GetGoalUseCase(goals, kit.reader);
+      },
+    },
+    {
+      inject: [
+        LazyGoalRepository,
+        GetOwnedAccountUseCase,
+        GetOwnedAccountBalanceUseCase,
+        ListOwnedManualExchangeQuotesUseCase,
+        LazyUserProfileRepository,
+      ],
+      provide: UpdateGoalUseCase,
+      useFactory: (
+        goals: GoalRepository,
+        accounts: GetOwnedAccountUseCase,
+        balances: GetOwnedAccountBalanceUseCase,
+        quotes: ListOwnedManualExchangeQuotesUseCase,
+        profiles: UserProfileRepository,
+      ): UpdateGoalUseCase => {
+        const kit = goalKit(goals, accounts, balances, quotes, profiles);
+        return new UpdateGoalUseCase(
+          goals,
+          kit.directory,
+          kit.reader,
+          kit.calendar,
+          new SystemIdentifierGenerator(),
+        );
+      },
+    },
+    {
+      inject: [
+        LazyGoalRepository,
+        GetOwnedAccountUseCase,
+        GetOwnedAccountBalanceUseCase,
+        ListOwnedManualExchangeQuotesUseCase,
+        LazyUserProfileRepository,
+      ],
+      provide: ChangeGoalLifecycleUseCase,
+      useFactory: (
+        goals: GoalRepository,
+        accounts: GetOwnedAccountUseCase,
+        balances: GetOwnedAccountBalanceUseCase,
+        quotes: ListOwnedManualExchangeQuotesUseCase,
+        profiles: UserProfileRepository,
+      ): ChangeGoalLifecycleUseCase => {
+        const kit = goalKit(goals, accounts, balances, quotes, profiles);
+        return new ChangeGoalLifecycleUseCase(
+          goals,
+          kit.directory,
+          kit.reader,
+          kit.calendar,
+          new SystemIdentifierGenerator(),
+        );
+      },
+    },
+    {
+      inject: [
+        LazyGoalRepository,
+        GetOwnedAccountUseCase,
+        GetOwnedAccountBalanceUseCase,
+        ListOwnedManualExchangeQuotesUseCase,
+        LazyUserProfileRepository,
+      ],
+      provide: UnlinkGoalAccountUseCase,
+      useFactory: (
+        goals: GoalRepository,
+        accounts: GetOwnedAccountUseCase,
+        balances: GetOwnedAccountBalanceUseCase,
+        quotes: ListOwnedManualExchangeQuotesUseCase,
+        profiles: UserProfileRepository,
+      ): UnlinkGoalAccountUseCase => {
+        const kit = goalKit(goals, accounts, balances, quotes, profiles);
+        return new UnlinkGoalAccountUseCase(
+          goals,
+          kit.reader,
+          kit.calendar,
+          new SystemIdentifierGenerator(),
+        );
+      },
+    },
+    {
+      inject: [
+        LazyGoalRepository,
+        GetOwnedAccountUseCase,
+        GetOwnedAccountBalanceUseCase,
+        ListOwnedManualExchangeQuotesUseCase,
+        LazyUserProfileRepository,
+      ],
+      provide: GetAccountGoalImpactUseCase,
+      useFactory: (
+        goals: GoalRepository,
+        accounts: GetOwnedAccountUseCase,
+        balances: GetOwnedAccountBalanceUseCase,
+        quotes: ListOwnedManualExchangeQuotesUseCase,
+        profiles: UserProfileRepository,
+      ): GetAccountGoalImpactUseCase => {
+        const kit = goalKit(goals, accounts, balances, quotes, profiles);
+        return new GetAccountGoalImpactUseCase(
+          goals,
+          kit.directory,
+          kit.reader,
+        );
+      },
+    },
     {
       inject: [
         LazyCreditCardRepository,
@@ -518,6 +699,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     LazyCardPurchaseRepository,
     LazyCardInstallmentPlanRepository,
     LazyLoanRepository,
+    LazyGoalRepository,
     LazyCardInvoiceRepository,
     LazyInvoiceSettlementRepository,
     LazyCounterpartyRepository,
@@ -1623,3 +1805,24 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
   ],
 })
 export class AppModule {}
+
+/** Goals read accounts, balances and quotes only through their public use cases. */
+function goalKit(
+  goals: GoalRepository,
+  accounts: GetOwnedAccountUseCase,
+  balances: GetOwnedAccountBalanceUseCase,
+  quotes: ListOwnedManualExchangeQuotesUseCase,
+  profiles: UserProfileRepository,
+): Readonly<{
+  calendar: GoalCalendar;
+  directory: OwnedGoalAccountDirectory;
+  reader: GoalProgressReader;
+}> {
+  const calendar = new GoalCalendar(profiles, new SystemClock());
+  const directory = new OwnedGoalAccountDirectory(accounts, balances);
+  return {
+    calendar,
+    directory,
+    reader: new GoalProgressReader(goals, directory, quotes, calendar),
+  };
+}

@@ -75,6 +75,10 @@ test('archived account returns to archived state after trash restoration', async
       });
     }
   });
+  // US-049: archiving or trashing first checks goals that use the account.
+  await page.route('**/api/goals/account-impact/**', async (route) => {
+    await route.fulfill({ json: [] });
+  });
   page.on('dialog', (dialog) => {
     void dialog.accept();
   });
