@@ -50,6 +50,17 @@ const profiles = {
   findById: () => Promise.resolve({ timeZone: 'America/Sao_Paulo' }),
 } as unknown as UserProfileRepository;
 
+interface Kit {
+  availability: GetOwnedAvailabilitySummaryUseCase;
+  budgets: CreateBudgetUseCase;
+  contributions: PrismaGoalContributionRepository;
+  createGoal: CreateGoalUseCase;
+  distribute: DistributeContributionUseCase;
+  reserve: SetAccountReserveUseCase;
+  reserveView: GetAccountAvailabilityUseCase;
+  updateGoal: UpdateGoalUseCase;
+}
+
 describe('S08 invariants in PostgreSQL (INV-012/013/025/026/047)', () => {
   let stop: (() => Promise<void>) | undefined;
   let client: PrismaClient | undefined;
@@ -89,7 +100,7 @@ describe('S08 invariants in PostgreSQL (INV-012/013/025/026/047)', () => {
     return client;
   }
 
-  function kit() {
+  function kit(): Kit {
     const accounts = new PrismaAccountRepository(prisma());
     const transactions = new PrismaTransactionRepository(prisma());
     const owned = new GetOwnedAccountUseCase(accounts);
@@ -285,9 +296,11 @@ describe('S08 invariants in PostgreSQL (INV-012/013/025/026/047)', () => {
       ),
     );
 
-    const rejected = results.filter((r) => r.status === 'rejected');
+    const rejected = results.filter(
+      (r): r is PromiseRejectedResult => r.status === 'rejected',
+    );
     expect(rejected).toHaveLength(1);
-    expect((rejected[0] as PromiseRejectedResult).reason).toBeInstanceOf(
+    expect(rejected[0]?.reason).toBeInstanceOf(
       ContributionVersionConflictError,
     );
     const [sum] = await prisma().$queryRaw<{ total: string; lines: bigint }[]>`
