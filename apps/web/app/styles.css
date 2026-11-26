@@ -407,3 +407,30 @@ button:focus-visible {
 .invoice-state.no-purchases {
   color: #176a61;
 }
+.reserve-panel {
+  margin-top: 2rem;
+  border-top: 1px solid #c9d6d4;
+  padding-top: 1.25rem;
+}
+.form-message.warning {
+  border-left: 4px solid #8a5a00;
+  padding-left: 0.75rem;
+  color: #6b4500;
+}
+.reserve-form,
+.reserve-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.reserve-form label {
+  flex-basis: 100%;
+  font-weight: 650;
+}
+.reserve-preview p {
+  flex-basis: 100%;
+  margin: 0;
+  line-height: 1.5;
+}

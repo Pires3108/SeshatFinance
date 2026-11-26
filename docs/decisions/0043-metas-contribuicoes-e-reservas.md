@@ -64,6 +64,7 @@ As regras de orçamento (US-052) seguem pendentes de confirmação no início da
 - A fatia limitada ao saldo atual evita dupla contagem quando várias metas compartilham uma conta, ao custo de um aviso extra na interface.
 - A conversão continua só de apresentação; consolidação contábil em BRL segue dependente do RII-007.
 - **Limites da US-049:** a moeda de uma conta não pode ser alterada hoje, então o painel de impacto cobre o arquivamento e a lixeira da conta; se a troca de moeda for criada, ela deve reutilizar o mesmo painel. A rotina opcional de contribuição depende da semântica de recorrência ainda aberta no RII-020 e não foi implementada. Saldo negativo conta zero para a meta, e uma conta na lixeira deixa de contar até ser restaurada.
+- **Regras da US-051:** a reserva fica numa tabela própria por conta (`account_reserves`), com versão otimista e auditoria; remover é gravar zero, e o histórico continua. Só uma conta ativa aceita mudança de reserva. Aumentar é validado contra o saldo contábil lido no momento, com a conta travada (`FOR UPDATE`); reduzir ou remover é sempre aceito, mesmo com a reserva acima do saldo. Conta arquivada mantém a reserva e continua no resumo de disponível; conta na lixeira sai do resumo com a reserva e volta ao ser restaurada. O resumo soma saldo, reserva e disponível só dentro de cada moeda.
 
 ## Alternativas consideradas
 

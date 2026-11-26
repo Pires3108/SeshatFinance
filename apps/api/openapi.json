@@ -8940,6 +8940,409 @@
         "tags": ["goals"]
       }
     },
+    "/api/v1/accounts/availability": {
+      "get": {
+        "operationId": "AccountReserveController_availability",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "accounts": {
+                      "items": {
+                        "description": "Book balance, declared reserve and available amount of an account, in its currency. Available = book − reserve; the book balance and net worth never change with a reserve.",
+                        "properties": {
+                          "accountId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "available": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "book": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "reserveAboveBalance": {
+                            "type": "boolean"
+                          },
+                          "reserveVersion": {
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "reserved": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          }
+                        },
+                        "required": [
+                          "accountId",
+                          "available",
+                          "book",
+                          "reserveAboveBalance",
+                          "reserveVersion",
+                          "reserved"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "totalsByCurrency": {
+                      "description": "One line per currency; currencies are never added up.",
+                      "items": {
+                        "properties": {
+                          "available": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "book": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "reserved": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          }
+                        },
+                        "required": ["available", "book", "reserved"],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": ["accounts", "totalsByCurrency"],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Book balance, reserve and available amount per account and per currency",
+        "tags": ["accounts"]
+      }
+    },
+    "/api/v1/accounts/{accountId}/reserve": {
+      "get": {
+        "operationId": "AccountReserveController_get",
+        "parameters": [
+          {
+            "name": "accountId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Book balance, declared reserve and available amount of an account, in its currency. Available = book − reserve; the book balance and net worth never change with a reserve.",
+                  "properties": {
+                    "accountId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "available": {
+                      "properties": {
+                        "amount": {
+                          "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        },
+                        "currencyCode": {
+                          "pattern": "^[A-Z]{3}$",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["amount", "currencyCode"],
+                      "type": "object"
+                    },
+                    "book": {
+                      "properties": {
+                        "amount": {
+                          "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        },
+                        "currencyCode": {
+                          "pattern": "^[A-Z]{3}$",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["amount", "currencyCode"],
+                      "type": "object"
+                    },
+                    "reserveAboveBalance": {
+                      "type": "boolean"
+                    },
+                    "reserveVersion": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "reserved": {
+                      "properties": {
+                        "amount": {
+                          "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        },
+                        "currencyCode": {
+                          "pattern": "^[A-Z]{3}$",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["amount", "currencyCode"],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "accountId",
+                    "available",
+                    "book",
+                    "reserveAboveBalance",
+                    "reserveVersion",
+                    "reserved"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned account not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the reserve and availability of an account",
+        "tags": ["accounts"]
+      },
+      "put": {
+        "operationId": "AccountReserveController_set",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "accountId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "amount": {
+                    "pattern": "^\\d+(?:\\.\\d+)?$",
+                    "type": "string"
+                  },
+                  "expectedVersion": {
+                    "description": "0 when the account has no reserve yet",
+                    "minimum": 0,
+                    "type": "integer"
+                  }
+                },
+                "required": ["amount", "expectedVersion"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "Book balance, declared reserve and available amount of an account, in its currency. Available = book − reserve; the book balance and net worth never change with a reserve.",
+                  "properties": {
+                    "accountId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "available": {
+                      "properties": {
+                        "amount": {
+                          "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        },
+                        "currencyCode": {
+                          "pattern": "^[A-Z]{3}$",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["amount", "currencyCode"],
+                      "type": "object"
+                    },
+                    "book": {
+                      "properties": {
+                        "amount": {
+                          "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        },
+                        "currencyCode": {
+                          "pattern": "^[A-Z]{3}$",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["amount", "currencyCode"],
+                      "type": "object"
+                    },
+                    "reserveAboveBalance": {
+                      "type": "boolean"
+                    },
+                    "reserveVersion": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "reserved": {
+                      "properties": {
+                        "amount": {
+                          "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        },
+                        "currencyCode": {
+                          "pattern": "^[A-Z]{3}$",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["amount", "currencyCode"],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "accountId",
+                    "available",
+                    "book",
+                    "reserveAboveBalance",
+                    "reserveVersion",
+                    "reserved"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid reserve or idempotency key"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned account not found"
+          },
+          "409": {
+            "description": "Reserve changed by another request, or idempotency key reused with a different payload"
+          },
+          "422": {
+            "description": "Reserve above the balance, or the account is not active"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create, change or remove (amount 0) the reserve of an account; nothing moves between accounts",
+        "tags": ["accounts"]
+      }
+    },
     "/api/v1/credit-cards/{cardId}/invoices": {
       "get": {
         "operationId": "CardInvoiceController_list",
@@ -15568,7 +15971,8 @@
                 "invoice-settlement",
                 "manual-exchange-quote",
                 "loan",
-                "goal"
+                "goal",
+                "account-reserve"
               ],
               "type": "string"
             }
@@ -15633,7 +16037,8 @@
                           "invoice-settlement",
                           "manual-exchange-quote",
                           "loan",
-                          "goal"
+                          "goal",
+                          "account-reserve"
                         ]
                       },
                       "resourceId": {

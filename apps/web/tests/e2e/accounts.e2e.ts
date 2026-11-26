@@ -7,6 +7,23 @@ const balance = {
   currencyMinorUnitScale: 2,
 };
 
+// US-051: the account detail also shows the reserve panel.
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/accounts/*/reserve', async (route) => {
+    await route.fulfill({
+      json: {
+        accountId: id,
+        // Distinct from the account balance, which tests look up as unique text.
+        available: { amount: '7.77', currencyCode: 'BRL' },
+        book: { amount: '7.77', currencyCode: 'BRL' },
+        reserveAboveBalance: false,
+        reserveVersion: 0,
+        reserved: { amount: '0.00', currencyCode: 'BRL' },
+      },
+    });
+  });
+});
+
 test('empty account list gives a clear accessible state', async ({ page }) => {
   await page.route('**/api/accounts?lifecycle=active', async (route) => {
     await route.fulfill({ json: [] });

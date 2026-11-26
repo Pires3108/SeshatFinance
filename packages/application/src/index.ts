@@ -480,3 +480,23 @@ export {
   type UnlinkGoalAccountCommand,
   type UpdateGoalCommand,
 } from './goals/manage-goal.js';
+export {
+  AccountReserveVersionConflictError,
+  GetAccountAvailabilityUseCase,
+  GetOwnedAvailabilitySummaryUseCase,
+  OwnedReserveAccountDirectory,
+  parseReserveResponse,
+  ReserveAccountNotFoundError,
+  ReserveAccountUnavailableError,
+  serializeReserveResponse,
+  SET_ACCOUNT_RESERVE_OPERATION,
+  SetAccountReserveUseCase,
+  type AccountAvailabilityView,
+  type AccountReserveRepository,
+  type AccountReserveWrite,
+  type CurrencyAvailabilityTotal,
+  type OwnedAvailabilitySummary,
+  type ReserveAccountDirectory,
+  type ReserveAccountView,
+  type SetAccountReserveCommand,
+} from './reserves/manage-account-reserve.js';

@@ -24,6 +24,7 @@ import {
   type AccountChange,
 } from '../../metas/goal-impact-panel';
 import type { GoalView } from '../../metas/goal-presentation';
+import { ReservePanel } from './reserve-panel';
 
 type ViewState =
   | 'loading'
@@ -275,6 +276,13 @@ export function AccountDetail({ accountId }: { accountId: string }): ReactNode {
                   Consultar receitas e despesas
                 </Link>
               </p>
+              {item.account.lifecycle !== 'trashed' && (
+                <ReservePanel
+                  accountId={accountId}
+                  editable={item.account.lifecycle === 'active'}
+                  key={`${item.balance.amount}:${item.account.lifecycle}`}
+                />
+              )}
               {impact !== null && (
                 <GoalImpactPanel
                   accountId={accountId}

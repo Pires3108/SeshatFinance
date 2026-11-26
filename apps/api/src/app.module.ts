@@ -27,6 +27,11 @@ import {
   UnlinkGoalAccountUseCase,
   UpdateGoalUseCase,
   type GoalRepository,
+  GetAccountAvailabilityUseCase,
+  GetOwnedAvailabilitySummaryUseCase,
+  OwnedReserveAccountDirectory,
+  SetAccountReserveUseCase,
+  type AccountReserveRepository,
   CreateFamilyGroupUseCase,
   GetOwnedCreditCardUseCase,
   GetOwnedTransferUseCase,
@@ -171,6 +176,8 @@ import { LazyCardInstallmentPlanRepository } from './cards/lazy-card-installment
 import { LoanController } from './loans/loan.controller.js';
 import { GoalController } from './goals/goal.controller.js';
 import { LazyGoalRepository } from './goals/lazy-goal-repository.js';
+import { AccountReserveController } from './reserves/account-reserve.controller.js';
+import { LazyAccountReserveRepository } from './reserves/lazy-account-reserve-repository.js';
 import { LazyLoanRepository } from './loans/lazy-loan-repository.js';
 import { LazyCardPurchaseRepository } from './cards/lazy-card-purchase-repository.js';
 import { CardInvoiceController } from './cards/card-invoice.controller.js';
@@ -249,6 +256,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     CardInstallmentPlanChangeController,
     LoanController,
     GoalController,
+    AccountReserveController,
     CardInvoiceController,
     InvoiceSettlementController,
     CounterpartyController,
@@ -274,6 +282,52 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     TrashEliminationController,
   ],
   providers: [
+    LazyAccountReserveRepository,
+    {
+      inject: [
+        LazyAccountReserveRepository,
+        GetOwnedAccountUseCase,
+        GetOwnedAccountBalanceUseCase,
+      ],
+      provide: SetAccountReserveUseCase,
+      useFactory: (
+        reserves: AccountReserveRepository,
+        accounts: GetOwnedAccountUseCase,
+        balances: GetOwnedAccountBalanceUseCase,
+      ): SetAccountReserveUseCase =>
+        new SetAccountReserveUseCase(
+          reserves,
+          new OwnedReserveAccountDirectory(accounts, balances),
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [
+        LazyAccountReserveRepository,
+        GetOwnedAccountUseCase,
+        GetOwnedAccountBalanceUseCase,
+      ],
+      provide: GetAccountAvailabilityUseCase,
+      useFactory: (
+        reserves: AccountReserveRepository,
+        accounts: GetOwnedAccountUseCase,
+        balances: GetOwnedAccountBalanceUseCase,
+      ): GetAccountAvailabilityUseCase =>
+        new GetAccountAvailabilityUseCase(
+          reserves,
+          new OwnedReserveAccountDirectory(accounts, balances),
+        ),
+    },
+    {
+      inject: [LazyAccountReserveRepository, GetOwnedBalanceSummaryUseCase],
+      provide: GetOwnedAvailabilitySummaryUseCase,
+      useFactory: (
+        reserves: AccountReserveRepository,
+        summary: GetOwnedBalanceSummaryUseCase,
+      ): GetOwnedAvailabilitySummaryUseCase =>
+        new GetOwnedAvailabilitySummaryUseCase(reserves, summary),
+    },
     {
       inject: [
         LazyGoalRepository,

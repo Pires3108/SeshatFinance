@@ -161,6 +161,7 @@ model Account {
   balanceAdjustments       BalanceAdjustment[]
   creditCards              CreditCard[]
   goalLinks                GoalAccountLink[]
+  reserve                  AccountReserve?
 
   @@unique([id, ownerId])
   @@index([ownerId, lifecycle])
@@ -391,6 +392,7 @@ enum FinancialAuditResourceType {
   invoice_settlement    @map("invoice-settlement")
   manual_exchange_quote @map("manual-exchange-quote")
   goal
+  account_reserve       @map("account-reserve")
 
   @@map("financial_audit_resource_type")
 }
@@ -798,4 +800,22 @@ model GoalAccountLink {
   @@id([goalId, accountId])
   @@index([ownerId, accountId])
   @@map("goal_account_links")
+}
+
+/// RN-071 / US-051: the declared reserve of an account. Organizational only:
+/// the book balance and net worth do not change (INV-012, INV-013).
+model AccountReserve {
+  accountId              String   @id @map("account_id") @db.Uuid
+  ownerId                String   @map("owner_id") @db.Uuid
+  amountMinorUnits       Decimal  @map("amount_minor_units") @db.Decimal(1000, 0)
+  currencyCode           String   @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale Int      @map("currency_minor_unit_scale") @db.SmallInt
+  createdAt              DateTime @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime @map("updated_at") @db.Timestamptz(6)
+  version                Int
+  account                Account  @relation(fields: [accountId, ownerId], references: [id, ownerId], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([accountId, ownerId])
+  @@index([ownerId])
+  @@map("account_reserves")
 }

@@ -293,3 +293,11 @@ export {
   type GoalStatus,
   type PresentationQuote,
 } from './goals/goal-progress.js';
+export {
+  AccountReserve,
+  AccountReserveExceedsBalanceError,
+  calculateAccountAvailability,
+  InvalidAccountReserveError,
+  type AccountAvailability,
+  type AccountReserveSnapshot,
+} from './reserves/account-reserve.js';

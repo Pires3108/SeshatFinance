@@ -456,6 +456,41 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/accounts/availability": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Book balance, reserve and available amount per account and per currency */
+        readonly get: operations["AccountReserveController_availability"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/accounts/{accountId}/reserve": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get the reserve and availability of an account */
+        readonly get: operations["AccountReserveController_get"];
+        /** Create, change or remove (amount 0) the reserve of an account; nothing moves between accounts */
+        readonly put: operations["AccountReserveController_set"];
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/credit-cards/{cardId}/invoices": {
         readonly parameters: {
             readonly query?: never;
@@ -4980,6 +5015,202 @@ export interface operations {
             };
         };
     };
+    readonly AccountReserveController_availability: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly accounts: readonly {
+                            /** Format: uuid */
+                            readonly accountId: string;
+                            readonly available: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly book: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly reserveAboveBalance: boolean;
+                            readonly reserveVersion: number;
+                            readonly reserved: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                        }[];
+                        /** @description One line per currency; currencies are never added up. */
+                        readonly totalsByCurrency: readonly {
+                            readonly available: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly book: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly reserved: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                        }[];
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly AccountReserveController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly accountId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly accountId: string;
+                        readonly available: {
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                        };
+                        readonly book: {
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                        };
+                        readonly reserveAboveBalance: boolean;
+                        readonly reserveVersion: number;
+                        readonly reserved: {
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                        };
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned account not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly AccountReserveController_set: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                /** @description UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409. */
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly accountId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly amount: string;
+                    /** @description 0 when the account has no reserve yet */
+                    readonly expectedVersion: number;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /** Format: uuid */
+                        readonly accountId: string;
+                        readonly available: {
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                        };
+                        readonly book: {
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                        };
+                        readonly reserveAboveBalance: boolean;
+                        readonly reserveVersion: number;
+                        readonly reserved: {
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                        };
+                    };
+                };
+            };
+            /** @description Invalid reserve or idempotency key */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned account not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reserve changed by another request, or idempotency key reused with a different payload */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Reserve above the balance, or the account is not active */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly CardInvoiceController_list: {
         readonly parameters: {
             readonly query?: never;
@@ -8488,7 +8719,7 @@ export interface operations {
         readonly parameters: {
             readonly query?: {
                 readonly resourceId?: unknown;
-                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal";
+                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve";
                 readonly limit?: number;
                 readonly afterSequence?: string;
             };
@@ -8513,7 +8744,7 @@ export interface operations {
                         readonly actorId: string;
                         readonly action: string;
                         /** @enum {string} */
-                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal";
+                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve";
                         /** Format: uuid */
                         readonly resourceId: string;
                         /** @enum {string} */
