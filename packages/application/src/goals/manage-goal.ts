@@ -10,6 +10,7 @@ import {
   type GoalAccountLink,
   type GoalAccountPosition,
   type GoalAccountShare,
+  type GoalContributionPosition,
   type GoalDetails,
   type GoalMode,
   type GoalProgress,
@@ -237,6 +238,12 @@ export class GoalProgressReader {
     private readonly accounts: GoalAccountDirectory,
     private readonly quotes: GoalQuoteSource,
     private readonly calendar: GoalCalendar,
+    private readonly contributions?: Readonly<{
+      listPositionsForGoals(
+        ownerId: string,
+        goalIds: readonly string[],
+      ): Promise<ReadonlyMap<string, readonly GoalContributionPosition[]>>;
+    }>,
   ) {}
 
   public async views(
@@ -254,14 +261,25 @@ export class GoalProgressReader {
       accountIds.length === 0
         ? []
         : await this.goals.listSharesForAccounts(ownerId, accountIds);
-    const needsQuotes = goals.some((goal) =>
-      goal.links.some((link) => {
-        const account = accounts.find((a) => a.id === link.accountId);
-        return (
-          account !== undefined &&
-          !account.balance.currency.equals(goal.target.currency)
-        );
-      }),
+    const contributions =
+      this.contributions === undefined || goals.length === 0
+        ? new Map<string, readonly GoalContributionPosition[]>()
+        : await this.contributions.listPositionsForGoals(
+            ownerId,
+            goals.map((goal) => goal.id),
+          );
+    const needsQuotes = goals.some(
+      (goal) =>
+        goal.links.some((link) => {
+          const account = accounts.find((a) => a.id === link.accountId);
+          return (
+            account !== undefined &&
+            !account.balance.currency.equals(goal.target.currency)
+          );
+        }) ||
+        (contributions.get(goal.id) ?? []).some(
+          (line) => !line.amount.currency.equals(goal.target.currency),
+        ),
     );
     const quotes = needsQuotes
       ? (await this.quotes.execute(ownerId)).map(toQuote)
@@ -278,6 +296,7 @@ export class GoalProgressReader {
         ),
         goal,
         progress: calculateGoalProgress({
+          contributions: contributions.get(goal.id) ?? [],
           goal,
           now,
           positions: positionsFor(goal, accounts, shares),

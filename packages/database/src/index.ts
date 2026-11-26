@@ -32,4 +32,5 @@ export { PrismaOriginAttemptRepository } from './auth/prisma-origin-attempt-repo
 export { PrismaRecoveryRequestAttemptRepository } from './auth/prisma-recovery-request-attempt-repository.js';
 export { PrismaLoanRepository } from './loans/prisma-loan-repository.js';
 export { PrismaGoalRepository } from './goals/prisma-goal-repository.js';
+export { PrismaGoalContributionRepository } from './goals/prisma-goal-contribution-repository.js';
 export { PrismaAccountReserveRepository } from './reserves/prisma-account-reserve-repository.js';

@@ -288,6 +288,8 @@ export {
   type GoalAccountLifecycle,
   type GoalAccountPosition,
   type GoalAccountProgressLine,
+  type GoalContributionPosition,
+  type GoalContributionProgressLine,
   type GoalConversion,
   type GoalProgress,
   type GoalStatus,
@@ -301,3 +303,12 @@ export {
   type AccountAvailability,
   type AccountReserveSnapshot,
 } from './reserves/account-reserve.js';
+export {
+  ContributionDistribution,
+  ContributionExceedsSourceError,
+  InvalidContributionError,
+  MAX_CONTRIBUTION_LINES,
+  type ContributionDistributionSnapshot,
+  type ContributionLine,
+  type ContributionLineSnapshot,
+} from './goals/goal-contribution.js';

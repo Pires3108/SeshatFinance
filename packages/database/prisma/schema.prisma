@@ -248,6 +248,7 @@ model Transaction {
   revisions              TransactionRevision[]
   refundExpenseLinks     RefundLink[]             @relation("refund_expense")
   refundEntryLink        RefundLink?              @relation("refund_entry")
+  goalContribution       GoalContributionSource?
   cardSettlement         InvoiceSettlement?
 
   @@unique([id, ownerId])
@@ -393,6 +394,7 @@ enum FinancialAuditResourceType {
   manual_exchange_quote @map("manual-exchange-quote")
   goal
   account_reserve       @map("account-reserve")
+  goal_contribution     @map("goal-contribution")
 
   @@map("financial_audit_resource_type")
 }
@@ -778,6 +780,7 @@ model Goal {
   updatedAt              DateTime          @map("updated_at") @db.Timestamptz(6)
   version                Int
   links                  GoalAccountLink[]
+  contributions          GoalContribution[]
 
   @@unique([id, ownerId])
   @@index([ownerId, createdAt])
@@ -818,4 +821,38 @@ model AccountReserve {
   @@unique([accountId, ownerId])
   @@index([ownerId])
   @@map("account_reserves")
+}
+
+/// RN-070 / US-050: how one eligible entry is split between goals. The entry
+/// keeps its full value in the balance (INV-026); the lines never exceed it
+/// (INV-025). Rows are kept when the entry goes to the trash.
+model GoalContributionSource {
+  sourceTransactionId String             @id @map("source_transaction_id") @db.Uuid
+  ownerId             String             @map("owner_id") @db.Uuid
+  authorId            String             @map("author_id") @db.Uuid
+  createdAt           DateTime           @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime           @map("updated_at") @db.Timestamptz(6)
+  version             Int
+  transaction         Transaction        @relation(fields: [sourceTransactionId, ownerId], references: [id, ownerId], onDelete: Restrict, onUpdate: Cascade)
+  lines               GoalContribution[]
+
+  @@unique([sourceTransactionId, ownerId])
+  @@index([ownerId])
+  @@map("goal_contribution_sources")
+}
+
+model GoalContribution {
+  sourceTransactionId    String                 @map("source_transaction_id") @db.Uuid
+  goalId                 String                 @map("goal_id") @db.Uuid
+  ownerId                String                 @map("owner_id") @db.Uuid
+  position               Int                    @db.SmallInt
+  amountMinorUnits       Decimal                @map("amount_minor_units") @db.Decimal(1000, 0)
+  currencyCode           String                 @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale Int                    @map("currency_minor_unit_scale") @db.SmallInt
+  source                 GoalContributionSource @relation(fields: [sourceTransactionId, ownerId], references: [sourceTransactionId, ownerId], onDelete: Cascade, onUpdate: Cascade)
+  goal                   Goal                   @relation(fields: [goalId, ownerId], references: [id, ownerId], onDelete: Restrict, onUpdate: Cascade)
+
+  @@id([sourceTransactionId, goalId])
+  @@index([ownerId, goalId])
+  @@map("goal_contributions")
 }

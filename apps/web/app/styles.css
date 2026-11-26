@@ -434,3 +434,17 @@ button:focus-visible {
   margin: 0;
   line-height: 1.5;
 }
+.goal-distributor {
+  margin-top: 2.5rem;
+  border-top: 1px solid #c9d6d4;
+  padding-top: 1.25rem;
+}
+.goal-distributor label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 650;
+  margin-top: 0.75rem;
+}
+.goal-distributor-line {
+  margin-top: 0.75rem;
+}

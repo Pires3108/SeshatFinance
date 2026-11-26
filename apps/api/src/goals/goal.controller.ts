@@ -214,7 +214,33 @@ const linkJson: SchemaObject = {
   ],
   type: 'object',
 };
+const contributionJson: SchemaObject = {
+  description:
+    'Part of an eligible entry assigned to the goal. A trashed entry counts zero (excluded) and an entry in a linked account is not counted again (coveredByAccount).',
+  properties: {
+    accountId: { format: 'uuid', type: 'string' },
+    belowDeclared: { type: 'boolean' },
+    conversion: conversionJson,
+    counted: money,
+    coveredByAccount: { type: 'boolean' },
+    declared: money,
+    excluded: { type: 'boolean' },
+    sourceTransactionId: { format: 'uuid', type: 'string' },
+  },
+  required: [
+    'accountId',
+    'belowDeclared',
+    'conversion',
+    'counted',
+    'coveredByAccount',
+    'declared',
+    'excluded',
+    'sourceTransactionId',
+  ],
+  type: 'object',
+};
 const goalProperties: Record<string, SchemaObject> = {
+  contributions: { items: contributionJson, type: 'array' },
   createdAt: { format: 'date-time', type: 'string' },
   deadline: { format: 'date', nullable: true, type: 'string' },
   id: { format: 'uuid', type: 'string' },
@@ -277,6 +303,16 @@ export type GoalResponse = Readonly<{
   version: number;
   createdAt: string;
   updatedAt: string;
+  contributions: readonly Readonly<{
+    sourceTransactionId: string;
+    accountId: string;
+    declared: MoneyResponse;
+    counted: MoneyResponse;
+    excluded: boolean;
+    coveredByAccount: boolean;
+    belowDeclared: boolean;
+    conversion: ConversionResponse;
+  }>[];
   links: readonly Readonly<{
     accountId: string;
     accountName: string | null;
@@ -578,6 +614,16 @@ export function mapGoal(view: GoalView): GoalResponse {
   const snapshot = view.goal.toSnapshot();
   const { progress } = view;
   return {
+    contributions: progress.contributions.map((line) => ({
+      accountId: line.accountId,
+      belowDeclared: line.belowDeclared,
+      conversion: conversionOf(line.conversion),
+      counted: moneyOf(line.counted),
+      coveredByAccount: line.coveredByAccount,
+      declared: moneyOf(line.declared),
+      excluded: line.excluded,
+      sourceTransactionId: line.sourceTransactionId,
+    })),
     createdAt: snapshot.createdAt.toISOString(),
     deadline: snapshot.deadline,
     id: snapshot.id,

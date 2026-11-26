@@ -500,3 +500,22 @@ export {
   type ReserveAccountView,
   type SetAccountReserveCommand,
 } from './reserves/manage-account-reserve.js';
+export {
+  ContributionGoalUnavailableError,
+  ContributionSourceNotFoundError,
+  ContributionSourceUnavailableError,
+  ContributionVersionConflictError,
+  DISTRIBUTE_CONTRIBUTION_OPERATION,
+  DistributeContributionUseCase,
+  GetContributionUseCase,
+  ListContributionSourcesUseCase,
+  parseContributionResponse,
+  serializeContributionResponse,
+  type ContributionGoalState,
+  type ContributionSourceSummary,
+  type ContributionSourceView,
+  type ContributionView,
+  type ContributionWrite,
+  type DistributeContributionCommand,
+  type GoalContributionRepository,
+} from './goals/distribute-goal-contribution.js';

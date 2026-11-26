@@ -32,6 +32,10 @@ import {
   OwnedReserveAccountDirectory,
   SetAccountReserveUseCase,
   type AccountReserveRepository,
+  DistributeContributionUseCase,
+  GetContributionUseCase,
+  ListContributionSourcesUseCase,
+  type GoalContributionRepository,
   CreateFamilyGroupUseCase,
   GetOwnedCreditCardUseCase,
   GetOwnedTransferUseCase,
@@ -176,6 +180,8 @@ import { LazyCardInstallmentPlanRepository } from './cards/lazy-card-installment
 import { LoanController } from './loans/loan.controller.js';
 import { GoalController } from './goals/goal.controller.js';
 import { LazyGoalRepository } from './goals/lazy-goal-repository.js';
+import { GoalContributionController } from './goals/goal-contribution.controller.js';
+import { LazyGoalContributionRepository } from './goals/lazy-goal-contribution-repository.js';
 import { AccountReserveController } from './reserves/account-reserve.controller.js';
 import { LazyAccountReserveRepository } from './reserves/lazy-account-reserve-repository.js';
 import { LazyLoanRepository } from './loans/lazy-loan-repository.js';
@@ -257,6 +263,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     LoanController,
     GoalController,
     AccountReserveController,
+    GoalContributionController,
     CardInvoiceController,
     InvoiceSettlementController,
     CounterpartyController,
@@ -283,6 +290,34 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
   ],
   providers: [
     LazyAccountReserveRepository,
+    LazyGoalContributionRepository,
+    {
+      inject: [LazyGoalContributionRepository],
+      provide: DistributeContributionUseCase,
+      useFactory: (
+        contributions: GoalContributionRepository,
+      ): DistributeContributionUseCase =>
+        new DistributeContributionUseCase(
+          contributions,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyGoalContributionRepository],
+      provide: GetContributionUseCase,
+      useFactory: (
+        contributions: GoalContributionRepository,
+      ): GetContributionUseCase => new GetContributionUseCase(contributions),
+    },
+    {
+      inject: [LazyGoalContributionRepository],
+      provide: ListContributionSourcesUseCase,
+      useFactory: (
+        contributions: GoalContributionRepository,
+      ): ListContributionSourcesUseCase =>
+        new ListContributionSourcesUseCase(contributions),
+    },
     {
       inject: [
         LazyAccountReserveRepository,
@@ -335,6 +370,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         GetOwnedAccountBalanceUseCase,
         ListOwnedManualExchangeQuotesUseCase,
         LazyUserProfileRepository,
+        LazyGoalContributionRepository,
       ],
       provide: CreateGoalUseCase,
       useFactory: (
@@ -343,8 +379,16 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         balances: GetOwnedAccountBalanceUseCase,
         quotes: ListOwnedManualExchangeQuotesUseCase,
         profiles: UserProfileRepository,
+        contributions: GoalContributionRepository,
       ): CreateGoalUseCase => {
-        const kit = goalKit(goals, accounts, balances, quotes, profiles);
+        const kit = goalKit(
+          goals,
+          accounts,
+          balances,
+          quotes,
+          profiles,
+          contributions,
+        );
         return new CreateGoalUseCase(
           goals,
           kit.directory,
@@ -361,6 +405,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         GetOwnedAccountBalanceUseCase,
         ListOwnedManualExchangeQuotesUseCase,
         LazyUserProfileRepository,
+        LazyGoalContributionRepository,
       ],
       provide: ListGoalsUseCase,
       useFactory: (
@@ -369,8 +414,16 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         balances: GetOwnedAccountBalanceUseCase,
         quotes: ListOwnedManualExchangeQuotesUseCase,
         profiles: UserProfileRepository,
+        contributions: GoalContributionRepository,
       ): ListGoalsUseCase => {
-        const kit = goalKit(goals, accounts, balances, quotes, profiles);
+        const kit = goalKit(
+          goals,
+          accounts,
+          balances,
+          quotes,
+          profiles,
+          contributions,
+        );
         return new ListGoalsUseCase(goals, kit.reader);
       },
     },
@@ -381,6 +434,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         GetOwnedAccountBalanceUseCase,
         ListOwnedManualExchangeQuotesUseCase,
         LazyUserProfileRepository,
+        LazyGoalContributionRepository,
       ],
       provide: GetGoalUseCase,
       useFactory: (
@@ -389,8 +443,16 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         balances: GetOwnedAccountBalanceUseCase,
         quotes: ListOwnedManualExchangeQuotesUseCase,
         profiles: UserProfileRepository,
+        contributions: GoalContributionRepository,
       ): GetGoalUseCase => {
-        const kit = goalKit(goals, accounts, balances, quotes, profiles);
+        const kit = goalKit(
+          goals,
+          accounts,
+          balances,
+          quotes,
+          profiles,
+          contributions,
+        );
         return new GetGoalUseCase(goals, kit.reader);
       },
     },
@@ -401,6 +463,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         GetOwnedAccountBalanceUseCase,
         ListOwnedManualExchangeQuotesUseCase,
         LazyUserProfileRepository,
+        LazyGoalContributionRepository,
       ],
       provide: UpdateGoalUseCase,
       useFactory: (
@@ -409,8 +472,16 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         balances: GetOwnedAccountBalanceUseCase,
         quotes: ListOwnedManualExchangeQuotesUseCase,
         profiles: UserProfileRepository,
+        contributions: GoalContributionRepository,
       ): UpdateGoalUseCase => {
-        const kit = goalKit(goals, accounts, balances, quotes, profiles);
+        const kit = goalKit(
+          goals,
+          accounts,
+          balances,
+          quotes,
+          profiles,
+          contributions,
+        );
         return new UpdateGoalUseCase(
           goals,
           kit.directory,
@@ -427,6 +498,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         GetOwnedAccountBalanceUseCase,
         ListOwnedManualExchangeQuotesUseCase,
         LazyUserProfileRepository,
+        LazyGoalContributionRepository,
       ],
       provide: ChangeGoalLifecycleUseCase,
       useFactory: (
@@ -435,8 +507,16 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         balances: GetOwnedAccountBalanceUseCase,
         quotes: ListOwnedManualExchangeQuotesUseCase,
         profiles: UserProfileRepository,
+        contributions: GoalContributionRepository,
       ): ChangeGoalLifecycleUseCase => {
-        const kit = goalKit(goals, accounts, balances, quotes, profiles);
+        const kit = goalKit(
+          goals,
+          accounts,
+          balances,
+          quotes,
+          profiles,
+          contributions,
+        );
         return new ChangeGoalLifecycleUseCase(
           goals,
           kit.directory,
@@ -453,6 +533,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         GetOwnedAccountBalanceUseCase,
         ListOwnedManualExchangeQuotesUseCase,
         LazyUserProfileRepository,
+        LazyGoalContributionRepository,
       ],
       provide: UnlinkGoalAccountUseCase,
       useFactory: (
@@ -461,8 +542,16 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         balances: GetOwnedAccountBalanceUseCase,
         quotes: ListOwnedManualExchangeQuotesUseCase,
         profiles: UserProfileRepository,
+        contributions: GoalContributionRepository,
       ): UnlinkGoalAccountUseCase => {
-        const kit = goalKit(goals, accounts, balances, quotes, profiles);
+        const kit = goalKit(
+          goals,
+          accounts,
+          balances,
+          quotes,
+          profiles,
+          contributions,
+        );
         return new UnlinkGoalAccountUseCase(
           goals,
           kit.reader,
@@ -478,6 +567,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         GetOwnedAccountBalanceUseCase,
         ListOwnedManualExchangeQuotesUseCase,
         LazyUserProfileRepository,
+        LazyGoalContributionRepository,
       ],
       provide: GetAccountGoalImpactUseCase,
       useFactory: (
@@ -486,8 +576,16 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
         balances: GetOwnedAccountBalanceUseCase,
         quotes: ListOwnedManualExchangeQuotesUseCase,
         profiles: UserProfileRepository,
+        contributions: GoalContributionRepository,
       ): GetAccountGoalImpactUseCase => {
-        const kit = goalKit(goals, accounts, balances, quotes, profiles);
+        const kit = goalKit(
+          goals,
+          accounts,
+          balances,
+          quotes,
+          profiles,
+          contributions,
+        );
         return new GetAccountGoalImpactUseCase(
           goals,
           kit.directory,
@@ -1867,6 +1965,7 @@ function goalKit(
   balances: GetOwnedAccountBalanceUseCase,
   quotes: ListOwnedManualExchangeQuotesUseCase,
   profiles: UserProfileRepository,
+  contributions: GoalContributionRepository,
 ): Readonly<{
   calendar: GoalCalendar;
   directory: OwnedGoalAccountDirectory;
@@ -1877,6 +1976,12 @@ function goalKit(
   return {
     calendar,
     directory,
-    reader: new GoalProgressReader(goals, directory, quotes, calendar),
+    reader: new GoalProgressReader(
+      goals,
+      directory,
+      quotes,
+      calendar,
+      contributions,
+    ),
   };
 }
