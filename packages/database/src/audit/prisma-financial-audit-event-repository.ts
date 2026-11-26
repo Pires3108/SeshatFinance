@@ -164,6 +164,8 @@ function toPersistedResourceType(
       return 'manual_exchange_quote';
     case 'account-reserve':
       return 'account_reserve';
+    case 'goal-contribution':
+      return 'goal_contribution';
     default:
       return resourceType;
   }
@@ -189,6 +191,8 @@ function fromPersistedResourceType(
       return 'manual-exchange-quote';
     case 'account_reserve':
       return 'account-reserve';
+    case 'goal_contribution':
+      return 'goal-contribution';
     default:
       return resourceType;
   }

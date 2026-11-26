@@ -53,6 +53,41 @@ export type GoalAccountProgressLine = Readonly<{
   conversion: GoalConversion;
 }>;
 
+/**
+ * One contribution line of this goal (US-050): the part of an eligible
+ * entry the holder assigned to it, with the current facts of the entry.
+ */
+export type GoalContributionPosition = Readonly<{
+  sourceTransactionId: string;
+  /** Account where the entry was recorded. */
+  accountId: string;
+  /** The part assigned to this goal, in the entry currency. */
+  amount: Money;
+  /** Current amount of the entry. */
+  sourceAmount: Money;
+  /** Sum of every line on the entry, this one included. */
+  allocatedTotal: Money;
+  sourceLifecycle: GoalAccountLifecycle;
+}>;
+
+export type GoalContributionProgressLine = Readonly<{
+  sourceTransactionId: string;
+  accountId: string;
+  declared: Money;
+  /** Value counted for the goal, in the entry currency (original). */
+  counted: Money;
+  /** A trashed entry counts zero until restored; the link is kept. */
+  excluded: boolean;
+  /**
+   * The entry is in an account linked to this goal: its value already
+   * counts through the account share, so it is not added again.
+   */
+  coveredByAccount: boolean;
+  /** The entry was edited below the sum of its lines. */
+  belowDeclared: boolean;
+  conversion: GoalConversion;
+}>;
+
 export const goalStatuses = [
   'in-progress',
   'completed',
@@ -65,6 +100,7 @@ export type GoalStatus = (typeof goalStatuses)[number];
 
 export type GoalProgress = Readonly<{
   lines: readonly GoalAccountProgressLine[];
+  contributions: readonly GoalContributionProgressLine[];
   /** Initial amount plus counted values, or null when a quote is missing. */
   accumulated: Money | null;
   remaining: Money | null;
@@ -92,6 +128,7 @@ export function calculateGoalProgress(
     quotes: readonly PresentationQuote[];
     today: CivilDate;
     now: Date;
+    contributions?: readonly GoalContributionPosition[];
   }>,
 ): GoalProgress {
   const target = input.goal.target;
@@ -118,9 +155,27 @@ export function calculateGoalProgress(
     };
   });
 
+  const linked = new Set(input.goal.links.map((link) => link.accountId));
+  const contributions = (input.contributions ?? []).map((position) => {
+    const counted = contributionValue(position, linked);
+    return {
+      ...counted,
+      accountId: position.accountId,
+      conversion: convert(
+        counted.counted,
+        target.currency,
+        input.quotes,
+        input.now,
+      ),
+      declared: position.amount,
+      sourceTransactionId: position.sourceTransactionId,
+    };
+  });
+
   let accumulated: Money | null = input.goal.initialAmount;
-  for (const line of lines) {
+  for (const line of [...lines, ...contributions]) {
     if (accumulated === null) break;
+    if (line.counted.isZero()) continue;
     if (line.conversion.status === 'unavailable') accumulated = null;
     else if (line.conversion.status === 'available')
       accumulated = accumulated.add(line.conversion.amount);
@@ -129,10 +184,56 @@ export function calculateGoalProgress(
 
   return {
     accumulated,
+    contributions,
     lines,
     percent: accumulated === null ? null : percentOf(accumulated, target),
     remaining: accumulated === null ? null : remainingOf(accumulated, target),
     status: statusOf(input.goal, accumulated, input.today),
+  };
+}
+
+function contributionValue(
+  position: GoalContributionPosition,
+  linkedAccounts: ReadonlySet<string>,
+): Readonly<{
+  counted: Money;
+  excluded: boolean;
+  coveredByAccount: boolean;
+  belowDeclared: boolean;
+}> {
+  const currency = position.amount.currency;
+  if (
+    !position.sourceAmount.currency.equals(currency) ||
+    !position.allocatedTotal.currency.equals(currency)
+  ) {
+    throw new GoalProgressInputError('A contribution uses the entry currency.');
+  }
+  const zero = Money.fromMinorUnits(0n, currency);
+  const excluded = position.sourceLifecycle === 'trashed';
+  const coveredByAccount = linkedAccounts.has(position.accountId);
+  const available =
+    position.sourceAmount.compare(zero) > 0 ? position.sourceAmount : zero;
+  const belowDeclared = available.compare(position.allocatedTotal) < 0;
+  if (excluded || coveredByAccount) {
+    return { belowDeclared, counted: zero, coveredByAccount, excluded };
+  }
+  if (!belowDeclared) {
+    return {
+      belowDeclared,
+      counted: position.amount,
+      coveredByAccount,
+      excluded,
+    };
+  }
+  // INV-025: an entry edited below its lines keeps their proportions.
+  const minor =
+    (position.amount.toMinorUnits() * available.toMinorUnits()) /
+    position.allocatedTotal.toMinorUnits();
+  return {
+    belowDeclared,
+    counted: Money.fromMinorUnits(minor, currency),
+    coveredByAccount,
+    excluded,
   };
 }
 

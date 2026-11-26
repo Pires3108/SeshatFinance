@@ -25,6 +25,7 @@ import {
   statusLabels,
   type GoalView,
 } from './goal-presentation';
+import { ContributionDistributor } from './contribution-distributor';
 
 type LoadState = 'loading' | 'ready' | 'unauthorized' | 'unavailable';
 type ShareDraft = Readonly<{
@@ -538,6 +539,22 @@ export function GoalManager(): ReactNode {
                     ))}
                   </ul>
                 )}
+                {goal.contributions.length > 0 && (
+                  <ul aria-label={`Contribuições de ${goal.name}`}>
+                    {goal.contributions.map((line) => (
+                      <li key={line.sourceTransactionId}>
+                        Contribuição de {formatMoney(line.declared)}
+                        {line.excluded
+                          ? ' · Entrada na lixeira: não conta até ser restaurada'
+                          : line.coveredByAccount
+                            ? ' · Já conta pela conta vinculada'
+                            : ` · conta ${formatMoney(line.counted)}`}
+                        {line.belowDeclared &&
+                          ' · Entrada editada abaixo do distribuído'}
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <div className="account-actions">
                   {goal.lifecycle !== 'archived' && (
                     <button
@@ -589,6 +606,9 @@ export function GoalManager(): ReactNode {
               </li>
             ))}
           </ul>
+        )}
+        {state === 'ready' && goals.length > 0 && (
+          <ContributionDistributor goals={goals} onSaved={load} />
         )}
       </main>
     </div>

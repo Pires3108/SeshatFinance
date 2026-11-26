@@ -6700,6 +6700,128 @@
                 "schema": {
                   "description": "A goal declared by the holder. It organizes progress only and never moves money nor changes balances or net worth.",
                   "properties": {
+                    "contributions": {
+                      "items": {
+                        "description": "Part of an eligible entry assigned to the goal. A trashed entry counts zero (excluded) and an entry in a linked account is not counted again (coveredByAccount).",
+                        "properties": {
+                          "accountId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "belowDeclared": {
+                            "type": "boolean"
+                          },
+                          "conversion": {
+                            "description": "Presentation-only conversion to the goal currency (INV-047). Unavailable without a valid manual quote: never zero.",
+                            "properties": {
+                              "amount": {
+                                "properties": {
+                                  "amount": {
+                                    "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                    "type": "string"
+                                  },
+                                  "currencyCode": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["amount", "currencyCode"],
+                                "type": "object",
+                                "nullable": true
+                              },
+                              "effectiveAt": {
+                                "format": "date-time",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "inverted": {
+                                "nullable": true,
+                                "type": "boolean"
+                              },
+                              "quoteId": {
+                                "format": "uuid",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "rate": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "source": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "status": {
+                                "enum": [
+                                  "same-currency",
+                                  "available",
+                                  "unavailable"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "effectiveAt",
+                              "inverted",
+                              "quoteId",
+                              "rate",
+                              "source",
+                              "status"
+                            ],
+                            "type": "object"
+                          },
+                          "counted": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "coveredByAccount": {
+                            "type": "boolean"
+                          },
+                          "declared": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "excluded": {
+                            "type": "boolean"
+                          },
+                          "sourceTransactionId": {
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "accountId",
+                          "belowDeclared",
+                          "conversion",
+                          "counted",
+                          "coveredByAccount",
+                          "declared",
+                          "excluded",
+                          "sourceTransactionId"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
                     "createdAt": {
                       "format": "date-time",
                       "type": "string"
@@ -6943,6 +7065,7 @@
                     }
                   },
                   "required": [
+                    "contributions",
                     "createdAt",
                     "deadline",
                     "id",
@@ -6997,6 +7120,128 @@
                   "items": {
                     "description": "A goal declared by the holder. It organizes progress only and never moves money nor changes balances or net worth.",
                     "properties": {
+                      "contributions": {
+                        "items": {
+                          "description": "Part of an eligible entry assigned to the goal. A trashed entry counts zero (excluded) and an entry in a linked account is not counted again (coveredByAccount).",
+                          "properties": {
+                            "accountId": {
+                              "format": "uuid",
+                              "type": "string"
+                            },
+                            "belowDeclared": {
+                              "type": "boolean"
+                            },
+                            "conversion": {
+                              "description": "Presentation-only conversion to the goal currency (INV-047). Unavailable without a valid manual quote: never zero.",
+                              "properties": {
+                                "amount": {
+                                  "properties": {
+                                    "amount": {
+                                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                      "type": "string"
+                                    },
+                                    "currencyCode": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["amount", "currencyCode"],
+                                  "type": "object",
+                                  "nullable": true
+                                },
+                                "effectiveAt": {
+                                  "format": "date-time",
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "inverted": {
+                                  "nullable": true,
+                                  "type": "boolean"
+                                },
+                                "quoteId": {
+                                  "format": "uuid",
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "rate": {
+                                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "source": {
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "status": {
+                                  "enum": [
+                                    "same-currency",
+                                    "available",
+                                    "unavailable"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "amount",
+                                "effectiveAt",
+                                "inverted",
+                                "quoteId",
+                                "rate",
+                                "source",
+                                "status"
+                              ],
+                              "type": "object"
+                            },
+                            "counted": {
+                              "properties": {
+                                "amount": {
+                                  "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                  "type": "string"
+                                },
+                                "currencyCode": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["amount", "currencyCode"],
+                              "type": "object"
+                            },
+                            "coveredByAccount": {
+                              "type": "boolean"
+                            },
+                            "declared": {
+                              "properties": {
+                                "amount": {
+                                  "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                  "type": "string"
+                                },
+                                "currencyCode": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["amount", "currencyCode"],
+                              "type": "object"
+                            },
+                            "excluded": {
+                              "type": "boolean"
+                            },
+                            "sourceTransactionId": {
+                              "format": "uuid",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "accountId",
+                            "belowDeclared",
+                            "conversion",
+                            "counted",
+                            "coveredByAccount",
+                            "declared",
+                            "excluded",
+                            "sourceTransactionId"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
                       "createdAt": {
                         "format": "date-time",
                         "type": "string"
@@ -7240,6 +7485,7 @@
                       }
                     },
                     "required": [
+                      "contributions",
                       "createdAt",
                       "deadline",
                       "id",
@@ -7296,6 +7542,128 @@
                   "items": {
                     "description": "A goal declared by the holder. It organizes progress only and never moves money nor changes balances or net worth.",
                     "properties": {
+                      "contributions": {
+                        "items": {
+                          "description": "Part of an eligible entry assigned to the goal. A trashed entry counts zero (excluded) and an entry in a linked account is not counted again (coveredByAccount).",
+                          "properties": {
+                            "accountId": {
+                              "format": "uuid",
+                              "type": "string"
+                            },
+                            "belowDeclared": {
+                              "type": "boolean"
+                            },
+                            "conversion": {
+                              "description": "Presentation-only conversion to the goal currency (INV-047). Unavailable without a valid manual quote: never zero.",
+                              "properties": {
+                                "amount": {
+                                  "properties": {
+                                    "amount": {
+                                      "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                      "type": "string"
+                                    },
+                                    "currencyCode": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": ["amount", "currencyCode"],
+                                  "type": "object",
+                                  "nullable": true
+                                },
+                                "effectiveAt": {
+                                  "format": "date-time",
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "inverted": {
+                                  "nullable": true,
+                                  "type": "boolean"
+                                },
+                                "quoteId": {
+                                  "format": "uuid",
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "rate": {
+                                  "pattern": "^\\d+(?:\\.\\d+)?$",
+                                  "type": "string",
+                                  "nullable": true
+                                },
+                                "source": {
+                                  "nullable": true,
+                                  "type": "string"
+                                },
+                                "status": {
+                                  "enum": [
+                                    "same-currency",
+                                    "available",
+                                    "unavailable"
+                                  ],
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "amount",
+                                "effectiveAt",
+                                "inverted",
+                                "quoteId",
+                                "rate",
+                                "source",
+                                "status"
+                              ],
+                              "type": "object"
+                            },
+                            "counted": {
+                              "properties": {
+                                "amount": {
+                                  "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                  "type": "string"
+                                },
+                                "currencyCode": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["amount", "currencyCode"],
+                              "type": "object"
+                            },
+                            "coveredByAccount": {
+                              "type": "boolean"
+                            },
+                            "declared": {
+                              "properties": {
+                                "amount": {
+                                  "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                  "type": "string"
+                                },
+                                "currencyCode": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["amount", "currencyCode"],
+                              "type": "object"
+                            },
+                            "excluded": {
+                              "type": "boolean"
+                            },
+                            "sourceTransactionId": {
+                              "format": "uuid",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "accountId",
+                            "belowDeclared",
+                            "conversion",
+                            "counted",
+                            "coveredByAccount",
+                            "declared",
+                            "excluded",
+                            "sourceTransactionId"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
                       "createdAt": {
                         "format": "date-time",
                         "type": "string"
@@ -7539,6 +7907,7 @@
                       }
                     },
                     "required": [
+                      "contributions",
                       "createdAt",
                       "deadline",
                       "id",
@@ -7597,6 +7966,128 @@
                 "schema": {
                   "description": "A goal declared by the holder. It organizes progress only and never moves money nor changes balances or net worth.",
                   "properties": {
+                    "contributions": {
+                      "items": {
+                        "description": "Part of an eligible entry assigned to the goal. A trashed entry counts zero (excluded) and an entry in a linked account is not counted again (coveredByAccount).",
+                        "properties": {
+                          "accountId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "belowDeclared": {
+                            "type": "boolean"
+                          },
+                          "conversion": {
+                            "description": "Presentation-only conversion to the goal currency (INV-047). Unavailable without a valid manual quote: never zero.",
+                            "properties": {
+                              "amount": {
+                                "properties": {
+                                  "amount": {
+                                    "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                    "type": "string"
+                                  },
+                                  "currencyCode": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["amount", "currencyCode"],
+                                "type": "object",
+                                "nullable": true
+                              },
+                              "effectiveAt": {
+                                "format": "date-time",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "inverted": {
+                                "nullable": true,
+                                "type": "boolean"
+                              },
+                              "quoteId": {
+                                "format": "uuid",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "rate": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "source": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "status": {
+                                "enum": [
+                                  "same-currency",
+                                  "available",
+                                  "unavailable"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "effectiveAt",
+                              "inverted",
+                              "quoteId",
+                              "rate",
+                              "source",
+                              "status"
+                            ],
+                            "type": "object"
+                          },
+                          "counted": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "coveredByAccount": {
+                            "type": "boolean"
+                          },
+                          "declared": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "excluded": {
+                            "type": "boolean"
+                          },
+                          "sourceTransactionId": {
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "accountId",
+                          "belowDeclared",
+                          "conversion",
+                          "counted",
+                          "coveredByAccount",
+                          "declared",
+                          "excluded",
+                          "sourceTransactionId"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
                     "createdAt": {
                       "format": "date-time",
                       "type": "string"
@@ -7840,6 +8331,7 @@
                     }
                   },
                   "required": [
+                    "contributions",
                     "createdAt",
                     "deadline",
                     "id",
@@ -7997,6 +8489,128 @@
                 "schema": {
                   "description": "A goal declared by the holder. It organizes progress only and never moves money nor changes balances or net worth.",
                   "properties": {
+                    "contributions": {
+                      "items": {
+                        "description": "Part of an eligible entry assigned to the goal. A trashed entry counts zero (excluded) and an entry in a linked account is not counted again (coveredByAccount).",
+                        "properties": {
+                          "accountId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "belowDeclared": {
+                            "type": "boolean"
+                          },
+                          "conversion": {
+                            "description": "Presentation-only conversion to the goal currency (INV-047). Unavailable without a valid manual quote: never zero.",
+                            "properties": {
+                              "amount": {
+                                "properties": {
+                                  "amount": {
+                                    "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                    "type": "string"
+                                  },
+                                  "currencyCode": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["amount", "currencyCode"],
+                                "type": "object",
+                                "nullable": true
+                              },
+                              "effectiveAt": {
+                                "format": "date-time",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "inverted": {
+                                "nullable": true,
+                                "type": "boolean"
+                              },
+                              "quoteId": {
+                                "format": "uuid",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "rate": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "source": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "status": {
+                                "enum": [
+                                  "same-currency",
+                                  "available",
+                                  "unavailable"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "effectiveAt",
+                              "inverted",
+                              "quoteId",
+                              "rate",
+                              "source",
+                              "status"
+                            ],
+                            "type": "object"
+                          },
+                          "counted": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "coveredByAccount": {
+                            "type": "boolean"
+                          },
+                          "declared": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "excluded": {
+                            "type": "boolean"
+                          },
+                          "sourceTransactionId": {
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "accountId",
+                          "belowDeclared",
+                          "conversion",
+                          "counted",
+                          "coveredByAccount",
+                          "declared",
+                          "excluded",
+                          "sourceTransactionId"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
                     "createdAt": {
                       "format": "date-time",
                       "type": "string"
@@ -8240,6 +8854,7 @@
                     }
                   },
                   "required": [
+                    "contributions",
                     "createdAt",
                     "deadline",
                     "id",
@@ -8327,6 +8942,128 @@
                 "schema": {
                   "description": "A goal declared by the holder. It organizes progress only and never moves money nor changes balances or net worth.",
                   "properties": {
+                    "contributions": {
+                      "items": {
+                        "description": "Part of an eligible entry assigned to the goal. A trashed entry counts zero (excluded) and an entry in a linked account is not counted again (coveredByAccount).",
+                        "properties": {
+                          "accountId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "belowDeclared": {
+                            "type": "boolean"
+                          },
+                          "conversion": {
+                            "description": "Presentation-only conversion to the goal currency (INV-047). Unavailable without a valid manual quote: never zero.",
+                            "properties": {
+                              "amount": {
+                                "properties": {
+                                  "amount": {
+                                    "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                    "type": "string"
+                                  },
+                                  "currencyCode": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["amount", "currencyCode"],
+                                "type": "object",
+                                "nullable": true
+                              },
+                              "effectiveAt": {
+                                "format": "date-time",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "inverted": {
+                                "nullable": true,
+                                "type": "boolean"
+                              },
+                              "quoteId": {
+                                "format": "uuid",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "rate": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "source": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "status": {
+                                "enum": [
+                                  "same-currency",
+                                  "available",
+                                  "unavailable"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "effectiveAt",
+                              "inverted",
+                              "quoteId",
+                              "rate",
+                              "source",
+                              "status"
+                            ],
+                            "type": "object"
+                          },
+                          "counted": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "coveredByAccount": {
+                            "type": "boolean"
+                          },
+                          "declared": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "excluded": {
+                            "type": "boolean"
+                          },
+                          "sourceTransactionId": {
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "accountId",
+                          "belowDeclared",
+                          "conversion",
+                          "counted",
+                          "coveredByAccount",
+                          "declared",
+                          "excluded",
+                          "sourceTransactionId"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
                     "createdAt": {
                       "format": "date-time",
                       "type": "string"
@@ -8570,6 +9307,7 @@
                     }
                   },
                   "required": [
+                    "contributions",
                     "createdAt",
                     "deadline",
                     "id",
@@ -8654,6 +9392,128 @@
                 "schema": {
                   "description": "A goal declared by the holder. It organizes progress only and never moves money nor changes balances or net worth.",
                   "properties": {
+                    "contributions": {
+                      "items": {
+                        "description": "Part of an eligible entry assigned to the goal. A trashed entry counts zero (excluded) and an entry in a linked account is not counted again (coveredByAccount).",
+                        "properties": {
+                          "accountId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "belowDeclared": {
+                            "type": "boolean"
+                          },
+                          "conversion": {
+                            "description": "Presentation-only conversion to the goal currency (INV-047). Unavailable without a valid manual quote: never zero.",
+                            "properties": {
+                              "amount": {
+                                "properties": {
+                                  "amount": {
+                                    "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                    "type": "string"
+                                  },
+                                  "currencyCode": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["amount", "currencyCode"],
+                                "type": "object",
+                                "nullable": true
+                              },
+                              "effectiveAt": {
+                                "format": "date-time",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "inverted": {
+                                "nullable": true,
+                                "type": "boolean"
+                              },
+                              "quoteId": {
+                                "format": "uuid",
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "rate": {
+                                "pattern": "^\\d+(?:\\.\\d+)?$",
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "source": {
+                                "nullable": true,
+                                "type": "string"
+                              },
+                              "status": {
+                                "enum": [
+                                  "same-currency",
+                                  "available",
+                                  "unavailable"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "amount",
+                              "effectiveAt",
+                              "inverted",
+                              "quoteId",
+                              "rate",
+                              "source",
+                              "status"
+                            ],
+                            "type": "object"
+                          },
+                          "counted": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "coveredByAccount": {
+                            "type": "boolean"
+                          },
+                          "declared": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "excluded": {
+                            "type": "boolean"
+                          },
+                          "sourceTransactionId": {
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "accountId",
+                          "belowDeclared",
+                          "conversion",
+                          "counted",
+                          "coveredByAccount",
+                          "declared",
+                          "excluded",
+                          "sourceTransactionId"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
                     "createdAt": {
                       "format": "date-time",
                       "type": "string"
@@ -8897,6 +9757,7 @@
                     }
                   },
                   "required": [
+                    "contributions",
                     "createdAt",
                     "deadline",
                     "id",
@@ -9341,6 +10202,486 @@
         ],
         "summary": "Create, change or remove (amount 0) the reserve of an account; nothing moves between accounts",
         "tags": ["accounts"]
+      }
+    },
+    "/api/v1/goal-contributions/sources": {
+      "get": {
+        "operationId": "GoalContributionController_sources",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "properties": {
+                      "accountId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "amount": {
+                        "properties": {
+                          "amount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "currencyCode": {
+                            "pattern": "^[A-Z]{3}$",
+                            "type": "string"
+                          }
+                        },
+                        "required": ["amount", "currencyCode"],
+                        "type": "object"
+                      },
+                      "description": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "kind": {
+                        "enum": ["income", "transfer-in"],
+                        "type": "string"
+                      },
+                      "lifecycle": {
+                        "enum": ["active", "archived", "trashed"],
+                        "type": "string"
+                      },
+                      "occurredAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "allocated": {
+                        "properties": {
+                          "amount": {
+                            "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          },
+                          "currencyCode": {
+                            "pattern": "^[A-Z]{3}$",
+                            "type": "string"
+                          }
+                        },
+                        "required": ["amount", "currencyCode"],
+                        "type": "object",
+                        "nullable": true
+                      },
+                      "version": {
+                        "minimum": 0,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "accountId",
+                      "amount",
+                      "description",
+                      "id",
+                      "kind",
+                      "lifecycle",
+                      "occurredAt",
+                      "allocated",
+                      "version"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Recent eligible entries (incomes and incoming transfers) with what is already distributed",
+        "tags": ["goals"]
+      }
+    },
+    "/api/v1/goal-contributions/{transactionId}": {
+      "get": {
+        "operationId": "GoalContributionController_get",
+        "parameters": [
+          {
+            "name": "transactionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "How one eligible entry is split between goals. The entry keeps its full value in the balance; the lines never exceed it.",
+                  "properties": {
+                    "allocated": {
+                      "properties": {
+                        "amount": {
+                          "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        },
+                        "currencyCode": {
+                          "pattern": "^[A-Z]{3}$",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["amount", "currencyCode"],
+                      "type": "object"
+                    },
+                    "lines": {
+                      "items": {
+                        "properties": {
+                          "amount": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "goalId": {
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": ["amount", "goalId"],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "remaining": {
+                      "properties": {
+                        "amount": {
+                          "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        },
+                        "currencyCode": {
+                          "pattern": "^[A-Z]{3}$",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["amount", "currencyCode"],
+                      "type": "object"
+                    },
+                    "source": {
+                      "properties": {
+                        "accountId": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "amount": {
+                          "properties": {
+                            "amount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "currencyCode": {
+                              "pattern": "^[A-Z]{3}$",
+                              "type": "string"
+                            }
+                          },
+                          "required": ["amount", "currencyCode"],
+                          "type": "object"
+                        },
+                        "description": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "kind": {
+                          "enum": ["income", "transfer-in"],
+                          "type": "string"
+                        },
+                        "lifecycle": {
+                          "enum": ["active", "archived", "trashed"],
+                          "type": "string"
+                        },
+                        "occurredAt": {
+                          "format": "date-time",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "accountId",
+                        "amount",
+                        "description",
+                        "id",
+                        "kind",
+                        "lifecycle",
+                        "occurredAt"
+                      ],
+                      "type": "object"
+                    },
+                    "version": {
+                      "minimum": 0,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "allocated",
+                    "lines",
+                    "remaining",
+                    "source",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned eligible entry not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get how an eligible entry is split between goals",
+        "tags": ["goals"]
+      },
+      "put": {
+        "operationId": "GoalContributionController_put",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "transactionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "expectedVersion": {
+                    "description": "0 when the entry was never distributed",
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "lines": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "amount": {
+                          "pattern": "^\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        },
+                        "goalId": {
+                          "format": "uuid",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["amount", "goalId"],
+                      "type": "object"
+                    },
+                    "maxItems": 20,
+                    "type": "array"
+                  }
+                },
+                "required": ["expectedVersion", "lines"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "How one eligible entry is split between goals. The entry keeps its full value in the balance; the lines never exceed it.",
+                  "properties": {
+                    "allocated": {
+                      "properties": {
+                        "amount": {
+                          "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        },
+                        "currencyCode": {
+                          "pattern": "^[A-Z]{3}$",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["amount", "currencyCode"],
+                      "type": "object"
+                    },
+                    "lines": {
+                      "items": {
+                        "properties": {
+                          "amount": {
+                            "properties": {
+                              "amount": {
+                                "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                                "type": "string"
+                              },
+                              "currencyCode": {
+                                "pattern": "^[A-Z]{3}$",
+                                "type": "string"
+                              }
+                            },
+                            "required": ["amount", "currencyCode"],
+                            "type": "object"
+                          },
+                          "goalId": {
+                            "format": "uuid",
+                            "type": "string"
+                          }
+                        },
+                        "required": ["amount", "goalId"],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "remaining": {
+                      "properties": {
+                        "amount": {
+                          "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        },
+                        "currencyCode": {
+                          "pattern": "^[A-Z]{3}$",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["amount", "currencyCode"],
+                      "type": "object"
+                    },
+                    "source": {
+                      "properties": {
+                        "accountId": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "amount": {
+                          "properties": {
+                            "amount": {
+                              "pattern": "^-?\\d+(?:\\.\\d+)?$",
+                              "type": "string"
+                            },
+                            "currencyCode": {
+                              "pattern": "^[A-Z]{3}$",
+                              "type": "string"
+                            }
+                          },
+                          "required": ["amount", "currencyCode"],
+                          "type": "object"
+                        },
+                        "description": {
+                          "nullable": true,
+                          "type": "string"
+                        },
+                        "id": {
+                          "format": "uuid",
+                          "type": "string"
+                        },
+                        "kind": {
+                          "enum": ["income", "transfer-in"],
+                          "type": "string"
+                        },
+                        "lifecycle": {
+                          "enum": ["active", "archived", "trashed"],
+                          "type": "string"
+                        },
+                        "occurredAt": {
+                          "format": "date-time",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "accountId",
+                        "amount",
+                        "description",
+                        "id",
+                        "kind",
+                        "lifecycle",
+                        "occurredAt"
+                      ],
+                      "type": "object"
+                    },
+                    "version": {
+                      "minimum": 0,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "allocated",
+                    "lines",
+                    "remaining",
+                    "source",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid lines or idempotency key"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned eligible entry not found"
+          },
+          "409": {
+            "description": "Distribution changed by another request, or idempotency key reused with a different payload"
+          },
+          "422": {
+            "description": "Lines exceed the entry, the entry is trashed or a goal is unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace how an eligible entry is split between goals (empty lines remove it); the entry is never changed",
+        "tags": ["goals"]
       }
     },
     "/api/v1/credit-cards/{cardId}/invoices": {
@@ -15972,7 +17313,8 @@
                 "manual-exchange-quote",
                 "loan",
                 "goal",
-                "account-reserve"
+                "account-reserve",
+                "goal-contribution"
               ],
               "type": "string"
             }
@@ -16038,7 +17380,8 @@
                           "manual-exchange-quote",
                           "loan",
                           "goal",
-                          "account-reserve"
+                          "account-reserve",
+                          "goal-contribution"
                         ]
                       },
                       "resourceId": {

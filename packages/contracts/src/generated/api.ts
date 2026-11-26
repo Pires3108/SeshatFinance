@@ -491,6 +491,41 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/goal-contributions/sources": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Recent eligible entries (incomes and incoming transfers) with what is already distributed */
+        readonly get: operations["GoalContributionController_sources"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/goal-contributions/{transactionId}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Get how an eligible entry is split between goals */
+        readonly get: operations["GoalContributionController_get"];
+        /** Replace how an eligible entry is split between goals (empty lines remove it); the entry is never changed */
+        readonly put: operations["GoalContributionController_put"];
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/credit-cards/{cardId}/invoices": {
         readonly parameters: {
             readonly query?: never;
@@ -4150,6 +4185,39 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": readonly {
+                        readonly contributions: readonly {
+                            /** Format: uuid */
+                            readonly accountId: string;
+                            readonly belowDeclared: boolean;
+                            /** @description Presentation-only conversion to the goal currency (INV-047). Unavailable without a valid manual quote: never zero. */
+                            readonly conversion: {
+                                readonly amount: {
+                                    readonly amount: string;
+                                    readonly currencyCode: string;
+                                } | null;
+                                /** Format: date-time */
+                                readonly effectiveAt: string | null;
+                                readonly inverted: boolean | null;
+                                /** Format: uuid */
+                                readonly quoteId: string | null;
+                                readonly rate: string | null;
+                                readonly source: string | null;
+                                /** @enum {string} */
+                                readonly status: "same-currency" | "available" | "unavailable";
+                            };
+                            readonly counted: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly coveredByAccount: boolean;
+                            readonly declared: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly excluded: boolean;
+                            /** Format: uuid */
+                            readonly sourceTransactionId: string;
+                        }[];
                         /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: date */
@@ -4276,6 +4344,39 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly contributions: readonly {
+                            /** Format: uuid */
+                            readonly accountId: string;
+                            readonly belowDeclared: boolean;
+                            /** @description Presentation-only conversion to the goal currency (INV-047). Unavailable without a valid manual quote: never zero. */
+                            readonly conversion: {
+                                readonly amount: {
+                                    readonly amount: string;
+                                    readonly currencyCode: string;
+                                } | null;
+                                /** Format: date-time */
+                                readonly effectiveAt: string | null;
+                                readonly inverted: boolean | null;
+                                /** Format: uuid */
+                                readonly quoteId: string | null;
+                                readonly rate: string | null;
+                                readonly source: string | null;
+                                /** @enum {string} */
+                                readonly status: "same-currency" | "available" | "unavailable";
+                            };
+                            readonly counted: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly coveredByAccount: boolean;
+                            readonly declared: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly excluded: boolean;
+                            /** Format: uuid */
+                            readonly sourceTransactionId: string;
+                        }[];
                         /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: date */
@@ -4403,6 +4504,39 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": readonly {
+                        readonly contributions: readonly {
+                            /** Format: uuid */
+                            readonly accountId: string;
+                            readonly belowDeclared: boolean;
+                            /** @description Presentation-only conversion to the goal currency (INV-047). Unavailable without a valid manual quote: never zero. */
+                            readonly conversion: {
+                                readonly amount: {
+                                    readonly amount: string;
+                                    readonly currencyCode: string;
+                                } | null;
+                                /** Format: date-time */
+                                readonly effectiveAt: string | null;
+                                readonly inverted: boolean | null;
+                                /** Format: uuid */
+                                readonly quoteId: string | null;
+                                readonly rate: string | null;
+                                readonly source: string | null;
+                                /** @enum {string} */
+                                readonly status: "same-currency" | "available" | "unavailable";
+                            };
+                            readonly counted: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly coveredByAccount: boolean;
+                            readonly declared: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly excluded: boolean;
+                            /** Format: uuid */
+                            readonly sourceTransactionId: string;
+                        }[];
                         /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: date */
@@ -4509,6 +4643,39 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly contributions: readonly {
+                            /** Format: uuid */
+                            readonly accountId: string;
+                            readonly belowDeclared: boolean;
+                            /** @description Presentation-only conversion to the goal currency (INV-047). Unavailable without a valid manual quote: never zero. */
+                            readonly conversion: {
+                                readonly amount: {
+                                    readonly amount: string;
+                                    readonly currencyCode: string;
+                                } | null;
+                                /** Format: date-time */
+                                readonly effectiveAt: string | null;
+                                readonly inverted: boolean | null;
+                                /** Format: uuid */
+                                readonly quoteId: string | null;
+                                readonly rate: string | null;
+                                readonly source: string | null;
+                                /** @enum {string} */
+                                readonly status: "same-currency" | "available" | "unavailable";
+                            };
+                            readonly counted: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly coveredByAccount: boolean;
+                            readonly declared: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly excluded: boolean;
+                            /** Format: uuid */
+                            readonly sourceTransactionId: string;
+                        }[];
                         /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: date */
@@ -4642,6 +4809,39 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly contributions: readonly {
+                            /** Format: uuid */
+                            readonly accountId: string;
+                            readonly belowDeclared: boolean;
+                            /** @description Presentation-only conversion to the goal currency (INV-047). Unavailable without a valid manual quote: never zero. */
+                            readonly conversion: {
+                                readonly amount: {
+                                    readonly amount: string;
+                                    readonly currencyCode: string;
+                                } | null;
+                                /** Format: date-time */
+                                readonly effectiveAt: string | null;
+                                readonly inverted: boolean | null;
+                                /** Format: uuid */
+                                readonly quoteId: string | null;
+                                readonly rate: string | null;
+                                readonly source: string | null;
+                                /** @enum {string} */
+                                readonly status: "same-currency" | "available" | "unavailable";
+                            };
+                            readonly counted: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly coveredByAccount: boolean;
+                            readonly declared: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly excluded: boolean;
+                            /** Format: uuid */
+                            readonly sourceTransactionId: string;
+                        }[];
                         /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: date */
@@ -4777,6 +4977,39 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly contributions: readonly {
+                            /** Format: uuid */
+                            readonly accountId: string;
+                            readonly belowDeclared: boolean;
+                            /** @description Presentation-only conversion to the goal currency (INV-047). Unavailable without a valid manual quote: never zero. */
+                            readonly conversion: {
+                                readonly amount: {
+                                    readonly amount: string;
+                                    readonly currencyCode: string;
+                                } | null;
+                                /** Format: date-time */
+                                readonly effectiveAt: string | null;
+                                readonly inverted: boolean | null;
+                                /** Format: uuid */
+                                readonly quoteId: string | null;
+                                readonly rate: string | null;
+                                readonly source: string | null;
+                                /** @enum {string} */
+                                readonly status: "same-currency" | "available" | "unavailable";
+                            };
+                            readonly counted: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly coveredByAccount: boolean;
+                            readonly declared: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly excluded: boolean;
+                            /** Format: uuid */
+                            readonly sourceTransactionId: string;
+                        }[];
                         /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: date */
@@ -4905,6 +5138,39 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": {
+                        readonly contributions: readonly {
+                            /** Format: uuid */
+                            readonly accountId: string;
+                            readonly belowDeclared: boolean;
+                            /** @description Presentation-only conversion to the goal currency (INV-047). Unavailable without a valid manual quote: never zero. */
+                            readonly conversion: {
+                                readonly amount: {
+                                    readonly amount: string;
+                                    readonly currencyCode: string;
+                                } | null;
+                                /** Format: date-time */
+                                readonly effectiveAt: string | null;
+                                readonly inverted: boolean | null;
+                                /** Format: uuid */
+                                readonly quoteId: string | null;
+                                readonly rate: string | null;
+                                readonly source: string | null;
+                                /** @enum {string} */
+                                readonly status: "same-currency" | "available" | "unavailable";
+                            };
+                            readonly counted: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly coveredByAccount: boolean;
+                            readonly declared: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly excluded: boolean;
+                            /** Format: uuid */
+                            readonly sourceTransactionId: string;
+                        }[];
                         /** Format: date-time */
                         readonly createdAt: string;
                         /** Format: date */
@@ -5203,6 +5469,229 @@ export interface operations {
                 content?: never;
             };
             /** @description Reserve above the balance, or the account is not active */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly GoalContributionController_sources: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        /** Format: uuid */
+                        readonly accountId: string;
+                        readonly amount: {
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                        };
+                        readonly description: string | null;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly kind: "income" | "transfer-in";
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                        readonly allocated: {
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                        } | null;
+                        readonly version: number;
+                    }[];
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly GoalContributionController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly transactionId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly allocated: {
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                        };
+                        readonly lines: readonly {
+                            readonly amount: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            /** Format: uuid */
+                            readonly goalId: string;
+                        }[];
+                        readonly remaining: {
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                        };
+                        readonly source: {
+                            /** Format: uuid */
+                            readonly accountId: string;
+                            readonly amount: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly description: string | null;
+                            /** Format: uuid */
+                            readonly id: string;
+                            /** @enum {string} */
+                            readonly kind: "income" | "transfer-in";
+                            /** @enum {string} */
+                            readonly lifecycle: "active" | "archived" | "trashed";
+                            /** Format: date-time */
+                            readonly occurredAt: string;
+                        };
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned eligible entry not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly GoalContributionController_put: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                /** @description UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409. */
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly transactionId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** @description 0 when the entry was never distributed */
+                    readonly expectedVersion: number;
+                    readonly lines: readonly {
+                        readonly amount: string;
+                        /** Format: uuid */
+                        readonly goalId: string;
+                    }[];
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly allocated: {
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                        };
+                        readonly lines: readonly {
+                            readonly amount: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            /** Format: uuid */
+                            readonly goalId: string;
+                        }[];
+                        readonly remaining: {
+                            readonly amount: string;
+                            readonly currencyCode: string;
+                        };
+                        readonly source: {
+                            /** Format: uuid */
+                            readonly accountId: string;
+                            readonly amount: {
+                                readonly amount: string;
+                                readonly currencyCode: string;
+                            };
+                            readonly description: string | null;
+                            /** Format: uuid */
+                            readonly id: string;
+                            /** @enum {string} */
+                            readonly kind: "income" | "transfer-in";
+                            /** @enum {string} */
+                            readonly lifecycle: "active" | "archived" | "trashed";
+                            /** Format: date-time */
+                            readonly occurredAt: string;
+                        };
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Invalid lines or idempotency key */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned eligible entry not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Distribution changed by another request, or idempotency key reused with a different payload */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Lines exceed the entry, the entry is trashed or a goal is unavailable */
             readonly 422: {
                 headers: {
                     readonly [name: string]: unknown;
@@ -8719,7 +9208,7 @@ export interface operations {
         readonly parameters: {
             readonly query?: {
                 readonly resourceId?: unknown;
-                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve";
+                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve" | "goal-contribution";
                 readonly limit?: number;
                 readonly afterSequence?: string;
             };
@@ -8744,7 +9233,7 @@ export interface operations {
                         readonly actorId: string;
                         readonly action: string;
                         /** @enum {string} */
-                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve";
+                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve" | "goal-contribution";
                         /** Format: uuid */
                         readonly resourceId: string;
                         /** @enum {string} */
