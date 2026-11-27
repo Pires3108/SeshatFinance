@@ -35,4 +35,5 @@ export { PrismaGoalRepository } from './goals/prisma-goal-repository.js';
 export { PrismaGoalContributionRepository } from './goals/prisma-goal-contribution-repository.js';
 export { PrismaBudgetRepository } from './budgets/prisma-budget-repository.js';
 export { PrismaInvestmentRepository } from './investments/prisma-investment-repository.js';
+export { PrismaInvestmentEventRepository } from './investments/prisma-investment-event-repository.js';
 export { PrismaAccountReserveRepository } from './reserves/prisma-account-reserve-repository.js';

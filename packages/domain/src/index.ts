@@ -169,6 +169,19 @@ export {
   type InvestmentSnapshot,
 } from './investments/investment.js';
 export {
+  InvestmentEvent,
+  InvalidInvestmentEventError,
+  investmentEventAccountEffect,
+  investmentEventKinds,
+  investmentEventLifecycles,
+  isInvestmentIncomeKind,
+  isInvestmentMovementKind,
+  type CreateInvestmentEventProperties,
+  type InvestmentEventKind,
+  type InvestmentEventLifecycle,
+  type InvestmentEventSnapshot,
+} from './investments/investment-event.js';
+export {
   FamilyGroup,
   FamilyGroupMembership,
   InvalidFamilyGroupError,

@@ -160,3 +160,107 @@ test('a manual investment is registered, archived, trashed and restored without 
     },
   ]);
 });
+
+test('an aporte with an account lowers the balance once, is undone by the trash and a resgate above custody is refused (US-055)', async ({
+  page,
+  context,
+  request,
+}) => {
+  const headers = { Cookie: cookie };
+  await context.addCookies([
+    {
+      name: '__Host-seshat_session',
+      value: token,
+      domain: 'localhost',
+      path: '/',
+      secure: true,
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ]);
+  const created = await request.post(`${apiUrl}/api/v1/accounts`, {
+    headers,
+    data: {
+      name: 'Conta da corretora',
+      typeKey: 'checking-account',
+      initialBalance: '5000.00',
+      currencyCode: 'BRL',
+      currencyMinorUnitScale: 2,
+      color: null,
+      description: null,
+      icon: null,
+      institution: null,
+    },
+  });
+  expect(created.status()).toBe(201);
+  const account = (await created.json()) as { id: string };
+  const registered = await request.post(`${apiUrl}/api/v1/investments`, {
+    headers: { ...headers, 'Idempotency-Key': randomUUID() },
+    data: {
+      code: 'PETR4',
+      currencyCode: 'BRL',
+      currencyMinorUnitScale: 2,
+      institution: 'Corretora Exemplo',
+      liquidity: { days: 2, kind: 'd-plus' },
+      name: 'Petrobras PN',
+      startDate: '2026-01-02',
+      type: 'stock',
+    },
+  });
+  expect(registered.status()).toBe(201);
+  const balance = async (): Promise<unknown> =>
+    (
+      await request.get(`${apiUrl}/api/v1/accounts/${account.id}/balance`, {
+        headers,
+      })
+    ).json();
+
+  await page.goto('/investimentos');
+  const card = page
+    .getByRole('list', { name: 'Investimentos' })
+    .getByRole('listitem')
+    .filter({
+      has: page.getByRole('heading', { name: 'Petrobras PN (PETR4)' }),
+    });
+  await card.getByRole('button', { name: 'Movimentações' }).click();
+  const panel = page.getByRole('region', {
+    name: 'Movimentações de Petrobras PN',
+  });
+  await expect(panel).toContainText('Nenhuma movimentação registrada.');
+
+  await panel.getByLabel('Tipo de evento').selectOption('contribution');
+  await panel.getByLabel('Valor (BRL)').fill('1500,00');
+  await panel.getByLabel('Quantidade').fill('100');
+  await panel.getByLabel('Preço unitário (opcional)').fill('15');
+  await panel.getByLabel('Data').fill('2026-03-10T12:00');
+  await panel.getByLabel('Conta (opcional)').selectOption(account.id);
+  await panel.getByRole('button', { name: 'Registrar evento' }).click();
+  await expect(panel.getByRole('status')).toContainText(
+    'Aporte registrado em Petrobras PN',
+  );
+  const events = panel.getByRole('list', { name: 'Eventos de Petrobras PN' });
+  await expect(events).toContainText('Aporte · 10/03/2026 · BRL 1500,00');
+  await expect(events).toContainText('100 un. · Saiu da conta');
+  expect(await balance()).toMatchObject({ amount: '3500.00' });
+
+  // Cenário: o resgate acima da custódia é recusado sem efeito parcial.
+  await panel.getByLabel('Tipo de evento').selectOption('redemption');
+  await panel.getByLabel('Valor (BRL)').fill('1700');
+  await panel.getByLabel('Quantidade').fill('101');
+  await panel.getByLabel('Conta (opcional)').selectOption(account.id);
+  await panel.getByRole('button', { name: 'Registrar evento' }).click();
+  await expect(panel.getByRole('alert')).toContainText(
+    'o resgate não passa da quantidade em custódia',
+  );
+  expect(await balance()).toMatchObject({ amount: '3500.00' });
+
+  // Cenário: o aporte na lixeira leva junto a saída da conta.
+  await events
+    .getByRole('button', { name: 'Mover aporte para a lixeira' })
+    .click();
+  await expect(events).toContainText('Na lixeira');
+  expect(await balance()).toMatchObject({ amount: '5000.00' });
+  await events.getByRole('button', { name: 'Restaurar aporte' }).click();
+  await expect(events).not.toContainText('Na lixeira');
+  expect(await balance()).toMatchObject({ amount: '3500.00' });
+});

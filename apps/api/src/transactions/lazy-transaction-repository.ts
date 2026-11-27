@@ -132,6 +132,15 @@ export class LazyTransactionRepository
       ownerId,
     );
   }
+  public findInvestmentEventIdByEntryForOwner(
+    transactionId: string,
+    ownerId: string,
+  ): Promise<string | null> {
+    return this.getRepository().findInvestmentEventIdByEntryForOwner(
+      transactionId,
+      ownerId,
+    );
+  }
 
   private getRepository(): PrismaTransactionRepository {
     this.repository ??= new PrismaTransactionRepository(this.prisma.get());

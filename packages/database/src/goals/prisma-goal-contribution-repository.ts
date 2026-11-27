@@ -62,7 +62,10 @@ const eligibleSql = `
     AND NOT EXISTS (SELECT 1 FROM "balance_adjustments" b
       WHERE b."transaction_id" = t."id")
     AND NOT EXISTS (SELECT 1 FROM "invoice_settlements" s
-      WHERE s."transaction_id" = t."id")`;
+      WHERE s."transaction_id" = t."id")
+    AND NOT EXISTS (SELECT 1 FROM "investment_events" e
+      WHERE e."transaction_id" = t."id"
+        AND e."kind" IN ('contribution', 'redemption'))`;
 
 export class PrismaGoalContributionRepository implements GoalContributionRepository {
   private readonly transactions: PrismaTransactionRunner;

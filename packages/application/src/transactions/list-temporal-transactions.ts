@@ -13,6 +13,11 @@ export type TemporalTransaction = Readonly<{
   cardSettlement?: boolean;
   /** Either side of a transfer between owned accounts (US-052). */
   transfer?: boolean;
+  /**
+   * Account entry of a declared aporte or resgate (US-055). It changes the
+   * balance but is neither income nor expense (ADR-044).
+   */
+  investmentMovement?: boolean;
   /** Entry of a balance adjustment, not a spending or an income. */
   balanceAdjustment?: boolean;
   /** For a refund or compensation entry, the expense it refers to. */
@@ -174,8 +179,12 @@ function sumTotals(
   transactions: readonly TemporalTransaction[],
 ): readonly TemporalTotal[] {
   const totals = new Map<string, { income: Money; expense: Money }>();
-  for (const { transaction, cardSettlement } of transactions) {
-    if (cardSettlement === true) continue;
+  for (const {
+    transaction,
+    cardSettlement,
+    investmentMovement,
+  } of transactions) {
+    if (cardSettlement === true || investmentMovement === true) continue;
     const amount = transaction.amount;
     const key = `${amount.currency.code}:${String(amount.currency.minorUnitScale)}`;
     const current = totals.get(key) ?? {

@@ -114,6 +114,24 @@ export {
   type UpdateInvestmentCommand,
 } from './investments/manage-investment.js';
 export {
+  ChangeInvestmentEventLifecycleUseCase,
+  InvestmentCustodyExceededError,
+  InvestmentEventAccountUnavailableError,
+  InvestmentEventCurrencyMismatchError,
+  InvestmentEventNotFoundError,
+  InvestmentEventVersionConflictError,
+  InvestmentUnavailableForEventError,
+  ListInvestmentEventsUseCase,
+  parseInvestmentEventResponse,
+  RECORD_INVESTMENT_EVENT_OPERATION,
+  RecordInvestmentEventUseCase,
+  serializeInvestmentEventResponse,
+  type InvestmentEventLifecycleAction,
+  type InvestmentEventRepository,
+  type InvestmentEventWrite,
+  type RecordInvestmentEventCommand,
+} from './investments/record-investment-event.js';
+export {
   CategoryVersionConflictError,
   CategoryLinkedError,
   CreateCategoryUseCase,
@@ -219,6 +237,7 @@ export {
   type TransactionRevision,
   TransactionRequiresTransferMutationError,
   TransactionRequiresCardSettlementMutationError,
+  TransactionRequiresInvestmentEventMutationError,
   assertNotCardSettlementEntry,
   UpdateOwnedTransactionUseCase,
   TransactionAccountUnavailableError,

@@ -1107,6 +1107,41 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/investments/{investmentId}/events": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List the events of an owned investment */
+        readonly get: operations["InvestmentEventController_list"];
+        readonly put?: never;
+        /** Record an aporte, resgate, income, fee or tax of a manual investment */
+        readonly post: operations["InvestmentEventController_record"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/investment-events/{eventId}/lifecycle": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Move an event and its linked account entry to the trash or back */
+        readonly post: operations["InvestmentEventController_lifecycle"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/manual-exchange-quotes": {
         readonly parameters: {
             readonly query?: never;
@@ -8213,6 +8248,297 @@ export interface operations {
             };
         };
     };
+    readonly InvestmentEventController_list: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly investmentId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        /**
+                         * Format: uuid
+                         * @description Owned active account in the investment currency. With an aporte or resgate it writes a linked account entry that is neither income nor expense; with an income it writes a linked income. Not allowed for fees and taxes.
+                         */
+                        readonly accountId: string | null;
+                        /** @description Positive amount in the investment currency. */
+                        readonly amount: string;
+                        /** @enum {string} */
+                        readonly kind: "contribution" | "redemption" | "yield" | "dividend" | "interest" | "fee" | "tax";
+                        readonly note: string | null;
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                        /** @description Required for aportes and resgates of types with quantity, within the type scale; otherwise null. */
+                        readonly quantity: string | null;
+                        /** @description IANA time zone of the event. */
+                        readonly timeZone: string;
+                        /** @description Optional unit price with up to 8 decimal places. */
+                        readonly unitPrice: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** Format: uuid */
+                        readonly investmentId: string;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "trashed";
+                        /** Format: date */
+                        readonly occurredOn: string;
+                        /**
+                         * Format: uuid
+                         * @description Linked account entry, if any.
+                         */
+                        readonly transactionId: string | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    }[];
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned investment not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly InvestmentEventController_record: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                /** @description UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409. */
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly investmentId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /**
+                     * Format: uuid
+                     * @description Owned active account in the investment currency. With an aporte or resgate it writes a linked account entry that is neither income nor expense; with an income it writes a linked income. Not allowed for fees and taxes.
+                     */
+                    readonly accountId?: string | null;
+                    /** @description Positive amount in the investment currency. */
+                    readonly amount: string;
+                    /** @enum {string} */
+                    readonly kind: "contribution" | "redemption" | "yield" | "dividend" | "interest" | "fee" | "tax";
+                    readonly note?: string | null;
+                    /** Format: date-time */
+                    readonly occurredAt: string;
+                    /** @description Required for aportes and resgates of types with quantity, within the type scale; otherwise null. */
+                    readonly quantity?: string | null;
+                    /** @description IANA time zone of the event. */
+                    readonly timeZone: string;
+                    /** @description Optional unit price with up to 8 decimal places. */
+                    readonly unitPrice?: string | null;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /**
+                         * Format: uuid
+                         * @description Owned active account in the investment currency. With an aporte or resgate it writes a linked account entry that is neither income nor expense; with an income it writes a linked income. Not allowed for fees and taxes.
+                         */
+                        readonly accountId: string | null;
+                        /** @description Positive amount in the investment currency. */
+                        readonly amount: string;
+                        /** @enum {string} */
+                        readonly kind: "contribution" | "redemption" | "yield" | "dividend" | "interest" | "fee" | "tax";
+                        readonly note: string | null;
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                        /** @description Required for aportes and resgates of types with quantity, within the type scale; otherwise null. */
+                        readonly quantity: string | null;
+                        /** @description IANA time zone of the event. */
+                        readonly timeZone: string;
+                        /** @description Optional unit price with up to 8 decimal places. */
+                        readonly unitPrice: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** Format: uuid */
+                        readonly investmentId: string;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "trashed";
+                        /** Format: date */
+                        readonly occurredOn: string;
+                        /**
+                         * Format: uuid
+                         * @description Linked account entry, if any.
+                         */
+                        readonly transactionId: string | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Invalid event or idempotency key */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned investment not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency key reused */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Inactive investment, unusable account, other currency or custody exceeded */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly InvestmentEventController_lifecycle: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly eventId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** @enum {string} */
+                    readonly action: "trash" | "restore";
+                    readonly expectedVersion: number;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        /**
+                         * Format: uuid
+                         * @description Owned active account in the investment currency. With an aporte or resgate it writes a linked account entry that is neither income nor expense; with an income it writes a linked income. Not allowed for fees and taxes.
+                         */
+                        readonly accountId: string | null;
+                        /** @description Positive amount in the investment currency. */
+                        readonly amount: string;
+                        /** @enum {string} */
+                        readonly kind: "contribution" | "redemption" | "yield" | "dividend" | "interest" | "fee" | "tax";
+                        readonly note: string | null;
+                        /** Format: date-time */
+                        readonly occurredAt: string;
+                        /** @description Required for aportes and resgates of types with quantity, within the type scale; otherwise null. */
+                        readonly quantity: string | null;
+                        /** @description IANA time zone of the event. */
+                        readonly timeZone: string;
+                        /** @description Optional unit price with up to 8 decimal places. */
+                        readonly unitPrice: string | null;
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** Format: uuid */
+                        readonly investmentId: string;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "trashed";
+                        /** Format: date */
+                        readonly occurredOn: string;
+                        /**
+                         * Format: uuid
+                         * @description Linked account entry, if any.
+                         */
+                        readonly transactionId: string | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned investment event not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Event changed by another request */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transition not allowed or custody would become negative */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly ManualExchangeQuoteController_list: {
         readonly parameters: {
             readonly query?: never;
@@ -10165,7 +10491,7 @@ export interface operations {
         readonly parameters: {
             readonly query?: {
                 readonly resourceId?: unknown;
-                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve" | "goal-contribution" | "budget" | "investment";
+                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve" | "goal-contribution" | "budget" | "investment" | "investment-event";
                 readonly limit?: number;
                 readonly afterSequence?: string;
             };
@@ -10190,7 +10516,7 @@ export interface operations {
                         readonly actorId: string;
                         readonly action: string;
                         /** @enum {string} */
-                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve" | "goal-contribution" | "budget" | "investment";
+                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve" | "goal-contribution" | "budget" | "investment" | "investment-event";
                         /** Format: uuid */
                         readonly resourceId: string;
                         /** @enum {string} */

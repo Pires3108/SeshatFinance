@@ -60,6 +60,18 @@ export interface TransactionFinancialLinkRepository {
     transactionId: string,
     ownerId: string,
   ): Promise<string | null>;
+  /** Investment event whose account entry this is (US-055), if any. */
+  findInvestmentEventIdByEntryForOwner?(
+    transactionId: string,
+    ownerId: string,
+  ): Promise<string | null>;
+}
+
+export class TransactionRequiresInvestmentEventMutationError extends Error {
+  public constructor(public readonly eventId: string) {
+    super('An investment event entry cannot be changed on its own.');
+    this.name = 'TransactionRequiresInvestmentEventMutationError';
+  }
 }
 
 export class TransactionRequiresCardSettlementMutationError extends Error {
@@ -81,6 +93,13 @@ export async function assertNotCardSettlementEntry(
   );
   if (settlementId !== undefined && settlementId !== null) {
     throw new TransactionRequiresCardSettlementMutationError(settlementId);
+  }
+  const eventId = await links.findInvestmentEventIdByEntryForOwner?.(
+    transactionId,
+    ownerId,
+  );
+  if (eventId !== undefined && eventId !== null) {
+    throw new TransactionRequiresInvestmentEventMutationError(eventId);
   }
 }
 

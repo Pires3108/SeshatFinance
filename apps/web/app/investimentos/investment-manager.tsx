@@ -12,6 +12,8 @@ import {
 
 import type { paths } from '@seshat/contracts';
 
+import { InvestmentEvents } from './investment-events';
+
 type InvestmentView =
   paths['/api/v1/investments']['get']['responses'][200]['content']['application/json'][number];
 type CreateBody = NonNullable<
@@ -143,6 +145,7 @@ export function InvestmentManager(): ReactNode {
   const [liquidityDays, setLiquidityDays] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<Message | null>(null);
+  const [openEventsId, setOpenEventsId] = useState<string | null>(null);
   const keyRef = useRef<string>(crypto.randomUUID());
 
   const load = useCallback(async (): Promise<void> => {
@@ -553,7 +556,28 @@ export function InvestmentManager(): ReactNode {
                         {item.label}
                       </button>
                     ))}
+                    {investment.lifecycle !== 'trashed' && (
+                      <button
+                        aria-expanded={openEventsId === investment.id}
+                        onClick={() => {
+                          setOpenEventsId(
+                            openEventsId === investment.id
+                              ? null
+                              : investment.id,
+                          );
+                        }}
+                        type="button"
+                      >
+                        {openEventsId === investment.id
+                          ? 'Ocultar movimentações'
+                          : 'Movimentações'}
+                      </button>
+                    )}
                   </div>
+                  {openEventsId === investment.id &&
+                    investment.lifecycle !== 'trashed' && (
+                      <InvestmentEvents investment={investment} />
+                    )}
                 </li>
               );
             })}
