@@ -121,7 +121,7 @@ test('a manual investment is registered, archived, trashed and restored without 
   // Cenário: dados inconsistentes são recusados antes do envio.
   await page.getByLabel('Vencimento (opcional)').fill('2025-01-01');
   await page.getByRole('button', { name: 'Salvar investimento' }).click();
-  await expect(page.getByRole('alert')).toContainText(
+  await expect(page.locator('main').getByRole('alert')).toContainText(
     'O vencimento não pode ser anterior à data inicial.',
   );
   await page.getByLabel('Vencimento (opcional)').fill('2035-05-15');
