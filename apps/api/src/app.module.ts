@@ -120,6 +120,12 @@ import {
   ListOwnedAccountsUseCase,
   ListOwnedAccountTransactionsUseCase,
   ListInvestmentTypesUseCase,
+  ChangeInvestmentLifecycleUseCase,
+  CreateInvestmentUseCase,
+  GetInvestmentUseCase,
+  ListInvestmentsUseCase,
+  UpdateInvestmentUseCase,
+  type InvestmentRepository,
   ListDefaultAccountTypesUseCase,
   RegisterUserUseCase,
   OpaqueSessionService,
@@ -232,6 +238,8 @@ import { TagController } from './classifications/tag.controller.js';
 import { HealthController } from './health/health.controller.js';
 import { DatabaseReadiness } from './health/database-readiness.js';
 import { InvestmentTypeController } from './investments/investment-type.controller.js';
+import { InvestmentController } from './investments/investment.controller.js';
+import { LazyInvestmentRepository } from './investments/lazy-investment-repository.js';
 import { LazyManualExchangeQuoteRepository } from './money/lazy-manual-exchange-quote-repository.js';
 import { ManualExchangeQuoteController } from './money/manual-exchange-quote.controller.js';
 import { CorrelationContext } from './platform/correlation-context.js';
@@ -285,6 +293,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     HealthController,
     LinkedRefundController,
     InvestmentTypeController,
+    InvestmentController,
     ManualExchangeQuoteController,
     PasswordRecoveryController,
     SessionController,
@@ -302,6 +311,55 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
   providers: [
     LazyAccountReserveRepository,
     LazyBudgetRepository,
+    LazyInvestmentRepository,
+    {
+      inject: [LazyInvestmentRepository],
+      provide: CreateInvestmentUseCase,
+      useFactory: (
+        investments: InvestmentRepository,
+      ): CreateInvestmentUseCase =>
+        new CreateInvestmentUseCase(
+          investments,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyInvestmentRepository],
+      provide: ListInvestmentsUseCase,
+      useFactory: (investments: InvestmentRepository): ListInvestmentsUseCase =>
+        new ListInvestmentsUseCase(investments),
+    },
+    {
+      inject: [LazyInvestmentRepository],
+      provide: GetInvestmentUseCase,
+      useFactory: (investments: InvestmentRepository): GetInvestmentUseCase =>
+        new GetInvestmentUseCase(investments),
+    },
+    {
+      inject: [LazyInvestmentRepository],
+      provide: UpdateInvestmentUseCase,
+      useFactory: (
+        investments: InvestmentRepository,
+      ): UpdateInvestmentUseCase =>
+        new UpdateInvestmentUseCase(
+          investments,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyInvestmentRepository],
+      provide: ChangeInvestmentLifecycleUseCase,
+      useFactory: (
+        investments: InvestmentRepository,
+      ): ChangeInvestmentLifecycleUseCase =>
+        new ChangeInvestmentLifecycleUseCase(
+          investments,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
     {
       inject: [
         LazyBudgetRepository,

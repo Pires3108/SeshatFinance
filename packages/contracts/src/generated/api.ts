@@ -1054,6 +1054,59 @@ export type paths = {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/investments": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List the holder investments */
+        readonly get: operations["InvestmentController_list"];
+        readonly put?: never;
+        /** Register a manual investment */
+        readonly post: operations["InvestmentController_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/investments/{investmentId}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Read one owned investment */
+        readonly get: operations["InvestmentController_get"];
+        /** Edit the descriptive data; type and currency stay fixed */
+        readonly put: operations["InvestmentController_update"];
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/investments/{investmentId}/lifecycle": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Archive, unarchive, move to trash or restore an investment */
+        readonly post: operations["InvestmentController_lifecycle"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/manual-exchange-quotes": {
         readonly parameters: {
             readonly query?: never;
@@ -7711,6 +7764,455 @@ export interface operations {
             };
         };
     };
+    readonly InvestmentController_list: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": readonly {
+                        readonly code: string | null;
+                        /** @description Descriptive contracted rate; never used to compute cost, value or return. */
+                        readonly contractedRate: {
+                            /** @enum {string} */
+                            readonly indexer: "cdi" | "selic" | "ipca" | "prefixed" | "other";
+                            readonly percent: string;
+                        } | null;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly institution: string;
+                        /** @description daily, at-maturity (needs a maturity date) or d-plus with business days. */
+                        readonly liquidity: {
+                            readonly days?: number;
+                            /** @enum {string} */
+                            readonly kind: "daily" | "at-maturity" | "d-plus";
+                        };
+                        /** Format: date */
+                        readonly maturityDate: string | null;
+                        readonly name: string;
+                        /** Format: date */
+                        readonly startDate: string;
+                        /** @enum {string} */
+                        readonly type: "treasury-direct" | "cdb" | "lci" | "lca" | "savings" | "stock" | "fii" | "etf" | "cryptocurrency" | "investment-fund" | "private-pension";
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        /** @description Maximum decimal places of a quantity for the type; null when the type is tracked only by value. */
+                        readonly quantityScale: number | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    }[];
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly InvestmentController_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                /** @description UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409. */
+                readonly "Idempotency-Key": string;
+            };
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly code?: string | null;
+                    /** @description Descriptive contracted rate; never used to compute cost, value or return. */
+                    readonly contractedRate?: {
+                        /** @enum {string} */
+                        readonly indexer: "cdi" | "selic" | "ipca" | "prefixed" | "other";
+                        readonly percent: string;
+                    } | null;
+                    readonly currencyCode: string;
+                    readonly currencyMinorUnitScale: number;
+                    readonly institution: string;
+                    /** @description daily, at-maturity (needs a maturity date) or d-plus with business days. */
+                    readonly liquidity: {
+                        readonly days?: number;
+                        /** @enum {string} */
+                        readonly kind: "daily" | "at-maturity" | "d-plus";
+                    };
+                    /** Format: date */
+                    readonly maturityDate?: string | null;
+                    readonly name: string;
+                    /** Format: date */
+                    readonly startDate: string;
+                    /** @enum {string} */
+                    readonly type: "treasury-direct" | "cdb" | "lci" | "lca" | "savings" | "stock" | "fii" | "etf" | "cryptocurrency" | "investment-fund" | "private-pension";
+                };
+            };
+        };
+        readonly responses: {
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly code: string | null;
+                        /** @description Descriptive contracted rate; never used to compute cost, value or return. */
+                        readonly contractedRate: {
+                            /** @enum {string} */
+                            readonly indexer: "cdi" | "selic" | "ipca" | "prefixed" | "other";
+                            readonly percent: string;
+                        } | null;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly institution: string;
+                        /** @description daily, at-maturity (needs a maturity date) or d-plus with business days. */
+                        readonly liquidity: {
+                            readonly days?: number;
+                            /** @enum {string} */
+                            readonly kind: "daily" | "at-maturity" | "d-plus";
+                        };
+                        /** Format: date */
+                        readonly maturityDate: string | null;
+                        readonly name: string;
+                        /** Format: date */
+                        readonly startDate: string;
+                        /** @enum {string} */
+                        readonly type: "treasury-direct" | "cdb" | "lci" | "lca" | "savings" | "stock" | "fii" | "etf" | "cryptocurrency" | "investment-fund" | "private-pension";
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        /** @description Maximum decimal places of a quantity for the type; null when the type is tracked only by value. */
+                        readonly quantityScale: number | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Invalid investment or idempotency key */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Idempotency key reused */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly InvestmentController_get: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly investmentId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly code: string | null;
+                        /** @description Descriptive contracted rate; never used to compute cost, value or return. */
+                        readonly contractedRate: {
+                            /** @enum {string} */
+                            readonly indexer: "cdi" | "selic" | "ipca" | "prefixed" | "other";
+                            readonly percent: string;
+                        } | null;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly institution: string;
+                        /** @description daily, at-maturity (needs a maturity date) or d-plus with business days. */
+                        readonly liquidity: {
+                            readonly days?: number;
+                            /** @enum {string} */
+                            readonly kind: "daily" | "at-maturity" | "d-plus";
+                        };
+                        /** Format: date */
+                        readonly maturityDate: string | null;
+                        readonly name: string;
+                        /** Format: date */
+                        readonly startDate: string;
+                        /** @enum {string} */
+                        readonly type: "treasury-direct" | "cdb" | "lci" | "lca" | "savings" | "stock" | "fii" | "etf" | "cryptocurrency" | "investment-fund" | "private-pension";
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        /** @description Maximum decimal places of a quantity for the type; null when the type is tracked only by value. */
+                        readonly quantityScale: number | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned investment not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly InvestmentController_update: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly investmentId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    readonly code?: string | null;
+                    /** @description Descriptive contracted rate; never used to compute cost, value or return. */
+                    readonly contractedRate?: {
+                        /** @enum {string} */
+                        readonly indexer: "cdi" | "selic" | "ipca" | "prefixed" | "other";
+                        readonly percent: string;
+                    } | null;
+                    readonly currencyCode: string;
+                    readonly currencyMinorUnitScale: number;
+                    readonly institution: string;
+                    /** @description daily, at-maturity (needs a maturity date) or d-plus with business days. */
+                    readonly liquidity: {
+                        readonly days?: number;
+                        /** @enum {string} */
+                        readonly kind: "daily" | "at-maturity" | "d-plus";
+                    };
+                    /** Format: date */
+                    readonly maturityDate?: string | null;
+                    readonly name: string;
+                    /** Format: date */
+                    readonly startDate: string;
+                    /** @enum {string} */
+                    readonly type: "treasury-direct" | "cdb" | "lci" | "lca" | "savings" | "stock" | "fii" | "etf" | "cryptocurrency" | "investment-fund" | "private-pension";
+                    readonly expectedVersion: number;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly code: string | null;
+                        /** @description Descriptive contracted rate; never used to compute cost, value or return. */
+                        readonly contractedRate: {
+                            /** @enum {string} */
+                            readonly indexer: "cdi" | "selic" | "ipca" | "prefixed" | "other";
+                            readonly percent: string;
+                        } | null;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly institution: string;
+                        /** @description daily, at-maturity (needs a maturity date) or d-plus with business days. */
+                        readonly liquidity: {
+                            readonly days?: number;
+                            /** @enum {string} */
+                            readonly kind: "daily" | "at-maturity" | "d-plus";
+                        };
+                        /** Format: date */
+                        readonly maturityDate: string | null;
+                        readonly name: string;
+                        /** Format: date */
+                        readonly startDate: string;
+                        /** @enum {string} */
+                        readonly type: "treasury-direct" | "cdb" | "lci" | "lca" | "savings" | "stock" | "fii" | "etf" | "cryptocurrency" | "investment-fund" | "private-pension";
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        /** @description Maximum decimal places of a quantity for the type; null when the type is tracked only by value. */
+                        readonly quantityScale: number | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Invalid investment */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned investment not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Investment changed by another request */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Archived or trashed investment */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readonly InvestmentController_lifecycle: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly investmentId: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": {
+                    /** @enum {string} */
+                    readonly action: "archive" | "unarchive" | "trash" | "restore";
+                    readonly expectedVersion: number;
+                };
+            };
+        };
+        readonly responses: {
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": {
+                        readonly code: string | null;
+                        /** @description Descriptive contracted rate; never used to compute cost, value or return. */
+                        readonly contractedRate: {
+                            /** @enum {string} */
+                            readonly indexer: "cdi" | "selic" | "ipca" | "prefixed" | "other";
+                            readonly percent: string;
+                        } | null;
+                        readonly currencyCode: string;
+                        readonly currencyMinorUnitScale: number;
+                        readonly institution: string;
+                        /** @description daily, at-maturity (needs a maturity date) or d-plus with business days. */
+                        readonly liquidity: {
+                            readonly days?: number;
+                            /** @enum {string} */
+                            readonly kind: "daily" | "at-maturity" | "d-plus";
+                        };
+                        /** Format: date */
+                        readonly maturityDate: string | null;
+                        readonly name: string;
+                        /** Format: date */
+                        readonly startDate: string;
+                        /** @enum {string} */
+                        readonly type: "treasury-direct" | "cdb" | "lci" | "lca" | "savings" | "stock" | "fii" | "etf" | "cryptocurrency" | "investment-fund" | "private-pension";
+                        /** Format: date-time */
+                        readonly createdAt: string;
+                        /** Format: uuid */
+                        readonly id: string;
+                        /** @enum {string} */
+                        readonly lifecycle: "active" | "archived" | "trashed";
+                        /** @description Maximum decimal places of a quantity for the type; null when the type is tracked only by value. */
+                        readonly quantityScale: number | null;
+                        /** Format: date-time */
+                        readonly updatedAt: string;
+                        readonly version: number;
+                    };
+                };
+            };
+            /** @description Bearer token missing or invalid */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Owned investment not found */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Investment changed by another request */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transition not allowed from the current lifecycle */
+            readonly 422: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readonly ManualExchangeQuoteController_list: {
         readonly parameters: {
             readonly query?: never;
@@ -9663,7 +10165,7 @@ export interface operations {
         readonly parameters: {
             readonly query?: {
                 readonly resourceId?: unknown;
-                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve" | "goal-contribution" | "budget";
+                readonly resourceType?: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve" | "goal-contribution" | "budget" | "investment";
                 readonly limit?: number;
                 readonly afterSequence?: string;
             };
@@ -9688,7 +10190,7 @@ export interface operations {
                         readonly actorId: string;
                         readonly action: string;
                         /** @enum {string} */
-                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve" | "goal-contribution" | "budget";
+                        readonly resourceType: "account" | "transaction" | "transfer" | "balance-adjustment" | "credit-card" | "card-purchase" | "card-installment-plan" | "card-invoice" | "invoice-settlement" | "manual-exchange-quote" | "loan" | "goal" | "account-reserve" | "goal-contribution" | "budget" | "investment";
                         /** Format: uuid */
                         readonly resourceId: string;
                         /** @enum {string} */

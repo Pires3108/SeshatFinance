@@ -396,6 +396,7 @@ enum FinancialAuditResourceType {
   account_reserve       @map("account-reserve")
   goal_contribution     @map("goal-contribution")
   budget
+  investment
 
   @@map("financial_audit_resource_type")
 }
@@ -890,4 +891,30 @@ model BudgetLimitVersion {
 
   @@id([budgetId, effectiveFrom])
   @@map("budget_limit_versions")
+}
+
+/// A manually declared investment (US-054, ADR-044). Descriptive only.
+model Investment {
+  id                     String    @id @db.Uuid
+  ownerId                String    @map("owner_id") @db.Uuid
+  type                   String    @db.VarChar(32)
+  institution            String    @db.VarChar(120)
+  name                   String    @db.VarChar(120)
+  code                   String?   @db.VarChar(20)
+  currencyCode           String    @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale Int       @map("currency_minor_unit_scale") @db.SmallInt
+  startDate              DateTime  @map("start_date") @db.Date
+  maturityDate           DateTime? @map("maturity_date") @db.Date
+  rateIndexer            String?   @map("rate_indexer") @db.VarChar(16)
+  ratePercent            String?   @map("rate_percent") @db.VarChar(24)
+  liquidityKind          String    @map("liquidity_kind") @db.VarChar(16)
+  liquidityDays          Int?      @map("liquidity_days")
+  lifecycle              String    @db.VarChar(16)
+  createdAt              DateTime  @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime  @map("updated_at") @db.Timestamptz(6)
+  version                Int
+
+  @@unique([id, ownerId])
+  @@index([ownerId, createdAt])
+  @@map("investments")
 }

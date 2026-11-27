@@ -87,6 +87,12 @@ describe('Protected API authorization', () => {
     ['POST', '/api/v1/credit-cards'],
     ['POST', '/api/v1/categories'],
     ['POST', '/api/v1/cost-centers'],
+    ['POST', '/api/v1/investments'],
+    [
+      'POST',
+      '/api/v1/investments/c722103a-e28a-482c-b6e9-e3320d8a44e3/lifecycle',
+    ],
+    ['PUT', '/api/v1/investments/c722103a-e28a-482c-b6e9-e3320d8a44e3'],
     ['POST', '/api/v1/tags'],
     ['POST', '/api/v1/transfers'],
     ['PATCH', '/api/v1/accounts/7c2c7a54-73fe-49a3-b0ea-19034bf22baf'],

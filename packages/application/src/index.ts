@@ -95,6 +95,25 @@ export {
 } from './accounts/get-owned-balance-summary.js';
 export { ListInvestmentTypesUseCase } from './investments/list-investment-types.js';
 export {
+  ChangeInvestmentLifecycleUseCase,
+  CREATE_INVESTMENT_OPERATION,
+  CreateInvestmentUseCase,
+  GetInvestmentUseCase,
+  InvestmentNotFoundError,
+  InvestmentVersionConflictError,
+  ListInvestmentsUseCase,
+  parseInvestmentResponse,
+  serializeInvestmentResponse,
+  UpdateInvestmentUseCase,
+  type ChangeInvestmentLifecycleCommand,
+  type CreateInvestmentCommand,
+  type InvestmentDetailsInput,
+  type InvestmentLifecycleAction,
+  type InvestmentRepository,
+  type InvestmentWrite,
+  type UpdateInvestmentCommand,
+} from './investments/manage-investment.js';
+export {
   CategoryVersionConflictError,
   CategoryLinkedError,
   CreateCategoryUseCase,

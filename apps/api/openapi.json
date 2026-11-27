@@ -14449,6 +14449,1090 @@
         "tags": ["investments"]
       }
     },
+    "/api/v1/investments": {
+      "post": {
+        "operationId": "InvestmentController_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "maxLength": 20,
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "contractedRate": {
+                    "description": "Descriptive contracted rate; never used to compute cost, value or return.",
+                    "nullable": true,
+                    "properties": {
+                      "indexer": {
+                        "enum": ["cdi", "selic", "ipca", "prefixed", "other"],
+                        "type": "string"
+                      },
+                      "percent": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      }
+                    },
+                    "required": ["indexer", "percent"],
+                    "type": "object"
+                  },
+                  "currencyCode": {
+                    "pattern": "^[A-Z]{3}$",
+                    "type": "string"
+                  },
+                  "currencyMinorUnitScale": {
+                    "maximum": 18,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "institution": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "liquidity": {
+                    "description": "daily, at-maturity (needs a maturity date) or d-plus with business days.",
+                    "properties": {
+                      "days": {
+                        "maximum": 3650,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "kind": {
+                        "enum": ["daily", "at-maturity", "d-plus"],
+                        "type": "string"
+                      }
+                    },
+                    "required": ["kind"],
+                    "type": "object"
+                  },
+                  "maturityDate": {
+                    "format": "date",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "name": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "startDate": {
+                    "format": "date",
+                    "type": "string"
+                  },
+                  "type": {
+                    "enum": [
+                      "treasury-direct",
+                      "cdb",
+                      "lci",
+                      "lca",
+                      "savings",
+                      "stock",
+                      "fii",
+                      "etf",
+                      "cryptocurrency",
+                      "investment-fund",
+                      "private-pension"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "currencyCode",
+                  "currencyMinorUnitScale",
+                  "institution",
+                  "liquidity",
+                  "name",
+                  "startDate",
+                  "type"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "A manually declared investment. Seshat Finance only records it; nothing is executed at any institution.",
+                  "properties": {
+                    "code": {
+                      "maxLength": 20,
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "contractedRate": {
+                      "description": "Descriptive contracted rate; never used to compute cost, value or return.",
+                      "nullable": true,
+                      "properties": {
+                        "indexer": {
+                          "enum": ["cdi", "selic", "ipca", "prefixed", "other"],
+                          "type": "string"
+                        },
+                        "percent": {
+                          "pattern": "^\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["indexer", "percent"],
+                      "type": "object"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "institution": {
+                      "maxLength": 120,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "liquidity": {
+                      "description": "daily, at-maturity (needs a maturity date) or d-plus with business days.",
+                      "properties": {
+                        "days": {
+                          "maximum": 3650,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "kind": {
+                          "enum": ["daily", "at-maturity", "d-plus"],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["kind"],
+                      "type": "object"
+                    },
+                    "maturityDate": {
+                      "format": "date",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "name": {
+                      "maxLength": 120,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "startDate": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "type": {
+                      "enum": [
+                        "treasury-direct",
+                        "cdb",
+                        "lci",
+                        "lca",
+                        "savings",
+                        "stock",
+                        "fii",
+                        "etf",
+                        "cryptocurrency",
+                        "investment-fund",
+                        "private-pension"
+                      ],
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "lifecycle": {
+                      "enum": ["active", "archived", "trashed"],
+                      "type": "string"
+                    },
+                    "quantityScale": {
+                      "description": "Maximum decimal places of a quantity for the type; null when the type is tracked only by value.",
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "contractedRate",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "institution",
+                    "liquidity",
+                    "maturityDate",
+                    "name",
+                    "startDate",
+                    "type",
+                    "createdAt",
+                    "id",
+                    "lifecycle",
+                    "quantityScale",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid investment or idempotency key"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "409": {
+            "description": "Idempotency key reused"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register a manual investment",
+        "tags": ["investments"]
+      },
+      "get": {
+        "operationId": "InvestmentController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "description": "A manually declared investment. Seshat Finance only records it; nothing is executed at any institution.",
+                    "properties": {
+                      "code": {
+                        "maxLength": 20,
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "contractedRate": {
+                        "description": "Descriptive contracted rate; never used to compute cost, value or return.",
+                        "nullable": true,
+                        "properties": {
+                          "indexer": {
+                            "enum": [
+                              "cdi",
+                              "selic",
+                              "ipca",
+                              "prefixed",
+                              "other"
+                            ],
+                            "type": "string"
+                          },
+                          "percent": {
+                            "pattern": "^\\d+(?:\\.\\d+)?$",
+                            "type": "string"
+                          }
+                        },
+                        "required": ["indexer", "percent"],
+                        "type": "object"
+                      },
+                      "currencyCode": {
+                        "pattern": "^[A-Z]{3}$",
+                        "type": "string"
+                      },
+                      "currencyMinorUnitScale": {
+                        "maximum": 18,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "institution": {
+                        "maxLength": 120,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "liquidity": {
+                        "description": "daily, at-maturity (needs a maturity date) or d-plus with business days.",
+                        "properties": {
+                          "days": {
+                            "maximum": 3650,
+                            "minimum": 0,
+                            "type": "integer"
+                          },
+                          "kind": {
+                            "enum": ["daily", "at-maturity", "d-plus"],
+                            "type": "string"
+                          }
+                        },
+                        "required": ["kind"],
+                        "type": "object"
+                      },
+                      "maturityDate": {
+                        "format": "date",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "name": {
+                        "maxLength": 120,
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "startDate": {
+                        "format": "date",
+                        "type": "string"
+                      },
+                      "type": {
+                        "enum": [
+                          "treasury-direct",
+                          "cdb",
+                          "lci",
+                          "lca",
+                          "savings",
+                          "stock",
+                          "fii",
+                          "etf",
+                          "cryptocurrency",
+                          "investment-fund",
+                          "private-pension"
+                        ],
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "lifecycle": {
+                        "enum": ["active", "archived", "trashed"],
+                        "type": "string"
+                      },
+                      "quantityScale": {
+                        "description": "Maximum decimal places of a quantity for the type; null when the type is tracked only by value.",
+                        "nullable": true,
+                        "type": "integer"
+                      },
+                      "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "version": {
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "code",
+                      "contractedRate",
+                      "currencyCode",
+                      "currencyMinorUnitScale",
+                      "institution",
+                      "liquidity",
+                      "maturityDate",
+                      "name",
+                      "startDate",
+                      "type",
+                      "createdAt",
+                      "id",
+                      "lifecycle",
+                      "quantityScale",
+                      "updatedAt",
+                      "version"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the holder investments",
+        "tags": ["investments"]
+      }
+    },
+    "/api/v1/investments/{investmentId}": {
+      "get": {
+        "operationId": "InvestmentController_get",
+        "parameters": [
+          {
+            "name": "investmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "A manually declared investment. Seshat Finance only records it; nothing is executed at any institution.",
+                  "properties": {
+                    "code": {
+                      "maxLength": 20,
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "contractedRate": {
+                      "description": "Descriptive contracted rate; never used to compute cost, value or return.",
+                      "nullable": true,
+                      "properties": {
+                        "indexer": {
+                          "enum": ["cdi", "selic", "ipca", "prefixed", "other"],
+                          "type": "string"
+                        },
+                        "percent": {
+                          "pattern": "^\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["indexer", "percent"],
+                      "type": "object"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "institution": {
+                      "maxLength": 120,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "liquidity": {
+                      "description": "daily, at-maturity (needs a maturity date) or d-plus with business days.",
+                      "properties": {
+                        "days": {
+                          "maximum": 3650,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "kind": {
+                          "enum": ["daily", "at-maturity", "d-plus"],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["kind"],
+                      "type": "object"
+                    },
+                    "maturityDate": {
+                      "format": "date",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "name": {
+                      "maxLength": 120,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "startDate": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "type": {
+                      "enum": [
+                        "treasury-direct",
+                        "cdb",
+                        "lci",
+                        "lca",
+                        "savings",
+                        "stock",
+                        "fii",
+                        "etf",
+                        "cryptocurrency",
+                        "investment-fund",
+                        "private-pension"
+                      ],
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "lifecycle": {
+                      "enum": ["active", "archived", "trashed"],
+                      "type": "string"
+                    },
+                    "quantityScale": {
+                      "description": "Maximum decimal places of a quantity for the type; null when the type is tracked only by value.",
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "contractedRate",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "institution",
+                    "liquidity",
+                    "maturityDate",
+                    "name",
+                    "startDate",
+                    "type",
+                    "createdAt",
+                    "id",
+                    "lifecycle",
+                    "quantityScale",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned investment not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read one owned investment",
+        "tags": ["investments"]
+      },
+      "put": {
+        "operationId": "InvestmentController_update",
+        "parameters": [
+          {
+            "name": "investmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "code": {
+                    "maxLength": 20,
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "contractedRate": {
+                    "description": "Descriptive contracted rate; never used to compute cost, value or return.",
+                    "nullable": true,
+                    "properties": {
+                      "indexer": {
+                        "enum": ["cdi", "selic", "ipca", "prefixed", "other"],
+                        "type": "string"
+                      },
+                      "percent": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string"
+                      }
+                    },
+                    "required": ["indexer", "percent"],
+                    "type": "object"
+                  },
+                  "currencyCode": {
+                    "pattern": "^[A-Z]{3}$",
+                    "type": "string"
+                  },
+                  "currencyMinorUnitScale": {
+                    "maximum": 18,
+                    "minimum": 0,
+                    "type": "integer"
+                  },
+                  "institution": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "liquidity": {
+                    "description": "daily, at-maturity (needs a maturity date) or d-plus with business days.",
+                    "properties": {
+                      "days": {
+                        "maximum": 3650,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "kind": {
+                        "enum": ["daily", "at-maturity", "d-plus"],
+                        "type": "string"
+                      }
+                    },
+                    "required": ["kind"],
+                    "type": "object"
+                  },
+                  "maturityDate": {
+                    "format": "date",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "name": {
+                    "maxLength": 120,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "startDate": {
+                    "format": "date",
+                    "type": "string"
+                  },
+                  "type": {
+                    "enum": [
+                      "treasury-direct",
+                      "cdb",
+                      "lci",
+                      "lca",
+                      "savings",
+                      "stock",
+                      "fii",
+                      "etf",
+                      "cryptocurrency",
+                      "investment-fund",
+                      "private-pension"
+                    ],
+                    "type": "string"
+                  },
+                  "expectedVersion": {
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "currencyCode",
+                  "currencyMinorUnitScale",
+                  "institution",
+                  "liquidity",
+                  "name",
+                  "startDate",
+                  "type",
+                  "expectedVersion"
+                ],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "A manually declared investment. Seshat Finance only records it; nothing is executed at any institution.",
+                  "properties": {
+                    "code": {
+                      "maxLength": 20,
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "contractedRate": {
+                      "description": "Descriptive contracted rate; never used to compute cost, value or return.",
+                      "nullable": true,
+                      "properties": {
+                        "indexer": {
+                          "enum": ["cdi", "selic", "ipca", "prefixed", "other"],
+                          "type": "string"
+                        },
+                        "percent": {
+                          "pattern": "^\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["indexer", "percent"],
+                      "type": "object"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "institution": {
+                      "maxLength": 120,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "liquidity": {
+                      "description": "daily, at-maturity (needs a maturity date) or d-plus with business days.",
+                      "properties": {
+                        "days": {
+                          "maximum": 3650,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "kind": {
+                          "enum": ["daily", "at-maturity", "d-plus"],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["kind"],
+                      "type": "object"
+                    },
+                    "maturityDate": {
+                      "format": "date",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "name": {
+                      "maxLength": 120,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "startDate": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "type": {
+                      "enum": [
+                        "treasury-direct",
+                        "cdb",
+                        "lci",
+                        "lca",
+                        "savings",
+                        "stock",
+                        "fii",
+                        "etf",
+                        "cryptocurrency",
+                        "investment-fund",
+                        "private-pension"
+                      ],
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "lifecycle": {
+                      "enum": ["active", "archived", "trashed"],
+                      "type": "string"
+                    },
+                    "quantityScale": {
+                      "description": "Maximum decimal places of a quantity for the type; null when the type is tracked only by value.",
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "contractedRate",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "institution",
+                    "liquidity",
+                    "maturityDate",
+                    "name",
+                    "startDate",
+                    "type",
+                    "createdAt",
+                    "id",
+                    "lifecycle",
+                    "quantityScale",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid investment"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned investment not found"
+          },
+          "409": {
+            "description": "Investment changed by another request"
+          },
+          "422": {
+            "description": "Archived or trashed investment"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit the descriptive data; type and currency stay fixed",
+        "tags": ["investments"]
+      }
+    },
+    "/api/v1/investments/{investmentId}/lifecycle": {
+      "post": {
+        "operationId": "InvestmentController_lifecycle",
+        "parameters": [
+          {
+            "name": "investmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "enum": ["archive", "unarchive", "trash", "restore"],
+                    "type": "string"
+                  },
+                  "expectedVersion": {
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": ["action", "expectedVersion"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "A manually declared investment. Seshat Finance only records it; nothing is executed at any institution.",
+                  "properties": {
+                    "code": {
+                      "maxLength": 20,
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "contractedRate": {
+                      "description": "Descriptive contracted rate; never used to compute cost, value or return.",
+                      "nullable": true,
+                      "properties": {
+                        "indexer": {
+                          "enum": ["cdi", "selic", "ipca", "prefixed", "other"],
+                          "type": "string"
+                        },
+                        "percent": {
+                          "pattern": "^\\d+(?:\\.\\d+)?$",
+                          "type": "string"
+                        }
+                      },
+                      "required": ["indexer", "percent"],
+                      "type": "object"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "maximum": 18,
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "institution": {
+                      "maxLength": 120,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "liquidity": {
+                      "description": "daily, at-maturity (needs a maturity date) or d-plus with business days.",
+                      "properties": {
+                        "days": {
+                          "maximum": 3650,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "kind": {
+                          "enum": ["daily", "at-maturity", "d-plus"],
+                          "type": "string"
+                        }
+                      },
+                      "required": ["kind"],
+                      "type": "object"
+                    },
+                    "maturityDate": {
+                      "format": "date",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "name": {
+                      "maxLength": 120,
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "startDate": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "type": {
+                      "enum": [
+                        "treasury-direct",
+                        "cdb",
+                        "lci",
+                        "lca",
+                        "savings",
+                        "stock",
+                        "fii",
+                        "etf",
+                        "cryptocurrency",
+                        "investment-fund",
+                        "private-pension"
+                      ],
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "lifecycle": {
+                      "enum": ["active", "archived", "trashed"],
+                      "type": "string"
+                    },
+                    "quantityScale": {
+                      "description": "Maximum decimal places of a quantity for the type; null when the type is tracked only by value.",
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "contractedRate",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "institution",
+                    "liquidity",
+                    "maturityDate",
+                    "name",
+                    "startDate",
+                    "type",
+                    "createdAt",
+                    "id",
+                    "lifecycle",
+                    "quantityScale",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned investment not found"
+          },
+          "409": {
+            "description": "Investment changed by another request"
+          },
+          "422": {
+            "description": "Transition not allowed from the current lifecycle"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Archive, unarchive, move to trash or restore an investment",
+        "tags": ["investments"]
+      }
+    },
     "/api/v1/manual-exchange-quotes": {
       "post": {
         "operationId": "ManualExchangeQuoteController_create",
@@ -18299,7 +19383,8 @@
                 "goal",
                 "account-reserve",
                 "goal-contribution",
-                "budget"
+                "budget",
+                "investment"
               ],
               "type": "string"
             }
@@ -18367,7 +19452,8 @@
                           "goal",
                           "account-reserve",
                           "goal-contribution",
-                          "budget"
+                          "budget",
+                          "investment"
                         ]
                       },
                       "resourceId": {

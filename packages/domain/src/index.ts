@@ -152,6 +152,23 @@ export {
   type InvestmentTypeSnapshot,
 } from './investments/investment-type.js';
 export {
+  Investment,
+  InvalidInvestmentError,
+  InvestmentLifecycleError,
+  investmentIndexers,
+  investmentLifecycles,
+  investmentQuantityScale,
+  parseDecimal,
+  MAX_LIQUIDITY_DAYS,
+  MAX_UNIT_PRICE_SCALE,
+  type ContractedRate,
+  type InvestmentDetails,
+  type InvestmentIndexer,
+  type InvestmentLifecycle,
+  type InvestmentLiquidity,
+  type InvestmentSnapshot,
+} from './investments/investment.js';
+export {
   FamilyGroup,
   FamilyGroupMembership,
   InvalidFamilyGroupError,
