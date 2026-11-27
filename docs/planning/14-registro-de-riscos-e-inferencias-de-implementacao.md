@@ -151,11 +151,12 @@ Este registro preserva decisões que não podem ser inferidas com segurança dur
 
 ### RII-016 — Semântica dos dados de posição de investimento
 
-- **Estado:** aberto.
+- **Estado:** decidido em 26/11/2026 e registrado no [ADR-044](../decisions/0044-investimentos-manuais.md).
 - **Referências:** RF-051; RF-052; RN-034; RN-037; US-054 a US-057; INV-028; INV-029.
 - **Risco:** quantidade, preço médio, taxa, impostos e liquidez não têm unidade, escala, periodicidade ou formato canônicos definidos. Tratar preço médio como dinheiro arredondado à menor fração da moeda, por exemplo, pode perder precisão no custo de uma posição; interpretar taxa ou imposto como percentual em vez de valor pode distorcer patrimônio e rentabilidade.
 - **Decisão necessária:** definir precisão e unidade da quantidade por tipo de ativo, precisão e moeda do preço unitário, semântica e periodicidade de taxas e impostos, representação da liquidez e regras de arredondamento para custo e valor atual.
-- **Limite atual:** expor somente o catálogo estável dos onze tipos previstos em RF-051. Não persistir posições nem calcular custo, rendimento ou valor atual antes da decisão.
+- **Decisão:** quantidade em decimal textual com escala por tipo e preço unitário com até 8 casas, arredondando só o resultado final com meio-para-cima (RN-072). Taxa e imposto pagos são eventos monetários; taxa contratada e indexador são descritivos (RN-073). Aporte e resgate com conta criam transferência interna vinculada (RN-073). Valor atual informado é versionado e o patrimônio em BRL usa a cotação manual vigente, sem tratar valor sem cotação como zero (RN-074, RN-075, INV-049).
+- **Limite atual:** atualização automática, cotações de mercado e proveniência seguem fora do MVP (RF-056, RN-036).
 
 ### RII-017 — Idempotência de comandos financeiros compostos
 

@@ -94,3 +94,12 @@ Os identificadores RN-068 a RN-071 seguem a numeração já citada nas história
 - **RN-069:** uma conta pode ser vinculada a várias metas, cada vínculo com uma fatia declarada (valor na moeda da conta ou saldo inteiro). A soma das fatias não supera o saldo da conta na declaração; contribuição para conta já vinculada à mesma meta não é contada de novo.
 - **RN-070:** o prazo da meta é data civil no fuso do perfil. A situação é concluída quando o progresso alcança o alvo, atrasada a partir do dia civil seguinte ao prazo se o alvo não foi alcançado e em andamento nos demais casos; pausada e arquivada são escolhas do usuário. Sem cotação válida, progresso convertido e situação ficam indisponíveis, nunca zero.
 - **RN-071:** reserva acima do saldo contábil é recusada na declaração. Se o saldo cair depois abaixo da reserva, a reserva declarada é mantida, o disponível pode ficar negativo e o usuário é avisado; nada é ajustado automaticamente.
+
+## 11. Investimentos manuais
+
+Os identificadores RN-072 a RN-075 detalham RN-034 a RN-037 para a Sprint 9. Detalhes no [ADR-044](../decisions/0044-investimentos-manuais.md).
+
+- **RN-072:** a quantidade é decimal textual não negativo, com escala máxima por tipo de investimento. O preço unitário é decimal textual positivo com até 8 casas, na moeda do investimento. Custo e valor são calculados em racional exato e só o resultado final é arredondado para a escala da moeda, com meio-para-cima.
+- **RN-073:** aporte e resgate com conta gravam o evento e a transferência interna vinculada na mesma transação; aporte sem conta representa posição preexistente. Rendimento, dividendo e juros com conta geram receita vinculada; sem conta, são renda reinvestida. Taxa e imposto pagos são valores monetários e não se confundem com a taxa contratada, que é só descritiva. Resgate acima da quantidade em custódia é recusado.
+- **RN-074:** o valor atual é informado pelo usuário, versionado e auditado. O valor atual efetivo é o último valor informado mais aportes e renda reinvestida, menos resgates, com data posterior à referência dele; sem valor informado, a base é zero.
+- **RN-075:** o patrimônio consolidado em BRL é o saldo contábil das contas mais o saldo investido, convertidos pela cotação manual vigente na data de referência. Valor sem cotação aparece à parte com o valor original e o total é marcado como parcial.

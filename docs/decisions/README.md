@@ -24,3 +24,4 @@ O status de uma decisão não comprova a conclusão da implementação. As evid�
 - [ADR-041 — Estados de atenção e atraso da fatura](0041-estados-de-atencao-e-atraso-da-fatura.md)
 - [ADR-042 — Parcelamento, juros e empréstimos declarados](0042-parcelamento-juros-e-emprestimos.md)
 - [ADR-043 — Metas, contribuições, reservas e orçamentos](0043-metas-contribuicoes-e-reservas.md)
+- [ADR-044 — Investimentos manuais: posição, eventos e consolidação](0044-investimentos-manuais.md)

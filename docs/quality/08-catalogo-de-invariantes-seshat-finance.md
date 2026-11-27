@@ -212,7 +212,15 @@ Cotação manual conserva par de moedas, taxa decimal textual, origem, autor, vi
 
 A consulta de saldos preserva cada valor com sua moeda e só agrega valores da mesma moeda. A presença de moeda diferente de BRL torna o total consolidado em BRL indisponível, com motivo explícito, independentemente de existir cotação manual ou informativa.
 
-**Referências:** RF-020; RN-037.
+A consolidação de patrimônio do ADR-044 é a consolidação em BRL aprovada. Ela converte cada valor pela cotação manual vigente na data de referência, conserva valor original, moeda, taxa, origem e data, e nunca grava o valor convertido. A consulta de saldos por conta continua sem converter.
+
+**Referências:** RF-020, RF-055; RN-037, RN-075; ADR-044.
+
+### INV-049 — Patrimônio sem cotação não é zero
+
+No patrimônio consolidado em BRL, um valor em outra moeda sem cotação vigente fica fora do total e aparece à parte com o valor original. O total é marcado como parcial e nunca trata esse valor como zero. Investimentos na lixeira não entram no saldo investido, e aporte ou resgate entre conta e investimento não muda o total.
+
+**Referências:** RF-055; RN-034, RN-035, RN-037, RN-075; INV-027, INV-029; ADR-044.
 
 ## 8. Importação e exportação
 
