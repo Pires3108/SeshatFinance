@@ -126,6 +126,7 @@ export class TemporalBudgetEntrySource implements BudgetEntrySource {
           kind: snapshot.kind,
           notSpending:
             item.cardSettlement === true ||
+            item.investmentMovement === true ||
             item.transfer === true ||
             item.balanceAdjustment === true,
           refundOfExpenseId: item.refundOfExpenseId ?? null,

@@ -166,6 +166,8 @@ function toPersistedResourceType(
       return 'account_reserve';
     case 'goal-contribution':
       return 'goal_contribution';
+    case 'investment-event':
+      return 'investment_event';
     default:
       return resourceType;
   }
@@ -193,6 +195,8 @@ function fromPersistedResourceType(
       return 'account-reserve';
     case 'goal_contribution':
       return 'goal-contribution';
+    case 'investment_event':
+      return 'investment-event';
     default:
       return resourceType;
   }

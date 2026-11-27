@@ -121,6 +121,10 @@ import {
   ListOwnedAccountTransactionsUseCase,
   ListInvestmentTypesUseCase,
   ChangeInvestmentLifecycleUseCase,
+  ChangeInvestmentEventLifecycleUseCase,
+  ListInvestmentEventsUseCase,
+  RecordInvestmentEventUseCase,
+  type InvestmentEventRepository,
   CreateInvestmentUseCase,
   GetInvestmentUseCase,
   ListInvestmentsUseCase,
@@ -239,6 +243,8 @@ import { HealthController } from './health/health.controller.js';
 import { DatabaseReadiness } from './health/database-readiness.js';
 import { InvestmentTypeController } from './investments/investment-type.controller.js';
 import { InvestmentController } from './investments/investment.controller.js';
+import { InvestmentEventController } from './investments/investment-event.controller.js';
+import { LazyInvestmentEventRepository } from './investments/lazy-investment-event-repository.js';
 import { LazyInvestmentRepository } from './investments/lazy-investment-repository.js';
 import { LazyManualExchangeQuoteRepository } from './money/lazy-manual-exchange-quote-repository.js';
 import { ManualExchangeQuoteController } from './money/manual-exchange-quote.controller.js';
@@ -294,6 +300,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     LinkedRefundController,
     InvestmentTypeController,
     InvestmentController,
+    InvestmentEventController,
     ManualExchangeQuoteController,
     PasswordRecoveryController,
     SessionController,
@@ -312,6 +319,7 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
     LazyAccountReserveRepository,
     LazyBudgetRepository,
     LazyInvestmentRepository,
+    LazyInvestmentEventRepository,
     {
       inject: [LazyInvestmentRepository],
       provide: CreateInvestmentUseCase,
@@ -356,6 +364,47 @@ import { LazyHolidaySettingsRepository } from './users/lazy-holiday-settings-rep
       ): ChangeInvestmentLifecycleUseCase =>
         new ChangeInvestmentLifecycleUseCase(
           investments,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [
+        LazyInvestmentRepository,
+        LazyAccountRepository,
+        LazyInvestmentEventRepository,
+      ],
+      provide: RecordInvestmentEventUseCase,
+      useFactory: (
+        investments: InvestmentRepository,
+        accounts: AccountRepository,
+        events: InvestmentEventRepository,
+      ): RecordInvestmentEventUseCase =>
+        new RecordInvestmentEventUseCase(
+          investments,
+          accounts,
+          events,
+          new SystemClock(),
+          new SystemIdentifierGenerator(),
+        ),
+    },
+    {
+      inject: [LazyInvestmentRepository, LazyInvestmentEventRepository],
+      provide: ListInvestmentEventsUseCase,
+      useFactory: (
+        investments: InvestmentRepository,
+        events: InvestmentEventRepository,
+      ): ListInvestmentEventsUseCase =>
+        new ListInvestmentEventsUseCase(investments, events),
+    },
+    {
+      inject: [LazyInvestmentEventRepository],
+      provide: ChangeInvestmentEventLifecycleUseCase,
+      useFactory: (
+        events: InvestmentEventRepository,
+      ): ChangeInvestmentEventLifecycleUseCase =>
+        new ChangeInvestmentEventLifecycleUseCase(
+          events,
           new SystemClock(),
           new SystemIdentifierGenerator(),
         ),

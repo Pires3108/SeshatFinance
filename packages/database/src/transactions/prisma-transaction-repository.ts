@@ -238,6 +238,7 @@ export class PrismaTransactionRepository
         balanceAdjustment: { select: { id: true } },
         cardSettlement: { select: { id: true } },
         incomingTransfer: { select: { id: true } },
+        investmentEvent: { select: { kind: true } },
         outgoingTransfer: { select: { id: true } },
         refundEntryLink: { select: { expenseTransactionId: true } },
         tagAssignments: { select: { tagId: true } },
@@ -248,6 +249,9 @@ export class PrismaTransactionRepository
     return rows.map((row) => ({
       balanceAdjustment: row.balanceAdjustment !== null,
       cardSettlement: row.cardSettlement !== null,
+      investmentMovement:
+        row.investmentEvent?.kind === 'contribution' ||
+        row.investmentEvent?.kind === 'redemption',
       refundOfExpenseId: row.refundEntryLink?.expenseTransactionId ?? null,
       transfer: row.incomingTransfer !== null || row.outgoingTransfer !== null,
       transaction: restoreTransaction(row),
@@ -437,6 +441,17 @@ export class PrismaTransactionRepository
       where: { ownerId, transactionId },
     });
     return settlement?.id ?? null;
+  }
+
+  public async findInvestmentEventIdByEntryForOwner(
+    transactionId: string,
+    ownerId: string,
+  ): Promise<string | null> {
+    const event = await this.client.investmentEvent.findFirst({
+      select: { id: true },
+      where: { ownerId, transactionId },
+    });
+    return event?.id ?? null;
   }
 
   public async findTransferIdByEntryForOwner(

@@ -6,6 +6,7 @@ import {
   SetOwnedTransactionClassificationUseCase,
   TransactionRequiresTransferMutationError,
   TransactionRequiresCardSettlementMutationError,
+  TransactionRequiresInvestmentEventMutationError,
   type TransactionClassificationSelection,
 } from '@seshat/application';
 import {
@@ -146,6 +147,10 @@ function mapError(error: unknown): Error {
   if (error instanceof TransactionRequiresCardSettlementMutationError)
     return new ConflictException(
       'Card settlement entries cannot be changed on their own.',
+    );
+  if (error instanceof TransactionRequiresInvestmentEventMutationError)
+    return new ConflictException(
+      'Investment event entries must be changed through the investment event.',
     );
   if (error instanceof TransactionRequiresTransferMutationError) {
     return new ConflictException(

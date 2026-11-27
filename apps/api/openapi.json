@@ -15533,6 +15533,578 @@
         "tags": ["investments"]
       }
     },
+    "/api/v1/investments/{investmentId}/events": {
+      "post": {
+        "operationId": "InvestmentEventController_record",
+        "parameters": [
+          {
+            "name": "investmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "UUID v4 unique per user and operation. An identical repetition within 24 hours returns the original response; a different payload or a concurrent repetition returns 409.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "accountId": {
+                    "description": "Owned active account in the investment currency. With an aporte or resgate it writes a linked account entry that is neither income nor expense; with an income it writes a linked income. Not allowed for fees and taxes.",
+                    "format": "uuid",
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "amount": {
+                    "pattern": "^\\d+(?:\\.\\d+)?$",
+                    "type": "string",
+                    "description": "Positive amount in the investment currency."
+                  },
+                  "kind": {
+                    "enum": [
+                      "contribution",
+                      "redemption",
+                      "yield",
+                      "dividend",
+                      "interest",
+                      "fee",
+                      "tax"
+                    ],
+                    "type": "string"
+                  },
+                  "note": {
+                    "maxLength": 500,
+                    "nullable": true,
+                    "type": "string"
+                  },
+                  "occurredAt": {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "pattern": "^\\d+(?:\\.\\d+)?$",
+                    "type": "string",
+                    "description": "Required for aportes and resgates of types with quantity, within the type scale; otherwise null.",
+                    "nullable": true
+                  },
+                  "timeZone": {
+                    "description": "IANA time zone of the event.",
+                    "type": "string"
+                  },
+                  "unitPrice": {
+                    "pattern": "^\\d+(?:\\.\\d+)?$",
+                    "type": "string",
+                    "description": "Optional unit price with up to 8 decimal places.",
+                    "nullable": true
+                  }
+                },
+                "required": ["amount", "kind", "occurredAt", "timeZone"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "A declared investment event. Seshat Finance only records it; nothing is executed at any broker or bank.",
+                  "properties": {
+                    "accountId": {
+                      "description": "Owned active account in the investment currency. With an aporte or resgate it writes a linked account entry that is neither income nor expense; with an income it writes a linked income. Not allowed for fees and taxes.",
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "amount": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Positive amount in the investment currency."
+                    },
+                    "kind": {
+                      "enum": [
+                        "contribution",
+                        "redemption",
+                        "yield",
+                        "dividend",
+                        "interest",
+                        "fee",
+                        "tax"
+                      ],
+                      "type": "string"
+                    },
+                    "note": {
+                      "maxLength": 500,
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "occurredAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Required for aportes and resgates of types with quantity, within the type scale; otherwise null.",
+                      "nullable": true
+                    },
+                    "timeZone": {
+                      "description": "IANA time zone of the event.",
+                      "type": "string"
+                    },
+                    "unitPrice": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Optional unit price with up to 8 decimal places.",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "investmentId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "lifecycle": {
+                      "enum": ["active", "trashed"],
+                      "type": "string"
+                    },
+                    "occurredOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "transactionId": {
+                      "description": "Linked account entry, if any.",
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "accountId",
+                    "amount",
+                    "kind",
+                    "note",
+                    "occurredAt",
+                    "quantity",
+                    "timeZone",
+                    "unitPrice",
+                    "createdAt",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "id",
+                    "investmentId",
+                    "lifecycle",
+                    "occurredOn",
+                    "transactionId",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid event or idempotency key"
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned investment not found"
+          },
+          "409": {
+            "description": "Idempotency key reused"
+          },
+          "422": {
+            "description": "Inactive investment, unusable account, other currency or custody exceeded"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record an aporte, resgate, income, fee or tax of a manual investment",
+        "tags": ["investments"]
+      },
+      "get": {
+        "operationId": "InvestmentEventController_list",
+        "parameters": [
+          {
+            "name": "investmentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "description": "A declared investment event. Seshat Finance only records it; nothing is executed at any broker or bank.",
+                    "properties": {
+                      "accountId": {
+                        "description": "Owned active account in the investment currency. With an aporte or resgate it writes a linked account entry that is neither income nor expense; with an income it writes a linked income. Not allowed for fees and taxes.",
+                        "format": "uuid",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "amount": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string",
+                        "description": "Positive amount in the investment currency."
+                      },
+                      "kind": {
+                        "enum": [
+                          "contribution",
+                          "redemption",
+                          "yield",
+                          "dividend",
+                          "interest",
+                          "fee",
+                          "tax"
+                        ],
+                        "type": "string"
+                      },
+                      "note": {
+                        "maxLength": 500,
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "occurredAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "quantity": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string",
+                        "description": "Required for aportes and resgates of types with quantity, within the type scale; otherwise null.",
+                        "nullable": true
+                      },
+                      "timeZone": {
+                        "description": "IANA time zone of the event.",
+                        "type": "string"
+                      },
+                      "unitPrice": {
+                        "pattern": "^\\d+(?:\\.\\d+)?$",
+                        "type": "string",
+                        "description": "Optional unit price with up to 8 decimal places.",
+                        "nullable": true
+                      },
+                      "createdAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "currencyCode": {
+                        "pattern": "^[A-Z]{3}$",
+                        "type": "string"
+                      },
+                      "currencyMinorUnitScale": {
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "investmentId": {
+                        "format": "uuid",
+                        "type": "string"
+                      },
+                      "lifecycle": {
+                        "enum": ["active", "trashed"],
+                        "type": "string"
+                      },
+                      "occurredOn": {
+                        "format": "date",
+                        "type": "string"
+                      },
+                      "transactionId": {
+                        "description": "Linked account entry, if any.",
+                        "format": "uuid",
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "format": "date-time",
+                        "type": "string"
+                      },
+                      "version": {
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "accountId",
+                      "amount",
+                      "kind",
+                      "note",
+                      "occurredAt",
+                      "quantity",
+                      "timeZone",
+                      "unitPrice",
+                      "createdAt",
+                      "currencyCode",
+                      "currencyMinorUnitScale",
+                      "id",
+                      "investmentId",
+                      "lifecycle",
+                      "occurredOn",
+                      "transactionId",
+                      "updatedAt",
+                      "version"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned investment not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the events of an owned investment",
+        "tags": ["investments"]
+      }
+    },
+    "/api/v1/investment-events/{eventId}/lifecycle": {
+      "post": {
+        "operationId": "InvestmentEventController_lifecycle",
+        "parameters": [
+          {
+            "name": "eventId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "action": {
+                    "enum": ["trash", "restore"],
+                    "type": "string"
+                  },
+                  "expectedVersion": {
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": ["action", "expectedVersion"],
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "description": "A declared investment event. Seshat Finance only records it; nothing is executed at any broker or bank.",
+                  "properties": {
+                    "accountId": {
+                      "description": "Owned active account in the investment currency. With an aporte or resgate it writes a linked account entry that is neither income nor expense; with an income it writes a linked income. Not allowed for fees and taxes.",
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "amount": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Positive amount in the investment currency."
+                    },
+                    "kind": {
+                      "enum": [
+                        "contribution",
+                        "redemption",
+                        "yield",
+                        "dividend",
+                        "interest",
+                        "fee",
+                        "tax"
+                      ],
+                      "type": "string"
+                    },
+                    "note": {
+                      "maxLength": 500,
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "occurredAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Required for aportes and resgates of types with quantity, within the type scale; otherwise null.",
+                      "nullable": true
+                    },
+                    "timeZone": {
+                      "description": "IANA time zone of the event.",
+                      "type": "string"
+                    },
+                    "unitPrice": {
+                      "pattern": "^\\d+(?:\\.\\d+)?$",
+                      "type": "string",
+                      "description": "Optional unit price with up to 8 decimal places.",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "currencyCode": {
+                      "pattern": "^[A-Z]{3}$",
+                      "type": "string"
+                    },
+                    "currencyMinorUnitScale": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "investmentId": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "lifecycle": {
+                      "enum": ["active", "trashed"],
+                      "type": "string"
+                    },
+                    "occurredOn": {
+                      "format": "date",
+                      "type": "string"
+                    },
+                    "transactionId": {
+                      "description": "Linked account entry, if any.",
+                      "format": "uuid",
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "version": {
+                      "minimum": 1,
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "accountId",
+                    "amount",
+                    "kind",
+                    "note",
+                    "occurredAt",
+                    "quantity",
+                    "timeZone",
+                    "unitPrice",
+                    "createdAt",
+                    "currencyCode",
+                    "currencyMinorUnitScale",
+                    "id",
+                    "investmentId",
+                    "lifecycle",
+                    "occurredOn",
+                    "transactionId",
+                    "updatedAt",
+                    "version"
+                  ],
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing or invalid"
+          },
+          "404": {
+            "description": "Owned investment event not found"
+          },
+          "409": {
+            "description": "Event changed by another request"
+          },
+          "422": {
+            "description": "Transition not allowed or custody would become negative"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Move an event and its linked account entry to the trash or back",
+        "tags": ["investments"]
+      }
+    },
     "/api/v1/manual-exchange-quotes": {
       "post": {
         "operationId": "ManualExchangeQuoteController_create",
@@ -19384,7 +19956,8 @@
                 "account-reserve",
                 "goal-contribution",
                 "budget",
-                "investment"
+                "investment",
+                "investment-event"
               ],
               "type": "string"
             }
@@ -19453,7 +20026,8 @@
                           "account-reserve",
                           "goal-contribution",
                           "budget",
-                          "investment"
+                          "investment",
+                          "investment-event"
                         ]
                       },
                       "resourceId": {

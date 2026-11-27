@@ -250,6 +250,7 @@ model Transaction {
   refundEntryLink        RefundLink?              @relation("refund_entry")
   goalContribution       GoalContributionSource?
   cardSettlement         InvoiceSettlement?
+  investmentEvent        InvestmentEvent?
 
   @@unique([id, ownerId])
   @@index([ownerId, accountId, occurredAt])
@@ -397,6 +398,7 @@ enum FinancialAuditResourceType {
   goal_contribution     @map("goal-contribution")
   budget
   investment
+  investment_event      @map("investment-event")
 
   @@map("financial_audit_resource_type")
 }
@@ -913,8 +915,38 @@ model Investment {
   createdAt              DateTime  @map("created_at") @db.Timestamptz(6)
   updatedAt              DateTime  @map("updated_at") @db.Timestamptz(6)
   version                Int
+  events                 InvestmentEvent[]
 
   @@unique([id, ownerId])
   @@index([ownerId, createdAt])
   @@map("investments")
+}
+
+model InvestmentEvent {
+  id                     String       @id @db.Uuid
+  ownerId                String       @map("owner_id") @db.Uuid
+  investmentId           String       @map("investment_id") @db.Uuid
+  investment             Investment   @relation(fields: [investmentId, ownerId], references: [id, ownerId], onDelete: Restrict, map: "investment_events_investment_fkey")
+  kind                   String       @db.VarChar(16)
+  amountMinorUnits       Decimal      @map("amount_minor_units") @db.Decimal(1000, 0)
+  currencyCode           String       @map("currency_code") @db.Char(3)
+  currencyMinorUnitScale Int          @map("currency_minor_unit_scale") @db.SmallInt
+  quantity               Decimal?     @db.Decimal(38, 8)
+  unitPrice              Decimal?     @map("unit_price") @db.Decimal(38, 8)
+  occurredAt             DateTime     @map("occurred_at") @db.Timestamptz(6)
+  timeZone               String       @map("time_zone") @db.VarChar(64)
+  occurredOn             DateTime     @map("occurred_on") @db.Date
+  accountId              String?      @map("account_id") @db.Uuid
+  transactionId          String?      @unique @map("transaction_id") @db.Uuid
+  transaction            Transaction? @relation(fields: [transactionId, ownerId], references: [id, ownerId], onDelete: Restrict, map: "investment_events_transaction_fkey")
+  note                   String?      @db.VarChar(500)
+  lifecycle              String       @db.VarChar(16)
+  createdAt              DateTime     @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime     @map("updated_at") @db.Timestamptz(6)
+  version                Int
+
+  @@unique([id, ownerId])
+  @@unique([transactionId, ownerId])
+  @@index([ownerId, investmentId, occurredOn])
+  @@map("investment_events")
 }
